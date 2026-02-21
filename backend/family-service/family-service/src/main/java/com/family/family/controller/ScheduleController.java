@@ -1,87 +1,95 @@
 package com.family.family.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
-import com.family.family.entity.TaskSchedule;
-import com.family.family.mapper.TaskScheduleMapper;
+import com.family.family.entity.Schedule;
+import com.family.family.service.ScheduleService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 排班控制器
+ */
 @RestController
 @RequestMapping("/api/schedule")
+@SaCheckLogin
 public class ScheduleController {
-    
-    private final TaskScheduleMapper scheduleMapper;
-    
-    public ScheduleController(TaskScheduleMapper scheduleMapper) {
-        this.scheduleMapper = scheduleMapper;
+
+    private final ScheduleService scheduleService;
+
+    public ScheduleController(ScheduleService scheduleService) {
+        this.scheduleService = scheduleService;
     }
-    
+
+    /**
+     * 获取排班列表
+     * GET /api/schedule/list
+     */
+    @GetMapping("/list")
+    public Result<List<Schedule>> list(
+            @RequestParam Long familyId,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(scheduleService.list(familyId, startDate, endDate, userId));
+    }
+
+    /**
+     * 创建排班
+     * POST /api/schedule/create
+     */
     @PostMapping("/create")
-    public Result<Long> createSchedule(@RequestBody CreateScheduleRequest request) {
-        TaskSchedule schedule = new TaskSchedule();
-        schedule.setFamilyId(request.getFamilyId());
-        schedule.setTaskName(request.getTaskName());
-        schedule.setAssigneeId(request.getAssigneeId());
-        schedule.setScheduleType(request.getScheduleType());
-        schedule.setScheduleDay(request.getScheduleDay());
-        schedule.setStatus(1);
-        
-        scheduleMapper.insert(schedule);
-        return Result.success(schedule.getId());
+    public Result<Schedule> create(@RequestBody Schedule schedule) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        schedule.setCreatorId(userId);
+        return Result.success(scheduleService.create(schedule, userId));
     }
-    
-    @GetMapping("/list/{familyId}")
-    public Result<List<TaskSchedule>> getSchedules(@PathVariable Long familyId) {
-        List<TaskSchedule> list = scheduleMapper.selectList(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<TaskSchedule>()
-                .eq(TaskSchedule::getFamilyId, familyId)
-                .eq(TaskSchedule::getStatus, 1)
-        );
-        return Result.success(list);
+
+    /**
+     * 更新排班
+     * POST /api/schedule/update
+     */
+    @PostMapping("/update")
+    public Result<Schedule> update(@RequestBody Schedule schedule) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(scheduleService.update(schedule, userId));
     }
-    
-    @GetMapping("/today/{familyId}")
-    public Result<List<TaskSchedule>> getTodaySchedules(@PathVariable Long familyId) {
-        java.time.LocalDate today = java.time.LocalDate.now();
-        int dayOfWeek = today.getDayOfWeek().getValue();
-        
-        List<TaskSchedule> list = scheduleMapper.selectList(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<TaskSchedule>()
-                .eq(TaskSchedule::getFamilyId, familyId)
-                .eq(TaskSchedule::getStatus, 1)
-                .eq(TaskSchedule::getScheduleDay, dayOfWeek)
-        );
-        return Result.success(list);
+
+    /**
+     * 删除排班
+     * POST /api/schedule/delete
+     */
+    @PostMapping("/delete")
+    public Result<Void> delete(@RequestParam Long scheduleId) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        scheduleService.delete(scheduleId, userId);
+        return Result.success();
     }
-    
-    @DeleteMapping("/{id}")
-    public Result<Boolean> deleteSchedule(@PathVariable Long id) {
-        scheduleMapper.deleteById(id);
-        return Result.success(true);
+
+    /**
+     * 获取我的排班
+     * GET /api/schedule/my
+     */
+    @GetMapping("/my")
+    public Result<List<Schedule>> mySchedule(
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(scheduleService.mySchedule(userId, startDate, endDate));
     }
-    
-    public static class CreateScheduleRequest {
-        private Long familyId;
-        private String taskName;
-        private Long assigneeId;
-        private String scheduleType;
-        private Integer scheduleDay;
-        
-        public Long getFamilyId() { return familyId; }
-        public void setFamilyId(Long familyId) { this.familyId = familyId; }
-        
-        public String getTaskName() { return taskName; }
-        public void setTaskName(String taskName) { this.taskName = taskName; }
-        
-        public Long getAssigneeId() { return assigneeId; }
-        public void setAssigneeId(Long assigneeId) { this.assigneeId = assigneeId; }
-        
-        public String getScheduleType() { return scheduleType; }
-        public void setScheduleType(String scheduleType) { this.scheduleType = scheduleType; }
-        
-        public Integer getScheduleDay() { return scheduleDay; }
-        public void setScheduleDay(Integer scheduleDay) { this.scheduleDay = scheduleDay; }
+
+    /**
+     * 交换排班
+     * POST /api/schedule/swap
+     */
+    @PostMapping("/swap")
+    public Result<Void> swap(
+            @RequestParam Long scheduleId1,
+            @RequestParam Long scheduleId2) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        scheduleService.swap(scheduleId1, scheduleId2, userId);
+        return Result.success();
     }
 }

@@ -58,7 +58,35 @@ export const gameApi = {
    * @param {object} request - 积分数据
    * @returns {Promise<boolean>}
    */
-  addPoints: (data) => request.post('/api/game/points/add', data)
+  addPoints: (data) => request.post('/api/game/points/add', data),
+
+  /**
+   * 获取优惠券列表
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<Array>} 优惠券列表
+   */
+  getCoupons: (familyId) => request.get('/api/game/coupon/list', { familyId }),
+  
+  /**
+   * 添加优惠券
+   * @param {object} data - 优惠券数据
+   * @returns {Promise<object>} 创建的优惠券
+   */
+  addCoupon: (data) => request.post('/api/game/coupon/add', data),
+  
+  /**
+   * 使用优惠券
+   * @param {number} id - 优惠券ID
+   * @returns {Promise<void>}
+   */
+  useCoupon: (id) => request.put(`/api/game/coupon/${id}/use`),
+  
+  /**
+   * 删除优惠券
+   * @param {number} id - 优惠券ID
+   * @returns {Promise<void>}
+   */
+  deleteCoupon: (id) => request.delete(`/api/game/coupon/${id}`)
 }
 
 export default gameApi

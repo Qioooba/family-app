@@ -3,7 +3,7 @@ import { request } from '../utils/request'
 /**
  * 家庭圈相关API
  * 对应后端: FamilyController.java
- * BasePath: /family
+ * BasePath: /api/family
  */
 export const familyApi = {
   /**
@@ -12,7 +12,7 @@ export const familyApi = {
    * @param {number} creatorId - 创建者ID
    * @returns {Promise<object>} 创建的家庭
    */
-  create: (data, creatorId) => request.post('/family/create', data, { params: { creatorId } }),
+  create: (data, creatorId) => request.post('/api/family/create', data, { params: { creatorId } }),
   
   /**
    * 加入家庭
@@ -20,21 +20,21 @@ export const familyApi = {
    * @param {number} userId - 用户ID
    * @returns {Promise<object>} 加入的家庭
    */
-  join: (inviteCode, userId) => request.post('/family/join', { inviteCode, userId }),
+  join: (inviteCode, userId) => request.post('/api/family/join', { inviteCode, userId }),
   
   /**
    * 获取家庭详情
    * @param {number} id - 家庭ID
    * @returns {Promise<object>} 家庭详情
    */
-  getById: (id) => request.get(`/family/${id}`),
+  getById: (id) => request.get(`/api/family/${id}`),
   
   /**
    * 获取家庭成员
    * @param {number} id - 家庭ID
    * @returns {Promise<Array>} 成员列表
    */
-  getMembers: (id) => request.get(`/family/${id}/members`),
+  getMembers: (id) => request.get(`/api/family/${id}/members`),
   
   /**
    * 移除成员
@@ -42,7 +42,7 @@ export const familyApi = {
    * @param {number} userId - 要移除的用户ID
    * @returns {Promise<void>}
    */
-  removeMember: (id, userId) => request.post(`/family/${id}/remove`, { userId })
+  removeMember: (id, userId) => request.post(`/api/family/${id}/remove`, { userId })
 }
 
 export default familyApi

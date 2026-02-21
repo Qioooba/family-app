@@ -232,7 +232,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { couponApi } from '../../api/index.js'
+import { gameApi } from '../../api/index.js'
 
 const coupons = ref([])
 const currentTab = ref('all')
@@ -292,7 +292,7 @@ const loadCoupons = async () => {
     loading.value = true
     const familyInfo = uni.getStorageSync('currentFamily')
     const familyId = familyInfo?.id || 1
-    const res = await couponApi.getList(familyId)
+    const res = await gameApi.getCoupons(familyId)
     coupons.value = res || []
   } catch (e) {
     console.error('加载优惠券失败', e)
@@ -385,7 +385,7 @@ const saveCoupon = async () => {
       familyId: familyInfo?.id || 1
     }
 
-    await couponApi.create(data)
+    await gameApi.addCoupon(data)
     uni.showToast({ title: '添加成功', icon: 'success' })
     closeAddModal()
     loadCoupons()
@@ -402,7 +402,7 @@ const useCoupon = async (coupon) => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          await couponApi.use(coupon.id)
+          await gameApi.useCoupon(coupon.id)
           uni.showToast({ title: '已标记为使用', icon: 'success' })
           loadCoupons()
         } catch (e) {
@@ -422,7 +422,7 @@ const deleteCoupon = async (coupon) => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          await couponApi.delete(coupon.id)
+          await gameApi.deleteCoupon(coupon.id)
           uni.showToast({ title: '删除成功', icon: 'success' })
           loadCoupons()
         } catch (e) {

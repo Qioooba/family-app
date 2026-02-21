@@ -143,7 +143,7 @@ public class CacheConfig implements CachingConfigurer {
      */
     @Bean
     public RedissonSpringCacheManager redissonCacheManager(RedissonClient redissonClient) {
-        Map<String, CacheConfig> config = new HashMap<>();
+        Map<String, org.redisson.spring.cache.CacheConfig> config = new HashMap<>();
         // 可以在这里添加Redisson特有的缓存配置
         return new RedissonSpringCacheManager(redissonClient, config);
     }

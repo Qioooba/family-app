@@ -1,5 +1,7 @@
 package com.family.family.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.json.JSONUtil;
 import com.family.common.core.Result;
 import com.family.family.entity.*;
@@ -15,6 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/export")
+@SaCheckLogin
 public class ExportController {
     
     private final TaskMapper taskMapper;
@@ -22,15 +25,17 @@ public class ExportController {
     private final FamilyReportMapper reportMapper;
     private final CouponMapper couponMapper;
     private final InventoryMapper inventoryMapper;
+    private final FamilyMemberMapper familyMemberMapper;
     
     public ExportController(TaskMapper taskMapper, WishMapper wishMapper, 
                            FamilyReportMapper reportMapper, CouponMapper couponMapper,
-                           InventoryMapper inventoryMapper) {
+                           InventoryMapper inventoryMapper, FamilyMemberMapper familyMemberMapper) {
         this.taskMapper = taskMapper;
         this.wishMapper = wishMapper;
         this.reportMapper = reportMapper;
         this.couponMapper = couponMapper;
         this.inventoryMapper = inventoryMapper;
+        this.familyMemberMapper = familyMemberMapper;
     }
     
     /**
@@ -39,6 +44,15 @@ public class ExportController {
      */
     @GetMapping("/family-data")
     public Result<Map<String, Object>> exportFamilyData(@RequestParam Long familyId) {
+        // 获取当前登录用户ID
+        Long userId = StpUtil.getLoginIdAsLong();
+        
+        // 校验用户是否属于该家庭
+        FamilyMember member = familyMemberMapper.selectByUserIdAndFamilyId(userId, familyId);
+        if (member == null) {
+            return Result.error(403, "无权访问该家庭数据");
+        }
+        
         Map<String, Object> exportData = new HashMap<>();
         
         // 导出任务数据
