@@ -143,6 +143,9 @@
 import { ref, computed } from 'vue'
 import LazyImage from '@/components/common/LazyImage.vue'
 import { useLazyList } from '@/utils/lazyLoad.js'
+import { useManagedListeners } from '@/utils/memoryManager.js'
+
+const { setManagedTimeout } = useManagedListeners()
 
 const unreadCount = ref(3)
 const loading = ref(false)
@@ -220,7 +223,7 @@ const previewImage = (images, current) => {
 const loadMore = () => {
   loading.value = true
   loadMoreItems()
-  setTimeout(() => {
+  setManagedTimeout(() => {
     loading.value = false
   }, 500)
 }

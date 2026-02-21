@@ -1,11 +1,11 @@
 package com.family.food.service.impl;
 
-import cn.hutool.core.codec.Base64;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.family.food.dto.request.ScanRequest;
 import com.family.food.dto.response.ScanResponse;
@@ -17,7 +17,8 @@ import com.family.food.mapper.ScanRecordMapper;
 import com.family.food.service.IngredientService;
 import com.family.food.service.ScanService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -32,20 +33,17 @@ import java.util.regex.Pattern;
 /**
  * 扫码识别服务实现
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> implements ScanService {
+    
+    private static final Logger log = LoggerFactory.getLogger(ScanServiceImpl.class);
     
     private final BarcodeProductMapper barcodeProductMapper;
     private final IngredientService ingredientService;
     private final StringRedisTemplate redisTemplate;
     
-    // 条码查询API配置
-    private static final String BARCODE_API_URL = "https://api.qrserver.com/v1/read-qr-code/";
     private static final String UPC_API_URL = "https://api.upcitemdb.com/prod/trial/lookup";
-    
-    // 条形码正则
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^[0-9]{8,14}$");
     
     @Override
@@ -57,20 +55,15 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         
         ScanResponse response;
         
-        // 判断是条形码还是二维码
         if (isBarcode(scanContent)) {
-            // 先从本地库查询
             response = queryFromBarcodeLibrary(scanContent);
             if (response == null) {
-                // 本地库没有，调用第三方API
                 response = queryFromThirdPartyApi(scanContent);
             }
         } else {
-            // 二维码处理
             response = handleQRCode(scanContent);
         }
         
-        // 保存扫码记录
         saveScanRecord(request, response);
         
         return response;
@@ -98,7 +91,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
             return buildErrorResponse("图片不能为空");
         }
         
-        // 调用AI服务识别图片中的食材
         List<Ingredient> ingredients = ingredientService.recognizeFromImage(imageBase64);
         
         ScanResponse response = new ScanResponse();
@@ -113,7 +105,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
             response.setMessage("识别成功，共识别出" + ingredients.size() + "种食材");
         }
         
-        // 保存扫码记录
         saveScanRecord(request, response);
         
         return response;
@@ -153,14 +144,12 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
     
     @Override
     public void addToInventory(ScanRequest request) {
-        // 先扫码识别
         ScanResponse response = scanProduct(request);
         
         if (!"success".equals(response.getStatus())) {
             throw new RuntimeException("扫码识别失败，无法添加到库存");
         }
         
-        // 创建食材实体
         Ingredient ingredient = new Ingredient();
         ingredient.setFamilyId(request.getFamilyId());
         ingredient.setName(response.getProductName());
@@ -169,7 +158,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         ingredient.setUnit("件");
         ingredient.setPurchaseDate(LocalDate.now());
         
-        // 设置过期日期
         if (response.getShelfLifeDays() != null) {
             ingredient.setExpireDate(LocalDate.now().plusDays(response.getShelfLifeDays()));
         }
@@ -178,10 +166,8 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         ingredient.setStatus(1);
         ingredient.setRecognizedData(JSONUtil.toJsonStr(response));
         
-        // 保存到库存
         ingredientService.addIngredient(ingredient);
         
-        // 更新扫码记录为已添加
         lambdaUpdate()
                 .eq(ScanRecord::getUserId, request.getUserId())
                 .eq(ScanRecord::getScanContent, request.getImageBase64())
@@ -191,30 +177,24 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
     
     @Override
     public ScanResponse queryFromBarcodeLibrary(String barcode) {
-        // 先从Redis缓存查询
         String cacheKey = "barcode:" + barcode;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (StrUtil.isNotBlank(cached)) {
             return JSONUtil.toBean(cached, ScanResponse.class);
         }
         
-        // 查询本地库
-        BarcodeProduct product = barcodeProductMapper.selectOne(
-                barcodeProductMapper.lambdaQuery()
-                        .eq(BarcodeProduct::getBarcode, barcode)
-                        .getWrapper()
-        );
+        QueryWrapper<BarcodeProduct> wrapper = new QueryWrapper<>();
+        wrapper.eq("barcode", barcode);
+        BarcodeProduct product = barcodeProductMapper.selectOne(wrapper);
         
         if (product == null) {
             return null;
         }
         
-        // 增加查询次数
         barcodeProductMapper.incrementQueryCount(product.getId());
         
         ScanResponse response = buildResponseFromProduct(product);
         
-        // 缓存结果
         redisTemplate.opsForValue().set(cacheKey, JSONUtil.toJsonStr(response), 7, TimeUnit.DAYS);
         
         return response;
@@ -223,7 +203,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
     @Override
     public ScanResponse queryFromThirdPartyApi(String barcode) {
         try {
-            // 调用UPC API
             String url = UPC_API_URL + "?upc=" + barcode;
             String result = HttpUtil.get(url, 5000);
             
@@ -242,31 +221,25 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
             response.setBrand(item.getStr("brand", ""));
             response.setRawData(result);
             
-            // 提取类别
             JSONArray offers = item.getJSONArray("offers");
             if (offers != null && !offers.isEmpty()) {
                 JSONObject offer = offers.getJSONObject(0);
                 response.setReferencePrice(new BigDecimal(offer.getStr("price", "0")));
             }
             
-            // 保存到本地库(异步)
             saveToBarcodeLibrary(barcode, response);
             
-            // 缓存结果
             String cacheKey = "barcode:" + barcode;
             redisTemplate.opsForValue().set(cacheKey, JSONUtil.toJsonStr(response), 7, TimeUnit.DAYS);
             
             return response;
             
         } catch (Exception e) {
-            log.error("第三方API查询失败: {} - {}", barcode, e.getMessage());
+            log.error("第三方API查询失败: {}", barcode, e);
             return buildErrorResponse("商品信息查询失败");
         }
     }
     
-    /**
-     * 处理二维码
-     */
     private ScanResponse handleQRCode(String content) {
         ScanResponse response = new ScanResponse();
         response.setStatus("success");
@@ -277,9 +250,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         return response;
     }
     
-    /**
-     * 判断是否为条形码
-     */
     private boolean isBarcode(String content) {
         if (StrUtil.isBlank(content)) {
             return false;
@@ -288,9 +258,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         return matcher.matches();
     }
     
-    /**
-     * 从商品实体构建响应
-     */
     private ScanResponse buildResponseFromProduct(BarcodeProduct product) {
         ScanResponse response = new ScanResponse();
         response.setStatus("success");
@@ -308,9 +275,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         return response;
     }
     
-    /**
-     * 构建错误响应
-     */
     private ScanResponse buildErrorResponse(String message) {
         ScanResponse response = new ScanResponse();
         response.setStatus("fail");
@@ -318,9 +282,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         return response;
     }
     
-    /**
-     * 保存扫码记录
-     */
     private void saveScanRecord(ScanRequest request, ScanResponse response) {
         try {
             ScanRecord record = new ScanRecord();
@@ -339,9 +300,6 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
         }
     }
     
-    /**
-     * 保存到本地条码库
-     */
     private void saveToBarcodeLibrary(String barcode, ScanResponse response) {
         try {
             BarcodeProduct product = new BarcodeProduct();
@@ -354,7 +312,7 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
             product.setQueryCount(1);
             barcodeProductMapper.insert(product);
         } catch (Exception e) {
-            log.warn("保存到条码库失败(可能已存在): {} - {}", barcode, e.getMessage());
+            log.warn("保存到条码库失败(可能已存在): {}", barcode);
         }
     }
 }
