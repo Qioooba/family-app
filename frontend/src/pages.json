@@ -22,9 +22,37 @@
       }
     },
     {
+      "path": "pages/task/create",
+      "style": {
+        "navigationBarTitleText": "创建任务",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/task/detail",
+      "style": {
+        "navigationBarTitleText": "任务详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/wish/index",
       "style": {
         "navigationBarTitleText": "心愿墙",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/wish/create",
+      "style": {
+        "navigationBarTitleText": "添加心愿",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/wish/detail",
+      "style": {
+        "navigationBarTitleText": "心愿详情",
         "navigationStyle": "custom"
       }
     },
@@ -36,9 +64,23 @@
       }
     },
     {
+      "path": "pages/recipe/detail",
+      "style": {
+        "navigationBarTitleText": "菜谱详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/food/index",
       "style": {
         "navigationBarTitleText": "饮食记录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/food/record",
+      "style": {
+        "navigationBarTitleText": "记录饮食",
         "navigationStyle": "custom"
       }
     },
@@ -57,9 +99,23 @@
       }
     },
     {
+      "path": "pages/vote/create",
+      "style": {
+        "navigationBarTitleText": "发起投票",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/family/index",
       "style": {
         "navigationBarTitleText": "家庭空间",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/family/switch",
+      "style": {
+        "navigationBarTitleText": "切换家庭",
         "navigationStyle": "custom"
       }
     },
