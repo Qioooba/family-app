@@ -22,6 +22,13 @@
       }
     },
     {
+      "path": "pages/task/schedule",
+      "style": {
+        "navigationBarTitleText": "家务排班",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/task/create",
       "style": {
         "navigationBarTitleText": "创建任务",
@@ -123,6 +130,76 @@
       "path": "pages/profile/index",
       "style": {
         "navigationBarTitleText": "我的",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/ai/index",
+      "style": {
+        "navigationBarTitleText": "AI助手",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/dashboard/index",
+      "style": {
+        "navigationBarTitleText": "数据看板",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/moments/index",
+      "style": {
+        "navigationBarTitleText": "家庭圈",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/moments/create",
+      "style": {
+        "navigationBarTitleText": "发布动态",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/moments/comments",
+      "style": {
+        "navigationBarTitleText": "评论",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/shopping/index",
+      "style": {
+        "navigationBarTitleText": "智能购物",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/shopping/list",
+      "style": {
+        "navigationBarTitleText": "清单详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/shopping/inventory",
+      "style": {
+        "navigationBarTitleText": "库存管理",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/game/index",
+      "style": {
+        "navigationBarTitleText": "家庭游戏",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/game/points",
+      "style": {
+        "navigationBarTitleText": "我的积分",
         "navigationStyle": "custom"
       }
     }

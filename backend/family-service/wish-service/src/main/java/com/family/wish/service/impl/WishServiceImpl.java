@@ -7,7 +7,7 @@ import com.family.wish.service.WishService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -54,7 +54,7 @@ public class WishServiceImpl extends ServiceImpl<WishMapper, Wish> implements Wi
         wish.setProgress(progress);
         if (progress >= 100) {
             wish.setStatus(2);
-            wish.setFinishTime(LocalDateTime.now());
+            wish.setFinishTime(LocalDate.now());
         }
         updateById(wish);
     }
@@ -64,7 +64,7 @@ public class WishServiceImpl extends ServiceImpl<WishMapper, Wish> implements Wi
         Wish wish = getById(wishId);
         wish.setStatus(2);
         wish.setProgress(100);
-        wish.setFinishTime(LocalDateTime.now());
+        wish.setFinishTime(LocalDate.now());
         updateById(wish);
     }
     

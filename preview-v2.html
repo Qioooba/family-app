@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>家庭助手 - 全新设计</title>    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', sans-serif;
+            background: #0f0f23;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .phone {
+            width: 390px;
+            height: 844px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            border-radius: 48px;
+            overflow: hidden;
+            box-shadow: 
+                0 0 0 12px #2d2d44,
+                0 25px 80px rgba(0,0,0,0.6),
+                0 0 60px rgba(99,102,241,0.15);
+            position: relative;
+        }
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 35px;
+            background: #000;
+            border-radius: 0 0 24px 24px;
+            z-index: 100;
+        }
+        .status-bar {
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            padding-top: 15px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .content {
+            height: calc(100% - 54px - 90px);
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .content::-webkit-scrollbar { display: none; }
+        
+        /* 顶部欢迎区 */
+        .header-section {
+            padding: 20px 24px;
+            color: #fff;
+        }
+        .greeting-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 3px solid rgba(255,255,255,0.1);
+        }
+        .greeting-text {
+            flex: 1;
+        }
+        .greeting {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        .user-name {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .notification-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            position: relative;
+        }
+        .notification-dot {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+        }
+        
+        /* 天气卡片 */
+        .weather-card {
+            margin: 0 24px 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.2) 100%);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .weather-info {
+            color: #fff;
+        }
+        .weather-temp {
+            font-size: 40px;
+            font-weight: 700;
+        }
+        .weather-desc {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .weather-icon {
+            font-size: 60px;
+        }
+        
+        /* 功能网格 */
+        .section-title {
+            padding: 0 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .section-title-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .section-more {
+            font-size: 13px;
+            color: #6366f1;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 0 24px;
+            margin-bottom: 24px;
+        }
+        .feature-item {
+            aspect-ratio: 1;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-item:active { transform: scale(0.95); }
+        .feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            position: relative;
+            z-index: 1;
+        }
+        .feature-name {
+            font-size: 12px;
+            color: #e2e8f0;
+            font-weight: 500;
+            z-index: 1;
+        }
+        .feature-glow {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.5;
+        }
+        
+        /* 特色卡片 */
+        .highlight-cards {
+            padding: 0 24px;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .highlight-card {
+            flex: 1;
+            padding: 20px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            min-height: 140px;
+        }
+        .highlight-card.ai {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .highlight-card.dashboard {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .highlight-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+        .highlight-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .highlight-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+        .highlight-arrow {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+        }
+        
+        /* 今日概览 */
+        .today-section {
+            padding: 0 24px;
+        }
+        .today-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .today-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .today-date {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .stats-row {
+            display: flex;
+            gap: 16px;
+        }
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .stat-change {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 6px;
+            display: inline-block;
+        }
+        .stat-change.up {
+            background: rgba(34,197,94,0.2);
+            color: #22c55e;
+        }
+        .stat-change.down {
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 90px;
+            background: rgba(15,15,35,0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 12px;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #64748b;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-item.active {
+            color: #6366f1;
+        }
+        .nav-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .nav-item.add {
+            margin-top: -25px;
+        }
+        .nav-add-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(102,126,234,0.4);
+        }
+        
+        /* 页面切换 */
+        .page {
+            display: none;
+            height: 100%;
+            overflow-y: auto;
+        }
+        .page.active {
+            display: block;
+        }
+        
+        /* AI助手页面 */
+        .ai-header {
+            padding: 20px 24px;
+            text-align: center;
+            color: #fff;
+        }
+        .ai-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: 0 10px 40px rgba(102,126,234,0.4);
+        }
+        .ai-title { font-size: 20px; font-weight: 700; }
+        .ai-subtitle { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+        
+        .ai-suggestions {
+            padding: 0 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .suggestion-chip {
+            padding: 10px 18px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
+            font-size: 13px;
+            color: #e2e8f0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .chat-area {
+            padding: 0 24px 100px;
+        }
+        .message {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .message.user { flex-direction: row-reverse; }
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .message-bubble {
+            max-width: 75%;
+            padding: 14px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .message.assistant .message-bubble {
+            background: rgba(255,255,255,0.1);
+            color: #e2e8f0;
+            border-bottom-left-radius: 6px;
+        }
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .chat-input-area {
+            position: absolute;
+            bottom: 90px;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            background: rgba(15,15,35,0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            gap: 12px;
+        }
+        .chat-input {
+            flex: 1;
+            height: 48px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 0 20px;
+            color: #fff;
+            font-size: 15px;
+        }
+        .chat-input::placeholder { color: #64748b; }
+        .chat-send {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        /* 数据看板 */
+        .dashboard-header {
+            padding: 20px 24px;
+            text-align: center;
+            color: #fff;
+        }
+        .dashboard-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .dashboard-subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        
+        .period-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 24px 20px;
+            padding: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+        }
+        .period-tab {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+        .period-tab.active {
+            background: rgba(99,102,241,0.3);
+            color: #fff;
+        }
+        
+        .chart-card {
+            margin: 0 24px 16px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .chart-title {
+            font-size: 15px;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .chart-container {
+            height: 160px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-bottom: 30px;
+            position: relative;
+        }
+        .chart-bar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .chart-bar {
+            width: 28px;
+            background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 6px 6px 0 0;
+            position: relative;
+            transition: height 0.5s ease;
+        }
+        .chart-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #94a3b8;
+        }
+        .chart-label {
+            position: absolute;
+            bottom: 0;
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0 24px 100px;
+        }
+        .achievement-card {
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(245,158,11,0.1) 100%);
+            border-radius: 20px;
+            border: 1px solid rgba(251,191,36,0.2);
+            text-align: center;
+        }
+        .achievement-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+        .achievement-name {
+            font-size: 14px;
+            color: #fbbf24;
+            font-weight: 600;
+        }
+        .achievement-desc {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="notch"></div>
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>📶 5G 🔋</span>
+        </div>
+        
+        <!-- 首页 -->
+        <div id="page-home" class="page active content">
+            <div class="header-section">
+                <div class="greeting-row">
+                    <div class="avatar">👨‍💼</div>
+                    <div class="greeting-text">
+                        <div class="greeting">下午好，欢迎回家 👋</div>
+                        <div class="user-name">张先生</div>
+                    </div>
+                    <div class="notification-btn">
+                        🔔
+                        <div class="notification-dot"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="weather-card">
+                <div class="weather-info">
+                    <div class="weather-temp">22°</div>
+                    <div class="weather-desc">晴朗 · 空气优 · 适宜外出</div>
+                </div>
+                <div class="weather-icon">☀️</div>
+            </div>
+            
+            <div class="section-title">
+                <span class="section-title-text">家庭功能</span>
+                <span class="section-more">自定义 ›</span>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(37,99,235,0.1) 100%);"
+                     onclick="showPage('task')">
+                    <div class="feature-glow" style="background: #3b82f6;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">📋</div>
+                    <div class="feature-name">任务清单</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(236,72,153,0.2) 0%, rgba(219,39,119,0.1) 100%);"
+                     onclick="showPage('wish')">
+                    <div class="feature-glow" style="background: #ec4899;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">💝</div>
+                    <div class="feature-name">心愿墙</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.1) 100%);"
+                     onclick="showPage('recipe')"
+003e
+                    <div class="feature-glow" style="background: #f59e0b;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🍳</div>
+                    <div class="feature-name">智能菜谱</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.1) 100%);"
+                     onclick="showPage('food')">
+                    <div class="feature-glow" style="background: #10b981;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">🥗</div>
+                    <div class="feature-name">饮食记录</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(124,58,237,0.1) 100%);"
+                     onclick="showPage('calendar')">
+                    <div class="feature-glow" style="background: #8b5cf6;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">📅</div>
+                    <div class="feature-name">纪念日</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(220,38,38,0.1) 100%);"
+                     onclick="showPage('vote')">
+                    <div class="feature-glow" style="background: #ef4444;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">🗳️</div>
+                    <div class="feature-name">家庭投票</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(6,182,212,0.2) 0%, rgba(8,145,178,0.1) 100%);"
+                     onclick="showPage('family')">
+                    <div class="feature-glow" style="background: #06b6d4;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">👨‍👩‍👧</div>
+                    <div class="feature-name">家庭圈</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(234,88,12,0.1) 100%);"
+                     onclick="showPage('shopping')">
+                    <div class="feature-glow" style="background: #f97316;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">🛒</div>
+                    <div class="feature-name">智能购物</div>
+                </div>
+                
+                <div class="feature-item" style="background: linear-gradient(135deg, rgba(20,184,166,0.2) 0%, rgba(13,148,136,0.1) 100%);"
+                     onclick="showPage('game')">
+                    <div class="feature-glow" style="background: #14b8a6;"></div>
+                    <div class="feature-icon" style="background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);">🎮</div>
+                    <div class="feature-name">家庭游戏</div>
+                </div>
+            </div>
+            
+            <div class="highlight-cards">
+                <div class="highlight-card ai" onclick="showPage('ai')">
+                    <div class="highlight-icon">🤖</div>
+                    <div class="highlight-title">AI 助手</div>
+                    <div class="highlight-desc">智能问答 · 菜谱推荐</div>
+                    <div class="highlight-arrow">›</div>
+                </div>
+                
+                <div class="highlight-card dashboard" onclick="showPage('dashboard')">
+                    <div class="highlight-icon">📊</div>
+                    <div class="highlight-title">数据看板</div>
+                    <div class="highlight-desc">统计分析 · 成就徽章</div>
+                    <div class="highlight-arrow">›</div>
+                </div>
+            </div>
+            
+            <div class="today-section">
+                <div class="section-title">
+                    <span class="section-title-text">今日概览</span>
+                </div>
+                
+                <div class="today-card">
+                    <div class="today-header">
+                        <span class="today-date">📅 2025年2月21日 周五</span>
+                    </div>
+                    
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #3b82f6;">3</div>
+                            <div class="stat-label">待办任务</div>
+                            <span class="stat-change up">+2 新增</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #10b981;">1250</div>
+                            <div class="stat-label">摄入(kcal)</div>
+                            <span class="stat-change down">-15%</span>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #f59e0b;">12</div>
+                            <div class="stat-label">本周完成</div>
+                            <span class="stat-change up">↑ 效率</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="height: 120px;"></div>
+        </div>
+        
+        <!-- AI助手页面 -->
+        <div id="page-ai" class="page content">
+            <div class="ai-header">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-title">AI 家庭助手</div>
+                <div class="ai-subtitle">基于 DeepSeek 大模型 · 随时为您服务</div>
+            </div>
+            
+            <div class="ai-suggestions">
+                <div class="suggestion-chip">🍳 今晚吃什么？</div>
+                <div class="suggestion-chip">🥗 分析今日饮食</div>
+                <div class="suggestion-chip">🛒 生成购物清单</div>
+                <div class="suggestion-chip">📋 今天有什么待办？</div>
+                <div class="suggestion-chip">💡 周末亲子活动推荐</div>
+            </div>
+            
+            <div class="chat-area">
+                <div class="message assistant">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        你好！我是你的AI家庭助手 🤖<br><br>
+                        我可以帮你：<br>
+                        • 推荐菜谱和营养分析<br>
+                        • 生成购物清单<br>
+                        • 提醒待办事项<br>
+                        • 回答家庭相关问题<br><br>
+                        有什么可以帮你的吗？
+                    </div>
+                </div>
+                
+                <div class="message user">
+                    <div class="message-avatar">👤</div>
+                    <div class="message-bubble">今晚吃什么？</div>
+                </div>
+                
+                <div class="message assistant">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        🍅 <b>番茄土豆炖牛肉</b> 怎么样？<br><br>
+                        这道菜：<br>
+                        • 营养均衡，富含蛋白质<br>
+                        • 做法简单，45分钟搞定<br>
+                        • 孩子大人都爱吃<br><br>
+                        需要我提供详细做法吗？
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" placeholder="输入问题...">
+                <button class="chat-send">➤</button>
+            </div>
+        </div>
+        
+        <!-- 数据看板页面 -->
+        <div id="page-dashboard" class="page content">
+            <div class="dashboard-header">
+                <div class="dashboard-title">📊 数据看板</div>
+                <div class="dashboard-subtitle">了解家庭生活的点点滴滴</div>
+            </div>
+            
+            <div class="period-tabs">
+                <div class="period-tab">周</div>
+                <div class="period-tab active">月</div>
+                <div class="period-tab">年</div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">🔥 热量摄入趋势</div>
+                <div class="chart-container">
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar" style="height: 60%;" data-value="1800"></div>
+                        <div class="chart-label">周一</div>
+                    </div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar" style="height: 80%;" data-value="2100"></div>
+                        <div class="chart-label">周二</div>
+                    </div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar" style="height: 70%;" data-value="1950"></div>
+                        <div class="chart-label">周三</div>
+                    </div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar" style="height: 55%;" data-value="1650"></div>
+                        <div class="chart-label">周四</div>
+                    </div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar" style="height: 75%;" data-value="2000"></div>
+                        <div class="chart-label">周五</div>
+                    </div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar" style="height: 90%;" data-value="2400"></div>
+                        <div class="chart-label">周六</div>
+                    </div>
+                    <div class="chart-bar-wrap">
+                        <div class="chart-bar" style="height: 65%;" data-value="1850"></div>
+                        <div class="chart-label">周日</div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="chart-card">
+                <div class="chart-title">✅ 任务完成情况</div>
+                <div style="display: flex; align-items: center; padding: 20px;">
+                    <div style="position: relative; width: 120px; height: 120px; margin-right: 30px;">
+                        <svg width="120" height="120" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="12"/>
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="url(#gradient)" stroke-width="12" 
+                                    stroke-dasharray="220 314" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#6366f1"/>
+                                    <stop offset="100%" style="stop-color:#8b5cf6"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                            <div style="font-size: 28px; font-weight: 700; color: #fff;">70%</div>
+                            <div style="font-size: 12px; color: #64748b;">完成率</div>
+                        </div>
+                    </div>
+                    
+                    <div style="flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <div style="padding: 14px; background: rgba(59,130,246,0.1); border-radius: 12px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #3b82f6;">8</div>
+                            <div style="font-size: 11px; color: #64748b;">待办</div>
+                        </div>
+                        <div style="padding: 14px; background: rgba(245,158,11,0.1); border-radius: 12px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #f59e0b;">5</div>
+                            <div style="font-size: 11px; color: #64748b;">进行中</div>
+                        </div>
+                        <div style="padding: 14px; background: rgba(16,185,129,0.1); border-radius: 12px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #10b981;">28</div>
+                            <div style="font-size: 11px; color: #64748b;">已完成</div>
+                        </div>
+                        <div style="padding: 14px; background: rgba(100,116,139,0.1); border-radius: 12px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #64748b;">2</div>
+                            <div style="font-size: 11px; color: #64748b;">已取消</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            <div class="section-title" style="margin-top: 24px;">
+                <span class="section-title-text">🏆 年度成就</span>
+            </div>
+            
+            <div class="achievement-grid">
+                <div class="achievement-card">
+                    <div class="achievement-icon">🏆</div>
+                    <div class="achievement-name">任务达人</div>
+                    <div class="achievement-desc">完成100个任务</div>
+                </div>
+                
+                <div class="achievement-card">
+                    <div class="achievement-icon">🌟</div>
+                    <div class="achievement-name">家务能手</div>
+                    <div class="achievement-desc">完成50个任务</div>
+                </div>
+                
+                <div class="achievement-card">
+                    <div class="achievement-icon">❤️</div>
+                    <div class="achievement-name">家庭守护者</div>
+                    <div class="achievement-desc">2025年活跃成员</div>
+                </div>
+                
+                <div class="achievement-card">
+                    <div class="achievement-icon">🍳</div>
+                    <div class="achievement-name">美食家</div>
+                    <div class="achievement-desc">记录50道菜谱</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showPage('home')">
+                <div class="nav-icon">🏠</div>
+                <div>首页</div>
+            </div>
+            
+            <div class="nav-item" onclick="showPage('task')">
+                <div class="nav-icon">📋</div>
+                <div>任务</div>
+            </div>
+            
+            <div class="nav-item add" onclick="showQuickAdd()">
+                <div class="nav-add-btn">+</div>
+            </div>
+            
+            <div class="nav-item" onclick="showPage('ai')">
+                <div class="nav-icon">🤖</div>
+                <div>AI</div>
+            </div>
+            
+            <div class="nav-item" onclick="showPage('profile')">
+                <div class="nav-icon">👤</div>
+                <div>我的</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            if (pageName === 'home' || pageName === 'ai' || pageName === 'dashboard') {
+                document.getElementById('page-' + pageName).classList.add('active');
+            } else {
+                alert('功能开发中: ' + pageName);
+                document.getElementById('page-home').classList.add('active');
+            }
+            
+            event.target.closest('.nav-item')?.classList.add('active');
+        }
+        
+        function showQuickAdd() {
+            const options = ['添加任务', '记录饮食', '添加心愿', '发起投票'];
+            alert('快速添加：' + options.join(' | '));
+        }
+    </script>
+</body>
+</html>

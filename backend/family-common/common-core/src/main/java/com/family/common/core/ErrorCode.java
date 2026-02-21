@@ -1,11 +1,8 @@
 package com.family.common.core;
 
-import lombok.Getter;
-
 /**
  * 错误码枚举
  */
-@Getter
 public enum ErrorCode {
     
     SUCCESS(200, "success"),
@@ -36,5 +33,13 @@ public enum ErrorCode {
     ErrorCode(Integer code, String message) {
         this.code = code;
         this.message = message;
+    }
+    
+    public Integer getCode() {
+        return code;
+    }
+    
+    public String getMessage() {
+        return message;
     }
 }

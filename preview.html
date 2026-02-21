@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭小程序 - 预览</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f6fa;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .phone {
+            width: 375px;
+            height: 812px;
+            background: #fff;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .status-bar {
+            height: 44px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .nav-tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+            padding: 0 20px;
+        }
+        .nav-tab {
+            flex: 1;
+            padding: 15px 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #999;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+        .content {
+            height: calc(100% - 88px - 60px);
+            overflow-y: auto;
+        }
+        .tab-content { display: none; padding: 15px; }
+        .tab-content.active { display: block; }
+        
+        /* 首页样式 */
+        .home-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            color: #fff;
+            border-radius: 0 0 20px 20px;
+        }
+        .greeting { font-size: 14px; opacity: 0.8; }
+        .user-name { font-size: 24px; font-weight: 600; margin-top: 5px; }
+        .family-selector {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: #fff;
+            margin: 15px;
+            border-radius: 16px;
+        }
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .action-name { font-size: 12px; color: #666; }
+        
+        .section-card {
+            background: #fff;
+            margin: 15px;
+            padding: 20px;
+            border-radius: 16px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .section-title { font-size: 16px; font-weight: 600; }
+        .more { font-size: 12px; color: #999; }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        .task-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        .task-title { font-size: 15px; color: #333; }
+        .task-meta { font-size: 12px; color: #999; margin-top: 4px; }
+        
+        /* AI助手样式 */
+        .ai-header {
+            padding: 20px;
+            background: linear-gradient(180deg, #f0f7ff 0%, #fff 100%);
+        }
+        .ai-title { display: flex; align-items: center; font-size: 20px; font-weight: 600; }
+        .ai-title .icon { font-size: 32px; margin-right: 10px; }
+        .ai-subtitle { font-size: 13px; color: #999; margin-left: 42px; margin-top: 5px; }
+        
+        .ai-quick-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: #fff;
+            margin: 10px 15px;
+            border-radius: 16px;
+        }
+        .ai-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        .ai-action-icon { font-size: 28px; margin-bottom: 5px; }
+        .ai-action-text { font-size: 12px; color: #666; }
+        
+        .chat-container {
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+        }
+        .message-item {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .message-item.user { flex-direction: row-reverse; }
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin: 0 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .message-item.assistant .message-bubble {
+            background: #fff;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .message-item.user .message-bubble {
+            background: #2979ff;
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .chat-input-area {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #fff;
+            border-top: 1px solid #f0f0f0;
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+        }
+        .chat-input {
+            flex: 1;
+            height: 44px;
+            background: #f5f7fa;
+            border: none;
+            border-radius: 22px;
+            padding: 0 20px;
+            font-size: 15px;
+        }
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            background: #2979ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            color: #fff;
+        }
+        
+        /* 数据看板样式 */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        .dashboard-title { font-size: 24px; font-weight: 600; }
+        .dashboard-date { font-size: 13px; opacity: 0.8; }
+        
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 20px;
+        }
+        .overview-item {
+            text-align: center;
+            padding: 15px 5px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        .overview-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .overview-label { font-size: 11px; color: #999; margin-top: 5px; }
+        
+        .chart-section {
+            background: #fff;
+            margin: 15px;
+            padding: 20px;
+            border-radius: 16px;
+        }
+        .chart-bars {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 150px;
+            margin-top: 20px;
+        }
+        .chart-bar-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        .chart-bar {
+            width: 30px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px 4px 0 0;
+        }
+        .chart-label { font-size: 11px; color: #999; margin-top: 8px; }
+        .chart-value { font-size: 10px; color: #667eea; margin-top: 4px; }
+        
+        .stat-circle {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+        .circle-chart {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(#667eea 0deg, #667eea 252deg, #f0f0f0 252deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 30px;
+        }
+        .circle-inner {
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .circle-percentage { font-size: 24px; font-weight: 700; color: #667eea; }
+        .circle-label { font-size: 11px; color: #999; }
+        
+        .stat-details {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .stat-detail-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .detail-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .detail-value { font-size: 18px; font-weight: 600; display: block; }
+        .detail-label { font-size: 11px; color: #999; }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            color: #999;
+        }
+        .nav-item.active { color: #5B8FF9; }
+        .nav-icon { font-size: 22px; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="status-bar"></div>
+        
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('home')">首页</div>
+            <div class="nav-tab" onclick="showTab('ai')">AI助手</div>
+            <div class="nav-tab" onclick="showTab('dashboard')">数据看板</div>
+        </div>
+        
+        <div class="content">
+            <!-- 首页 -->
+            <div id="home" class="tab-content active">
+                <div class="home-header">
+                    <div class="greeting">下午好</div>
+                    <div class="user-name">亲爱的用户</div>
+                    <div class="family-selector">
+                        🏠 我的家庭 ▼
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <div class="action-item">
+                        <div class="action-icon" style="background: #5B8FF9;">📝</div>
+                        <div class="action-name">添加任务</div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-icon" style="background: #5AD8A6;">📷</div>
+                        <div class="action-name">记录饮食</div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-icon" style="background: #9B59B6;">🤖</div>
+                        <div class="action-name">AI助手</div>
+                    </div>
+                    <div class="action-item">
+                        <div class="action-icon" style="background: #3498DB;">📊</div>
+                        <div class="action-name">数据看板</div>
+                    </div>
+                </div>
+                
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">📋 今日待办</div>
+                        <div class="more">更多 ></div>
+                    </div>
+                    <div class="task-item">
+                        <div class="task-checkbox"></div>
+                        <div>
+                            <div class="task-title">买牛奶和鸡蛋</div>
+                            <div class="task-meta">妈妈 · 今天 18:00</div>
+                        </div>
+                    </div>
+                    <div class="task-item">
+                        <div class="task-checkbox"></div>
+                        <div>
+                            <div class="task-title">给孩子检查作业</div>
+                            <div class="task-meta">爸爸 · 今天 20:00</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">💝 近期纪念</div>
+                        <div class="more">更多 ></div>
+                    </div>
+                    <div class="task-item">
+                        <div class="action-icon" style="background: #fff0f0;">💒</div>
+                        <div style="flex: 1; margin-left: 10px;">
+                            <div class="task-title">结婚纪念日</div>
+                            <div class="task-meta">12月25日</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 20px; font-weight: 600; color: #667eea;">5</div>
+                            <div style="font-size: 11px; color: #999;">天后</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI助手 -->
+            <div id="ai" class="tab-content">
+                <div class="ai-header">
+                    <div class="ai-title">
+                        <span class="icon">🤖</span>
+                        <span>AI 家庭助手</span>
+                    </div>
+                    <div class="ai-subtitle">你的智能生活顾问</div>
+                </div>
+                
+                <div class="ai-quick-actions">
+                    <div class="ai-action-item">
+                        <div class="ai-action-icon">🍳</div>
+                        <div class="ai-action-text">菜谱推荐</div>
+                    </div>
+                    <div class="ai-action-item">
+                        <div class="ai-action-icon">🥗</div>
+                        <div class="ai-action-text">营养分析</div>
+                    </div>
+                    <div class="ai-action-item">
+                        <div class="ai-action-icon">🛒</div>
+                        <div class="ai-action-text">购物助手</div>
+                    </div>
+                    <div class="ai-action-item">
+                        <div class="ai-action-icon">📋</div>
+                        <div class="ai-action-text">待办提醒</div>
+                    </div>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="message-item assistant">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-bubble">
+                            你好！我是你的AI家庭助手 🤖<br><br>
+                            我可以帮你：<br>
+                            • 🍳 推荐菜谱<br>
+                            • 🥗 分析营养<br>
+                            • 🛒 生成购物清单<br>
+                            • 📋 提醒待办事项<br>
+                            • 💡 回答家庭相关问题<br><br>
+                            有什么可以帮你的吗？
+                        </div>
+                    </div>
+                    
+                    <div class="message-item user">
+                        <div class="message-avatar">👤</div>
+                        <div class="message-bubble">今晚吃什么？</div>
+                    </div>
+                    
+                    <div class="message-item assistant">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-bubble">
+                            根据您的口味偏好，今晚推荐：<br><br>
+                            🍅 <b>番茄土豆炖牛肉</b><br>
+                            📍 所需食材：番茄、土豆、牛肉、洋葱<br>
+                            ⏱️ 烹饪时间：45分钟<br>
+                            🔥 热量：约320kcal/份<br><br>
+                            需要详细做法吗？
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" placeholder="输入问题，如：今晚吃什么？" value="">
+                    <div class="send-btn">➤</div>
+                </div>
+            </div>
+            
+            <!-- 数据看板 -->
+            <div id="dashboard" class="tab-content">
+                <div class="dashboard-header">
+                    <div>
+                        <div class="dashboard-title">📊 数据看板</div>
+                    </div>
+                    <div class="dashboard-date">2025年2月21日</div>
+                </div>
+                
+                <div style="background: #fff; margin: 15px; padding: 15px; border-radius: 16px;">
+                    <div class="section-title">今日概览</div>
+                    <div class="overview-grid">
+                        <div class="overview-item">
+                            <div class="overview-value">3</div>
+                            <div class="overview-label">待办任务</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-value" style="color: #ff6b6b;">1250</div>
+                            <div class="overview-label">今日摄入</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-value">12</div>
+                            <div class="overview-label">本周完成</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-value">4</div>
+                            <div class="overview-label">家庭成员</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <div class="section-title">本周热量趋势</div>
+                    <div class="chart-bars">
+                        <div class="chart-bar-item">
+                            <div class="chart-bar" style="height: 60%;"></div>
+                            <div class="chart-label">周一</div>
+                            <div class="chart-value">1800</div>
+                        </div>
+                        <div class="chart-bar-item">
+                            <div class="chart-bar" style="height: 80%;"></div>
+                            <div class="chart-label">周二</div>
+                            <div class="chart-value">2100</div>
+                        </div>
+                        <div class="chart-bar-item">
+                            <div class="chart-bar" style="height: 70%;"></div>
+                            <div class="chart-label">周三</div>
+                            <div class="chart-value">1950</div>
+                        </div>
+                        <div class="chart-bar-item">
+                            <div class="chart-bar" style="height: 55%;"></div>
+                            <div class="chart-label">周四</div>
+                            <div class="chart-value">1650</div>
+                        </div>
+                        <div class="chart-bar-item">
+                            <div class="chart-bar" style="height: 75%;"></div>
+                            <div class="chart-label">周五</div>
+                            <div class="chart-value">2000</div>
+                        </div>
+                        <div class="chart-bar-item">
+                            <div class="chart-bar" style="height: 90%; background: linear-gradient(180deg, #ff6b6b 0%, #ee5a5a 100%);"></div>
+                            <div class="chart-label">周六</div>
+                            <div class="chart-value">2400</div>
+                        </div>
+                        <div class="chart-bar-item">
+                            <div class="chart-bar" style="height: 65%;"></div>
+                            <div class="chart-label">周日</div>
+                            <div class="chart-value">1850</div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 15px; font-size: 13px; color: #666;">
+                        本周平均: <span style="color: #667eea; font-weight: 600;">1964</span> kcal/天
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <div class="section-title">任务统计</div>
+                    
+                    <div class="stat-circle">
+                        <div class="circle-chart">
+                            <div class="circle-inner">
+                                <div class="circle-percentage">70%</div>
+                                <div class="circle-label">完成率</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-details">
+                            <div class="stat-detail-item">
+                                <div class="detail-dot" style="background: #2979ff;"></div>
+                                <div>
+                                    <span class="detail-value">8</span>
+                                    <span class="detail-label">待办</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-detail-item">
+                                <div class="detail-dot" style="background: #ffa726;"></div>
+                                <div>
+                                    <span class="detail-value">5</span>
+                                    <span class="detail-label">进行中</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-detail-item">
+                                <div class="detail-dot" style="background: #66bb6a;"></div>
+                                <div>
+                                    <span class="detail-value">28</span>
+                                    <span class="detail-label">已完成</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-detail-item">
+                                <div class="detail-dot" style="background: #9e9e9e;"></div>
+                                <div>
+                                    <span class="detail-value">2</span>
+                                    <span class="detail-label">已取消</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                <div class="chart-section">
+                    <div class="section-title">年度成就</div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; padding: 12px; background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%); border-radius: 12px; flex: 1; min-width: 140px;">
+                            <div style="font-size: 32px; margin-right: 10px;">🏆</div>
+                            <div>
+                                <div style="font-size: 14px; font-weight: 600;">任务达人</div>
+                                <div style="font-size: 11px; color: #999;">完成100个任务</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; padding: 12px; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-radius: 12px; flex: 1; min-width: 140px;">
+                            <div style="font-size: 32px; margin-right: 10px;">🌟</div>
+                            <div>
+                                <div style="font-size: 14px; font-weight: 600;">家务能手</div>
+                                <div style="font-size: 11px; color: #999;">完成50个任务</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; padding: 12px; background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); border-radius: 12px; flex: 1; min-width: 140px;">
+                            <div style="font-size: 32px; margin-right: 10px;">❤️</div>
+                            <div>
+                                <div style="font-size: 14px; font-weight: 600;">家庭守护者</div>
+                                <div style="font-size: 11px; color: #999;">2025年活跃成员</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon">🏠</div>
+                <div>首页</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">✓</div>
+                <div>任务</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">💝</div>
+                <div>心愿</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">👨‍👩‍👧</div>
+                <div>家庭</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon">👤</div>
+                <div>我的</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // 隐藏所有tab内容
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // 显示选中的tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -323,3 +323,378 @@ INSERT INTO task_category (family_id, name, icon, color, sort_order) VALUES
 (0, '财务提醒', 'account-book', '#96CEB4', 4),
 (0, '育儿相关', 'smile', '#FFEAA7', 5),
 (0, '健康医疗', 'medicine-box', '#DDA0DD', 6);
+
+-- ============================================
+-- AI助手功能表
+-- ============================================
+
+-- AI对话历史表
+CREATE TABLE IF NOT EXISTS ai_chat_history (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    family_id BIGINT COMMENT '家庭ID',
+    session_id VARCHAR(64) COMMENT '会话ID',
+    role ENUM('user', 'assistant') COMMENT '角色',
+    content TEXT COMMENT '对话内容',
+    intent VARCHAR(50) COMMENT '意图识别',
+    entities JSON COMMENT '实体提取',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_session (user_id, session_id),
+    INDEX idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI对话历史表';
+
+-- AI使用统计表
+CREATE TABLE IF NOT EXISTS ai_usage_stats (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    date DATE NOT NULL COMMENT '日期',
+    chat_count INT DEFAULT 0 COMMENT '对话次数',
+    voice_count INT DEFAULT 0 COMMENT '语音次数',
+    token_used INT DEFAULT 0 COMMENT 'Token使用量',
+    UNIQUE KEY uk_user_date (user_id, date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI使用统计表';
+
+-- ============================================
+-- 数据看板功能表
+-- ============================================
+
+-- 统计缓存表
+CREATE TABLE IF NOT EXISTS stats_cache (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    stat_type VARCHAR(50) NOT NULL COMMENT '统计类型',
+    target_id BIGINT NOT NULL COMMENT '目标ID（用户ID或家庭ID）',
+    stat_date DATE NOT NULL COMMENT '统计日期',
+    data JSON COMMENT '统计结果JSON',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_type_target_date (stat_type, target_id, stat_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='统计缓存表';
+
+-- 用户活跃度表
+CREATE TABLE IF NOT EXISTS user_activity (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    date DATE NOT NULL COMMENT '日期',
+    login_count INT DEFAULT 0 COMMENT '登录次数',
+    task_completed INT DEFAULT 0 COMMENT '完成任务数',
+    diet_recorded INT DEFAULT 0 COMMENT '饮食记录数',
+    active_minutes INT DEFAULT 0 COMMENT '活跃分钟数',
+    UNIQUE KEY uk_user_date (user_id, date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户活跃度表';
+
+-- 菜谱记录表（补充）
+CREATE TABLE IF NOT EXISTS recipe_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    family_id BIGINT COMMENT '家庭ID',
+    recipe_id BIGINT COMMENT '菜谱ID',
+    recipe_name VARCHAR(100) COMMENT '菜谱名称',
+    image_url VARCHAR(255) COMMENT '图片URL',
+    cook_time DATETIME COMMENT '烹饪时间',
+    remark VARCHAR(500) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_family_id (family_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜谱记录表';
+
+-- ============================================
+-- 家庭圈功能表
+-- ============================================
+
+-- 动态表
+CREATE TABLE IF NOT EXISTS moment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    content TEXT COMMENT '文字内容',
+    images JSON COMMENT '图片列表',
+    video VARCHAR(255) COMMENT '视频URL',
+    location VARCHAR(200) COMMENT '位置',
+    tags JSON COMMENT '标签',
+    mentions JSON COMMENT '@的用户ID列表',
+    like_count INT DEFAULT 0 COMMENT '点赞数',
+    comment_count INT DEFAULT 0 COMMENT '评论数',
+    is_top TINYINT DEFAULT 0 COMMENT '是否置顶',
+    status TINYINT DEFAULT 1 COMMENT '0删除 1正常',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_family_time (family_id, create_time),
+    INDEX idx_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='动态表';
+
+-- 点赞表
+CREATE TABLE IF NOT EXISTS moment_like (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    moment_id BIGINT NOT NULL COMMENT '动态ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_moment_user (moment_id, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='动态点赞表';
+
+-- 评论表
+CREATE TABLE IF NOT EXISTS moment_comment (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    moment_id BIGINT NOT NULL COMMENT '动态ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    content TEXT NOT NULL COMMENT '评论内容',
+    reply_to BIGINT COMMENT '回复的评论ID',
+    reply_user_id BIGINT COMMENT '回复的用户ID',
+    like_count INT DEFAULT 0 COMMENT '点赞数',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_moment (moment_id),
+    INDEX idx_user (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='动态评论表';
+
+-- ============================================
+-- 智能购物功能表
+-- ============================================
+
+-- 购物清单表
+CREATE TABLE IF NOT EXISTS shopping_list (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    name VARCHAR(100) COMMENT '清单名称',
+    type ENUM('auto', 'manual') DEFAULT 'manual' COMMENT '类型',
+    status TINYINT DEFAULT 0 COMMENT '0进行中 1已完成',
+    total_amount DECIMAL(10,2) COMMENT '总金额',
+    creator_id BIGINT COMMENT '创建者ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    complete_time DATETIME COMMENT '完成时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购物清单表';
+
+-- 购物清单项表
+CREATE TABLE IF NOT EXISTS shopping_item (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    list_id BIGINT NOT NULL COMMENT '清单ID',
+    name VARCHAR(100) NOT NULL COMMENT '商品名称',
+    category VARCHAR(50) COMMENT '分类',
+    quantity DECIMAL(10,2) COMMENT '数量',
+    unit VARCHAR(20) COMMENT '单位',
+    estimated_price DECIMAL(10,2) COMMENT '预计价格',
+    actual_price DECIMAL(10,2) COMMENT '实际价格',
+    status TINYINT DEFAULT 0 COMMENT '0未买 1已买',
+    barcode VARCHAR(50) COMMENT '条形码',
+    assignee_id BIGINT COMMENT '指派给谁',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购物清单项表';
+
+-- 库存表
+CREATE TABLE IF NOT EXISTS inventory (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    name VARCHAR(100) NOT NULL COMMENT '商品名称',
+    category VARCHAR(50) COMMENT '分类',
+    quantity DECIMAL(10,2) COMMENT '数量',
+    unit VARCHAR(20) COMMENT '单位',
+    storage_location VARCHAR(50) COMMENT '存放位置',
+    purchase_date DATE COMMENT '购买日期',
+    expire_date DATE COMMENT '过期日期',
+    barcode VARCHAR(50) COMMENT '条形码',
+    price DECIMAL(10,2) COMMENT '价格',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='库存表';
+
+-- ============================================
+-- 家庭游戏功能表
+-- ============================================
+
+-- 转盘表
+CREATE TABLE IF NOT EXISTS game_wheel (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    name VARCHAR(100) NOT NULL COMMENT '转盘名称',
+    items JSON NOT NULL COMMENT '转盘项 [{name, probability, color, icon}]',
+    creator_id BIGINT COMMENT '创建者ID',
+    use_count INT DEFAULT 0 COMMENT '使用次数',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='转盘表';
+
+-- 用户积分表
+CREATE TABLE IF NOT EXISTS user_points (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL UNIQUE COMMENT '用户ID',
+    total_points INT DEFAULT 0 COMMENT '总积分',
+    available_points INT DEFAULT 0 COMMENT '可用积分',
+    spent_points INT DEFAULT 0 COMMENT '已消费积分',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户积分表';
+
+-- 积分流水表
+CREATE TABLE IF NOT EXISTS points_transaction (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    type ENUM('earn', 'spend', 'transfer_in', 'transfer_out') NOT NULL COMMENT '类型',
+    points INT NOT NULL COMMENT '积分变动',
+    balance INT NOT NULL COMMENT '变动后余额',
+    reason VARCHAR(200) COMMENT '变动原因',
+    related_id BIGINT COMMENT '关联业务ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_time (user_id, create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分流水表';
+
+-- ============================================
+-- 拓展功能表
+-- ============================================
+
+-- 任务提醒表
+CREATE TABLE IF NOT EXISTS task_reminder (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    task_id BIGINT NOT NULL COMMENT '任务ID',
+    reminder_type ENUM('time', 'location') DEFAULT 'time' COMMENT '提醒类型',
+    reminder_time DATETIME COMMENT '提醒时间',
+    location_name VARCHAR(200) COMMENT '位置名称',
+    location_lat DECIMAL(10,7) COMMENT '纬度',
+    location_lng DECIMAL(10,7) COMMENT '经度',
+    is_triggered TINYINT DEFAULT 0 COMMENT '是否已触发',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务提醒表';
+
+-- 子任务表
+CREATE TABLE IF NOT EXISTS task_subtask (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    task_id BIGINT NOT NULL COMMENT '父任务ID',
+    title VARCHAR(100) NOT NULL COMMENT '子任务标题',
+    status TINYINT DEFAULT 0 COMMENT '0未完成 1已完成',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='子任务表';
+
+-- 家务排班表
+CREATE TABLE IF NOT EXISTS task_schedule (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    task_name VARCHAR(100) NOT NULL COMMENT '任务名称',
+    assignee_id BIGINT NOT NULL COMMENT '指派用户ID',
+    schedule_type ENUM('daily', 'weekly', 'monthly') DEFAULT 'weekly' COMMENT '排班类型',
+    schedule_day INT COMMENT '周几/几号',
+    status TINYINT DEFAULT 1 COMMENT '0停用 1启用',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='家务排班表';
+
+-- 心愿预算表
+CREATE TABLE IF NOT EXISTS wish_budget (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    wish_id BIGINT NOT NULL COMMENT '心愿ID',
+    estimated_amount DECIMAL(10,2) COMMENT '预估金额',
+    actual_amount DECIMAL(10,2) COMMENT '实际金额',
+    currency VARCHAR(10) DEFAULT 'CNY' COMMENT '货币',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='心愿预算表';
+
+-- 心愿里程碑表
+CREATE TABLE IF NOT EXISTS wish_milestone (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    wish_id BIGINT NOT NULL COMMENT '心愿ID',
+    title VARCHAR(100) NOT NULL COMMENT '里程碑标题',
+    description TEXT COMMENT '描述',
+    target_date DATE COMMENT '目标日期',
+    is_completed TINYINT DEFAULT 0 COMMENT '是否完成',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='心愿里程碑表';
+
+-- 菜谱库存匹配表
+CREATE TABLE IF NOT EXISTS recipe_inventory_match (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    recipe_id BIGINT NOT NULL COMMENT '菜谱ID',
+    inventory_name VARCHAR(100) NOT NULL COMMENT '所需食材名称',
+    required_quantity DECIMAL(10,2) COMMENT '所需数量',
+    unit VARCHAR(20) COMMENT '单位',
+    is_optional TINYINT DEFAULT 0 COMMENT '是否可选',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='菜谱库存匹配表';
+
+-- 体重记录表
+CREATE TABLE IF NOT EXISTS user_weight (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    weight DECIMAL(5,2) NOT NULL COMMENT '体重(kg)',
+    record_date DATE NOT NULL COMMENT '记录日期',
+    note VARCHAR(200) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_date (user_id, record_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='体重记录表';
+
+-- 详细营养记录表
+CREATE TABLE IF NOT EXISTS diet_nutrition_detail (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    diet_record_id BIGINT NOT NULL COMMENT '饮食记录ID',
+    protein DECIMAL(10,2) COMMENT '蛋白质(g)',
+    carbs DECIMAL(10,2) COMMENT '碳水化合物(g)',
+    fat DECIMAL(10,2) COMMENT '脂肪(g)',
+    fiber DECIMAL(10,2) COMMENT '膳食纤维(g)',
+    sugar DECIMAL(10,2) COMMENT '糖分(g)',
+    sodium DECIMAL(10,2) COMMENT '钠(mg)',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='详细营养记录表';
+
+-- 纪念日提醒设置表
+CREATE TABLE IF NOT EXISTS anniversary_reminder (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    anniversary_id BIGINT NOT NULL COMMENT '纪念日ID',
+    reminder_days INT DEFAULT 7 COMMENT '提前几天提醒',
+    reminder_type ENUM('app', 'sms', 'email') DEFAULT 'app' COMMENT '提醒方式',
+    is_enabled TINYINT DEFAULT 1 COMMENT '是否启用',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='纪念日提醒设置表';
+
+-- 价格历史表
+CREATE TABLE IF NOT EXISTS price_history (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    item_name VARCHAR(100) NOT NULL COMMENT '商品名称',
+    barcode VARCHAR(50) COMMENT '条形码',
+    price DECIMAL(10,2) NOT NULL COMMENT '价格',
+    store_name VARCHAR(100) COMMENT '商店名称',
+    purchase_date DATE COMMENT '购买日期',
+    family_id BIGINT COMMENT '家庭ID',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='价格历史表';
+
+-- 优惠券表
+CREATE TABLE IF NOT EXISTS coupon (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    title VARCHAR(100) NOT NULL COMMENT '优惠券名称',
+    platform VARCHAR(50) COMMENT '平台（淘宝/京东/美团等）',
+    coupon_code VARCHAR(100) COMMENT '优惠码',
+    discount_amount DECIMAL(10,2) COMMENT '优惠金额',
+    min_amount DECIMAL(10,2) COMMENT '最低消费',
+    expire_date DATE COMMENT '过期日期',
+    status TINYINT DEFAULT 0 COMMENT '0未使用 1已使用 2已过期',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='优惠券表';
+
+-- 积分兑换券表
+CREATE TABLE IF NOT EXISTS points_coupon (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    title VARCHAR(100) NOT NULL COMMENT '券名称',
+    description TEXT COMMENT '描述',
+    points_cost INT NOT NULL COMMENT '所需积分',
+    coupon_type ENUM('privilege', 'gift', 'task') DEFAULT 'privilege' COMMENT '类型',
+    status TINYINT DEFAULT 1 COMMENT '0停用 1启用',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分兑换券表';
+
+-- 用户积分兑换记录表
+CREATE TABLE IF NOT EXISTS points_coupon_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    coupon_id BIGINT NOT NULL COMMENT '券ID',
+    points_spent INT NOT NULL COMMENT '花费积分',
+    status TINYINT DEFAULT 0 COMMENT '0未使用 1已使用',
+    expire_date DATE COMMENT '过期日期',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户积分兑换记录表';
+
+-- 家庭报告表
+CREATE TABLE IF NOT EXISTS family_report (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL COMMENT '家庭ID',
+    report_type ENUM('weekly', 'monthly', 'yearly') NOT NULL COMMENT '报告类型',
+    report_date DATE NOT NULL COMMENT '报告日期',
+    title VARCHAR(100) NOT NULL COMMENT '报告标题',
+    content JSON COMMENT '报告内容JSON',
+    score INT COMMENT '综合评分',
+    is_read TINYINT DEFAULT 0 COMMENT '是否已读',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='家庭报告表';

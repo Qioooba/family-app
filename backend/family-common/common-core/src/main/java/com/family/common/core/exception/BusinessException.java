@@ -1,12 +1,10 @@
 package com.family.common.core.exception;
 
 import com.family.common.core.ErrorCode;
-import lombok.Getter;
 
 /**
  * 业务异常
  */
-@Getter
 public class BusinessException extends RuntimeException {
     
     private final Integer code;
@@ -24,5 +22,9 @@ public class BusinessException extends RuntimeException {
     public BusinessException(Integer code, String message) {
         super(message);
         this.code = code;
+    }
+    
+    public Integer getCode() {
+        return code;
     }
 }

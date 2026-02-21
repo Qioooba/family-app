@@ -4,17 +4,19 @@ import com.family.common.core.Result;
 import com.family.family.entity.Family;
 import com.family.family.entity.FamilyMember;
 import com.family.family.service.FamilyService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/family")
-@RequiredArgsConstructor
 public class FamilyController {
     
     private final FamilyService familyService;
+    
+    public FamilyController(FamilyService familyService) {
+        this.familyService = familyService;
+    }
     
     @PostMapping("/create")
     public Result<Family> create(@RequestBody Family family, @RequestParam Long creatorId) {

@@ -1,117 +1,192 @@
 <template>
-  <view class="task-page">
-    <!-- 顶部统计 -->
-    <view class="task-header">
-      <view class="header-bg"></view>
-      
-      <view class="stats-row">
-        <view class="stat-box">
-          <text class="stat-num">{{ stats.pending }}</text>
-          <text class="stat-label">待办</text>
-        </view>
-        
-        <view class="stat-box">
-          <text class="stat-num">{{ stats.today }}</text>
-          <text class="stat-label">今日</text>
-        </view>
-        
-        <view class="stat-box">
-          <text class="stat-num">{{ stats.completed }}</text>
-          <text class="stat-label">已完成</text>
-        </view>
-        
-        <view class="stat-box">
-          <text class="stat-num">{{ stats.completionRate }}%</text>
-          <text class="stat-label">完成率</text>
-        </view>
+  <view class="page-container">
+    <!-- 头部 -->
+    <view class="header">
+      <view class="header-title">任务清单</view>
+      <view class="header-action" @click="showAddModal">
+        <text class="icon">+</text>
       </view>
     </view>
     
     <!-- 分类标签 -->
-    <view class="category-tabs">
-      <scroll-view scroll-x class="tabs-scroll">
-        <view 
-          v-for="(cat, index) in categories" 
-          :key="index"
-          class="tab-item"
-          :class="{ active: currentCategory === cat.key }"
-          @click="currentCategory = cat.key"
-        >
-          <text class="tab-icon">{{ cat.icon }}</text>
-          <text class="tab-name">{{ cat.name }}</text>
-          <text v-if="cat.count > 0" class="tab-badge">{{ cat.count }}</text>
-        </view>
-      </scroll-view>
+    <scroll-view class="category-tabs" scroll-x>
+      <view 
+        v-for="(cat, index) in categories" 
+        :key="index"
+        class="category-tab"
+        :class="{ active: currentCategory === index }"
+        @click="switchCategory(index)"
+      >
+        <text>{{ cat.name }}</text>
+      </view>
+    </scroll-view>
+    
+    <!-- 新增：排班表入口 -->
+    <view class="schedule-entry" @click="goToSchedule">
+      <text class="schedule-icon">📅</text>
+      <text class="schedule-text">查看家务排班表</text>
+      <text class="schedule-arrow">›</text>
     </view>
     
     <!-- 任务列表 -->
-    <view class="task-list">
-      <view v-if="filteredTasks.length === 0" class="empty-state">
-        <image src="/static/empty-task.png" mode="aspectFit" />
-        <text>暂无任务，去创建一个吧~</text>
+    <scroll-view class="task-list" scroll-y>
+      <view 
+        v-for="(task, index) in filteredTasks" 
+        :key="index"
+        class="task-card"
+        :class="{ completed: task.status === 2, expanded: task.showSubtasks }"
+        @click="viewTask(task)"
+      >
+        <view class="task-header">
+          <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></view>
+          <view class="task-title">{{ task.title }}</view>
+          <view class="task-priority" :class="'priority-' + task.priority">{{ priorityText(task.priority) }}</view>
+        </view>
+        
+        <view class="task-info">
+          <text class="task-time">⏰ {{ task.dueTime }}</text>
+          <text class="task-assignee">👤 {{ task.assigneeName || '未指派' }}</text>
+        </view>
+        
+        <!-- 子任务进度 -->
+        <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
+          <view class="progress-bar">
+            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
+          </view>
+          <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
+        </view>
+        
+        <!-- 展开的子任务列表 -->
+        <view v-if="task.showSubtasks && task.subtasks" class="subtask-list">
+          <view 
+            v-for="(sub, sidx) in task.subtasks" 
+            :key="sidx"
+            class="subtask-item"
+            @click.stop="toggleSubtask(task, sub)"
+          >
+            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
+            <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
+          </view>
+          <view class="add-subtask" @click.stop="addSubtask(task)">
+            <text>+ 添加子任务</text>
+          </view>
+        </view>
+        
+        <view class="task-footer">
+          <view class="task-tags">
+            <view class="task-tag">{{ task.categoryName }}</view>
+          </view>
+          <!-- 展开按钮 -->
+          <view v-if="task.subtasks && task.subtasks.length > 0" class="expand-btn" @click.stop="task.showSubtasks = !task.showSubtasks">
+            <text>{{ task.showSubtasks ? '收起' : '展开' }}</text>
+          </view>
+        </view>
       </view>
       
-      <view 
-        v-for="task in filteredTasks" 
-        :key="task.id"
-        class="task-card"
-        :class="{ completed: task.status === 2, urgent: task.priority === 2 }"
-        @click="goDetail(task)"
-      >
-        <!-- 左侧：完成按钮 -->
-        <view class="task-check" @click.stop="toggleComplete(task)">
-          <view v-if="task.status === 2" class="check-icon checked">✓</view>
-          <view v-else class="check-icon"></view>
+      <view v-if="filteredTasks.length === 0" class="empty-state">
+        <text class="empty-icon">📝</text>
+        <text class="empty-text">暂无任务，点击右上角添加</text>
+      </view>
+    </scroll-view>
+    
+    <!-- 任务详情弹窗（含子任务） -->
+    <view v-if="showDetailModal" class="modal-overlay" @click="closeDetailModal">
+      <view class="modal-content detail-modal" @click.stop>
+        <view class="modal-header">
+          <text>任务详情</text>
+          <text class="close-btn" @click="closeDetailModal">✕</text>
         </view>
         
-        <!-- 中间：任务内容 -->
-        <view class="task-content">
-          <view class="task-title-row">
-            <text class="task-title" :class="{ completed: task.status === 2 }">
-              {{ task.title }}
-            </text>
-            
-            <view v-if="task.priority === 2" class="urgent-tag">紧急</view>
+        <view v-if="selectedTask" class="task-detail">
+          <view class="detail-title">{{ selectedTask.title }}</view>
+          <view class="detail-info">
+            <text>⏰ {{ selectedTask.dueTime }}</text>
+            <text>👤 {{ selectedTask.assigneeName || '未指派' }}</text>
           </view>
           
-          <view class="task-desc" v-if="task.description">{{ task.description }}</view>
-          
-          <view class="task-meta">
-            <view class="meta-item">
-              <u-icon name="clock" size="20" color="#999"></u-icon>
-              <text>{{ task.dueTime }}</text>
+          <!-- 子任务管理 -->
+          <view class="subtask-section">
+            <view class="section-header">
+              <text>子任务 ({{ subtaskCompleted(selectedTask) }}/{{ selectedTask.subtasks?.length || 0 }})</text>
+              <text class="add-btn" @click="addSubtask(selectedTask)">+ 添加</text>
             </view>
             
-            <view class="meta-item" v-if="task.assignee">
-              <u-icon name="account" size="20" color="#999"></u-icon>
-              <text>{{ task.assignee.nickname }}</text>
+            <view v-if="selectedTask.subtasks && selectedTask.subtasks.length > 0" class="subtask-list-detail">
+              <view 
+                v-for="(sub, idx) in selectedTask.subtasks" 
+                :key="idx"
+                class="subtask-item-detail"
+              >
+                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></view>
+                <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
+                <text class="delete-btn" @click="deleteSubtask(selectedTask, sub, idx)">🗑️</text>
+              </view>
             </view>
-            
-            <view class="meta-item" v-if="task.subTasks && task.subTasks.length > 0">
-              <u-icon name="list-dot" size="20" color="#999"></u-icon>
-              <text>{{ getCompletedSubTasks(task) }}/{{ task.subTasks.length }}</text>
+            <view v-else class="no-subtask">
+              <text>暂无子任务，点击添加</text>
             </view>
           </view>
-          
-          <view class="task-tags" v-if="task.tags && task.tags.length > 0">
-            <text 
-              v-for="(tag, idx) in task.tags" 
-              :key="idx"
-              class="tag"
-            >{{ tag }}</text>
-          </view>
-        </view>
-        
-        <!-- 右侧：更多操作 -->
-        <view class="task-actions">
-          <u-icon name="more-dot-fill" size="32" color="#ccc" @click.stop="showActions(task)"></u-icon>
         </view>
       </view>
     </view>
     
-    <!-- 悬浮添加按钮 -->
-    <view class="fab-btn" @click="createTask">
-      <u-icon name="plus" size="48" color="#fff"></u-icon>
+    <!-- 添加任务弹窗 -->
+    <view v-if="showModal" class="modal-overlay" @click="closeModal">
+      <view class="modal-content" @click.stop>
+        <view class="modal-header">
+          <text>添加新任务</text>
+          <text class="close-btn" @click="closeModal">✕</text>
+        </view>
+        
+        <view class="form-item">
+          <text class="label">任务标题</text>
+          <input class="input" v-model="newTask.title" placeholder="输入任务标题" />
+        </view>
+        
+        <view class="form-item">
+          <text class="label">截止时间</text>
+          <picker mode="date" @change="onDateChange">
+            <view class="picker">{{ newTask.dueDate || '请选择日期' }}</view>
+          </picker>
+        </view>
+        
+        <view class="form-item">
+          <text class="label">优先级</text>
+          <view class="priority-options">
+            <view 
+              v-for="(p, i) in priorities" 
+              :key="i"
+              class="priority-option"
+              :class="{ active: newTask.priority === i }"
+              @click="newTask.priority = i"
+            >
+              <text>{{ p }}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="form-actions">
+          <button class="btn-cancel" @click="closeModal">取消</button>
+          <button class="btn-confirm" @click="addTask">确认添加</button>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 添加子任务弹窗 -->
+    <view v-if="showSubtaskModal" class="modal-overlay" @click="closeSubtaskModal">
+      <view class="modal-content" @click.stop>
+        <view class="modal-header">
+          <text>添加子任务</text>
+          <text class="close-btn" @click="closeSubtaskModal">✕</text>
+        </view>
+        <view class="form-item">
+          <input class="input" v-model="newSubtaskTitle" placeholder="输入子任务名称" />
+        </view>
+        <view class="form-actions">
+          <button class="btn-cancel" @click="closeSubtaskModal">取消</button>
+          <button class="btn-confirm" @click="confirmAddSubtask">确认</button>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -119,368 +194,665 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-const currentCategory = ref('all')
-
 const categories = [
-  { key: 'all', name: '全部', icon: '📋', count: 0 },
-  { key: 'shopping', name: '购物', icon: '🛒', count: 3 },
-  { key: 'todo', name: '待办', icon: '📝', count: 5 },
-  { key: 'housework', name: '家务', icon: '🏠', count: 2 },
-  { key: 'finance', name: '财务', icon: '💰', count: 1 },
-  { key: 'child', name: '育儿', icon: '👶', count: 0 },
-  { key: 'health', name: '健康', icon: '🏥', count: 0 }
+  { name: '全部', id: 0 },
+  { name: '待办', id: 1 },
+  { name: '购物', id: 2 },
+  { name: '家务', id: 3 },
+  { name: '排班', id: 4 }
 ]
 
-const stats = ref({
-  pending: 8,
-  today: 5,
-  completed: 32,
-  completionRate: 80
-})
+const priorities = ['普通', '重要', '紧急']
+
+const currentCategory = ref(0)
+const showModal = ref(false)
+const showDetailModal = ref(false)
+const showSubtaskModal = ref(false)
+const selectedTask = ref(null)
+const currentSubtaskTask = ref(null)
+const newSubtaskTitle = ref('')
 
 const tasks = ref([
-  {
-    id: 1,
-    title: '去超市采购周末食材',
-    description: '需要买：牛肉、西兰花、胡萝卜、牛奶',
-    status: 0,
-    priority: 1,
-    dueTime: '今天 18:00',
-    assignee: { nickname: '妈妈', avatar: '' },
-    category: 'shopping',
-    tags: ['超市', '食材'],
-    subTasks: [
-      { id: 1, title: '列购物清单', completed: true },
-      { id: 2, title: '检查冰箱库存', completed: false }
+  { 
+    id: 1, 
+    title: '买牛奶和鸡蛋', 
+    status: 0, 
+    priority: 1, 
+    categoryName: '购物', 
+    dueTime: '今天 18:00', 
+    assigneeName: '爸爸',
+    showSubtasks: false,
+    subtasks: [
+      { title: '检查冰箱库存', status: 1 },
+      { title: '列购物清单', status: 0 },
+      { title: '去超市采购', status: 0 }
     ]
   },
-  {
-    id: 2,
-    title: '缴纳物业费',
-    description: '本月物业费 320元',
-    status: 0,
-    priority: 2,
-    dueTime: '今天 23:59',
-    assignee: { nickname: '爸爸', avatar: '' },
-    category: 'finance',
-    tags: ['缴费']
+  { 
+    id: 2, 
+    title: '给孩子检查作业', 
+    status: 0, 
+    priority: 2, 
+    categoryName: '待办', 
+    dueTime: '今天 20:00', 
+    assigneeName: '妈妈',
+    showSubtasks: false,
+    subtasks: []
   },
-  {
-    id: 3,
-    title: '孩子数学作业检查',
-    description: '检查第3单元测试卷',
-    status: 0,
-    priority: 1,
-    dueTime: '明天 20:00',
-    assignee: { nickname: '爸爸', avatar: '' },
-    category: 'child',
-    tags: ['作业', '数学']
-  },
-  {
-    id: 4,
-    title: '清洗空调滤网',
-    description: '客厅和主卧两台空调',
-    status: 2,
-    priority: 0,
-    dueTime: '昨天',
-    assignee: { nickname: '爷爷', avatar: '' },
-    category: 'housework',
-    tags: ['清洁']
+  { 
+    id: 3, 
+    title: '周末大扫除', 
+    status: 0, 
+    priority: 0, 
+    categoryName: '家务', 
+    dueTime: '明天 10:00', 
+    assigneeName: '',
+    showSubtasks: false,
+    subtasks: [
+      { title: '扫地', status: 0 },
+      { title: '擦桌子', status: 0 },
+      { title: '整理房间', status: 0 }
+    ]
   }
 ])
 
-const filteredTasks = computed(() => {
-  if (currentCategory.value === 'all') {
-    return tasks.value
-  }
-  return tasks.value.filter(t => t.category === currentCategory.value)
+const newTask = ref({
+  title: '',
+  dueDate: '',
+  priority: 0,
+  categoryId: 1
 })
 
-const getCompletedSubTasks = (task) => {
-  return task.subTasks?.filter(s => s.completed).length || 0
+const filteredTasks = computed(() => {
+  if (currentCategory.value === 0) return tasks.value
+  if (currentCategory.value === 4) {
+    // 排班视图
+    return tasks.value.filter(t => t.categoryName === '家务')
+  }
+  return tasks.value.filter(t => t.status === (currentCategory.value === 1 ? 0 : t.status))
+})
+
+const switchCategory = (index) => {
+  currentCategory.value = index
 }
 
-const toggleComplete = (task) => {
+const priorityText = (p) => priorities[p] || '普通'
+
+const toggleTask = (task) => {
   task.status = task.status === 2 ? 0 : 2
+  uni.showToast({ title: task.status === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
 }
 
-const goDetail = (task) => {
-  uni.navigateTo({ url: `/pages/task/detail?id=${task.id}` })
+const viewTask = (task) => {
+  selectedTask.value = task
+  showDetailModal.value = true
 }
 
-const createTask = () => {
-  uni.navigateTo({ url: '/pages/task/create' })
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  selectedTask.value = null
 }
 
-const showActions = (task) => {
-  uni.showActionSheet({
-    itemList: ['编辑', '删除', '指派给他人', '添加子任务'],
+const subtaskCompleted = (task) => {
+  if (!task.subtasks) return 0
+  return task.subtasks.filter(s => s.status === 1).length
+}
+
+const subtaskProgress = (task) => {
+  if (!task.subtasks || task.subtasks.length === 0) return 0
+  return Math.round((subtaskCompleted(task) / task.subtasks.length) * 100)
+}
+
+const toggleSubtask = (task, sub) => {
+  sub.status = sub.status === 0 ? 1 : 0
+  // 检查是否全部完成
+  if (subtaskProgress(task) === 100) {
+    uni.showToast({ title: '所有子任务完成！', icon: 'success' })
+  }
+}
+
+const addSubtask = (task) => {
+  currentSubtaskTask.value = task
+  newSubtaskTitle.value = ''
+  showSubtaskModal.value = true
+}
+
+const closeSubtaskModal = () => {
+  showSubtaskModal.value = false
+  currentSubtaskTask.value = null
+}
+
+const confirmAddSubtask = () => {
+  if (!newSubtaskTitle.value.trim()) {
+    uni.showToast({ title: '请输入子任务名称', icon: 'none' })
+    return
+  }
+  
+  if (!currentSubtaskTask.value.subtasks) {
+    currentSubtaskTask.value.subtasks = []
+  }
+  
+  currentSubtaskTask.value.subtasks.push({
+    title: newSubtaskTitle.value,
+    status: 0
+  })
+  
+  uni.showToast({ title: '添加成功', icon: 'success' })
+  closeSubtaskModal()
+}
+
+const deleteSubtask = (task, sub, index) => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除这个子任务吗？',
     success: (res) => {
-      switch (res.tapIndex) {
-        case 0:
-          uni.navigateTo({ url: `/pages/task/edit?id=${task.id}` })
-          break
-        case 1:
-          uni.showModal({
-            title: '确认删除',
-            content: '删除后无法恢复，是否继续？',
-            success: (modalRes) => {
-              if (modalRes.confirm) {
-                // 删除任务
-                const index = tasks.value.findIndex(t => t.id === task.id)
-                if (index > -1) tasks.value.splice(index, 1)
-              }
-            }
-          })
-          break
-        case 2:
-          uni.navigateTo({ url: `/pages/task/assign?id=${task.id}` })
-          break
-        case 3:
-          uni.navigateTo({ url: `/pages/task/subtask?id=${task.id}` })
-          break
+      if (res.confirm) {
+        task.subtasks.splice(index, 1)
+        uni.showToast({ title: '已删除', icon: 'success' })
       }
     }
   })
 }
+
+const goToSchedule = () => {
+  uni.navigateTo({ url: '/pages/task/schedule' })
+}
+
+const showAddModal = () => {
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  newTask.value = { title: '', dueDate: '', priority: 0, categoryId: 1 }
+}
+
+const onDateChange = (e) => {
+  newTask.value.dueDate = e.detail.value
+}
+
+const addTask = () => {
+  if (!newTask.value.title) {
+    uni.showToast({ title: '请输入任务标题', icon: 'none' })
+    return
+  }
+  
+  tasks.value.unshift({
+    id: Date.now(),
+    title: newTask.value.title,
+    status: 0,
+    priority: newTask.value.priority,
+    categoryName: '待办',
+    dueTime: newTask.value.dueDate || '未设置',
+    assigneeName: '',
+    showSubtasks: false,
+    subtasks: []
+  })
+  
+  uni.showToast({ title: '添加成功', icon: 'success' })
+  closeModal()
+}
 </script>
 
 <style lang="scss" scoped>
-.task-page {
+.page-container {
   min-height: 100vh;
-  background: #f5f6fa;
+  background: #F5F7FA;
 }
 
-.task-header {
-  position: relative;
-  padding: 40rpx;
-  padding-top: 60rpx;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 50px 20px 20px;
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
   
-  .header-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 300rpx;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 0 0 40rpx 40rpx;
+  .header-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2C3E50;
   }
   
-  .stats-row {
-    position: relative;
+  .header-action {
+    width: 44px;
+    height: 44px;
+    background: #4CAF50;
+    border-radius: 50%;
     display: flex;
-    justify-content: space-around;
-    background: #fff;
-    border-radius: 20rpx;
-    padding: 30rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.08);
+    align-items: center;
+    justify-content: center;
     
-    .stat-box {
-      text-align: center;
-      
-      .stat-num {
-        font-size: 48rpx;
-        font-weight: bold;
-        color: #333;
-        display: block;
-      }
-      
-      .stat-label {
-        font-size: 24rpx;
-        color: #999;
-        margin-top: 8rpx;
-      }
+    .icon {
+      font-size: 28px;
+      color: #fff;
+      font-weight: 300;
     }
   }
 }
 
 .category-tabs {
-  margin: 30rpx 0;
+  padding: 15px;
+  white-space: nowrap;
+  background: #fff;
   
-  .tabs-scroll {
-    white-space: nowrap;
-    padding: 0 20rpx;
+  .category-tab {
+    display: inline-block;
+    padding: 8px 20px;
+    margin-right: 10px;
+    background: #F5F7FA;
+    border-radius: 20px;
+    font-size: 14px;
+    color: #7F8C8D;
     
-    .tab-item {
-      display: inline-flex;
-      align-items: center;
-      padding: 16rpx 32rpx;
-      margin-right: 16rpx;
-      background: #fff;
-      border-radius: 32rpx;
-      
-      &.active {
-        background: #5B8FF9;
-        
-        .tab-name {
-          color: #fff;
-        }
-      }
-      
-      .tab-icon {
-        margin-right: 8rpx;
-      }
-      
-      .tab-name {
-        font-size: 26rpx;
-        color: #666;
-      }
-      
-      .tab-badge {
-        margin-left: 8rpx;
-        padding: 2rpx 12rpx;
-        background: #ff4d4f;
-        color: #fff;
-        font-size: 20rpx;
-        border-radius: 20rpx;
-      }
+    &.active {
+      background: #4CAF50;
+      color: #fff;
     }
+  }
+}
+
+.schedule-entry {
+  display: flex;
+  align-items: center;
+  margin: 10px 15px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+  border-radius: 12px;
+  
+  .schedule-icon {
+    font-size: 20px;
+    margin-right: 10px;
+  }
+  
+  .schedule-text {
+    flex: 1;
+    font-size: 14px;
+    color: #1976D2;
+  }
+  
+  .schedule-arrow {
+    font-size: 18px;
+    color: #1976D2;
   }
 }
 
 .task-list {
-  padding: 0 30rpx 120rpx;
+  padding: 15px;
+  height: calc(100vh - 220px);
+}
+
+.task-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   
-  .empty-state {
-    text-align: center;
-    padding: 100rpx 0;
-    
-    image {
-      width: 240rpx;
-      height: 240rpx;
-      margin-bottom: 30rpx;
-    }
-    
-    text {
-      font-size: 28rpx;
-      color: #999;
+  &.completed {
+    opacity: 0.7;
+    .task-title {
+      text-decoration: line-through;
     }
   }
   
-  .task-card {
-    display: flex;
-    align-items: flex-start;
-    background: #fff;
-    border-radius: 16rpx;
-    padding: 24rpx;
-    margin-bottom: 20rpx;
-    box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
-    
-    &.urgant {
-      border-left: 6rpx solid #ff4d4f;
-    }
-    
-    .task-check {
-      margin-right: 20rpx;
-      padding-top: 4rpx;
-      
-      .check-icon {
-        width: 44rpx;
-        height: 44rpx;
-        border: 2rpx solid #ddd;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24rpx;
-        color: transparent;
-        
-        &.checked {
-          background: #5AD8A6;
-          border-color: #5AD8A6;
-          color: #fff;
-        }
-      }
-    }
-    
-    .task-content {
-      flex: 1;
-      min-width: 0;
-      
-      .task-title-row {
-        display: flex;
-        align-items: center;
-        margin-bottom: 12rpx;
-        
-        .task-title {
-          font-size: 30rpx;
-          color: #333;
-          font-weight: 500;
-          
-          &.completed {
-            text-decoration: line-through;
-            color: #999;
-          }
-        }
-        
-        .urgent-tag {
-          margin-left: 12rpx;
-          padding: 4rpx 12rpx;
-          background: #FFF1F0;
-          color: #ff4d4f;
-          font-size: 20rpx;
-          border-radius: 8rpx;
-        }
-      }
-      
-      .task-desc {
-        font-size: 26rpx;
-        color: #666;
-        margin-bottom: 12rpx;
-        line-height: 1.5;
-      }
-      
-      .task-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20rpx;
-        margin-bottom: 12rpx;
-        
-        .meta-item {
-          display: flex;
-          align-items: center;
-          
-          text {
-            margin-left: 8rpx;
-            font-size: 24rpx;
-            color: #999;
-          }
-        }
-      }
-      
-      .task-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12rpx;
-        
-        .tag {
-          padding: 6rpx 16rpx;
-          background: #F0F5FF;
-          color: #5B8FF9;
-          font-size: 22rpx;
-          border-radius: 8rpx;
-        }
-      }
-    }
-    
-    .task-actions {
-      padding: 8rpx;
+  &.expanded {
+    .subtask-list {
+      display: block;
     }
   }
 }
 
-.fab-btn {
+.task-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  
+  .checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #E0E6ED;
+    border-radius: 50%;
+    margin-right: 12px;
+    
+    &.checked {
+      background: #4CAF50;
+      border-color: #4CAF50;
+    }
+  }
+  
+  .task-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #2C3E50;
+  }
+  
+  .task-priority {
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    
+    &.priority-0 {
+      background: #E8F5E9;
+      color: #4CAF50;
+    }
+    
+    &.priority-1 {
+      background: #FFF3E0;
+      color: #FF9800;
+    }
+    
+    &.priority-2 {
+      background: #FFEBEE;
+      color: #F44336;
+    }
+  }
+}
+
+.task-info {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #7F8C8D;
+  margin-bottom: 10px;
+}
+
+.subtask-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #E0E6ED;
+    border-radius: 3px;
+    overflow: hidden;
+    
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+  }
+  
+  .progress-text {
+    font-size: 11px;
+    color: #7F8C8D;
+  }
+}
+
+.subtask-list {
+  display: none;
+  margin: 10px 0;
+  padding: 10px;
+  background: #F8F9FA;
+  border-radius: 10px;
+  
+  .subtask-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    
+    .subtask-checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #DDD;
+      border-radius: 50%;
+      margin-right: 10px;
+      
+      &.checked {
+        background: #4CAF50;
+        border-color: #4CAF50;
+      }
+    }
+    
+    .subtask-title {
+      font-size: 14px;
+      color: #333;
+      
+      &.completed {
+        text-decoration: line-through;
+        color: #999;
+      }
+    }
+  }
+  
+  .add-subtask {
+    text-align: center;
+    padding: 10px;
+    color: #4CAF50;
+    font-size: 13px;
+  }
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .task-tags {
+    .task-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #E3F2FD;
+      color: #2196F3;
+      border-radius: 8px;
+      font-size: 11px;
+    }
+  }
+  
+  .expand-btn {
+    font-size: 12px;
+    color: #4CAF50;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  
+  .empty-icon {
+    font-size: 60px;
+    margin-bottom: 16px;
+    display: block;
+  }
+  
+  .empty-text {
+    font-size: 14px;
+    color: #7F8C8D;
+  }
+}
+
+.modal-overlay {
   position: fixed;
-  right: 40rpx;
-  bottom: 160rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.4);
-  z-index: 100;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 85%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  overflow-y: auto;
+  
+  &.detail-modal {
+    width: 90%;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 600;
+  
+  .close-btn {
+    font-size: 20px;
+    color: #7F8C8D;
+  }
+}
+
+.task-detail {
+  .detail-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .detail-info {
+    display: flex;
+    gap: 15px;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+}
+
+.subtask-section {
+  border-top: 1px solid #EEE;
+  padding-top: 15px;
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    
+    .add-btn {
+      color: #4CAF50;
+      font-size: 14px;
+    }
+  }
+}
+
+.subtask-list-detail {
+  .subtask-item-detail {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #F0F0F0;
+    
+    .subtask-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #DDD;
+      border-radius: 50%;
+      margin-right: 12px;
+      
+      &.checked {
+        background: #4CAF50;
+        border-color: #4CAF50;
+      }
+    }
+    
+    .subtask-title {
+      flex: 1;
+      font-size: 15px;
+      
+      &.completed {
+        text-decoration: line-through;
+        color: #999;
+      }
+    }
+    
+    .delete-btn {
+      font-size: 16px;
+      padding: 5px;
+    }
+  }
+}
+
+.no-subtask {
+  text-align: center;
+  padding: 30px;
+  color: #999;
+  font-size: 14px;
+}
+
+.form-item {
+  margin-bottom: 20px;
+  
+  .label {
+    display: block;
+    font-size: 14px;
+    color: #2C3E50;
+    margin-bottom: 8px;
+  }
+  
+  .input {
+    width: 100%;
+    height: 44px;
+    background: #F5F7FA;
+    border-radius: 10px;
+    padding: 0 15px;
+    font-size: 14px;
+  }
+  
+  .picker {
+    height: 44px;
+    line-height: 44px;
+    background: #F5F7FA;
+    border-radius: 10px;
+    padding: 0 15px;
+    font-size: 14px;
+    color: #7F8C8D;
+  }
+}
+
+.priority-options {
+  display: flex;
+  gap: 10px;
+  
+  .priority-option {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    background: #F5F7FA;
+    border-radius: 10px;
+    font-size: 14px;
+    
+    &.active {
+      background: #4CAF50;
+      color: #fff;
+    }
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  
+  button {
+    flex: 1;
+    height: 44px;
+    border-radius: 22px;
+    font-size: 15px;
+    border: none;
+  }
+  
+  .btn-cancel {
+    background: #F5F7FA;
+    color: #7F8C8D;
+  }
+  
+  .btn-confirm {
+    background: #4CAF50;
+    color: #fff;
+  }
 }
 </style>

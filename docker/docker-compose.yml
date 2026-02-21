@@ -277,6 +277,24 @@ services:
     networks:
       - family-network
 
+  # AI助手服务
+  ai-service:
+    image: family/ai-service:latest
+    container_name: family-ai-service
+    build:
+      context: ../backend/family-service/ai-service
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - MYSQL_HOST=mysql
+      - REDIS_HOST=redis
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - family-network
+
 volumes:
   mysql_data:
   redis_data:

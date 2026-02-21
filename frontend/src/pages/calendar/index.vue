@@ -1,554 +1,275 @@
 <template>
-  <view class="calendar-page">
-    <!-- 顶部日历 -->
-    <view class="calendar-header"
-      <view class="header-bg"></view>
-      
-      <view class="month-selector"
-        <u-icon name="arrow-left" size="36" color="#fff" @click="changeMonth(-1)"></u-icon>
-        
-        <text class="month-text">{{ currentYearMonth }}</text>
-        
-        <u-icon name="arrow-right" size="36" color="#fff" @click="changeMonth(1)"></u-icon>
-      </view>
-      
-      <view class="calendar-grid"
-        <view class="week-row"
-          <text v-for="day in weekDays" :key="day" class="week-day">{{ day }}</text>
-        </view>
-        
-        <view class="days-grid"
-          <view 
-            v-for="(day, index) in calendarDays" 
-            :key="index"
-            class="day-cell"
-            :class="{ 
-              'other-month': !day.isCurrentMonth, 
-              'today': day.isToday,
-              'has-event': day.hasEvent 
-            }"
-            @click="selectDay(day)"
-          >
-            <text class="day-num">{{ day.date }}</text>
-            
-            <view v-if="day.hasEvent" class="event-dots"
-              <view 
-                v-for="(dot, i) in day.dots" 
-                :key="i"
-                class="dot"
-                :style="{ background: dot.color }"
-              ></view>
-            </view>
-          </view>
-        </view>
+  <view class="page-container">
+    <view class="header">
+      <view class="header-title">纪念日 📅</view>
+      <view class="header-action" @click="showAddModal">
+        <text class="icon">+</text>
       </view>
     </view>
     
-    <!-- 今日倒计时 -->
-    <view class="countdown-section"
-      <view class="countdown-card" v-if="todayCountdown"
-        <view class="countdown-icon">{{ todayCountdown.icon }}</view>
-        
-        <view class="countdown-info"
-          <text class="countdown-title">{{ todayCountdown.title }}</text>
-          
-          <text class="countdown-date">{{ todayCountdown.date }}</text>
-        </view>
-        
-        <view class="countdown-days"
-          <text class="days-num">{{ todayCountdown.days }}</text>
-          
-          <text class="days-label">{{ todayCountdown.days > 0 ? '天后' : '就是今天' }}</text>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 纪念日列表 -->
-    <view class="anniversary-section"
-      <view class="section-header"
-        <text class="section-title">📅 纪念日列表</text>
-        
-        <view class="filter-tabs"
-          <text 
-            class="tab" 
-            :class="{ active: anniFilter === 'upcoming' }"
-            @click="anniFilter = 'upcoming'"
-          >即将到期</text>
-          
-          <text 
-            class="tab" 
-            :class="{ active: anniFilter === 'all' }"
-            @click="anniFilter = 'all'"
-          >全部</text>
-          
-          <text 
-            class="tab" 
-            :class="{ active: anniFilter === 'completed' }"
-            @click="anniFilter = 'completed'"
-          >已过去</text>
-        </view>
+    <view class="calendar-section">
+      <view class="month-header">
+        <text class="month-text">{{ currentYear }}年{{ currentMonth }}月</text>
       </view>
       
-      <view class="anniversary-list"
+      <view class="weekdays">
+        <text v-for="day in weekdays" :key="day">{{ day }}</text>
+      </view>
+      
+      <view class="days-grid">
         <view 
-          v-for="item in filteredAnniversaries" 
-          :key="item.id"
-          class="anniversary-card"
-          @click="goDetail(item)"
+          v-for="(day, index) in daysInMonth" 
+          :key="index"
+          class="day-cell"
+          :class="{ today: isToday(day), hasEvent: hasEvent(day) }"
+          @click="selectDay(day)"
         >
-          <view class="card-icon" :style="{ background: item.bgColor }"
-            <text>{{ item.icon }}</text>
-          </view>
-          
-          <view class="card-content"
-            <text class="card-title">{{ item.title }}</text>
-            
-            <text class="card-date">{{ item.date }} · {{ item.dateType === 'lunar' ? '农历' : '阳历' }}</text>
-            
-            <view v-if="item.relatedPerson" class="related-person"
-              <image :src="item.relatedPerson.avatar" />
-              <text>{{ item.relatedPerson.name }}</text>
-            </view>
-          </view>
-          
-          <view class="card-days"
-            <text class="days-num" :class="{ 'is-today': item.days === 0 }">
-              {{ item.days === 0 ? '今天' : item.days }}
-            </text>
-            
-            <text v-if="item.days !== 0" class="days-label">{{ item.days > 0 ? '天后' : '天前' }}</text>
-          </view>
+          <text>{{ day }}</text>
+          <view v-if="hasEvent(day)" class="event-dot"></view>
         </view>
       </view>
     </view>
     
-    <!-- 添加按钮 -->
-    <view class="fab-btn" @click="createAnniversary"
-      <u-icon name="plus" size="48" color="#fff"></u-icon>
+    <view class="events-section">
+      <view class="section-title">即将到来的纪念日</view>
+      
+      <scroll-view class="events-list" scroll-y>
+        <view 
+          v-for="(event, index) in upcomingEvents" 
+          :key="index"
+          class="event-card"
+        >
+          <view class="event-icon">{{ event.icon }}</view>
+          
+          <view class="event-info">
+            <view class="event-title">{{ event.title }}</view>
+            <view class="event-date">{{ event.date }}</view>
+          </view>
+          
+          <view class="event-countdown">
+            <text class="days">{{ event.days }}</text>
+            <text class="label">天后</text>
+          </view>
+        </view>
+      </scroll-view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 
-const currentYearMonth = ref('2025年2月')
-const anniFilter = ref('upcoming')
-const weekDays = ['日', '一', '二', '三', '四', '五', '六']
+const currentYear = ref(2025)
+const currentMonth = ref(2)
+const weekdays = ['日', '一', '二', '三', '四', '五', '六']
 
-const calendarDays = ref([
-  { date: 26, isCurrentMonth: false, isToday: false, hasEvent: false },
-  { date: 27, isCurrentMonth: false, isToday: false, hasEvent: false },
-  { date: 28, isCurrentMonth: false, isToday: false, hasEvent: false },
-  { date: 29, isCurrentMonth: false, isToday: false, hasEvent: false },
-  { date: 30, isCurrentMonth: false, isToday: false, hasEvent: false },
-  { date: 31, isCurrentMonth: false, isToday: false, hasEvent: false },
-  { date: 1, isCurrentMonth: true, isToday: false, hasEvent: true, dots: [{ color: '#FF6B6B' }] },
-  { date: 2, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 3, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 4, isCurrentMonth: true, isToday: false, hasEvent: true, dots: [{ color: '#4ECDC4' }] },
-  { date: 5, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 6, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 7, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 8, isCurrentMonth: true, isToday: false, hasEvent: true, dots: [{ color: '#FFE66D' }] },
-  { date: 9, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 10, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 11, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 12, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 13, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 14, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 15, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 16, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 17, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 18, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 19, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 20, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 21, isCurrentMonth: true, isToday: true, hasEvent: false },
-  { date: 22, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 23, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 24, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 25, isCurrentMonth: true, isToday: false, hasEvent: true, dots: [{ color: '#FF6B6B' }] },
-  { date: 26, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 27, isCurrentMonth: true, isToday: false, hasEvent: false },
-  { date: 28, isCurrentMonth: true, isToday: false, hasEvent: false },
+const daysInMonth = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28])
+
+const events = ref([
+  { day: 14, title: '情人节' },
+  { day: 21, title: '家庭聚餐' },
+  { day: 25, title: '结婚纪念日' }
 ])
 
-const todayCountdown = ref({
-  icon: '💒',
-  title: '结婚纪念日',
-  date: '12月25日',
-  days: 5
-})
-
-const anniversaries = ref([
-  {
-    id: 1,
-    title: '结婚纪念日',
-    date: '12月25日',
-    dateType: 'solar',
-    days: 5,
-    icon: '💒',
-    bgColor: '#FFE4E1',
-    relatedPerson: { name: '爸爸妈妈', avatar: '/static/avatar/parents.jpg' }
-  },
-  {
-    id: 2,
-    title: '宝贝生日',
-    date: '1月8日',
-    dateType: 'solar',
-    days: 19,
-    icon: '🎂',
-    bgColor: '#FFF8DC',
-    relatedPerson: { name: '宝贝', avatar: '/static/avatar/baby.jpg' }
-  },
-  {
-    id: 3,
-    title: '在一起1000天',
-    date: '2月14日',
-    dateType: 'solar',
-    days: -7,
-    icon: '💕',
-    bgColor: '#FFE4E1',
-    relatedPerson: null
-  },
-  {
-    id: 4,
-    title: '春节',
-    date: '正月初一',
-    dateType: 'lunar',
-    days: 25,
-    icon: '🧧',
-    bgColor: '#FFD700',
-    relatedPerson: null
-  }
+const upcomingEvents = ref([
+  { icon: '💒', title: '结婚纪念日', date: '2025年2月25日', days: 4 },
+  { icon: '👨', title: '爸爸生日', date: '2025年3月5日', days: 12 },
+  { icon: '🎂', title: '宝贝生日', date: '2025年3月15日', days: 22 }
 ])
 
-const filteredAnniversaries = computed(() => {
-  if (anniFilter.value === 'upcoming') {
-    return anniversaries.value.filter(a => a.days >= 0).sort((a, b) => a.days - b.days)
-  } else if (anniFilter.value === 'completed') {
-    return anniversaries.value.filter(a => a.days < 0).sort((a, b) => b.days - a.days)
-  }
-  return anniversaries.value.sort((a, b) => Math.abs(a.days) - Math.abs(b.days))
-})
+const isToday = (day) => {
+  return day === 21
+}
 
-const changeMonth = (delta) => {
-  console.log('切换月份:', delta)
+const hasEvent = (day) => {
+  return events.value.some(e => e.day === day)
 }
 
 const selectDay = (day) => {
-  console.log('选择日期:', day)
+  const event = events.value.find(e => e.day === day)
+  if (event) {
+    uni.showModal({
+      title: event.title,
+      content: `${currentYear.value}年${currentMonth.value}月${day}日`,
+      showCancel: true,
+      confirmText: '编辑',
+      cancelText: '关闭'
+    })
+  } else {
+    uni.showToast({ title: `${day}日 无事件`, icon: 'none' })
+  }
 }
 
-const goDetail = (item) => {
-  uni.navigateTo({ url: `/pages/calendar/detail?id=${item.id}` })
-}
-
-const createAnniversary = () => {
-  uni.navigateTo({ url: '/pages/calendar/create' })
+const showAddModal = () => {
+  uni.showModal({
+    title: '添加纪念日',
+    editable: true,
+    placeholderText: '输入纪念日名称...',
+    success: (res) => {
+      if (res.confirm && res.content) {
+        uni.showToast({ title: '添加成功', icon: 'success' })
+      }
+    }
+  })
 }
 </script>
 
 <style lang="scss" scoped>
-.calendar-page {
+.page-container {
   min-height: 100vh;
-  background: #f5f6fa;
-  padding-bottom: 120rpx;
+  background: #F5F7FA;
 }
 
-.calendar-header {
-  position: relative;
-  padding: 40rpx;
-  padding-top: 60rpx;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 50px 20px 20px;
+  background: linear-gradient(135deg, #F3E5F5, #E1BEE7);
   
-  .header-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 500rpx;
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    border-radius: 0 0 40rpx 40rpx;
+  .header-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2C3E50;
   }
   
-  .month-selector {
-    position: relative;
+  .header-action {
+    width: 44px;
+    height: 44px;
+    background: #9C27B0;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 30rpx;
+    
+    .icon {
+      font-size: 28px;
+      color: #fff;
+      font-weight: 300;
+    }
+  }
+}
+
+.calendar-section {
+  background: #fff;
+  padding: 20px;
+  
+  .month-header {
+    text-align: center;
+    margin-bottom: 20px;
     
     .month-text {
-      font-size: 36rpx;
-      color: #fff;
+      font-size: 18px;
       font-weight: 600;
-      margin: 0 40rpx;
+      color: #2C3E50;
     }
   }
   
-  .calendar-grid {
-    position: relative;
-    background: #fff;
-    border-radius: 20rpx;
-    padding: 20rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.08);
-    
-    .week-row {
-      display: flex;
-      margin-bottom: 20rpx;
-      
-      .week-day {
-        flex: 1;
-        text-align: center;
-        font-size: 26rpx;
-        color: #999;
-      }
-    }
-    
-    .days-grid {
-      display: flex;
-      flex-wrap: wrap;
-      
-      .day-cell {
-        width: 14.28%;
-        height: 90rpx;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        
-        &.other-month {
-          .day-num {
-            color: #ccc;
-          }
-        }
-        
-        &.today {
-          .day-num {
-            width: 50rpx;
-            height: 50rpx;
-            background: #fa709a;
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-        }
-        
-        .day-num {
-          font-size: 28rpx;
-          color: #333;
-        }
-        
-        .event-dots {
-          display: flex;
-          gap: 6rpx;
-          margin-top: 6rpx;
-          
-          .dot {
-            width: 8rpx;
-            height: 8rpx;
-            border-radius: 50%;
-          }
-        }
-      }
-    }
-  }
-}
-
-.countdown-section {
-  margin: 30rpx;
-  margin-top: -20rpx;
-  
-  .countdown-card {
+  .weekdays {
     display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    border-radius: 20rpx;
-    padding: 30rpx;
+    justify-content: space-around;
+    margin-bottom: 10px;
     
-    .countdown-icon {
-      width: 100rpx;
-      height: 100rpx;
-      background: rgba(255,255,255,0.3);
-      border-radius: 50%;
+    text {
+      font-size: 14px;
+      color: #7F8C8D;
+    }
+  }
+  
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    
+    .day-cell {
+      aspect-ratio: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 50rpx;
-      margin-right: 24rpx;
-    }
-    
-    .countdown-info {
-      flex: 1;
+      border-radius: 10px;
+      font-size: 14px;
+      position: relative;
       
-      .countdown-title {
-        font-size: 32rpx;
+      &.today {
+        background: #9C27B0;
         color: #fff;
-        font-weight: 600;
-        display: block;
-        margin-bottom: 8rpx;
       }
       
-      .countdown-date {
-        font-size: 26rpx;
-        color: rgba(255,255,255,0.9);
-      }
-    }
-    
-    .countdown-days {
-      text-align: center;
-      
-      .days-num {
-        font-size: 52rpx;
-        font-weight: bold;
-        color: #fff;
-        display: block;
-      }
-      
-      .days-label {
-        font-size: 24rpx;
-        color: rgba(255,255,255,0.9);
-      }
-    }
-  }
-}
-
-.anniversary-section {
-  margin: 0 30rpx;
-  padding: 30rpx;
-  background: #fff;
-  border-radius: 20rpx;
-  
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24rpx;
-    
-    .section-title {
-      font-size: 32rpx;
-      font-weight: 600;
-      color: #333;
-    }
-    
-    .filter-tabs {
-      display: flex;
-      background: #f5f6fa;
-      border-radius: 30rpx;
-      padding: 4rpx;
-      
-      .tab {
-        padding: 12rpx 20rpx;
-        font-size: 24rpx;
-        color: #666;
-        border-radius: 26rpx;
-        
-        &.active {
-          background: #fa709a;
-          color: #fff;
-        }
-      }
-    }
-  }
-  
-  .anniversary-list {
-    .anniversary-card {
-      display: flex;
-      align-items: center;
-      padding: 24rpx;
-      background: #f9f9f9;
-      border-radius: 16rpx;
-      margin-bottom: 20rpx;
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-      
-      .card-icon {
-        width: 90rpx;
-        height: 90rpx;
+      .event-dot {
+        width: 6px;
+        height: 6px;
+        background: #F44336;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 44rpx;
-        margin-right: 24rpx;
-      }
-      
-      .card-content {
-        flex: 1;
-        
-        .card-title {
-          font-size: 30rpx;
-          color: #333;
-          font-weight: 500;
-          display: block;
-          margin-bottom: 8rpx;
-        }
-        
-        .card-date {
-          font-size: 24rpx;
-          color: #999;
-          display: block;
-          margin-bottom: 8rpx;
-        }
-        
-        .related-person {
-          display: flex;
-          align-items: center;
-          
-          image {
-            width: 32rpx;
-            height: 32rpx;
-            border-radius: 50%;
-            margin-right: 8rpx;
-          }
-          
-          text {
-            font-size: 22rpx;
-            color: #666;
-          }
-        }
-      }
-      
-      .card-days {
-        text-align: right;
-        
-        .days-num {
-          font-size: 44rpx;
-          font-weight: bold;
-          color: #fa709a;
-          display: block;
-          
-          &.is-today {
-            color: #5AD8A6;
-          }
-        }
-        
-        .days-label {
-          font-size: 22rpx;
-          color: #999;
-        }
+        position: absolute;
+        bottom: 4px;
       }
     }
   }
 }
 
-.fab-btn {
-  position: fixed;
-  right: 40rpx;
-  bottom: 160rpx;
-  width: 100rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-  border-radius: 50%;
+.events-section {
+  padding: 20px;
+  
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2C3E50;
+    margin-bottom: 15px;
+  }
+}
+
+.events-list {
+  height: calc(100vh - 500px);
+}
+
+.event-card {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 8rpx 24rpx rgba(250, 112, 154, 0.4);
-  z-index: 100;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  
+  .event-icon {
+    font-size: 36px;
+    margin-right: 16px;
+  }
+  
+  .event-info {
+    flex: 1;
+    
+    .event-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2C3E50;
+      margin-bottom: 4px;
+    }
+    
+    .event-date {
+      font-size: 13px;
+      color: #7F8C8D;
+    }
+  }
+  
+  .event-countdown {
+    text-align: center;
+    padding: 8px 16px;
+    background: #F3E5F5;
+    border-radius: 12px;
+    
+    .days {
+      display: block;
+      font-size: 24px;
+      font-weight: 700;
+      color: #9C27B0;
+    }
+    
+    .label {
+      font-size: 11px;
+      color: #9C27B0;
+    }
+  }
 }
 </style>

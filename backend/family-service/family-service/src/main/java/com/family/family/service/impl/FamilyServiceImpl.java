@@ -7,17 +7,19 @@ import com.family.family.entity.FamilyMember;
 import com.family.family.mapper.FamilyMapper;
 import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.service.FamilyService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class FamilyServiceImpl extends ServiceImpl<FamilyMapper, Family> implements FamilyService {
     
     private final FamilyMemberMapper memberMapper;
+    
+    public FamilyServiceImpl(FamilyMemberMapper memberMapper) {
+        this.memberMapper = memberMapper;
+    }
     
     @Override
     @Transactional
