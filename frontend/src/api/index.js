@@ -7,8 +7,9 @@ import { voteApi } from './vote.js'
 import { familyApi } from './family.js'
 import { shoppingApi } from './shopping.js'
 import { gameApi } from './game.js'
+import { scheduleApi } from './schedule.js'
 
-export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi, familyApi, shoppingApi, gameApi }
+export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi, familyApi, shoppingApi, gameApi, scheduleApi }
 
 // 食材相关API
 export const ingredientApi = {
