@@ -11,13 +11,19 @@
 ## P0 - 阻塞级别（影响编译/启动/安全）
 
 ### Q023 - 编译错误 (CacheAspect Lombok)
-**状态**: 🔴 新发现
-**负责**: 后端
-**问题**: `CacheAspect.java` 已有`@Slf4j`注解但编译失败，找不到`log`变量
-**错误信息**: `[ERROR] 找不到符号: 变量 log`
-**建议方案**:
-1. 检查Lombok annotationProcessorPaths配置
-2. 或手动添加`private static final Logger log = LoggerFactory.getLogger(...)`
+**状态**: ✅ 已修复 (git a8945a5)
+**验证时间**: 2026-02-22 01:35
+**验证结果**: pom.xml配置Lombok annotationProcessorPaths (v1.18.30)后，common-core编译成功
+**修复内容**: 添加maven-compiler-plugin配置
+```xml
+<annotationProcessorPaths>
+    <path>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.30</version>
+    </path>
+</annotationProcessorPaths>
+```
 
 ### Q007 - 编译错误 (Lombok)
 **状态**: 🟡 需重新验证
@@ -53,10 +59,12 @@
 **建议方案**: 创建MomentsController实现6个接口
 
 ### Q019 - Controller缺失 (Schedule)
-**状态**: 🔴 待修复
-**负责**: 后端
-**问题**: 前端调用 `/schedule/xxx` 接口，后端不存在对应Controller
-**建议方案**: 创建ScheduleController实现排班功能
+**状态**: ⚠️ 部分修复 (git f501c2c)
+**验证时间**: 2026-02-22 01:37
+**验证结果**: 
+- ✅ ScheduleController已创建
+- ⚠️ 但缺少Schedule实体类和ScheduleService，导致编译失败
+- 🔴 编译错误: 找不到符号 Schedule, ScheduleService
 
 ---
 
