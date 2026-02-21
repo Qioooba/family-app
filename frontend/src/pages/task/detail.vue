@@ -438,6 +438,134 @@ const deleteSubtask = async (id, index) => {
   })
 }
 
+// 加载提醒列表
+const loadReminders = async (id) => {
+  try {
+    const res = await taskApi.getReminders(id)
+    reminders.value = res || []
+  } catch (e) {
+    console.error('加载提醒失败', e)
+  }
+}
+
+// 显示提醒弹窗
+const showReminderModal = () => {
+  reminderModalVisible.value = true
+  resetNewReminder()
+}
+
+// 关闭提醒弹窗
+const closeReminderModal = () => {
+  reminderModalVisible.value = false
+}
+
+// 重置新提醒
+const resetNewReminder = () => {
+  newReminder.value = {
+    reminderType: 'time',
+    reminderTime: '',
+    advanceMinutes: 0,
+    locationName: '',
+    locationAddress: '',
+    latitude: null,
+    longitude: null,
+    radius: 500
+  }
+  timeIndex.value = [9, 0]
+}
+
+// 时间选择变化
+const onTimeChange = (e) => {
+  const [hourIndex, minuteIndex] = e.detail.value
+  const hour = String(hourIndex).padStart(2, '0')
+  const minute = String(minuteIndex).padStart(2, '0')
+  newReminder.value.reminderTime = `${hour}:${minute}`
+  timeIndex.value = [hourIndex, minuteIndex]
+}
+
+// 选择地图位置
+const chooseLocation = () => {
+  uni.chooseLocation({
+    success: (res) => {
+      newReminder.value.locationName = res.name || '选定位置'
+      newReminder.value.locationAddress = res.address
+      newReminder.value.latitude = res.latitude
+      newReminder.value.longitude = res.longitude
+    },
+    fail: (err) => {
+      console.error('选择位置失败', err)
+      uni.showToast({ title: '选择位置失败', icon: 'none' })
+    }
+  })
+}
+
+// 格式化提醒显示
+const formatReminder = (reminder) => {
+  if (reminder.reminderType === 'time') {
+    const advance = advanceOptions.find(a => a.value === reminder.advanceMinutes)
+    const advanceText = advance && advance.value > 0 ? `(${advance.label})` : ''
+    return `⏰ ${reminder.reminderTime} ${advanceText}`
+  } else {
+    const radius = radiusOptions.find(r => r.value === reminder.radius)
+    return `📍 ${reminder.locationName || '位置提醒'} ${radius ? radius.label : ''}`
+  }
+}
+
+// 保存提醒
+const saveReminder = async () => {
+  // 验证
+  if (newReminder.value.reminderType === 'time' && !newReminder.value.reminderTime) {
+    uni.showToast({ title: '请选择提醒时间', icon: 'none' })
+    return
+  }
+  if (newReminder.value.reminderType === 'location' && !newReminder.value.locationName) {
+    uni.showToast({ title: '请选择提醒位置', icon: 'none' })
+    return
+  }
+
+  try {
+    const data = {
+      reminderType: newReminder.value.reminderType,
+      reminderTime: newReminder.value.reminderType === 'time' ? newReminder.value.reminderTime : null,
+      advanceMinutes: newReminder.value.advanceMinutes,
+      locationName: newReminder.value.locationName,
+      locationAddress: newReminder.value.locationAddress,
+      latitude: newReminder.value.latitude,
+      longitude: newReminder.value.longitude,
+      radius: newReminder.value.radius
+    }
+
+    await taskApi.setReminder(taskId.value, data)
+    uni.showToast({ title: '添加成功', icon: 'success' })
+    await loadReminders(taskId.value)
+    resetNewReminder()
+  } catch (e) {
+    console.error('保存提醒失败', e)
+    uni.showToast({ title: '添加失败', icon: 'none' })
+  }
+}
+
+// 删除提醒
+const deleteReminder = async (reminderId) => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定删除这个提醒吗？',
+    confirmColor: '#FF4D4F',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await taskApi.deleteReminder(reminderId)
+          uni.showToast({ title: '已删除', icon: 'success' })
+          await loadReminders(taskId.value)
+        } catch (e) {
+          console.error('删除提醒失败', e)
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
+      }
+    }
+  })
+}
+
 const getStatusClass = computed(() => {
   const map = { 0: 'pending', 1: 'progress', 2: 'completed' }
   return map[task.value.status] || 'pending'
@@ -869,6 +997,243 @@ const deleteTask = async () => {
       background: #FFF1F0;
       color: #FF4D4F;
       border: 2rpx solid #FFCCC7;
+    }
+  }
+}
+
+// 提醒设置样式
+.reminder-section {
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .reminder-list {
+    .no-reminder {
+      padding: 30rpx 0;
+      text-align: center;
+      color: #999;
+      font-size: 28rpx;
+    }
+
+    .reminder-item {
+      display: flex;
+      align-items: center;
+      gap: 20rpx;
+      padding: 20rpx 0;
+      border-bottom: 1rpx solid #f5f5f5;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .reminder-icon {
+        width: 48rpx;
+        height: 48rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .reminder-info {
+        display: flex;
+        flex-direction: column;
+
+        .reminder-time {
+          font-size: 28rpx;
+          color: #333;
+        }
+
+        .reminder-location {
+          font-size: 24rpx;
+          color: #999;
+          margin-top: 4rpx;
+        }
+      }
+    }
+  }
+}
+
+// 提醒弹窗样式
+.reminder-modal {
+  max-height: 80vh;
+  overflow-y: auto;
+
+  .reminder-type-tabs {
+    display: flex;
+    gap: 20rpx;
+    margin-bottom: 30rpx;
+
+    .type-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10rpx;
+      padding: 30rpx;
+      background: #f5f5f5;
+      border-radius: 16rpx;
+
+      text {
+        font-size: 26rpx;
+        color: #666;
+      }
+
+      &.active {
+        background: #5B8FF9;
+
+        text {
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  .form-item {
+    margin-bottom: 30rpx;
+
+    .label {
+      display: block;
+      font-size: 26rpx;
+      color: #333;
+      margin-bottom: 16rpx;
+    }
+
+    .picker-value {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20rpx;
+      background: #f5f5f5;
+      border-radius: 12rpx;
+      font-size: 28rpx;
+      color: #333;
+    }
+  }
+
+  .advance-options,
+  .radius-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16rpx;
+
+    .advance-item,
+    .radius-item {
+      padding: 16rpx 24rpx;
+      background: #f5f5f5;
+      border-radius: 30rpx;
+      font-size: 24rpx;
+      color: #666;
+
+      &.active {
+        background: #5B8FF9;
+        color: #fff;
+      }
+    }
+  }
+
+  .location-picker {
+    padding: 40rpx;
+    background: #f5f5f5;
+    border-radius: 12rpx;
+    border: 2rpx dashed #ddd;
+
+    .location-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16rpx;
+
+      text {
+        font-size: 28rpx;
+        color: #999;
+      }
+    }
+
+    .location-selected {
+      display: flex;
+      align-items: center;
+      gap: 20rpx;
+
+      .location-info {
+        display: flex;
+        flex-direction: column;
+
+        .location-name {
+          font-size: 28rpx;
+          color: #333;
+          font-weight: 500;
+        }
+
+        .location-address {
+          font-size: 24rpx;
+          color: #999;
+          margin-top: 4rpx;
+        }
+      }
+    }
+  }
+
+  .existing-reminders {
+    margin-top: 30rpx;
+    padding-top: 30rpx;
+    border-top: 1rpx solid #eee;
+
+    .section-subtitle {
+      display: block;
+      font-size: 26rpx;
+      color: #666;
+      margin-bottom: 20rpx;
+    }
+
+    .existing-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20rpx;
+      background: #f9f9f9;
+      border-radius: 12rpx;
+      margin-bottom: 16rpx;
+
+      .existing-info {
+        display: flex;
+        align-items: center;
+        gap: 16rpx;
+
+        text {
+          font-size: 28rpx;
+          color: #333;
+        }
+      }
+
+      .delete-btn {
+        padding: 10rpx;
+      }
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 20rpx;
+    margin-top: 40rpx;
+
+    button {
+      flex: 1;
+      height: 80rpx;
+      border-radius: 40rpx;
+      font-size: 28rpx;
+      border: none;
+    }
+
+    .btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    .btn-confirm {
+      background: #5B8FF9;
+      color: #fff;
     }
   }
 }
