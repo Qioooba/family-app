@@ -1,9 +1,12 @@
 package com.family.family.controller;
 
 import com.family.common.core.Result;
+import com.family.family.dto.TaskReminderDTO;
 import com.family.family.entity.Task;
 import com.family.family.mapper.TaskMapper;
+import com.family.family.service.TaskReminderService;
 import com.family.family.service.TaskRepeatService;
+import com.family.family.vo.TaskReminderVO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,10 +20,12 @@ public class TaskController {
     
     private final TaskMapper taskMapper;
     private final TaskRepeatService taskRepeatService;
+    private final TaskReminderService taskReminderService;
     
-    public TaskController(TaskMapper taskMapper, TaskRepeatService taskRepeatService) {
+    public TaskController(TaskMapper taskMapper, TaskRepeatService taskRepeatService, TaskReminderService taskReminderService) {
         this.taskMapper = taskMapper;
         this.taskRepeatService = taskRepeatService;
+        this.taskReminderService = taskReminderService;
     }
     
     /**
@@ -153,5 +158,55 @@ public class TaskController {
         
         public String getRepeatRule() { return repeatRule; }
         public void setRepeatRule(String repeatRule) { this.repeatRule = repeatRule; }
+    }
+    
+    /**
+     * 设置任务提醒
+     * POST /api/task/{id}/reminder
+     */
+    @PostMapping("/{id}/reminder")
+    public Result<Void> setReminder(@PathVariable Long id, @RequestBody TaskReminderDTO dto) {
+        taskReminderService.setReminder(id, dto);
+        return Result.success();
+    }
+    
+    /**
+     * 获取任务提醒列表
+     * GET /api/task/{id}/reminders
+     */
+    @GetMapping("/{id}/reminders")
+    public Result<List<TaskReminderVO>> getReminders(@PathVariable Long id) {
+        return Result.success(taskReminderService.getReminders(id));
+    }
+    
+    /**
+     * 删除任务提醒
+     * DELETE /api/task/reminder/{reminderId}
+     */
+    @DeleteMapping("/reminder/{reminderId}")
+    public Result<Void> deleteReminder(@PathVariable Long reminderId) {
+        taskReminderService.deleteReminder(reminderId);
+        return Result.success();
+    }
+    
+    /**
+     * 获取用户待处理的时间提醒
+     * GET /api/task/reminders/pending
+     */
+    @GetMapping("/reminders/pending")
+    public Result<List<TaskReminderVO>> getPendingReminders(@RequestParam Long userId) {
+        return Result.success(taskReminderService.getPendingTimeReminders(userId));
+    }
+    
+    /**
+     * 上报位置（触发位置提醒）
+     * POST /api/task/location/report
+     */
+    @PostMapping("/location/report")
+    public Result<Void> reportLocation(@RequestParam Long userId,
+                                        @RequestParam Double latitude,
+                                        @RequestParam Double longitude) {
+        taskReminderService.processLocationReminders(userId, latitude, longitude);
+        return Result.success();
     }
 }

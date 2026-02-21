@@ -544,6 +544,7 @@ CREATE TABLE IF NOT EXISTS task_reminder (
     location_name VARCHAR(200) COMMENT '位置名称',
     location_lat DECIMAL(10,7) COMMENT '纬度',
     location_lng DECIMAL(10,7) COMMENT '经度',
+    radius INT DEFAULT 500 COMMENT '地理围栏半径(米)',
     is_triggered TINYINT DEFAULT 0 COMMENT '是否已触发',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='任务提醒表';

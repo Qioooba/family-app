@@ -22,6 +22,7 @@ public class TaskReminder {
     private String locationName;
     private BigDecimal locationLat;
     private BigDecimal locationLng;
+    private Integer radius; // 地理围栏半径(米)
     private Integer isTriggered;
     private LocalDateTime createTime;
     
@@ -46,6 +47,9 @@ public class TaskReminder {
     
     public BigDecimal getLocationLng() { return locationLng; }
     public void setLocationLng(BigDecimal locationLng) { this.locationLng = locationLng; }
+    
+    public Integer getRadius() { return radius; }
+    public void setRadius(Integer radius) { this.radius = radius; }
     
     public Integer getIsTriggered() { return isTriggered; }
     public void setIsTriggered(Integer isTriggered) { this.isTriggered = isTriggered; }
