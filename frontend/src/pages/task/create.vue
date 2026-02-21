@@ -114,6 +114,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { taskApi } from '../../api/index.js'
 
 const form = ref({
   title: '',
@@ -194,17 +195,34 @@ const goBack = () => {
   uni.navigateBack()
 }
 
-const saveTask = () => {
+const saveTask = async () => {
   if (!form.value.title.trim()) {
     uni.showToast({ title: '请输入任务标题', icon: 'none' })
     return
   }
   
-  // TODO: 调用API保存任务
-  uni.showToast({ title: '创建成功', icon: 'success' })
-  setTimeout(() => {
-    uni.navigateBack()
-  }, 1500)
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const data = {
+      title: form.value.title,
+      familyId: familyId,
+      category: form.value.category,
+      priority: form.value.priority,
+      deadline: form.value.deadline,
+      assigneeId: form.value.assigneeId,
+      remark: form.value.remark,
+      repeat: form.value.repeat,
+      status: 0
+    }
+    await taskApi.create(data)
+    uni.showToast({ title: '创建成功', icon: 'success' })
+    setTimeout(() => {
+      uni.navigateBack()
+    }, 1500)
+  } catch (e) {
+    console.error('创建任务失败', e)
+    uni.showToast({ title: '创建失败', icon: 'none' })
+  }
 }
 </script>
 

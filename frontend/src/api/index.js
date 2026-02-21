@@ -1,28 +1,7 @@
 import { request } from '../utils/request'
+import { taskApi } from './task.js'
 
-// 任务相关API
-export const taskApi = {
-  // 获取任务列表
-  getList: (familyId, params = {}) => request.get('/task/list', { familyId, ...params }),
-  
-  // 创建任务
-  create: (data) => request.post('/task/create', data),
-  
-  // 更新任务
-  update: (data) => request.put('/task/update', data),
-  
-  // 完成任务
-  complete: (id) => request.post(`/task/complete/${id}`),
-  
-  // 指派任务
-  assign: (id, assigneeId) => request.post(`/task/assign/${id}`, null, { params: { assigneeId } }),
-  
-  // 获取今日任务
-  getTodayTasks: (familyId) => request.get(`/task/today/${familyId}`),
-  
-  // 删除任务
-  delete: (id) => request.delete(`/task/${id}`)
-}
+export { taskApi }
 
 // 心愿相关API
 export const wishApi = {

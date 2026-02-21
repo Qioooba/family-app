@@ -1,0 +1,68 @@
+import { request } from '../utils/request'
+
+/**
+ * 任务相关API
+ * 对应后端: TaskController.java
+ * BasePath: /task
+ */
+export const taskApi = {
+  /**
+   * 获取任务列表
+   * @param {number} familyId - 家庭ID
+   * @param {object} params - 可选参数: categoryId, status
+   * @returns {Promise<Array>} 任务列表
+   */
+  getList: (familyId, params = {}) => request.get('/task/list', { familyId, ...params }),
+  
+  /**
+   * 创建任务
+   * @param {object} data - 任务数据
+   * @returns {Promise<object>} 创建的任务
+   */
+  create: (data) => request.post('/task/create', data),
+  
+  /**
+   * 更新任务
+   * @param {object} data - 任务数据(需包含id)
+   * @returns {Promise<object>} 更新后的任务
+   */
+  update: (data) => request.put('/task/update', data),
+  
+  /**
+   * 完成任务
+   * @param {number} id - 任务ID
+   * @returns {Promise<void>}
+   */
+  complete: (id) => request.post(`/task/complete/${id}`),
+  
+  /**
+   * 指派任务
+   * @param {number} id - 任务ID
+   * @param {number} assigneeId - 被指派人ID
+   * @returns {Promise<void>}
+   */
+  assign: (id, assigneeId) => request.post(`/task/assign/${id}`, { assigneeId }),
+  
+  /**
+   * 获取今日任务
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<Array>} 今日任务列表
+   */
+  getTodayTasks: (familyId) => request.get(`/task/today/${familyId}`),
+  
+  /**
+   * 删除任务
+   * @param {number} id - 任务ID
+   * @returns {Promise<void>}
+   */
+  delete: (id) => request.delete(`/task/${id}`),
+  
+  /**
+   * 获取任务详情
+   * @param {number} id - 任务ID
+   * @returns {Promise<object>} 任务详情
+   */
+  getById: (id) => request.get(`/task/${id}`)
+}
+
+export default taskApi

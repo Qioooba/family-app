@@ -86,6 +86,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { taskApi } from '../../api/index.js'
 
 const taskId = ref(null)
 const task = ref({
@@ -100,13 +101,33 @@ const task = ref({
   createTime: '2026-02-21 09:00',
   remark: '记得买有机牛奶，鸡蛋要土鸡蛋'
 })
+const loading = ref(false)
 
 onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   taskId.value = currentPage.options.id
-  // TODO: 根据ID加载任务详情
+  // 加载任务详情
+  if (taskId.value) {
+    loadTaskDetail(taskId.value)
+  }
 })
+
+// 加载任务详情
+const loadTaskDetail = async (id) => {
+  loading.value = true
+  try {
+    const res = await taskApi.getById(id)
+    if (res) {
+      task.value = res
+    }
+  } catch (e) {
+    console.error('加载任务详情失败', e)
+    uni.showToast({ title: '加载失败', icon: 'none' })
+  } finally {
+    loading.value = false
+  }
+}
 
 const getStatusClass = computed(() => {
   const map = { 0: 'pending', 1: 'progress', 2: 'completed' }
@@ -156,25 +177,44 @@ const showActions = () => {
   })
 }
 
-const completeTask = () => {
-  task.value.status = 2
-  uni.showToast({ title: '已完成', icon: 'success' })
+const completeTask = async () => {
+  try {
+    await taskApi.complete(taskId.value)
+    task.value.status = 2
+    uni.showToast({ title: '已完成', icon: 'success' })
+  } catch (e) {
+    console.error('完成任务失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
 }
 
-const reopenTask = () => {
-  task.value.status = 0
-  uni.showToast({ title: '已重新打开', icon: 'success' })
+const reopenTask = async () => {
+  try {
+    // 重新打开任务 - 使用update API修改状态
+    await taskApi.update({ id: taskId.value, status: 0 })
+    task.value.status = 0
+    uni.showToast({ title: '已重新打开', icon: 'success' })
+  } catch (e) {
+    console.error('重新打开任务失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
 }
 
-const deleteTask = () => {
+const deleteTask = async () => {
   uni.showModal({
     title: '确认删除',
     content: '删除后无法恢复，是否继续？',
     confirmColor: '#FF4D4F',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm) {
-        uni.showToast({ title: '已删除', icon: 'success' })
-        setTimeout(() => uni.navigateBack(), 1500)
+        try {
+          await taskApi.delete(taskId.value)
+          uni.showToast({ title: '已删除', icon: 'success' })
+          setTimeout(() => uni.navigateBack(), 1500)
+        } catch (e) {
+          console.error('删除任务失败', e)
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
       }
     }
   })
