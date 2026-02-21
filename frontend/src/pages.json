@@ -74,6 +74,13 @@
             "navigationBarTitleText": "任务详情",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "repeat",
+          "style": {
+            "navigationBarTitleText": "重复设置",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
