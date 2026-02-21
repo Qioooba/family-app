@@ -88,6 +88,13 @@
             "navigationBarTitleText": "调整优先级",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "reminder",
+          "style": {
+            "navigationBarTitleText": "提醒设置",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
