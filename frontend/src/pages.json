@@ -109,6 +109,13 @@
             "navigationBarTitleText": "任务甘特图",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "board",
+          "style": {
+            "navigationBarTitleText": "任务看板",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
