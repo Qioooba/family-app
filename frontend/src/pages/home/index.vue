@@ -190,6 +190,7 @@ const currentFamily = ref({ name: '幸福小家' })
 const quickActions = [
   { name: '添加任务', icon: 'file-text', bgColor: '#5B8FF9', path: '/pages/task/create' },
   { name: '记录饮食', icon: 'photo', bgColor: '#5AD8A6', path: '/pages/food/record' },
+  { name: '喝水打卡', icon: 'minus-circle', bgColor: '#2E6AD8', path: '/pages/water/index' },
   { name: 'AI助手', icon: 'robot', bgColor: '#9B59B6', path: '/pages/ai/index' },
   { name: '数据看板', icon: 'bar-chart', bgColor: '#3498DB', path: '/pages/dashboard/index' }
 ]
