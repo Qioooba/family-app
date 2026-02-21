@@ -332,6 +332,13 @@
             "navigationBarTitleText": "价格追踪",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "scan",
+          "style": {
+            "navigationBarTitleText": "扫码录入",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
