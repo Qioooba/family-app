@@ -370,6 +370,13 @@
             "navigationBarTitleText": "喝水打卡",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "tracker",
+          "style": {
+            "navigationBarTitleText": "喝水记录",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
