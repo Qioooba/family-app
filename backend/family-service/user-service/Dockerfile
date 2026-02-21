@@ -1,0 +1,19 @@
+FROM openjdk:17-jdk-slim
+
+WORKDIR /app
+
+COPY target/*.jar app.jar
+
+ENV JAVA_OPTS="-Xms256m -Xmx512m"
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV MYSQL_HOST=mysql
+ENV MYSQL_PORT=3306
+ENV MYSQL_DB=family_app
+ENV MYSQL_USER=root
+ENV MYSQL_PASSWORD=Family@2025
+ENV REDIS_HOST=redis
+ENV REDIS_PORT=6379
+
+EXPOSE 8080
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
