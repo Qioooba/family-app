@@ -7,7 +7,17 @@ import java.util.Map;
  */
 public interface StatsService {
     
-    Map<String, Object> getFamilyStats(Long familyId);
+    Map<String, Object> getFamilyStats(Long familyId, String type);
     
     Map<String, Object> getUserStats(Long userId);
+    
+    Map<String, Object> getPersonalStats(Long userId, String type, String date);
+    
+    Map<String, Object> getTaskStats(Long familyId, String startDate, String endDate);
+    
+    Map<String, Object> getDietStats(Long userId, String type);
+    
+    Map<String, Object> getYearlyStats(Long familyId, int year);
+    
+    Map<String, Object> getTodayOverview(Long userId, Long familyId);
 }
