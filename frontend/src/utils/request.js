@@ -1,18 +1,25 @@
 // 请求封装
 const BASE_URL = 'http://localhost:8080'
+const USER_SERVICE_URL = 'http://localhost:8081'
+
+// 判断是否是用户相关API
+const isUserApi = (url) => {
+  return url.startsWith('/user/') || url === '/user/login' || url === '/user/register'
+}
 
 // 请求拦截
 const request = (options) => {
   return new Promise((resolve, reject) => {
     const token = uni.getStorageSync('token')
+    const baseUrl = isUserApi(options.url) ? USER_SERVICE_URL : BASE_URL
     
     uni.request({
-      url: BASE_URL + options.url,
+      url: baseUrl + options.url,
       method: options.method || 'GET',
       data: options.data || {},
       header: {
         'Content-Type': 'application/json',
-        'Authorization': token ? 'Bearer ' + token : ''
+        'Authorization': token || ''
       },
       success: (res) => {
         if (res.statusCode === 200) {

@@ -32,11 +32,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     public UserVO register(UserRegisterDTO dto) {
-        // 校验验证码
-        String codeKey = "sms:code:" + dto.getPhone();
-        String cacheCode = redisTemplate.opsForValue().get(codeKey);
-        if (!dto.getCode().equals(cacheCode)) {
-            throw new BusinessException("验证码错误或已过期");
+        String codeKey = null;
+        // 如果提供了验证码，则校验
+        if (StrUtil.isNotBlank(dto.getCode()) && StrUtil.isNotBlank(dto.getPhone())) {
+            codeKey = "sms:code:" + dto.getPhone();
+            String cacheCode = redisTemplate.opsForValue().get(codeKey);
+            if (!dto.getCode().equals(cacheCode)) {
+                throw new BusinessException("验证码错误或已过期");
+            }
         }
         
         // 检查用户名/手机号是否存在
@@ -55,7 +58,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         save(user);
         
         // 删除验证码
-        redisTemplate.delete(codeKey);
+        if (codeKey != null) {
+            redisTemplate.delete(codeKey);
+        }
         
         return convertToVO(user);
     }

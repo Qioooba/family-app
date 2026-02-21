@@ -192,7 +192,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { taskApi } from '../../api/index.js'
 
 const categories = [
   { name: '全部', id: 0 },
@@ -211,50 +212,29 @@ const showSubtaskModal = ref(false)
 const selectedTask = ref(null)
 const currentSubtaskTask = ref(null)
 const newSubtaskTitle = ref('')
+const tasks = ref([])
+const loading = ref(false)
 
-const tasks = ref([
-  { 
-    id: 1, 
-    title: '买牛奶和鸡蛋', 
-    status: 0, 
-    priority: 1, 
-    categoryName: '购物', 
-    dueTime: '今天 18:00', 
-    assigneeName: '爸爸',
-    showSubtasks: false,
-    subtasks: [
-      { title: '检查冰箱库存', status: 1 },
-      { title: '列购物清单', status: 0 },
-      { title: '去超市采购', status: 0 }
-    ]
-  },
-  { 
-    id: 2, 
-    title: '给孩子检查作业', 
-    status: 0, 
-    priority: 2, 
-    categoryName: '待办', 
-    dueTime: '今天 20:00', 
-    assigneeName: '妈妈',
-    showSubtasks: false,
-    subtasks: []
-  },
-  { 
-    id: 3, 
-    title: '周末大扫除', 
-    status: 0, 
-    priority: 0, 
-    categoryName: '家务', 
-    dueTime: '明天 10:00', 
-    assigneeName: '',
-    showSubtasks: false,
-    subtasks: [
-      { title: '扫地', status: 0 },
-      { title: '擦桌子', status: 0 },
-      { title: '整理房间', status: 0 }
-    ]
+// 加载任务列表
+const loadTasks = async () => {
+  loading.value = true
+  try {
+    // 从本地存储获取家庭ID
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const res = await taskApi.getList(familyId)
+    tasks.value = res || []
+  } catch (e) {
+    console.error('加载任务失败', e)
+    uni.showToast({ title: '加载任务失败', icon: 'none' })
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 页面加载时获取任务
+onMounted(() => {
+  loadTasks()
+})
 
 const newTask = ref({
   title: '',
@@ -278,9 +258,18 @@ const switchCategory = (index) => {
 
 const priorityText = (p) => priorities[p] || '普通'
 
-const toggleTask = (task) => {
-  task.status = task.status === 2 ? 0 : 2
-  uni.showToast({ title: task.status === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
+const toggleTask = async (task) => {
+  const newStatus = task.status === 2 ? 0 : 2
+  try {
+    if (newStatus === 2) {
+      await taskApi.complete(task.id)
+    }
+    task.status = newStatus
+    uni.showToast({ title: newStatus === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
+  } catch (e) {
+    console.error('更新任务状态失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
 }
 
 const viewTask = (task) => {
@@ -371,26 +360,29 @@ const onDateChange = (e) => {
   newTask.value.dueDate = e.detail.value
 }
 
-const addTask = () => {
+const addTask = async () => {
   if (!newTask.value.title) {
     uni.showToast({ title: '请输入任务标题', icon: 'none' })
     return
   }
-  
-  tasks.value.unshift({
-    id: Date.now(),
-    title: newTask.value.title,
-    status: 0,
-    priority: newTask.value.priority,
-    categoryName: '待办',
-    dueTime: newTask.value.dueDate || '未设置',
-    assigneeName: '',
-    showSubtasks: false,
-    subtasks: []
-  })
-  
-  uni.showToast({ title: '添加成功', icon: 'success' })
-  closeModal()
+
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const data = {
+      title: newTask.value.title,
+      familyId: familyId,
+      priority: newTask.value.priority,
+      dueDate: newTask.value.dueDate
+    }
+    await taskApi.create(data)
+    uni.showToast({ title: '添加成功', icon: 'success' })
+    closeModal()
+    // 重新加载任务列表
+    loadTasks()
+  } catch (e) {
+    console.error('创建任务失败', e)
+    uni.showToast({ title: '创建失败', icon: 'none' })
+  }
 }
 </script>
 
