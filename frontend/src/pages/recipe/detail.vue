@@ -133,9 +133,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { recipeApi } from '../../api/index.js'
 
 const recipeId = ref(null)
 const isFavorite = ref(false)
+const loading = ref(false)
 
 const recipe = ref({
   id: 1,
@@ -176,18 +178,52 @@ onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   recipeId.value = currentPage.options.id
+  if (recipeId.value) {
+    loadRecipeDetail(recipeId.value)
+  }
 })
+
+// 加载菜谱详情
+const loadRecipeDetail = async (id) => {
+  loading.value = true
+  try {
+    const res = await recipeApi.getById(id)
+    if (res) {
+      // 合并数据，保持前端需要的结构
+      recipe.value = { 
+        ...recipe.value, 
+        ...res,
+        ingredients: res.ingredients || recipe.value.ingredients,
+        steps: res.steps || recipe.value.steps,
+        nutrition: res.nutrition || recipe.value.nutrition
+      }
+      isFavorite.value = res.isFavorite || false
+    }
+  } catch (e) {
+    console.error('加载菜谱详情失败', e)
+    uni.showToast({ title: '加载失败', icon: 'none' })
+  } finally {
+    loading.value = false
+  }
+}
 
 const goBack = () => {
   uni.navigateBack()
 }
 
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value
-  uni.showToast({ 
-    title: isFavorite.value ? '已收藏' : '取消收藏', 
-    icon: 'none' 
-  })
+const toggleFavorite = async () => {
+  try {
+    const userId = uni.getStorageSync('userInfo')?.id || 1
+    await recipeApi.favorite(recipeId.value, userId)
+    isFavorite.value = !isFavorite.value
+    uni.showToast({ 
+      title: isFavorite.value ? '已收藏' : '取消收藏', 
+      icon: 'none' 
+    })
+  } catch (e) {
+    console.error('收藏失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
 }
 
 const shareRecipe = () => {
@@ -206,8 +242,16 @@ const addToPlan = () => {
   })
 }
 
-const markAsMade = () => {
-  uni.showToast({ title: '已标记做过', icon: 'success' })
+const markAsMade = async () => {
+  try {
+    const userId = uni.getStorageSync('userInfo')?.id || 1
+    await recipeApi.recordCooking(recipeId.value, userId)
+    uni.showToast({ title: '已标记做过', icon: 'success' })
+    recipe.value.made = (recipe.value.made || 0) + 1
+  } catch (e) {
+    console.error('记录失败', e)
+    uni.showToast({ title: '记录失败', icon: 'none' })
+  }
 }
 </script>
 

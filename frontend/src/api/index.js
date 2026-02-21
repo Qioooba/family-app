@@ -1,32 +1,9 @@
 import { request } from '../utils/request'
 import { taskApi } from './task.js'
 import { wishApi } from './wish.js'
+import { recipeApi } from './recipe.js'
 
-export { taskApi, wishApi }
-
-// 菜谱相关API
-export const recipeApi = {
-  // 搜索菜谱
-  search: (params) => request.get('/recipe/search', params),
-  
-  // 获取家庭菜谱
-  getFamilyRecipes: (familyId) => request.get(`/recipe/family/${familyId}`),
-  
-  // AI推荐菜谱
-  recommend: (ingredients) => request.post('/recipe/recommend', ingredients),
-  
-  // 创建菜谱
-  create: (data) => request.post('/recipe/create', data),
-  
-  // 获取菜谱详情
-  getById: (id) => request.get(`/recipe/${id}`),
-  
-  // 收藏菜谱
-  favorite: (id, userId) => request.post(`/recipe/favorite/${id}`, null, { params: { userId } }),
-  
-  // 记录做过
-  recordCooking: (id, userId) => request.post(`/recipe/cook/${id}`, null, { params: { userId } })
-}
+export { taskApi, wishApi, recipeApi }
 
 // 食材相关API
 export const ingredientApi = {

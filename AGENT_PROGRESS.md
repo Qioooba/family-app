@@ -10,14 +10,21 @@
   - [x] POST /api/task/assign/{id} - 指派任务
   - [x] GET /api/task/today/{familyId} - 今日任务
   - [x] DELETE /api/task/{id} - 删除任务
+- [x] 心愿模块API对接 - 2026-02-22 00:05 - 9ef8330
+  - [x] GET /api/wish/list - 心愿列表
+  - [x] POST /api/wish/create - 创建心愿
+  - [x] PUT /api/wish/update - 更新心愿
+  - [x] POST /api/wish/claim/{id} - 认领心愿
+  - [x] POST /api/wish/progress/{id} - 更新进度
+  - [x] POST /api/wish/complete/{id} - 完成心愿
+  - [x] POST /api/wish/abandon/{id} - 放弃心愿
+  - [x] DELETE /api/wish/{id} - 删除心愿
 
 ## 进行中
-- [ ] 心愿模块API对接 - 2026-02-22 00:03
-  - 正在查看后端API定义
+- [ ] 菜谱模块API对接 - 2026-02-22 00:07
 
 ## 待完成
 ### P0 - 前端API对接
-- [ ] 心愿模块API对接
 - [ ] 菜谱模块API对接
 - [ ] 纪念日模块API对接
 - [ ] 投票模块API对接
