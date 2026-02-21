@@ -24,14 +24,29 @@
     </view>
 
     <!-- 动态列表 -->
-    <scroll-view class="moments-list" scroll-y @scrolltolower="loadMore"
+    <scroll-view 
+      class="moments-list" 
+      scroll-y 
+      @scrolltolower="loadMore"
+      :lower-threshold="100"
+      enable-back-to-top
     >
-      <view v-for="(moment, index) in moments" :key="index" class="moment-card"
+      <view 
+        v-for="(moment, index) in displayMoments" 
+        :key="moment.id || index" 
+        class="moment-card"
       >
         <!-- 发布者信息 -->
         <view class="moment-header"
         >
-          <image class="avatar" :src="moment.userAvatar" mode="aspectFill" />
+          <LazyImage 
+            class="avatar" 
+            :src="moment.userAvatar" 
+            mode="aspectFill" 
+            width="44px"
+            height="44px"
+            circle
+          />
           <view class="user-info"
           >
             <text class="nickname">{{ moment.userName }}</text>
@@ -48,13 +63,16 @@
           <!-- 图片网格 -->
           <view class="image-grid" v-if="moment.images && moment.images.length > 0"
           >
-            <image 
+            <LazyImage 
               v-for="(img, imgIndex) in moment.images" 
               :key="imgIndex"
               class="grid-image"
               :class="{ 'single': moment.images.length === 1 }"
               :src="img" 
               mode="aspectFill"
+              width="100%"
+              height="100%"
+              :threshold="50"
               @click="previewImage(moment.images, imgIndex)"
             />
           </view>
@@ -122,7 +140,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import LazyImage from '@/components/common/LazyImage.vue'
+import { useLazyList } from '@/utils/lazyLoad.js'
 
 const unreadCount = ref(3)
 const loading = ref(false)

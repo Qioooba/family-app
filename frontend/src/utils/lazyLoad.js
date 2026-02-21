@@ -1,74 +1,170 @@
 /**
- * 图片懒加载指令
- * 使用 IntersectionObserver API 实现
+ * 图片懒加载工具
+ * 支持自定义指令 v-lazy 和组件方式
  */
 
-const lazyImages = new Map()
-let observer = null
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-// 创建 IntersectionObserver
-function createObserver() {
-  if (observer) return observer
+// 全局配置
+const defaultConfig = {
+  // 占位图
+  placeholder: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23f0f0f0"/%3E%3C/svg%3E',
+  // 错误图
+  errorImage: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23ffebee"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" fill="%23ef5350" font-size="14"%3E加载失败%3C/text%3E%3C/svg%3E',
+  // 根边距，提前加载距离
+  rootMargin: '100px',
+  // 阈值
+  threshold: 0
+}
+
+// 存储观察器实例
+const observers = new WeakMap()
+const loadedImages = new Set()
+
+/**
+ * 创建 IntersectionObserver 观察器
+ * @param {Function} callback 回调函数
+ * @param {Object} options 配置选项
+ */
+function createObserver(callback, options = {}) {
+  const config = { ...defaultConfig, ...options }
   
-  observer = uni.createIntersectionObserver({
-    thresholds: [0, 0.5, 1],
-    initialRatio: 0
-  })
+  // 使用 uni.createIntersectionObserver (微信小程序)
+  // 或 IntersectionObserver (H5)
+  if (typeof uni !== 'undefined' && uni.createIntersectionObserver) {
+    return {
+      observe: (el, onIntersect) => {
+        const observer = uni.createIntersectionObserver({
+          thresholds: [0, 0.5, 1],
+          initialRatio: 0
+        })
+        observer.relativeToViewport({ bottom: parseInt(config.rootMargin) }).observe(el, (res) => {
+          if (res.intersectionRatio > 0) {
+            onIntersect(res)
+            observer.disconnect()
+          }
+        })
+        return observer
+      },
+      disconnect: () => {}
+    }
+  }
   
-  return observer
+  // H5 环境使用原生 IntersectionObserver
+  if (typeof window !== 'undefined' && window.IntersectionObserver) {
+    return new IntersectionObserver(callback, {
+      rootMargin: config.rootMargin,
+      threshold: config.threshold
+    })
+  }
+  
+  return null
 }
 
 /**
- * 懒加载指令
- * 使用方式: v-lazy="imageUrl"
+ * 预加载图片
+ * @param {string} src 图片地址
+ * @returns {Promise}
  */
-export const lazyDirective = {
-  mounted(el, binding) {
-    const src = binding.value
-    if (!src) return
-    
-    // 保存原始src
-    el.dataset.src = src
-    
-    // 设置占位图或背景色
-    if (el.tagName === 'IMG') {
-      el.style.backgroundColor = '#f0f0f0'
+export function preloadImage(src) {
+  return new Promise((resolve, reject) => {
+    if (!src) {
+      reject(new Error('Empty image src'))
+      return
     }
     
-    // 创建观察器
-    const observer = createObserver()
+    // 如果是本地图片，直接返回
+    if (src.startsWith('/') && !src.startsWith('//')) {
+      resolve(src)
+      return
+    }
     
-    observer.relativeToViewport({ bottom: 100 }).observe(el, (res) => {
-      if (res.intersectionRatio > 0) {
-        // 进入视口，加载图片
-        loadImage(el)
-        // 停止观察
-        observer.disconnect()
-      }
+    // 使用 uni.getImageInfo 预加载
+    uni.getImageInfo({
+      src,
+      success: () => resolve(src),
+      fail: reject
+    })
+  })
+}
+
+/**
+ * 懒加载指令 v-lazy
+ * 使用方式: 
+ *   <image v-lazy="imageUrl" />
+ *   <image v-lazy="{ src: imageUrl, placeholder: '...', error: '...' }" />
+ */
+export const vLazy = {
+  mounted(el, binding) {
+    const options = typeof binding.value === 'object' ? binding.value : { src: binding.value }
+    const src = options.src || binding.value
+    const placeholder = options.placeholder || defaultConfig.placeholder
+    const errorImage = options.error || defaultConfig.errorImage
+    
+    if (!src) return
+    
+    // 设置占位图
+    if (el.tagName === 'IMG' || el.tagName === 'image') {
+      el.src = placeholder
+      el.style.backgroundColor = '#f0f0f0'
+    } else {
+      el.style.backgroundImage = `url(${placeholder})`
+    }
+    
+    // 标记为未加载
+    el.dataset.lazyState = 'pending'
+    el.dataset.src = src
+    
+    // 创建观察器
+    const observer = createObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          loadImage(el, src, errorImage)
+          observer.unobserve(el)
+        }
+      })
     })
     
-    lazyImages.set(el, observer)
+    if (observer) {
+      // 微信小程序
+      if (observer.observe) {
+        const uniObserver = observer.observe(el, () => {
+          loadImage(el, src, errorImage)
+        })
+        observers.set(el, uniObserver)
+      } else {
+        // H5
+        observer.observe(el)
+        observers.set(el, observer)
+      }
+    } else {
+      // 不支持观察器，直接加载
+      loadImage(el, src, errorImage)
+    }
   },
   
   updated(el, binding) {
-    // 更新src时重新加载
-    const newSrc = binding.value
-    if (newSrc && newSrc !== el.dataset.src) {
+    const newSrc = typeof binding.value === 'object' ? binding.value.src : binding.value
+    const oldSrc = el.dataset.src
+    
+    if (newSrc && newSrc !== oldSrc) {
       el.dataset.src = newSrc
-      if (el.tagName === 'IMG') {
+      // 如果已经加载过，直接更新
+      if (el.dataset.lazyState === 'loaded') {
         el.src = newSrc
       } else {
-        el.style.backgroundImage = `url(${newSrc})`
+        // 重新触发懒加载
+        el.dataset.lazyState = 'pending'
       }
     }
   },
   
   unmounted(el) {
-    // 清理
-    const observer = lazyImages.get(el)
+    const observer = observers.get(el)
     if (observer) {
-      observer.disconnect()
-      lazyImages.delete(el)
+      if (observer.disconnect) observer.disconnect()
+      if (observer.unobserve) observer.unobserve(el)
+      observers.delete(el)
     }
   }
 }
@@ -76,136 +172,198 @@ export const lazyDirective = {
 /**
  * 加载图片
  */
-function loadImage(el) {
-  const src = el.dataset.src
-  if (!src) return
+function loadImage(el, src, errorImage) {
+  if (!src || el.dataset.lazyState === 'loaded') return
   
-  // 预加载图片
-  uni.getImageInfo({
-    src,
-    success: () => {
-      if (el.tagName === 'IMG') {
+  preloadImage(src)
+    .then(() => {
+      if (el.tagName === 'IMG' || el.tagName === 'image') {
         el.src = src
         el.style.backgroundColor = ''
       } else {
         el.style.backgroundImage = `url(${src})`
       }
+      el.dataset.lazyState = 'loaded'
       el.classList.add('lazy-loaded')
-    },
-    fail: () => {
-      // 加载失败，显示错误占位图
+      loadedImages.add(src)
+    })
+    .catch(() => {
+      if (el.tagName === 'IMG' || el.tagName === 'image') {
+        el.src = errorImage
+      } else {
+        el.style.backgroundImage = `url(${errorImage})`
+      }
+      el.dataset.lazyState = 'error'
       el.classList.add('lazy-error')
-    }
-  })
+    })
 }
 
 /**
- * 批量懒加载
- * @param {Array} list 数据列表
- * @param {number} pageSize 每页数量
- * @returns {Object} 分页数据
+ * 批量懒加载 Hook
+ * @param {Ref<Array>} listRef 数据列表
+ * @param {Object} options 配置
  */
-export function useLazyLoad(list, pageSize = 20) {
+export function useLazyList(listRef, options = {}) {
+  const { pageSize = 20, preloadPages = 1 } = options
+  
   const displayList = ref([])
   const currentPage = ref(1)
+  const loading = ref(false)
+  const finished = ref(false)
+  
   const hasMore = computed(() => {
-    return displayList.value.length < list.value.length
+    return displayList.value.length < (listRef.value?.length || 0)
   })
   
-  const loadMore = () => {
-    const start = (currentPage.value - 1) * pageSize
+  const loadMore = async () => {
+    if (loading.value || finished.value) return
+    
+    loading.value = true
+    const list = listRef.value || []
+    const start = displayList.value.length
     const end = start + pageSize
-    const newItems = list.value.slice(start, end)
-    displayList.value.push(...newItems)
-    currentPage.value++
+    const newItems = list.slice(start, end)
+    
+    if (newItems.length > 0) {
+      displayList.value.push(...newItems)
+      currentPage.value++
+    } else {
+      finished.value = true
+    }
+    
+    loading.value = false
   }
   
-  // 初始化加载第一页
-  loadMore()
+  const reset = () => {
+    displayList.value = []
+    currentPage.value = 1
+    finished.value = false
+    loadMore()
+  }
+  
+  // 初始化
+  onMounted(() => {
+    loadMore()
+  })
   
   return {
     displayList,
+    loading,
+    finished,
     hasMore,
-    loadMore
+    loadMore,
+    reset
   }
 }
 
 /**
- * 虚拟滚动列表
- * @param {Array} list 完整数据列表
- * @param {number} itemHeight 每项高度
- * @param {number} bufferSize 缓冲数量
+ * 虚拟列表 Hook
+ * 适用于长列表场景
+ * @param {Ref<Array>} listRef 数据列表
+ * @param {Object} options 配置
  */
-export function useVirtualList(list, itemHeight = 80, bufferSize = 5) {
-  const containerRef = ref(null)
+export function useVirtualList(listRef, options = {}) {
+  const {
+    itemHeight = 80,
+    bufferSize = 5,
+    containerHeight = 600
+  } = options
+  
   const scrollTop = ref(0)
-  const containerHeight = ref(0)
-  
-  // 可视区域能显示的项目数
-  const visibleCount = computed(() => {
-    return Math.ceil(containerHeight.value / itemHeight) + bufferSize * 2
-  })
-  
-  // 起始索引
   const startIndex = computed(() => {
     return Math.max(0, Math.floor(scrollTop.value / itemHeight) - bufferSize)
   })
   
-  // 结束索引
   const endIndex = computed(() => {
-    return Math.min(list.value.length, startIndex.value + visibleCount.value)
+    const list = listRef.value || []
+    return Math.min(
+      list.length,
+      startIndex.value + Math.ceil(containerHeight / itemHeight) + bufferSize * 2
+    )
   })
   
-  // 可视区域数据
   const visibleList = computed(() => {
-    return list.value.slice(startIndex.value, endIndex.value).map((item, index) => ({
+    const list = listRef.value || []
+    return list.slice(startIndex.value, endIndex.value).map((item, index) => ({
       ...item,
       _index: startIndex.value + index,
-      _style: {
-        position: 'absolute',
-        top: `${(startIndex.value + index) * itemHeight}px`,
-        height: `${itemHeight}px`,
-        width: '100%'
-      }
+      _offset: (startIndex.value + index) * itemHeight
     }))
   })
   
-  // 总高度
   const totalHeight = computed(() => {
-    return list.value.length * itemHeight
+    return (listRef.value?.length || 0) * itemHeight
   })
   
-  // 偏移量
-  const offset = computed(() => {
-    return startIndex.value * itemHeight
-  })
+  const offsetStyle = computed(() => ({
+    paddingTop: `${startIndex.value * itemHeight}px`,
+    paddingBottom: `${Math.max(0, totalHeight.value - endIndex.value * itemHeight)}px`
+  }))
   
-  // 滚动事件处理
   const onScroll = (e) => {
-    scrollTop.value = e.detail.scrollTop
+    scrollTop.value = e.detail?.scrollTop || e.target?.scrollTop || 0
   }
-  
-  // 初始化容器高度
-  const initContainer = () => {
-    if (containerRef.value) {
-      const query = uni.createSelectorQuery()
-      query.select(containerRef.value).boundingClientRect((rect) => {
-        containerHeight.value = rect.height
-      }).exec()
-    }
-  }
-  
-  onMounted(() => {
-    initContainer()
-  })
   
   return {
-    containerRef,
     visibleList,
     totalHeight,
-    offset,
+    offsetStyle,
     onScroll,
     startIndex,
     endIndex
   }
 }
+
+/**
+ * 图片预加载队列
+ * 适用于需要优先加载首屏图片的场景
+ */
+export function createPreloadQueue(maxConcurrent = 3) {
+  const queue = []
+  const loading = new Set()
+  let isProcessing = false
+  
+  const processQueue = async () => {
+    if (isProcessing) return
+    isProcessing = true
+    
+    while (queue.length > 0 && loading.size < maxConcurrent) {
+      const task = queue.shift()
+      if (!task) continue
+      
+      loading.add(task.src)
+      
+      try {
+        await preloadImage(task.src)
+        task.resolve(task.src)
+      } catch (err) {
+        task.reject(err)
+      } finally {
+        loading.delete(task.src)
+      }
+    }
+    
+    isProcessing = false
+    
+    if (queue.length > 0) {
+      processQueue()
+    }
+  }
+  
+  const add = (src) => {
+    return new Promise((resolve, reject) => {
+      if (loadedImages.has(src)) {
+        resolve(src)
+        return
+      }
+      
+      queue.push({ src, resolve, reject })
+      processQueue()
+    })
+  }
+  
+  return { add }
+}
+
+// 导出默认配置
+export { defaultConfig }
