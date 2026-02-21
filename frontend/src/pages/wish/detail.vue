@@ -167,11 +167,27 @@ const wish = ref({
   authorAvatar: '/static/avatar/mom.png',
   progress: 30,
   budget: 2999,
+  targetAmount: 2999,
+  currentAmount: 1200,
   description: '想要一台全自动咖啡机，早上可以自己做咖啡喝',
   claimer: null,
   claimerName: '',
   claimerAvatar: '',
   claimTime: ''
+})
+
+// 预算和里程碑数据
+const milestones = ref([])
+const budgetModalVisible = ref(false)
+const milestoneModalVisible = ref(false)
+const budgetForm = ref({
+  targetAmount: '',
+  currentAmount: ''
+})
+const milestoneForm = ref({
+  title: '',
+  targetDate: '',
+  description: ''
 })
 
 onMounted(() => {
@@ -180,6 +196,7 @@ onMounted(() => {
   wishId.value = currentPage.options.id
   if (wishId.value) {
     loadWishDetail(wishId.value)
+    loadMilestones(wishId.value)
   }
 })
 
