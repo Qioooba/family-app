@@ -63,7 +63,51 @@ export const wishApi = {
    * @param {number} id - 心愿ID
    * @returns {Promise<void>}
    */
-  delete: (id) => request.delete(`/wish/${id}`)
+  delete: (id) => request.delete(`/wish/${id}`),
+
+  /**
+   * 设置心愿预算
+   * @param {number} id - 心愿ID
+   * @param {object} data - {targetAmount, currentAmount, currency}
+   * @returns {Promise<void>}
+   */
+  setBudget: (id, data) => request.post(`/wish/${id}/budget`, data),
+
+  /**
+   * 获取预算统计
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<object>} 预算统计
+   */
+  getBudgetStats: (familyId) => request.get('/wish/budget-stats', { familyId }),
+
+  /**
+   * 获取里程碑列表
+   * @param {number} id - 心愿ID
+   * @returns {Promise<Array>} 里程碑列表
+   */
+  getMilestones: (id) => request.get(`/wish/${id}/milestones`),
+
+  /**
+   * 添加里程碑
+   * @param {number} id - 心愿ID
+   * @param {object} data - {title, targetDate, description}
+   * @returns {Promise<object>} 创建的里程碑
+   */
+  addMilestone: (id, data) => request.post(`/wish/${id}/milestone`, data),
+
+  /**
+   * 完成里程碑
+   * @param {number} milestoneId - 里程碑ID
+   * @returns {Promise<void>}
+   */
+  completeMilestone: (milestoneId) => request.put(`/milestone/${milestoneId}/complete`),
+
+  /**
+   * 删除里程碑
+   * @param {number} milestoneId - 里程碑ID
+   * @returns {Promise<void>}
+   */
+  deleteMilestone: (milestoneId) => request.delete(`/milestone/${milestoneId}`)
 }
 
 export default wishApi

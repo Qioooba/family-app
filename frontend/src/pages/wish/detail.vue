@@ -51,6 +51,72 @@
         </view>
       </view>
       
+      <!-- 预算 -->
+      <view class="section-card budget-section">
+        <view class="section-title">
+          <text>预算</text>
+          <view class="budget-edit" @click="showBudgetModal">
+            <u-icon name="edit-pen" size="28" color="#5B8FF9"></u-icon>
+            <text>编辑</text>
+          </view>
+        </view>
+
+        <view v-if="wish.targetAmount" class="budget-content">
+          <view class="budget-progress">
+            <view class="progress-header">
+              <text class="current">¥{{ wish.currentAmount || 0 }}</text>
+              <text class="target">/ ¥{{ wish.targetAmount }}</text>
+            </view>
+            <view class="progress-bar">
+              <view class="progress-fill" :style="{ width: budgetProgress + '%' }"></view>
+            </view>
+            <text class="progress-percent">{{ budgetProgress }}%</text>
+          </view>
+        </view>
+        <view v-else class="budget-empty" @click="showBudgetModal">
+          <text>设置预算目标 🎯</text>
+        </view>
+      </view>
+
+      <!-- 里程碑 -->
+      <view class="section-card milestone-section">
+        <view class="section-title">
+          <text>里程碑</text>
+          <view class="milestone-add" @click="showMilestoneModal">
+            <u-icon name="plus" size="28" color="#5B8FF9"></u-icon>
+            <text>添加</text>
+          </view>
+        </view>
+
+        <view v-if="milestones.length > 0" class="milestone-list">
+          <view
+            v-for="(milestone, index) in milestones"
+            :key="milestone.id"
+            class="milestone-item"
+            :class="{ completed: milestone.status === 1 }"
+          >
+            <view class="milestone-left">
+              <view class="milestone-dot" :class="{ active: milestone.status === 1 }"></view>
+              <view class="milestone-line" v-if="index < milestones.length - 1"></view>
+            </view>
+            <view class="milestone-content">
+              <text class="milestone-title">{{ milestone.title }}</text>
+              <text v-if="milestone.description" class="milestone-desc">{{ milestone.description }}</text>
+              <view class="milestone-footer">
+                <text class="milestone-date">{{ formatDate(milestone.targetDate) }}</text>
+                <view v-if="milestone.status === 0 && wish.claimer === currentUserId" class="milestone-actions">
+                  <text class="complete-btn" @click="completeMilestone(milestone.id)">完成</text>
+                  <text class="delete-btn" @click="deleteMilestone(milestone.id)">删除</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view v-else class="milestone-empty">
+          <text>还没有里程碑，添加一个吧 📝</text>
+        </view>
+      </view>
+
       <!-- 描述 -->
       <view class="section-card" v-if="wish.description">
         <view class="section-title">详细描述</view>
