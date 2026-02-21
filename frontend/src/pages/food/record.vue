@@ -303,6 +303,104 @@ const recognizedFood = ref(null)
 const isRecording = ref(false)
 const voiceText = ref('')
 
+onMounted(() => {
+  loadLatestWeight()
+})
+
+// 加载最新体重
+const loadLatestWeight = async () => {
+  try {
+    const res = await dietApi.getLatestWeight()
+    if (res) {
+      latestWeight.value = res.weight
+    }
+  } catch (e) {
+    console.error('加载最新体重失败', e)
+  }
+}
+
+// 加载体重历史
+const loadWeightHistory = async () => {
+  try {
+    const res = await dietApi.getWeightHistory()
+    weightHistory.value = res || []
+  } catch (e) {
+    console.error('加载体重历史失败', e)
+  }
+}
+
+// 显示体重弹窗
+const showWeightModal = async () => {
+  weightModalVisible.value = true
+  weightInput.value = ''
+  weightNote.value = ''
+  await loadWeightHistory()
+}
+
+// 关闭体重弹窗
+const closeWeightModal = () => {
+  weightModalVisible.value = false
+}
+
+// 保存体重
+const saveWeight = async () => {
+  const weight = parseFloat(weightInput.value)
+  if (!weight || weight <= 0) {
+    uni.showToast({ title: '请输入有效的体重', icon: 'none' })
+    return
+  }
+  
+  try {
+    await dietApi.recordWeight({
+      weight: weight,
+      note: weightNote.value
+    })
+    
+    latestWeight.value = weight
+    uni.showToast({ title: '记录成功', icon: 'success' })
+    closeWeightModal()
+    await loadWeightHistory()
+  } catch (e) {
+    console.error('记录体重失败', e)
+    uni.showToast({ title: '记录失败', icon: 'none' })
+  }
+}
+
+// 格式化日期
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}/${date.getDate()}`
+}
+
+// 计算趋势图数据
+const chartPoints = computed(() => {
+  if (weightHistory.value.length < 2) return []
+  
+  const recent7 = weightHistory.value.slice(0, 7).reverse()
+  const weights = recent7.map(item => parseFloat(item.weight))
+  const min = Math.min(...weights) - 1
+  const max = Math.max(...weights) + 1
+  const range = max - min || 1
+  
+  return recent7.map((item, index) => ({
+    x: (index / (recent7.length - 1)) * 80 + 10,
+    y: ((parseFloat(item.weight) - min) / range) * 70 + 15,
+    weight: item.weight
+  }))
+})
+
+// 计算趋势图路径
+const chartPath = computed(() => {
+  return chartPoints.value.map(p => `${p.x},${100 - p.y}`).join(' ')
+})
+
+// 图表标签
+const chartLabels = computed(() => {
+  const recent7 = weightHistory.value.slice(0, 7).reverse()
+  return recent7.map(item => formatDate(item.recordDate))
+})
+
 const goBack = () => {
   uni.navigateBack()
 }
@@ -683,5 +781,293 @@ const saveRecord = () => {
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
+}
+
+// 体重入口样式
+.weight-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  
+  .weight-info {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+    
+    .weight-text {
+      display: flex;
+      flex-direction: column;
+      
+      .label {
+        font-size: 24rpx;
+        color: #999;
+      }
+      
+      .value {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+  }
+  
+  &:active {
+    background: #f9f9f9;
+  }
+}
+
+// 体重弹窗样式
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 100%;
+  background: #fff;
+  border-radius: 30rpx 30rpx 0 0;
+  padding: 40rpx 30rpx;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.weight-modal {
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40rpx;
+    
+    text {
+      font-size: 36rpx;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .close-btn {
+      font-size: 40rpx;
+      color: #999;
+      padding: 10rpx;
+    }
+  }
+  
+  .weight-input-section {
+    text-align: center;
+    margin-bottom: 40rpx;
+    
+    .weight-display {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10rpx;
+      margin-bottom: 30rpx;
+      
+      .weight-number {
+        font-size: 80rpx;
+        font-weight: bold;
+        color: #333;
+        width: 250rpx;
+        text-align: center;
+        border: none;
+        background: transparent;
+      }
+      
+      .weight-unit {
+        font-size: 40rpx;
+        color: #999;
+      }
+    }
+    
+    .quick-weights {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16rpx;
+      
+      .quick-weight-item {
+        padding: 16rpx 30rpx;
+        background: #f5f5f5;
+        border-radius: 30rpx;
+        font-size: 28rpx;
+        color: #666;
+        
+        &.active {
+          background: #5AD8A6;
+          color: #fff;
+        }
+      }
+    }
+  }
+  
+  .form-item {
+    margin-bottom: 30rpx;
+    
+    .label {
+      display: block;
+      font-size: 26rpx;
+      color: #666;
+      margin-bottom: 16rpx;
+    }
+    
+    .input {
+      width: 100%;
+      height: 80rpx;
+      background: #f5f5f5;
+      border-radius: 12rpx;
+      padding: 0 24rpx;
+      font-size: 28rpx;
+    }
+  }
+  
+  .weight-chart-section {
+    margin-bottom: 30rpx;
+    
+    .chart-title {
+      display: block;
+      font-size: 28rpx;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20rpx;
+    }
+    
+    .chart-container {
+      background: #f9f9f9;
+      border-radius: 16rpx;
+      padding: 30rpx 20rpx;
+      
+      .chart-line {
+        position: relative;
+        height: 200rpx;
+        margin-bottom: 20rpx;
+        
+        .chart-point {
+          position: absolute;
+          width: 16rpx;
+          height: 16rpx;
+          border-radius: 50%;
+          transform: translate(-50%, 50%);
+          
+          .point-tooltip {
+            position: absolute;
+            bottom: 20rpx;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20rpx;
+            color: #666;
+            white-space: nowrap;
+          }
+        }
+        
+        .chart-line-svg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 30rpx;
+          
+          svg {
+            width: 100%;
+            height: 100%;
+          }
+        }
+      }
+      
+      .chart-labels {
+        display: flex;
+        justify-content: space-between;
+        
+        .chart-label {
+          font-size: 20rpx;
+          color: #999;
+        }
+      }
+    }
+  }
+  
+  .weight-history-section {
+    max-height: 300rpx;
+    margin-bottom: 30rpx;
+    
+    .history-title {
+      display: block;
+      font-size: 28rpx;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20rpx;
+    }
+    
+    .history-list {
+      max-height: 250rpx;
+      
+      .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20rpx 0;
+        border-bottom: 1rpx solid #f0f0f0;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
+        .history-left {
+          display: flex;
+          flex-direction: column;
+          
+          .history-weight {
+            font-size: 30rpx;
+            color: #333;
+            font-weight: 500;
+          }
+          
+          .history-note {
+            font-size: 24rpx;
+            color: #999;
+            margin-top: 4rpx;
+          }
+        }
+        
+        .history-date {
+          font-size: 24rpx;
+          color: #999;
+        }
+      }
+    }
+  }
+  
+  .modal-actions {
+    display: flex;
+    gap: 20rpx;
+    
+    button {
+      flex: 1;
+      height: 90rpx;
+      border-radius: 45rpx;
+      font-size: 30rpx;
+      border: none;
+    }
+    
+    .btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+    }
+    
+    .btn-confirm {
+      background: #5AD8A6;
+      color: #fff;
+    }
+  }
 }
 </style>
