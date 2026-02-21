@@ -73,6 +73,53 @@ public class ShoppingController {
         return Result.success(shoppingService.getExpiringItems(familyId));
     }
     
+    /**
+     * 记录商品价格
+     * POST /api/shopping/price-record
+     */
+    @PostMapping("/price-record")
+    public Result<Boolean> recordPrice(@RequestBody PriceRecordRequest request) {
+        return Result.success(shoppingService.recordPrice(
+            request.getItemName(), 
+            request.getBarcode(), 
+            request.getPrice(), 
+            request.getStoreName(),
+            request.getFamilyId()
+        ));
+    }
+    
+    /**
+     * 获取价格趋势
+     * GET /api/shopping/price-trend
+     */
+    @GetMapping("/price-trend")
+    public Result<Object> getPriceTrend(@RequestParam String itemName) {
+        return Result.success(shoppingService.getPriceTrend(itemName));
+    }
+    
+    public static class PriceRecordRequest {
+        private String itemName;
+        private String barcode;
+        private BigDecimal price;
+        private String storeName;
+        private Long familyId;
+        
+        public String getItemName() { return itemName; }
+        public void setItemName(String itemName) { this.itemName = itemName; }
+        
+        public String getBarcode() { return barcode; }
+        public void setBarcode(String barcode) { this.barcode = barcode; }
+        
+        public BigDecimal getPrice() { return price; }
+        public void setPrice(BigDecimal price) { this.price = price; }
+        
+        public String getStoreName() { return storeName; }
+        public void setStoreName(String storeName) { this.storeName = storeName; }
+        
+        public Long getFamilyId() { return familyId; }
+        public void setFamilyId(Long familyId) { this.familyId = familyId; }
+    }
+    
     public static class CreateListRequest {
         private Long familyId;
         private String name;

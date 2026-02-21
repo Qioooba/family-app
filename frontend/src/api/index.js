@@ -50,7 +50,16 @@ export const dietApi = {
   recognizeFood: (imageBase64) => request.post('/diet/recognize', { imageBase64 }),
   
   // 删除记录
-  delete: (id) => request.delete(`/diet/${id}`)
+  delete: (id) => request.delete(`/diet/${id}`),
+  
+  // 记录体重
+  recordWeight: (data) => request.post('/diet/weight/record', data),
+  
+  // 获取体重历史
+  getWeightHistory: () => request.get('/diet/weight/history'),
+  
+  // 获取最新体重
+  getLatestWeight: () => request.get('/diet/weight/latest')
 }
 
 // 用户相关API
