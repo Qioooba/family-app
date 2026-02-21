@@ -16,7 +16,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -109,15 +108,13 @@ public class MetricsAspect {
                 "status", success ? "success" : "error"
         ).increment();
 
-        // 记录耗时分布
-        meterRegistry.histogram("http_request_duration_ms", 
-                Duration.ofMillis(1), Duration.ofMillis(5), 
-                Duration.ofMillis(10), Duration.ofMillis(25),
-                Duration.ofMillis(50), Duration.ofMillis(100),
-                Duration.ofMillis(250), Duration.ofMillis(500),
-                Duration.ofSeconds(1), Duration.ofSeconds(2),
-                Duration.ofSeconds(5), Duration.ofSeconds(10)
-        ).record(durationMs, TimeUnit.MILLISECONDS);
+        // 记录耗时分布（使用DistributionSummary）
+        meterRegistry.summary("http_request_duration_ms",
+                "class", className,
+                "method", methodName,
+                "uri", uri,
+                "status", success ? "success" : "error"
+        ).record(durationMs);
 
         // 慢查询日志（超过1秒）
         if (durationMs > 1000) {
