@@ -58,6 +58,57 @@
         <view class="remark-content">{{ task.remark }}</view>
       </view>
       
+      <!-- 子任务 -->
+      <view class="section-card subtask-section">
+        <view class="section-title">
+          <text>子任务</text>
+          <text class="subtask-count" v-if="subtasks.length > 0">
+            {{ completedSubtasks }}/{{ subtasks.length }}
+          </text>
+        </view>
+        
+        <!-- 进度条 -->
+        <view v-if="subtasks.length > 0" class="progress-bar">
+          <view class="progress-fill" :style="{ width: subtaskProgress + '%' }"></view>
+        </view>
+        <text v-if="subtasks.length > 0" class="progress-text">{{ subtaskProgress }}%</text>
+        
+        <!-- 子任务列表 -->
+        <view class="subtask-list">
+          <view 
+            v-for="(sub, index) in subtasks" 
+            :key="sub.id"
+            class="subtask-item"
+          >
+            <view 
+              class="subtask-checkbox" 
+              :class="{ checked: sub.status === 1 }"
+              @click="toggleSubtask(sub)"
+            >
+              <u-icon v-if="sub.status === 1" name="checkmark" size="24" color="#fff"></u-icon>
+            </view>
+            <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
+            <view class="subtask-delete" @click="deleteSubtask(sub.id, index)">
+              <u-icon name="close" size="28" color="#999"></u-icon>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 添加子任务 -->
+        <view class="add-subtask">
+          <input 
+            v-model="newSubtaskTitle"
+            class="subtask-input"
+            placeholder="添加子任务..."
+            confirm-type="done"
+            @confirm="addSubtask"
+          />
+          <view class="add-btn" :class="{ active: newSubtaskTitle.trim() }" @click="addSubtask">
+            <u-icon name="plus" size="32" color="#fff"></u-icon>
+          </view>
+        </view>
+      </view>
+      
       <!-- 操作按钮 -->
       <view class="action-buttons">
         <view 
@@ -101,6 +152,8 @@ const task = ref({
   createTime: '2026-02-21 09:00',
   remark: '记得买有机牛奶，鸡蛋要土鸡蛋'
 })
+const subtasks = ref([])
+const newSubtaskTitle = ref('')
 const loading = ref(false)
 
 onMounted(() => {
@@ -121,12 +174,99 @@ const loadTaskDetail = async (id) => {
     if (res) {
       task.value = res
     }
+    // 加载子任务列表
+    await loadSubtasks(id)
   } catch (e) {
     console.error('加载任务详情失败', e)
     uni.showToast({ title: '加载失败', icon: 'none' })
   } finally {
     loading.value = false
   }
+}
+
+// 加载子任务列表
+const loadSubtasks = async (id) => {
+  try {
+    const res = await taskApi.getSubtasks(id)
+    subtasks.value = res || []
+  } catch (e) {
+    console.error('加载子任务失败', e)
+    subtasks.value = []
+  }
+}
+
+// 添加子任务
+const addSubtask = async () => {
+  const title = newSubtaskTitle.value.trim()
+  if (!title) return
+  
+  try {
+    const res = await taskApi.addSubtask({
+      taskId: taskId.value,
+      title: title,
+      sortOrder: subtasks.value.length
+    })
+    
+    // 添加成功，更新列表
+    subtasks.value.push({
+      id: res,
+      taskId: taskId.value,
+      title: title,
+      status: 0,
+      sortOrder: subtasks.value.length
+    })
+    
+    newSubtaskTitle.value = ''
+    uni.showToast({ title: '添加成功', icon: 'success' })
+  } catch (e) {
+    console.error('添加子任务失败', e)
+    uni.showToast({ title: '添加失败', icon: 'none' })
+  }
+}
+
+// 切换子任务状态
+const toggleSubtask = async (sub) => {
+  try {
+    await taskApi.toggleSubtask(sub.id)
+    sub.status = sub.status === 0 ? 1 : 0
+    
+    // 如果所有子任务完成，提示完成任务
+    if (subtaskProgress.value === 100 && task.value.status !== 2) {
+      uni.showModal({
+        title: '子任务全部完成',
+        content: '是否将主任务标记为完成？',
+        success: (res) => {
+          if (res.confirm) {
+            completeTask()
+          }
+        }
+      })
+    }
+  } catch (e) {
+    console.error('切换子任务状态失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
+}
+
+// 删除子任务
+const deleteSubtask = async (id, index) => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定删除这个子任务吗？',
+    confirmColor: '#FF4D4F',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await taskApi.deleteSubtask(id)
+          subtasks.value.splice(index, 1)
+          uni.showToast({ title: '已删除', icon: 'success' })
+        } catch (e) {
+          console.error('删除子任务失败', e)
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
+      }
+    }
+  })
 }
 
 const getStatusClass = computed(() => {
@@ -158,6 +298,16 @@ const getPriorityClass = computed(() => {
 const getPriorityText = computed(() => {
   const map = { 0: '普通', 1: '重要', 2: '紧急' }
   return map[task.value.priority] || '普通'
+})
+
+// 子任务计算属性
+const completedSubtasks = computed(() => {
+  return subtasks.value.filter(s => s.status === 1).length
+})
+
+const subtaskProgress = computed(() => {
+  if (subtasks.value.length === 0) return 0
+  return Math.round((completedSubtasks.value / subtasks.value.length) * 100)
 })
 
 const goBack = () => {
@@ -388,6 +538,137 @@ const deleteTask = async () => {
   font-size: 28rpx;
   color: #666;
   line-height: 1.6;
+}
+
+// 子任务样式
+.subtask-section {
+  .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .subtask-count {
+      font-size: 26rpx;
+      color: #999;
+      font-weight: normal;
+    }
+  }
+  
+  .progress-bar {
+    height: 8rpx;
+    background: #f0f0f0;
+    border-radius: 4rpx;
+    margin-bottom: 10rpx;
+    overflow: hidden;
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #5AD8A6, #5B8FF9);
+      border-radius: 4rpx;
+      transition: width 0.3s ease;
+    }
+  }
+  
+  .progress-text {
+    font-size: 24rpx;
+    color: #5AD8A6;
+    margin-bottom: 20rpx;
+    display: block;
+  }
+  
+  .subtask-list {
+    margin-bottom: 20rpx;
+    
+    .subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 20rpx;
+      padding: 20rpx 0;
+      border-bottom: 1rpx solid #f5f5f5;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .subtask-checkbox {
+        width: 40rpx;
+        height: 40rpx;
+        border-radius: 50%;
+        border: 2rpx solid #ddd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s;
+        
+        &.checked {
+          background: #5AD8A6;
+          border-color: #5AD8A6;
+        }
+      }
+      
+      .subtask-title {
+        flex: 1;
+        font-size: 28rpx;
+        color: #333;
+        transition: all 0.2s;
+        
+        &.completed {
+          text-decoration: line-through;
+          color: #999;
+        }
+      }
+      
+      .subtask-delete {
+        width: 50rpx;
+        height: 50rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.6;
+        
+        &:active {
+          opacity: 1;
+        }
+      }
+    }
+  }
+  
+  .add-subtask {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin-top: 10rpx;
+    
+    .subtask-input {
+      flex: 1;
+      height: 70rpx;
+      background: #f5f6fa;
+      border-radius: 35rpx;
+      padding: 0 30rpx;
+      font-size: 28rpx;
+      color: #333;
+    }
+    
+    .add-btn {
+      width: 70rpx;
+      height: 70rpx;
+      border-radius: 50%;
+      background: #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      
+      &.active {
+        background: #5AD8A6;
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
 }
 
 .action-buttons {

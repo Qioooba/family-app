@@ -62,7 +62,35 @@ export const taskApi = {
    * @param {number} id - 任务ID
    * @returns {Promise<object>} 任务详情
    */
-  getById: (id) => request.get(`/task/${id}`)
+  getById: (id) => request.get(`/task/${id}`),
+
+  /**
+   * 获取子任务列表
+   * @param {number} taskId - 任务ID
+   * @returns {Promise<Array>} 子任务列表
+   */
+  getSubtasks: (taskId) => request.get(`/task/subtask/list/${taskId}`),
+
+  /**
+   * 添加子任务
+   * @param {object} data - 子任务数据 {taskId, title, sortOrder}
+   * @returns {Promise<number>} 子任务ID
+   */
+  addSubtask: (data) => request.post('/task/subtask/add', data),
+
+  /**
+   * 切换子任务状态
+   * @param {number} id - 子任务ID
+   * @returns {Promise<boolean>}
+   */
+  toggleSubtask: (id) => request.put(`/task/subtask/${id}/toggle`),
+
+  /**
+   * 删除子任务
+   * @param {number} id - 子任务ID
+   * @returns {Promise<boolean>}
+   */
+  deleteSubtask: (id) => request.delete(`/task/subtask/${id}`)
 }
 
 export default taskApi

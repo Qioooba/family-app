@@ -1,15 +1,17 @@
 package com.family.wish.controller;
 
 import com.family.common.core.Result;
+import com.family.wish.dto.WishBudgetDTO;
 import com.family.wish.entity.Wish;
 import com.family.wish.service.WishService;
+import com.family.wish.vo.BudgetStatsVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/wish")
+@RequestMapping("/api/wish")
 @RequiredArgsConstructor
 public class WishController {
     
@@ -60,5 +62,24 @@ public class WishController {
     public Result<Void> delete(@PathVariable Long id) {
         wishService.removeById(id);
         return Result.success();
+    }
+    
+    /**
+     * 设置心愿预算
+     * POST /api/wish/{id}/budget
+     */
+    @PostMapping("/{id}/budget")
+    public Result<Void> setBudget(@PathVariable Long id, @RequestBody WishBudgetDTO dto) {
+        wishService.setBudget(id, dto);
+        return Result.success();
+    }
+    
+    /**
+     * 获取预算统计
+     * GET /api/wish/budget-stats
+     */
+    @GetMapping("/budget-stats")
+    public Result<BudgetStatsVO> getBudgetStats(@RequestParam Long familyId) {
+        return Result.success(wishService.getBudgetStats(familyId));
     }
 }
