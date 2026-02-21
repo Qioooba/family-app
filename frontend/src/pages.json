@@ -116,6 +116,13 @@
             "navigationBarTitleText": "任务看板",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "timeline",
+          "style": {
+            "navigationBarTitleText": "任务时间线",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
