@@ -36,13 +36,12 @@
         
         <view class="wish-footer">
           <view class="wish-user">
-            <image class="user-avatar" :src="wish.userAvatar" />
-            <text>{{ wish.userName }}</text>
+            <text>{{ wish.userId ? '用户' + wish.userId : '未知用户' }}</text>
           </view>
           
           <view class="wish-actions">
-            <view v-if="wish.claimerName" class="claimed-badge">
-              <text>✓ {{ wish.claimerName }} 已认领</text>
+            <view v-if="wish.claimantId" class="claimed-badge">
+              <text>✓ 已认领</text>
             </view>
             <view v-else class="claim-btn" @click.stop="claimWish(wish)">
               <text>认领</text>
@@ -59,59 +58,52 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { wishApi } from '../../api/index.js'
 
 const tabs = ['全部心愿', '我的心愿', '已认领', '已实现']
 const currentTab = ref(0)
+const wishes = ref([])
+const loading = ref(false)
 
 const wishIcons = {
   item: '🎁',
   experience: '✈️',
   goal: '🎯',
+  learn: '📚',
+  relation: '❤️',
+  charity: '🤝',
   custom: '💫'
 }
 
-const wishes = ref([
-  {
-    id: 1,
-    title: '想要一个新书包',
-    description: '开学需要一个新的双肩包，容量大一点',
-    type: 'item',
-    userName: '宝贝',
-    userAvatar: '/static/avatar/baby.png',
-    claimerName: '爸爸',
-    progress: 100,
-    status: 1
-  },
-  {
-    id: 2,
-    title: '周末去动物园',
-    description: '想去看大熊猫和长颈鹿',
-    type: 'experience',
-    userName: '宝贝',
-    userAvatar: '/static/avatar/baby.png',
-    claimerName: '',
-    progress: 0,
-    status: 0
-  },
-  {
-    id: 3,
-    title: '学会骑自行车',
-    description: '希望这个暑假能学会骑车',
-    type: 'goal',
-    userName: '宝贝',
-    userAvatar: '/static/avatar/baby.png',
-    claimerName: '妈妈',
-    progress: 60,
-    status: 1
+// 加载心愿列表
+const loadWishes = async () => {
+  loading.value = true
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const res = await wishApi.getList(familyId)
+    wishes.value = res || []
+  } catch (e) {
+    console.error('加载心愿失败', e)
+    uni.showToast({ title: '加载心愿失败', icon: 'none' })
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 页面加载时获取心愿
+onMounted(() => {
+  loadWishes()
+})
 
 const filteredWishes = computed(() => {
   if (currentTab.value === 0) return wishes.value
-  if (currentTab.value === 1) return wishes.value.filter(w => w.userName === '宝贝')
-  if (currentTab.value === 2) return wishes.value.filter(w => w.claimerName)
-  if (currentTab.value === 3) return wishes.value.filter(w => w.progress === 100)
+  if (currentTab.value === 1) {
+    const userId = uni.getStorageSync('userInfo')?.id
+    return wishes.value.filter(w => w.userId === userId)
+  }
+  if (currentTab.value === 2) return wishes.value.filter(w => w.claimantId)
+  if (currentTab.value === 3) return wishes.value.filter(w => w.status === 2)
   return wishes.value
 })
 
@@ -120,30 +112,36 @@ const viewWish = (wish) => {
     title: wish.title,
     content: wish.description,
     showCancel: true,
-    confirmText: wish.claimerName ? '查看进度' : '认领心愿',
+    confirmText: wish.claimantId ? '查看进度' : '认领心愿',
     cancelText: '关闭',
     success: (res) => {
-      if (res.confirm && !wish.claimerName) {
+      if (res.confirm && !wish.claimantId) {
         claimWish(wish)
       }
     }
   })
 }
 
-const claimWish = (wish) => {
-  if (wish.claimerName) {
-    uni.showToast({ title: '已被' + wish.claimerName + '认领', icon: 'none' })
+const claimWish = async (wish) => {
+  if (wish.claimantId) {
+    uni.showToast({ title: '已被认领', icon: 'none' })
     return
   }
   
   uni.showModal({
     title: '确认认领',
     content: `确定要认领"${wish.title}"吗？`,
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm) {
-        wish.claimerName = '我'
-        wish.progress = 10
-        uni.showToast({ title: '认领成功！', icon: 'success' })
+        try {
+          const userId = uni.getStorageSync('userInfo')?.id || 1
+          await wishApi.claim(wish.id, userId)
+          uni.showToast({ title: '认领成功！', icon: 'success' })
+          loadWishes()
+        } catch (e) {
+          console.error('认领失败', e)
+          uni.showToast({ title: '认领失败', icon: 'none' })
+        }
       }
     }
   })
@@ -154,20 +152,24 @@ const showAddModal = () => {
     title: '添加心愿',
     editable: true,
     placeholderText: '输入心愿内容...',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm && res.content) {
-        wishes.value.unshift({
-          id: Date.now(),
-          title: res.content,
-          description: '',
-          type: 'custom',
-          userName: '我',
-          userAvatar: '/static/avatar/me.png',
-          claimerName: '',
-          progress: 0,
-          status: 0
-        })
-        uni.showToast({ title: '添加成功', icon: 'success' })
+        try {
+          const familyId = uni.getStorageSync('currentFamilyId') || 1
+          const userId = uni.getStorageSync('userInfo')?.id || 1
+          await wishApi.create({
+            title: res.content,
+            description: '',
+            familyId: familyId,
+            userId: userId,
+            type: 'custom'
+          })
+          uni.showToast({ title: '添加成功', icon: 'success' })
+          loadWishes()
+        } catch (e) {
+          console.error('添加心愿失败', e)
+          uni.showToast({ title: '添加失败', icon: 'none' })
+        }
       }
     }
   })
