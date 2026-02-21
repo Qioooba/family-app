@@ -15,13 +15,13 @@
       
       <view class="points-section">
         <view class="points-item">
-          <text class="points-num">{{ userInfo.points || 0 }}</text>
+          <text class="points-num">{{ points }}</text>
           <text class="points-label">积分</text>
         </view>
         <view class="points-divider"></view>
         
         <view class="points-item">
-          <text class="points-num">{{ userInfo.badgeCount || 0 }}</text>
+          <text class="points-num">{{ badgeCount }}</text>
           <text class="points-label">徽章</text>
         </view>
       </view>
@@ -81,19 +81,43 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useUserStore } from '../../stores/user'
+import { gameApi } from '../../api/game'
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
 const isLogin = computed(() => userStore.isLogin)
+const points = ref(0)
+const badgeCount = ref(0)
 
 onMounted(() => {
-  // 如果已登录，刷新用户信息
+  // 如果已登录，刷新用户信息和积分
   if (isLogin.value) {
-    userStore.getUserInfo()
+    loadUserData()
   }
 })
+
+const loadUserData = async () => {
+  try {
+    // 获取用户信息
+    await userStore.getUserInfo()
+    
+    // 获取积分
+    const pointsRes = await gameApi.getUserPoints()
+    if (pointsRes && pointsRes.points !== undefined) {
+      points.value = pointsRes.points
+    }
+    
+    // 获取徽章数
+    const achievementsRes = await gameApi.getAchievements()
+    if (achievementsRes && Array.isArray(achievementsRes)) {
+      badgeCount.value = achievementsRes.filter(a => a.earned).length
+    }
+  } catch (e) {
+    console.error('加载用户数据失败:', e)
+  }
+}
 
 const goToPage = (url) => {
   uni.navigateTo({ url })
