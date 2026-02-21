@@ -97,14 +97,63 @@
       <view class="form-item">
         <text class="label">重复</text>
         <view class="repeat-list">
-          <view 
-            v-for="r in repeats" 
+          <view
+            v-for="r in repeats"
             :key="r.value"
             class="repeat-item"
-            :class="{ active: form.repeat === r.value }"
-            @click="form.repeat = r.value"
+            :class="{ active: form.repeatType === r.value }"
+            @click="selectRepeat(r.value)"
           >
             {{ r.label }}
+          </view>
+        </view>
+
+        <!-- 自定义重复规则 -->
+        <view v-if="form.repeatType === 'custom'" class="custom-repeat">
+          <view class="custom-row">
+            <text>每</text>
+            <input v-model.number="customRepeat.interval" type="number" class="interval-input" />
+            <picker mode="selector" :range="customUnits" :value="customRepeat.unitIndex" @change="onCustomUnitChange">
+              <text class="unit-picker">{{ customUnits[customRepeat.unitIndex] }}</text>
+            </picker>
+          </view>
+
+          <!-- 每周选项 -->
+          <view v-if="customRepeat.unitIndex === 1" class="weekdays-select">
+            <view
+              v-for="(day, index) in weekDays"
+              :key="index"
+              class="weekday-item"
+              :class="{ active: customRepeat.weekdays.includes(index + 1) }"
+              @click="toggleWeekday(index + 1)"
+            >
+              {{ day }}
+            </view>
+          </view>
+        </view>
+
+        <!-- 重复结束条件 -->
+        <view v-if="form.repeatType !== 'none'" class="repeat-end">
+          <text class="sub-label">结束</text>
+          <view class="end-options">
+            <view
+              v-for="opt in endOptions"
+              :key="opt.value"
+              class="end-option"
+              :class="{ active: form.repeatEndType === opt.value }"
+              @click="form.repeatEndType = opt.value"
+            >
+              {{ opt.label }}
+            </view>
+          </view>
+          <view v-if="form.repeatEndType === 'date'" class="end-date-picker">
+            <picker mode="date" :value="form.repeatEndDate" @change="onEndDateChange">
+              <text class="picker-value">{{ form.repeatEndDate || '选择结束日期' }}</text>
+            </picker>
+          </view>
+          <view v-if="form.repeatEndType === 'count'" class="end-count-input">
+            <input v-model.number="form.repeatCount" type="number" placeholder="重复次数" class="count-input" />
+            <text>次</text>
           </view>
         </view>
       </view>
@@ -123,8 +172,26 @@ const form = ref({
   deadline: '',
   assigneeId: null,
   remark: '',
-  repeat: 'none'
+  repeatType: 'none',
+  repeatEndType: 'never',
+  repeatEndDate: '',
+  repeatCount: null
 })
+
+// 自定义重复规则
+const customRepeat = ref({
+  interval: 1,
+  unitIndex: 0,
+  weekdays: []
+})
+
+const weekDays = ['一', '二', '三', '四', '五', '六', '日']
+const customUnits = ['天', '周', '月']
+const endOptions = [
+  { label: '永不', value: 'never' },
+  { label: '截止日期', value: 'date' },
+  { label: '重复次数', value: 'count' }
+]
 
 const categories = [
   { label: '购物', value: 'shopping' },

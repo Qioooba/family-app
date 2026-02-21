@@ -3,6 +3,8 @@ package com.family.health.controller;
 import com.family.common.core.Result;
 import com.family.health.entity.DietRecord;
 import com.family.health.service.DietService;
+import com.family.health.vo.DailyNutritionVO;
+import com.family.health.vo.WeeklyNutritionVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/diet")
+@RequestMapping("/api/diet")
 @RequiredArgsConstructor
 public class DietController {
     
@@ -37,6 +39,25 @@ public class DietController {
     @GetMapping("/statistics/week/{userId}")
     public Result<Map<String, Object>> getWeekStatistics(@PathVariable Long userId) {
         return Result.success(dietService.getWeekStatistics(userId));
+    }
+    
+    /**
+     * 获取每日营养分析
+     * GET /api/diet/nutrition/daily
+     */
+    @GetMapping("/nutrition/daily/{userId}")
+    public Result<DailyNutritionVO> getDailyNutrition(@PathVariable Long userId,
+                                                      @RequestParam String date) {
+        return Result.success(dietService.getDailyNutrition(userId, LocalDate.parse(date)));
+    }
+    
+    /**
+     * 获取周营养报告
+     * GET /api/diet/nutrition/weekly
+     */
+    @GetMapping("/nutrition/weekly/{userId}")
+    public Result<WeeklyNutritionVO> getWeeklyNutrition(@PathVariable Long userId) {
+        return Result.success(dietService.getWeeklyNutrition(userId));
     }
     
     @PostMapping("/recognize")

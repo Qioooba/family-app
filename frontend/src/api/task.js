@@ -90,7 +90,44 @@ export const taskApi = {
    * @param {number} id - 子任务ID
    * @returns {Promise<boolean>}
    */
-  deleteSubtask: (id) => request.delete(`/task/subtask/${id}`)
+  deleteSubtask: (id) => request.delete(`/task/subtask/${id}`),
+
+  /**
+   * 设置任务重复规则
+   * @param {number} taskId - 任务ID
+   * @param {object} data - {repeatType, repeatRule}
+   * @returns {Promise<void>}
+   */
+  setRepeatRule: (taskId, data) => request.post(`/task/${taskId}/repeat`, data),
+
+  /**
+   * 获取任务重复规则
+   * @param {number} taskId - 任务ID
+   * @returns {Promise<object>} 重复规则
+   */
+  getRepeatRule: (taskId) => request.get(`/task/${taskId}/repeat`),
+
+  /**
+   * 设置任务提醒
+   * @param {number} taskId - 任务ID
+   * @param {object} data - 提醒数据
+   * @returns {Promise<void>}
+   */
+  setReminder: (taskId, data) => request.post(`/task/${taskId}/reminder`, data),
+
+  /**
+   * 获取任务提醒列表
+   * @param {number} taskId - 任务ID
+   * @returns {Promise<Array>} 提醒列表
+   */
+  getReminders: (taskId) => request.get(`/task/${taskId}/reminders`),
+
+  /**
+   * 删除任务提醒
+   * @param {number} reminderId - 提醒ID
+   * @returns {Promise<void>}
+   */
+  deleteReminder: (reminderId) => request.delete(`/task/reminder/${reminderId}`)
 }
 
 export default taskApi
