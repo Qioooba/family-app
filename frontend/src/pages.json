@@ -223,6 +223,13 @@
         "navigationBarTitleText": "优惠券",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/nutrition/index",
+      "style": {
+        "navigationBarTitleText": "营养成分",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

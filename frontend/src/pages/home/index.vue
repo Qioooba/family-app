@@ -192,8 +192,8 @@ const quickActions = [
   { name: '记录饮食', icon: 'photo', bgColor: '#5AD8A6', path: '/pages/food/record' },
   { name: '喝水打卡', icon: 'minus-circle', bgColor: '#2E6AD8', path: '/pages/water/index' },
   { name: '优惠券', icon: 'coupon', bgColor: '#FF6B6B', path: '/pages/coupon/index' },
-  { name: 'AI助手', icon: 'robot', bgColor: '#9B59B6', path: '/pages/ai/index' },
-  { name: '数据看板', icon: 'bar-chart', bgColor: '#3498DB', path: '/pages/dashboard/index' }
+  { name: '营养成分', icon: 'file-text', bgColor: '#52C41A', path: '/pages/nutrition/index' },
+  { name: 'AI助手', icon: 'robot', bgColor: '#9B59B6', path: '/pages/ai/index' }
 ]
 
 // 今日任务
