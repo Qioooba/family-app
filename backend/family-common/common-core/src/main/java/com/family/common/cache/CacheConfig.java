@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -34,6 +35,7 @@ import java.util.Map;
  */
 @Configuration
 @EnableCaching
+@EnableScheduling
 public class CacheConfig implements CachingConfigurer {
 
     @Value("${spring.redis.host:localhost}")

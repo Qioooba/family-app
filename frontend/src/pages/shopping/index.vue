@@ -117,16 +117,163 @@
         </view>
       </view>
     </view>
+    
+    <!-- 扫码结果弹窗 -->
+    <view v-if="showScanModal" class="scan-modal">
+      <view class="scan-modal-mask" @click="closeScanModal"></view>
+      
+      <view class="scan-modal-content">
+        <view class="scan-modal-header">
+          <text class="scan-modal-title">扫码录入</text>
+          <view class="close-btn" @click="closeScanModal">×</view>
+        </view>
+        
+        <view v-if="scanLoading" class="scan-loading">
+          <view class="loading-spinner"></view>
+          <text class="loading-text">正在识别商品...</text>
+        </view>
+        
+        <view v-else class="scan-form">
+          <!-- 商品图片 -->
+          <view class="product-image-section">
+            <view v-if="scanResult.image" class="product-image">
+              <image :src="scanResult.image" mode="aspectFill"></image>
+            </view>
+            <view v-else class="product-image-placeholder">
+              <text class="placeholder-icon">📦</text>
+            </view>
+          </view>
+          
+          <!-- 条码信息 -->
+          <view class="form-item">
+            <text class="form-label">商品条码</text>
+            <view class="form-value barcode">{{ scanResult.barcode }}</view>
+          </view>
+          
+          <!-- 商品名称 -->
+          <view class="form-item">
+            <text class="form-label">商品名称 *</text>
+            <input 
+              v-model="scanResult.name"
+              class="form-input"
+              placeholder="输入商品名称"
+              :disabled="scanResult.source === 'database'"
+            />
+          </view>
+          
+          <!-- 品牌 -->
+          <view class="form-item">
+            <text class="form-label">品牌</text>
+            <input 
+              v-model="scanResult.brand"
+              class="form-input"
+              placeholder="输入品牌"
+            />
+          </view>
+          
+          <!-- 价格 -->
+          <view class="form-item">
+            <text class="form-label">参考价格</text>
+            <view class="price-input-wrapper">
+              <text class="currency">¥</text>
+              <input 
+                v-model="scanResult.price"
+                class="form-input price-input"
+                type="digit"
+                placeholder="0.00"
+              />
+            </view>
+          </view>
+          
+          <!-- 分类 -->
+          <view class="form-item">
+            <text class="form-label">分类</text>
+            <picker mode="selector" :range="categories" :value="categoryIndex" @change="onCategoryChange">
+              <view class="form-picker">{{ scanResult.category }}</view>
+            </picker>
+          </view>
+          
+          <!-- 添加到清单选择 -->
+          <view class="form-item" v-if="activeLists.length > 0">
+            <text class="form-label">添加到清单</text>
+            <picker mode="selector" :range="listNames" :value="listIndex" @change="onListChange">
+              <view class="form-picker">{{ selectedListId ? getListNameById(selectedListId) : '不添加到清单（加入库存）' }}</view>
+            </picker>
+          </view>
+          
+          <!-- 来源标识 -->
+          <view class="source-tag" v-if="scanResult.source === 'database'">
+            <text class="tag">🗄️ 来自商品库</text>
+          </view>
+          <view class="source-tag manual" v-else>
+            <text class="tag">✏️ 手动录入</text>
+          </view>
+          
+          <!-- 操作按钮 -->
+          <view class="scan-actions">
+            <view class="btn btn-secondary" @click="closeScanModal">取消</view>
+            <view class="btn btn-primary" @click="confirmAddProduct">确认添加</view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { shoppingApi } from '../../api/index.js'
 
 const activeLists = ref([])
 const expiringItems = ref([])
 const loading = ref(false)
+
+// 扫码相关
+const scanResult = ref(null)
+const showScanModal = ref(false)
+const scanLoading = ref(false)
+const selectedListId = ref(null)
+
+// 分类选项
+const categories = ['其他', '食品', '饮料', '日用品', '洗护', '生鲜', '零食', '酒水']
+const categoryIndex = computed(() => {
+  if (!scanResult.value) return 0
+  return categories.indexOf(scanResult.value.category) || 0
+})
+
+// 清单名称列表
+const listNames = computed(() => {
+  return ['不添加到清单（加入库存）', ...activeLists.value.map(l => l.name)]
+})
+
+const listIndex = computed(() => {
+  if (!selectedListId.value) return 0
+  const index = activeLists.value.findIndex(l => l.id === selectedListId.value)
+  return index >= 0 ? index + 1 : 0
+})
+
+// 根据ID获取清单名称
+const getListNameById = (id) => {
+  const list = activeLists.value.find(l => l.id === id)
+  return list ? list.name : '未知清单'
+}
+
+// 分类选择变更
+const onCategoryChange = (e) => {
+  if (scanResult.value) {
+    scanResult.value.category = categories[e.detail.value]
+  }
+}
+
+// 清单选择变更
+const onListChange = (e) => {
+  const index = e.detail.value
+  if (index === 0) {
+    selectedListId.value = null
+  } else {
+    selectedListId.value = activeLists.value[index - 1]?.id || null
+  }
+}
 
 // 加载购物清单
 const loadShoppingLists = async () => {
@@ -174,9 +321,125 @@ const goInventory = () => {
   uni.showToast({ title: '库存管理开发中', icon: 'none' })
 }
 
+// 扫码录入
 const scanCode = () => {
-  uni.showToast({ title: '扫码功能开发中', icon: 'none' })
+  uni.scanCode({
+    onlyFromCamera: false,
+    scanType: ['barCode', 'qrCode'],
+    success: (res) => {
+      console.log('扫码结果:', res)
+      handleScanResult(res.result)
+    },
+    fail: (err) => {
+      console.error('扫码失败:', err)
+      uni.showToast({ title: '扫码失败', icon: 'none' })
+    }
+  })
 }
+
+// 处理扫码结果
+const handleScanResult = async (barcode) => {
+  scanLoading.value = true
+  showScanModal.value = true
+  
+  try {
+    // 调用后端接口识别商品
+    const res = await shoppingApi.scanProduct({ barcode })
+    
+    if (res && res.productName) {
+      scanResult.value = {
+        barcode,
+        name: res.productName,
+        brand: res.brand || '',
+        price: res.price || 0,
+        category: res.category || '其他',
+        image: res.image || '',
+        specs: res.specs || '',
+        source: res.source || 'database'
+      }
+    } else {
+      // 未识别，显示手动输入
+      scanResult.value = {
+        barcode,
+        name: '',
+        brand: '',
+        price: 0,
+        category: '其他',
+        image: '',
+        specs: '',
+        source: 'manual'
+      }
+    }
+  } catch (e) {
+    console.error('识别商品失败:', e)
+    // 默认显示手动输入
+    scanResult.value = {
+      barcode,
+      name: '',
+      brand: '',
+      price: 0,
+      category: '其他',
+      image: '',
+      specs: '',
+      source: 'manual'
+    }
+  } finally {
+    scanLoading.value = false
+  }
+}
+
+// 关闭扫码弹窗
+const closeScanModal = () => {
+  showScanModal.value = false
+  scanResult.value = null
+  scanLoading.value = false
+}
+
+// 确认添加商品
+const confirmAddProduct = async () => {
+  if (!scanResult.value.name) {
+    uni.showToast({ title: '请输入商品名称', icon: 'none' })
+    return
+  }
+  
+  // 如果选择了清单，添加到清单
+  if (selectedListId.value) {
+    try {
+      await shoppingApi.addItem({
+        listId: selectedListId.value,
+        name: scanResult.value.name,
+        quantity: 1,
+        unit: '件',
+        estimatedPrice: scanResult.value.price,
+        barcode: scanResult.value.barcode,
+        category: scanResult.value.category
+      })
+      uni.showToast({ title: '已添加到清单', icon: 'success' })
+    } catch (e) {
+      uni.showToast({ title: '添加失败', icon: 'none' })
+    }
+  } else {
+    // 否则添加到库存
+    try {
+      const familyId = uni.getStorageSync('currentFamilyId') || 1
+      await shoppingApi.addInventory({
+        familyId,
+        productName: scanResult.value.name,
+        barcode: scanResult.value.barcode,
+        category: scanResult.value.category,
+        quantity: 1,
+        unit: '件',
+        expiryDate: null
+      })
+      uni.showToast({ title: '已添加到库存', icon: 'success' })
+    } catch (e) {
+      uni.showToast({ title: '添加失败', icon: 'none' })
+    }
+  }
+  
+  closeScanModal()
+}
+
 </script>
 
 <style lang="scss" scoped>
@@ -457,5 +720,239 @@ const scanCode = () => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+// 扫码弹窗样式
+.scan-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  
+  .scan-modal-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+  }
+  
+  .scan-modal-content {
+    position: relative;
+    width: 100%;
+    max-height: 80vh;
+    background: #1a1a2e;
+    border-radius: 24px 24px 0 0;
+    padding: 20px;
+    animation: slideUp 0.3s ease;
+    overflow-y: auto;
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  
+  .scan-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    .scan-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+    
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #64748b;
+    }
+  }
+  
+  .scan-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0;
+    
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(99,102,241,0.2);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #64748b;
+    }
+  }
+  
+  .scan-form {
+    .product-image-section {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      
+      .product-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.05);
+        
+        image {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      
+      .product-image-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .placeholder-icon {
+          font-size: 48px;
+        }
+      }
+    }
+    
+    .form-item {
+      margin-bottom: 16px;
+      
+      .form-label {
+        display: block;
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 8px;
+      }
+      
+      .form-value {
+        padding: 12px 16px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        font-size: 14px;
+        color: #fff;
+        
+        &.barcode {
+          font-family: monospace;
+          color: #94a3b8;
+        }
+      }
+      
+      .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        font-size: 14px;
+        color: #fff;
+        
+        &:focus {
+          border-color: #6366f1;
+        }
+      }
+      
+      .price-input-wrapper {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        
+        .currency {
+          font-size: 14px;
+          color: #64748b;
+          margin-right: 8px;
+        }
+        
+        .price-input {
+          flex: 1;
+          padding: 0;
+          background: transparent;
+          border: none;
+        }
+      }
+      
+      .form-picker {
+        padding: 12px 16px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        font-size: 14px;
+        color: #fff;
+      }
+    }
+    
+    .source-tag {
+      text-align: center;
+      margin-bottom: 20px;
+      
+      .tag {
+        display: inline-block;
+        padding: 6px 12px;
+        background: rgba(16,185,129,0.15);
+        color: #10b981;
+        font-size: 12px;
+        border-radius: 20px;
+      }
+      
+      &.manual .tag {
+        background: rgba(245,158,11,0.15);
+        color: #f59e0b;
+      }
+    }
+    
+    .scan-actions {
+      display: flex;
+      gap: 12px;
+      
+      .btn {
+        flex: 1;
+        padding: 14px 0;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 500;
+        text-align: center;
+        
+        &.btn-secondary {
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+        }
+        
+        &.btn-primary {
+          background: linear-gradient(135deg, #6366f1, #8b5cf6);
+          color: #fff;
+        }
+      }
+    }
+  }
 }
 </style>

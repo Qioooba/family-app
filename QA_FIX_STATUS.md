@@ -10,34 +10,34 @@
 
 ## P0 - 阻塞级别（影响编译/启动/安全）
 
+### Q023 - 编译错误 (CacheAspect Lombok)
+**状态**: 🔴 新发现
+**负责**: 后端
+**问题**: `CacheAspect.java` 已有`@Slf4j`注解但编译失败，找不到`log`变量
+**错误信息**: `[ERROR] 找不到符号: 变量 log`
+**建议方案**:
+1. 检查Lombok annotationProcessorPaths配置
+2. 或手动添加`private static final Logger log = LoggerFactory.getLogger(...)`
+
 ### Q007 - 编译错误 (Lombok)
-**状态**: 🔴 待修复
+**状态**: 🟡 需重新验证
 **负责**: 后端
 **问题**: Lombok 1.18.32 与 Java 17 兼容性问题导致user-service编译失败
-**建议方案**:
-1. 升级Lombok到1.18.30+
-2. 或升级maven-compiler-plugin
-3. 检查annotationProcessorPaths配置
 
 ### Q022 - 编译错误 (依赖)
-**状态**: 🔴 待修复
+**状态**: 🟡 需重新验证
 **负责**: 后端
 **问题**: bucket4j-core 8.7.0 依赖无法从Maven Central下载
-**建议方案**:
-1. 更换bucket4j版本
-2. 或添加jcenter/other仓库源
-3. 或使用替代库
 
 ### Q008 - 架构问题 (TaskController重复)
-**状态**: 🔴 待修复
-**负责**: 后端
-**问题**: task-service和family-service各有一个TaskController
-**建议方案**: 删除family-service中的TaskController，保留task-service版本
+**状态**: ✅ 已修复 (git f501c2c)
+**验证时间**: 2026-02-22 01:30
+**验证结果**: 只存在一个TaskController在task-service中
 
 ### Q011 - 安全问题 (ExportController无权限)
-**状态**: 🔴 待修复
-**负责**: 后端
-**问题**: `exportFamilyData` 接口无权限校验，任何人可导出任意家庭数据
+**状态**: ✅ 已修复 (git f501c2c)
+**验证时间**: 2026-02-22 01:33
+**验证结果**: 已有`@SaCheckLogin`和用户家庭权限校验
 **建议方案**: 添加@SaCheckLogin和用户家庭权限校验
 
 ### Q014 - 架构问题 (UserController重复)
