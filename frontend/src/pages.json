@@ -216,6 +216,13 @@
         "navigationBarTitleText": "喝水打卡",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/coupon/index",
+      "style": {
+        "navigationBarTitleText": "优惠券",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

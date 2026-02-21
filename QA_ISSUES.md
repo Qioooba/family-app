@@ -21,6 +21,11 @@
 | Q015 | 代码缺陷 | family-service/UserController.java | switchFamily硬编码userId=1L | P1 | 2026-02-22 |
 | Q016 | 字段不一致 | task/create.vue vs Task.java | deadline vs dueTime | P1 | 2026-02-22 |
 | Q017 | 字段不一致 | task/create.vue vs Task.java | category vs categoryId | P1 | 2026-02-22 |
+| Q018 | Controller缺失 | api/moments.js | 后端不存在MomentsController | P0 | 2026-02-22 |
+| Q019 | Controller缺失 | api/schedule.js | 后端不存在ScheduleController | P0 | 2026-02-22 |
+| Q020 | 路径不匹配 | api/user.js vs UserController.java | 前端`/api/user` vs 后端`/user` | P1 | 2026-02-22 |
+| Q021 | 路径不匹配 | api/coupon.js vs PointsCouponController.java | 路径完全不匹配 | P1 | 2026-02-22 |
+| Q022 | 依赖问题 | backend/pom.xml | bucket4j-core依赖无法下载 | P0 | 2026-02-22 |
 
 ## 已修复
 
