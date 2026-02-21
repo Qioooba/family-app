@@ -1,6 +1,5 @@
 package com.family.common.ratelimit;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,7 +11,6 @@ import java.util.Map;
  *
  * @author family
  */
-@Data
 @Configuration
 @ConfigurationProperties(prefix = "family.rate-limit")
 public class RateLimitProperties {
@@ -34,7 +32,30 @@ public class RateLimitProperties {
      */
     private Map<String, RateLimitConfig> configs = new HashMap<>();
 
-    @Data
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public RateLimitConfig getDefaultConfig() {
+        return defaultConfig;
+    }
+
+    public void setDefaultConfig(RateLimitConfig defaultConfig) {
+        this.defaultConfig = defaultConfig;
+    }
+
+    public Map<String, RateLimitConfig> getConfigs() {
+        return configs;
+    }
+
+    public void setConfigs(Map<String, RateLimitConfig> configs) {
+        this.configs = configs;
+    }
+
     public static class RateLimitConfig {
         /**
          * 每秒产生的令牌数
@@ -50,5 +71,29 @@ public class RateLimitProperties {
          * 限流类型
          */
         private String limitType = "default";
+
+        public double getPermitsPerSecond() {
+            return permitsPerSecond;
+        }
+
+        public void setPermitsPerSecond(double permitsPerSecond) {
+            this.permitsPerSecond = permitsPerSecond;
+        }
+
+        public long getBurstCapacity() {
+            return burstCapacity;
+        }
+
+        public void setBurstCapacity(long burstCapacity) {
+            this.burstCapacity = burstCapacity;
+        }
+
+        public String getLimitType() {
+            return limitType;
+        }
+
+        public void setLimitType(String limitType) {
+            this.limitType = limitType;
+        }
     }
 }

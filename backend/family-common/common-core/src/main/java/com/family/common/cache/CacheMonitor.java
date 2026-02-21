@@ -3,7 +3,8 @@ package com.family.common.cache;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,9 +21,10 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author family
  */
-@Slf4j
 @Component
 public class CacheMonitor {
+
+    private static final Logger log = LoggerFactory.getLogger(CacheMonitor.class);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final MeterRegistry meterRegistry;

@@ -145,3 +145,43 @@
 - **当前状态**: 🟢 运行中
 - **下次检查**: 每10分钟
 - **下次报告**: 每15分钟
+
+---
+
+## 持续审查新发现问题
+
+### 2026-02-22 01:26-01:35 第1轮审查
+
+#### ✅ 已验证修复
+| 编号 | 问题 | 验证时间 |
+|------|------|----------|
+| Q008 | 重复TaskController已删除 | 01:30 |
+| Q011 | ExportController权限校验已添加 | 01:33 |
+| Q014 | 重复UserController已删除 | 01:32 |
+| Q018 | MomentController已创建且接口完整 | 01:28 |
+
+#### 🔴 新发现问题
+| 编号 | 类型 | 优先级 | 描述 |
+|------|------|--------|------|
+| Q023 | 编译错误 | P0 | CacheAspect Lombok编译失败 |
+| Q024 | 接口不一致 | P1 | ScheduleController与前端不匹配 |
+| Q025 | 接口缺失 | P1 | Task子任务/重复规则/提醒接口缺失 |
+| Q026 | 接口不一致 | P1 | FamilyController路径缺少/api前缀 |
+| Q027 | 接口不一致 | P1 | VoteController路径缺少/api前缀 |
+| Q028 | 接口不一致 | P1 | UserController路径缺少/api前缀 |
+| Q029 | 接口不一致 | P1 | RecipeController路径缺少/api前缀 |
+| Q030 | 接口不一致 | P1 | PointsCouponController与game.js不匹配 |
+| Q031 | 接口缺失 | P2 | Shopping价格相关接口缺失(5个) |
+
+#### ⚠️ Q023可能已修复
+新commit `a8945a5` 更新了pom.xml，配置Lombok annotationProcessorPaths v1.18.30
+
+### 2026-02-22 01:33 第2轮审查 - 新commit a8945a5
+
+#### 🆕 新代码: 扫码录入功能
+- 前端shopping/index.vue: 扫码UI完成 ✅
+- 后端ShoppingController.scan: 接口已存在 ✅
+- 缓存系统代码: 新增CacheAspect等
+
+#### 🔴 新发现问题
+- Q031: Shopping价格历史/追踪/比价接口缺失

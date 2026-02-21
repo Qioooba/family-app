@@ -11,25 +11,27 @@
 
     <!-- 快捷操作 -->
     <view class="quick-actions">
-      <view class="action-card" @click="createList"
-      >
-        <view class="action-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"
-        >📝</view>
-        <view class="action-info"
-        >
+      <view class="action-card" @click="createList">
+        <view class="action-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">📝</view>
+        <view class="action-info">
           <text class="action-name">新建清单</text>
           <text class="action-desc">创建购物计划</text>
         </view>
       </view>
       
-      <view class="action-card" @click="goInventory"
-      >
-        <view class="action-icon" style="background: linear-gradient(135deg, #10b981, #059669);"
-        >📦</view>
-        <view class="action-info"
-        >
+      <view class="action-card" @click="goInventory">
+        <view class="action-icon" style="background: linear-gradient(135deg, #10b981, #059669);">📦</view>
+        <view class="action-info">
           <text class="action-name">库存管理</text>
           <text class="action-desc">查看家中存货</text>
+        </view>
+      </view>
+
+      <view class="action-card" @click="goPriceTrack">
+        <view class="action-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">📈</view>
+        <view class="action-info">
+          <text class="action-name">价格追踪</text>
+          <text class="action-desc">监控价格变动</text>
         </view>
       </view>
     </view>
@@ -319,6 +321,12 @@ const createList = () => {
 
 const goInventory = () => {
   uni.showToast({ title: '库存管理开发中', icon: 'none' })
+}
+
+const goPriceTrack = () => {
+  uni.navigateTo({
+    url: '/pages/shopping/price'
+  })
 }
 
 // 扫码录入

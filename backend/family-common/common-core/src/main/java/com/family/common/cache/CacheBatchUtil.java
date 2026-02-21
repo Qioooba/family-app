@@ -1,6 +1,7 @@
 package com.family.common.cache;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,9 +19,10 @@ import java.util.stream.Collectors;
  *
  * @author family
  */
-@Slf4j
 @Component
 public class CacheBatchUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(CacheBatchUtil.class);
 
     private final RedisTemplate<String, Object> redisTemplate;
 

@@ -2,7 +2,6 @@ package com.family.common.ratelimit;
 
 import com.google.common.util.concurrent.RateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Aspect
 @Component
 @Order(-1)
-@RequiredArgsConstructor
 public class RateLimitAspect {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitAspect.class);

@@ -197,6 +197,13 @@
       }
     },
     {
+      "path": "pages/shopping/price",
+      "style": {
+        "navigationBarTitleText": "价格追踪",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/game/index",
       "style": {
         "navigationBarTitleText": "家庭游戏",

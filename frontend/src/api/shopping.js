@@ -70,7 +70,42 @@ export const shoppingApi = {
    * @param {number} familyId - 家庭ID
    * @returns {Promise<Array>} 即将过期商品列表
    */
-  getExpiringItems: (familyId) => request.get(`/api/shopping/inventory/expiring/${familyId}`)
+  getExpiringItems: (familyId) => request.get(`/api/shopping/inventory/expiring/${familyId}`),
+
+  /**
+   * 获取商品价格历史
+   * @param {string} barcode - 商品条码
+   * @returns {Promise<Array>} 价格历史
+   */
+  getPriceHistory: (barcode) => request.get(`/api/shopping/price/history/${barcode}`),
+
+  /**
+   * 获取价格追踪列表
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<Array>} 追踪列表
+   */
+  getPriceTracking: (familyId) => request.get(`/api/shopping/price/tracking/${familyId}`),
+
+  /**
+   * 添加价格追踪
+   * @param {object} data - 追踪数据
+   * @returns {Promise<number>} 追踪ID
+   */
+  addPriceTracking: (data) => request.post('/api/shopping/price/tracking', data),
+
+  /**
+   * 删除价格追踪
+   * @param {number} id - 追踪ID
+   * @returns {Promise<boolean>}
+   */
+  deletePriceTracking: (id) => request.delete(`/api/shopping/price/tracking/${id}`),
+
+  /**
+   * 获取商品比价信息
+   * @param {string} barcode - 商品条码
+   * @returns {Promise<object>} 比价信息
+   */
+  getPriceCompare: (barcode) => request.get(`/api/shopping/price/compare/${barcode}`)
 }
 
 export default shoppingApi
