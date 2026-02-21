@@ -57,46 +57,96 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { anniversaryApi } from '../../api/index.js'
 
-const currentYear = ref(2025)
-const currentMonth = ref(2)
+const currentYear = ref(new Date().getFullYear())
+const currentMonth = ref(new Date().getMonth() + 1)
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+const events = ref([])
+const loading = ref(false)
 
-const daysInMonth = ref([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28])
+// 加载纪念日列表
+const loadAnniversaries = async () => {
+  loading.value = true
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const res = await anniversaryApi.getList(familyId)
+    events.value = res || []
+  } catch (e) {
+    console.error('加载纪念日失败', e)
+  } finally {
+    loading.value = false
+  }
+}
 
-const events = ref([
-  { day: 14, title: '情人节' },
-  { day: 21, title: '家庭聚餐' },
-  { day: 25, title: '结婚纪念日' }
-])
+// 页面加载时获取数据
+onMounted(() => {
+  loadAnniversaries()
+})
 
-const upcomingEvents = ref([
-  { icon: '💒', title: '结婚纪念日', date: '2025年2月25日', days: 4 },
-  { icon: '👨', title: '爸爸生日', date: '2025年3月5日', days: 12 },
-  { icon: '🎂', title: '宝贝生日', date: '2025年3月15日', days: 22 }
-])
+// 计算属性：即将到来的纪念日
+const upcomingEvents = computed(() => {
+  return events.value.map(event => {
+    const eventDate = new Date(event.date)
+    const today = new Date()
+    const diffTime = eventDate - today
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    return {
+      ...event,
+      icon: event.icon || '📅',
+      days: diffDays > 0 ? diffDays : 0
+    }
+  }).filter(e => e.days >= 0).sort((a, b) => a.days - b.days)
+})
+
+// 计算当月天数
+const daysInMonth = computed(() => {
+  const days = new Date(currentYear.value, currentMonth.value, 0).getDate()
+  return Array.from({ length: days }, (_, i) => i + 1)
+})
 
 const isToday = (day) => {
-  return day === 21
+  const today = new Date()
+  return day === today.getDate() && 
+         currentMonth.value === today.getMonth() + 1 &&
+         currentYear.value === today.getFullYear()
 }
 
 const hasEvent = (day) => {
-  return events.value.some(e => e.day === day)
+  return events.value.some(e => {
+    const date = new Date(e.date)
+    return date.getDate() === day &&
+           date.getMonth() + 1 === currentMonth.value &&
+           date.getFullYear() === currentYear.value
+  })
 }
 
 const selectDay = (day) => {
-  const event = events.value.find(e => e.day === day)
+  const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const event = events.value.find(e => e.date === dateStr)
   if (event) {
     uni.showModal({
       title: event.title,
-      content: `${currentYear.value}年${currentMonth.value}月${day}日`,
+      content: `${event.date}\n${event.description || ''}`,
       showCancel: true,
-      confirmText: '编辑',
-      cancelText: '关闭'
+      confirmText: '删除',
+      cancelText: '关闭',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            await anniversaryApi.delete(event.id)
+            uni.showToast({ title: '已删除', icon: 'success' })
+            loadAnniversaries()
+          } catch (e) {
+            uni.showToast({ title: '删除失败', icon: 'none' })
+          }
+        }
+      }
     })
   } else {
-    uni.showToast({ title: `${day}日 无事件`, icon: 'none' })
+    uni.showToast({ title: `${day}日 无纪念日`, icon: 'none' })
   }
 }
 
@@ -105,9 +155,24 @@ const showAddModal = () => {
     title: '添加纪念日',
     editable: true,
     placeholderText: '输入纪念日名称...',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm && res.content) {
-        uni.showToast({ title: '添加成功', icon: 'success' })
+        try {
+          const familyId = uni.getStorageSync('currentFamilyId') || 1
+          const today = new Date()
+          const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+          
+          await anniversaryApi.create({
+            title: res.content,
+            familyId: familyId,
+            date: dateStr
+          })
+          uni.showToast({ title: '添加成功', icon: 'success' })
+          loadAnniversaries()
+        } catch (e) {
+          console.error('添加失败', e)
+          uni.showToast({ title: '添加失败', icon: 'none' })
+        }
       }
     }
   })
