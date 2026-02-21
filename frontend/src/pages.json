@@ -95,6 +95,13 @@
             "navigationBarTitleText": "提醒设置",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "calendar",
+          "style": {
+            "navigationBarTitleText": "任务日历",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
