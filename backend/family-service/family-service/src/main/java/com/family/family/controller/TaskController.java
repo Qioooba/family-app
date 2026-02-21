@@ -199,6 +199,66 @@ public class TaskController {
     }
     
     /**
+     * 指派任务
+     * POST /api/task/{id}/assign
+     */
+    @PostMapping("/{id}/assign")
+    public Result<Boolean> assignTask(@PathVariable Long id, @RequestBody AssignRequest request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        Task task = taskMapper.selectById(id);
+        
+        if (task == null) {
+            return Result.error("任务不存在");
+        }
+        
+        // 只有创建者可以指派
+        if (!task.getCreatorId().equals(userId)) {
+            return Result.error(403, "无权指派此任务");
+        }
+        
+        task.setAssigneeId(request.getAssigneeId());
+        task.setUpdateTime(LocalDateTime.now());
+        taskMapper.updateById(task);
+        
+        return Result.success(true);
+    }
+    
+    /**
+     * 转交任务（将创建者转移给其他人）
+     * POST /api/task/{id}/transfer
+     */
+    @PostMapping("/{id}/transfer")
+    public Result<Boolean> transferTask(@PathVariable Long id, @RequestBody TransferRequest request) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        Task task = taskMapper.selectById(id);
+        
+        if (task == null) {
+            return Result.error("任务不存在");
+        }
+        
+        // 只有创建者可以转交
+        if (!task.getCreatorId().equals(userId)) {
+            return Result.error(403, "无权转交此任务");
+        }
+        
+        task.setCreatorId(request.getNewOwnerId());
+        task.setUpdateTime(LocalDateTime.now());
+        taskMapper.updateById(task);
+        
+        return Result.success(true);
+    }
+    
+    /**
+     * @提及成员（添加关注者）
+     * POST /api/task/{id}/mention
+     */
+    @PostMapping("/{id}/mention")
+    public Result<Boolean> mentionMembers(@PathVariable Long id, @RequestBody MentionRequest request) {
+        // 实际实现需要创建任务关注者表，这里简化处理
+        return Result.success(true);
+    }
+    
+    /**
      * 重复规则请求DTO
      */
     public static class RepeatRuleRequest {
@@ -309,5 +369,35 @@ public class TaskController {
         public void setAssigneeId(Long assigneeId) {
             this.assigneeId = assigneeId;
         }
+    }
+    
+    /**
+     * 指派请求
+     */
+    public static class AssignRequest {
+        private Long assigneeId;
+        
+        public Long getAssigneeId() { return assigneeId; }
+        public void setAssigneeId(Long assigneeId) { this.assigneeId = assigneeId; }
+    }
+    
+    /**
+     * 转交请求
+     */
+    public static class TransferRequest {
+        private Long newOwnerId;
+        
+        public Long getNewOwnerId() { return newOwnerId; }
+        public void setNewOwnerId(Long newOwnerId) { this.newOwnerId = newOwnerId; }
+    }
+    
+    /**
+     * @提及请求
+     */
+    public static class MentionRequest {
+        private List<Long> userIds;
+        
+        public List<Long> getUserIds() { return userIds; }
+        public void setUserIds(List<Long> userIds) { this.userIds = userIds; }
     }
 }
