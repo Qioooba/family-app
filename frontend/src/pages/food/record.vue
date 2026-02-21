@@ -30,6 +30,18 @@
           <text :class="{ 'over': remaining < 0 }">{{ remaining >= 0 ? '剩余 ' + remaining : '超出 ' + Math.abs(remaining) }} 千卡</text>
         </view>
       </view>
+
+      <!-- 体重快捷入口 -->
+      <view class="weight-entry" @click="showWeightModal">
+        <view class="weight-info">
+          <u-icon name="edit-pen" size="36" color="#5AD8A6"></u-icon>
+          <view class="weight-text">
+            <text class="label">今日体重</text>
+            <text class="value">{{ latestWeight ? latestWeight + ' kg' : '未记录' }}</text>
+          </view>
+        </view>
+        <u-icon name="arrow-right" size="32" color="#ccc"></u-icon>
+      </view>
       
       <!-- 记录方式选择 -->
       <view class="record-type">
@@ -118,17 +130,118 @@
         
         <!-- 语音记录 -->
         <view v-if="currentType === 'voice'" class="voice-section">
-          <view class="voice-btn" :class="{ recording: isRecording }" @click="toggleRecording"
-003e
-            <u-icon :name="isRecording ? 'mic-fill' : 'mic'" size="80" :color="isRecording ? '#fff' : '#5AD8A6'"  ></u-icon>
+          <view class="voice-btn" :class="{ recording: isRecording }" @click="toggleRecording">
+            <u-icon :name="isRecording ? 'mic-fill' : 'mic'" size="80" :color="isRecording ? '#fff' : '#5AD8A6'"></u-icon>
           </view>
           
           <text class="voice-hint">{{ isRecording ? '正在录音...' : '点击开始语音记录' }}</text>
           
           <view v-if="voiceText" class="voice-result">
             <text class="result-title">识别内容</text>
-            <text class="result-text">{{ voiceText }}</text>          
+            <text class="result-text">{{ voiceText }}</text>
           </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 体重记录弹窗 -->
+    <view v-if="weightModalVisible" class="modal-overlay" @click="closeWeightModal">
+      <view class="modal-content weight-modal" @click.stop>
+        <view class="modal-header">
+          <text>记录体重</text>
+          <text class="close-btn" @click="closeWeightModal">✕</text>
+        </view>
+
+        <!-- 体重输入 -->
+        <view class="weight-input-section">
+          <view class="weight-display">
+            <input 
+              v-model="weightInput" 
+              type="digit" 
+              class="weight-number"
+              placeholder="0.0"
+              maxlength="5"
+            />
+            <text class="weight-unit">kg</text>
+          </view>
+
+          <!-- 快速选择 -->
+          <view class="quick-weights">
+            <view 
+              v-for="w in quickWeights" 
+              :key="w"
+              class="quick-weight-item"
+              :class="{ active: weightInput === w.toString() }"
+              @click="weightInput = w.toString()"
+            >
+              {{ w }}
+            </view>
+          </view>
+        </view>
+
+        <!-- 备注 -->
+        <view class="form-item">
+          <text class="label">备注（选填）</text>
+          <input v-model="weightNote" class="input" placeholder="例如：空腹、运动后..." />
+        </view>
+
+        <!-- 历史趋势图 -->
+        <view class="weight-chart-section" v-if="weightHistory.length > 1">
+          <text class="chart-title">近7天趋势</text>
+          <view class="chart-container">
+            <view class="chart-line">
+              <view 
+                v-for="(point, index) in chartPoints" 
+                :key="index"
+                class="chart-point"
+                :style="{ 
+                  left: point.x + '%', 
+                  bottom: point.y + '%',
+                  background: index === chartPoints.length - 1 ? '#5AD8A6' : '#ccc'
+                }"
+              >
+                <view class="point-tooltip">{{ point.weight }}</view>
+              </view>
+              <view class="chart-line-svg" v-if="chartPoints.length > 1">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <polyline 
+                    :points="chartPath" 
+                    fill="none" 
+                    stroke="#5AD8A6" 
+                    stroke-width="2"
+                  />
+                </svg>
+              </view>
+            </view>
+            <view class="chart-labels">
+              <text v-for="(item, index) in chartLabels" :key="index" class="chart-label">
+                {{ item }}
+              </text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 历史列表 -->
+        <view class="weight-history-section" v-if="weightHistory.length > 0">
+          <text class="history-title">历史记录</text>
+          <scroll-view scroll-y class="history-list">
+            <view 
+              v-for="(item, index) in weightHistory.slice(0, 10)" 
+              :key="item.id || index"
+              class="history-item"
+            >
+              <view class="history-left">
+                <text class="history-weight">{{ item.weight }} kg</text>
+                <text v-if="item.note" class="history-note">{{ item.note }}</text>
+              </view>
+              <text class="history-date">{{ formatDate(item.recordDate) }}</text>
+            </view>
+          </scroll-view>
+        </view>
+
+        <view class="modal-actions">
+          <button class="btn-cancel" @click="closeWeightModal">取消</button>
+          <button class="btn-confirm" @click="saveWeight">保存</button>
         </view>
       </view>
     </view>
@@ -136,11 +249,20 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { dietApi } from '../../api/index.js'
 
 const today = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })
 const todayCalories = ref(1250)
 const targetCalories = ref(2000)
+
+// 体重相关数据
+const weightModalVisible = ref(false)
+const weightInput = ref('')
+const weightNote = ref('')
+const latestWeight = ref(null)
+const weightHistory = ref([])
+const quickWeights = [45, 50, 55, 60, 65, 70, 75, 80]
 
 const remaining = computed(() => targetCalories.value - todayCalories.value)
 const progressPercent = computed(() => Math.min((todayCalories.value / targetCalories.value) * 100, 100))
