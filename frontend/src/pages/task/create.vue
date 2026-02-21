@@ -561,4 +561,123 @@ const saveTask = async () => {
     }
   }
 }
+
+// 自定义重复样式
+.custom-repeat {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: #f9f9f9;
+  border-radius: 12rpx;
+
+  .custom-row {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    font-size: 28rpx;
+    color: #333;
+
+    .interval-input {
+      width: 100rpx;
+      height: 60rpx;
+      background: #fff;
+      border-radius: 8rpx;
+      text-align: center;
+      font-size: 28rpx;
+    }
+
+    .unit-picker {
+      padding: 10rpx 20rpx;
+      background: #fff;
+      border-radius: 8rpx;
+      color: #5B8FF9;
+    }
+  }
+
+  .weekdays-select {
+    display: flex;
+    gap: 12rpx;
+    margin-top: 20rpx;
+
+    .weekday-item {
+      width: 60rpx;
+      height: 60rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border-radius: 50%;
+      font-size: 26rpx;
+      color: #666;
+
+      &.active {
+        background: #5B8FF9;
+        color: #fff;
+      }
+    }
+  }
+}
+
+// 重复结束条件样式
+.repeat-end {
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #eee;
+
+  .sub-label {
+    display: block;
+    font-size: 26rpx;
+    color: #666;
+    margin-bottom: 16rpx;
+  }
+
+  .end-options {
+    display: flex;
+    gap: 16rpx;
+    margin-bottom: 16rpx;
+
+    .end-option {
+      padding: 12rpx 24rpx;
+      background: #f5f5f5;
+      border-radius: 24rpx;
+      font-size: 24rpx;
+      color: #666;
+
+      &.active {
+        background: #5B8FF9;
+        color: #fff;
+      }
+    }
+  }
+
+  .end-date-picker {
+    padding: 16rpx;
+    background: #f9f9f9;
+    border-radius: 8rpx;
+
+    .picker-value {
+      font-size: 28rpx;
+      color: #333;
+    }
+  }
+
+  .end-count-input {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+
+    .count-input {
+      width: 150rpx;
+      height: 60rpx;
+      background: #f9f9f9;
+      border-radius: 8rpx;
+      text-align: center;
+      font-size: 28rpx;
+    }
+
+    text {
+      font-size: 28rpx;
+      color: #666;
+    }
+  }
+}
 </style>
