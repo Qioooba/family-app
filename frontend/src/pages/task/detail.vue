@@ -109,6 +109,28 @@
         </view>
       </view>
       
+      <!-- 提醒设置 -->
+      <view class="section-card reminder-section" @click="showReminderModal">
+        <view class="section-title">
+          <text>提醒设置</text>
+          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+        </view>
+        <view class="reminder-list">
+          <view v-if="reminders.length === 0" class="no-reminder">
+            <text>点击设置提醒 ⏰</text>
+          </view>
+          <view v-for="(reminder, index) in reminders" :key="reminder.id" class="reminder-item">
+            <view class="reminder-icon">
+              <u-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="32" color="#5B8FF9"></u-icon>
+            </view>
+            <view class="reminder-info">
+              <text class="reminder-time">{{ formatReminder(reminder) }}</text>
+              <text v-if="reminder.reminderType === 'location' && reminder.locationName" class="reminder-location">{{ reminder.locationName }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
       <!-- 操作按钮 -->
       <view class="action-buttons">
         <view 
@@ -129,6 +151,111 @@
         
         <view class="btn btn-danger" @click="deleteTask">
           删除任务
+        </view>
+      </view>
+      <!-- 提醒设置弹窗 -->
+      <view v-if="reminderModalVisible" class="modal-overlay" @click="closeReminderModal">
+        <view class="modal-content reminder-modal" @click.stop>
+          <view class="modal-header">
+            <text>设置提醒</text>
+            <text class="close-btn" @click="closeReminderModal">✕</text>
+          </view>
+
+          <!-- 提醒类型 -->
+          <view class="reminder-type-tabs">
+            <view
+              v-for="type in reminderTypes"
+              :key="type.value"
+              class="type-tab"
+              :class="{ active: newReminder.reminderType === type.value }"
+              @click="newReminder.reminderType = type.value"
+            >
+              <u-icon :name="type.icon" size="32" :color="newReminder.reminderType === type.value ? '#fff' : '#666'"></u-icon>
+              <text>{{ type.label }}</text>
+            </view>
+          </view>
+
+          <!-- 时间提醒设置 -->
+          <view v-if="newReminder.reminderType === 'time'" class="time-reminder-form">
+            <view class="form-item">
+              <text class="label">提醒时间</text>
+              <picker mode="multiSelector" :range="timeRange" :value="timeIndex" @change="onTimeChange">
+                <view class="picker-value">
+                  {{ newReminder.reminderTime || '选择时间' }}
+                  <u-icon name="arrow-right" size="24" color="#ccc"></u-icon>
+                </view>
+              </picker>
+            </view>
+
+            <view class="form-item">
+              <text class="label">提前提醒</text>
+              <view class="advance-options">
+                <view
+                  v-for="adv in advanceOptions"
+                  :key="adv.value"
+                  class="advance-item"
+                  :class="{ active: newReminder.advanceMinutes === adv.value }"
+                  @click="newReminder.advanceMinutes = adv.value"
+                >
+                  {{ adv.label }}
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 位置提醒设置 -->
+          <view v-if="newReminder.reminderType === 'location'" class="location-reminder-form">
+            <view class="form-item">
+              <text class="label">选择位置</text>
+              <view class="location-picker" @click="chooseLocation">
+                <view v-if="!newReminder.locationName" class="location-placeholder">
+                  <u-icon name="map" size="48" color="#ccc"></u-icon>
+                  <text>点击选择地图位置</text>
+                </view>
+                <view v-else class="location-selected">
+                  <u-icon name="map-fill" size="40" color="#5B8FF9"></u-icon>
+                  <view class="location-info">
+                    <text class="location-name">{{ newReminder.locationName }}</text>
+                    <text class="location-address" v-if="newReminder.locationAddress">{{ newReminder.locationAddress }}</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+
+            <view class="form-item">
+              <text class="label">提醒范围</text>
+              <view class="radius-options">
+                <view
+                  v-for="r in radiusOptions"
+                  :key="r.value"
+                  class="radius-item"
+                  :class="{ active: newReminder.radius === r.value }"
+                  @click="newReminder.radius = r.value"
+                >
+                  {{ r.label }}
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 提醒列表 -->
+          <view v-if="reminders.length > 0" class="existing-reminders">
+            <text class="section-subtitle">已设置的提醒</text>
+            <view v-for="(reminder, index) in reminders" :key="reminder.id" class="existing-item">
+              <view class="existing-info">
+                <u-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#5B8FF9"></u-icon>
+                <text>{{ formatReminder(reminder) }}</text>
+              </view>
+              <view class="delete-btn" @click="deleteReminder(reminder.id)">
+                <u-icon name="trash" size="28" color="#FF4D4F"></u-icon>
+              </view>
+            </view>
+          </view>
+
+          <view class="modal-actions">
+            <button class="btn-cancel" @click="closeReminderModal">取消</button>
+            <button class="btn-confirm" @click="saveReminder">添加提醒</button>
+          </view>
         </view>
       </view>
     </view>
@@ -156,6 +283,47 @@ const subtasks = ref([])
 const newSubtaskTitle = ref('')
 const loading = ref(false)
 
+// 提醒相关数据
+const reminders = ref([])
+const reminderModalVisible = ref(false)
+const newReminder = ref({
+  reminderType: 'time',
+  reminderTime: '',
+  advanceMinutes: 0,
+  locationName: '',
+  locationAddress: '',
+  latitude: null,
+  longitude: null,
+  radius: 500
+})
+
+const reminderTypes = [
+  { label: '时间提醒', value: 'time', icon: 'clock' },
+  { label: '位置提醒', value: 'location', icon: 'map' }
+]
+
+const advanceOptions = [
+  { label: '准时', value: 0 },
+  { label: '5分钟前', value: 5 },
+  { label: '15分钟前', value: 15 },
+  { label: '30分钟前', value: 30 },
+  { label: '1小时前', value: 60 }
+]
+
+const radiusOptions = [
+  { label: '100米', value: 100 },
+  { label: '200米', value: 200 },
+  { label: '500米', value: 500 },
+  { label: '1公里', value: 1000 }
+]
+
+// 时间选择器数据
+const timeRange = ref([
+  Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0') + '时'),
+  Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0') + '分')
+])
+const timeIndex = ref([9, 0])
+
 onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
@@ -163,6 +331,7 @@ onMounted(() => {
   // 加载任务详情
   if (taskId.value) {
     loadTaskDetail(taskId.value)
+    loadReminders(taskId.value)
   }
 })
 
