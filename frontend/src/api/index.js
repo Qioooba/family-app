@@ -1,34 +1,8 @@
 import { request } from '../utils/request'
 import { taskApi } from './task.js'
+import { wishApi } from './wish.js'
 
-export { taskApi }
-
-// 心愿相关API
-export const wishApi = {
-  // 获取心愿列表
-  getList: (familyId, params = {}) => request.get('/wish/list', { familyId, ...params }),
-  
-  // 创建心愿
-  create: (data) => request.post('/wish/create', data),
-  
-  // 更新心愿
-  update: (data) => request.put('/wish/update', data),
-  
-  // 认领心愿
-  claim: (wishId, userId) => request.post(`/wish/claim/${wishId}`, null, { params: { userId } }),
-  
-  // 更新进度
-  updateProgress: (wishId, progress) => request.post(`/wish/progress/${wishId}`, null, { params: { progress } }),
-  
-  // 完成心愿
-  complete: (wishId) => request.post(`/wish/complete/${wishId}`),
-  
-  // 放弃心愿
-  abandon: (wishId) => request.post(`/wish/abandon/${wishId}`),
-  
-  // 删除心愿
-  delete: (id) => request.delete(`/wish/${id}`)
-}
+export { taskApi, wishApi }
 
 // 菜谱相关API
 export const recipeApi = {

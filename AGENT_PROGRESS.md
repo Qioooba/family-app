@@ -2,12 +2,18 @@
 
 ## 已完成
 - [x] 用户模块API对接（注册/登录/token/个人信息）- 2026-02-21
+- [x] 任务模块API对接 - 2026-02-22 00:00 - d6199c3
+  - [x] GET /api/task/list - 任务列表
+  - [x] POST /api/task/create - 创建任务
+  - [x] PUT /api/task/update - 更新任务
+  - [x] POST /api/task/complete/{id} - 完成任务
+  - [x] POST /api/task/assign/{id} - 指派任务
+  - [x] GET /api/task/today/{familyId} - 今日任务
+  - [x] DELETE /api/task/{id} - 删除任务
 
 ## 进行中
-- [ ] 任务模块API对接 - 2026-02-22 00:00
-  - 已创建 `/api/task.js` 独立模块
-  - 修复了 `assign` 方法的参数传递问题
-  - 正在更新任务详情页面API对接
+- [ ] 心愿模块API对接 - 2026-02-22 00:03
+  - 正在查看后端API定义
 
 ## 待完成
 ### P0 - 前端API对接

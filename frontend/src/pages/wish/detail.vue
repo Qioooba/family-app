@@ -86,9 +86,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { wishApi } from '../../api/index.js'
 
 const wishId = ref(null)
-const currentUserId = ref(2)
+const currentUserId = ref(uni.getStorageSync('userInfo')?.id || 1)
+const loading = ref(false)
 
 const wish = ref({
   id: 1,
@@ -110,7 +112,27 @@ onMounted(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   wishId.value = currentPage.options.id
+  if (wishId.value) {
+    loadWishDetail(wishId.value)
+  }
 })
+
+// 加载心愿详情
+const loadWishDetail = async (id) => {
+  // 目前后端没有单独的详情接口，从列表获取
+  const familyId = uni.getStorageSync('currentFamilyId') || 1
+  try {
+    const res = await wishApi.getList(familyId)
+    if (res) {
+      const found = res.find(w => w.id == id)
+      if (found) {
+        wish.value = { ...wish.value, ...found }
+      }
+    }
+  } catch (e) {
+    console.error('加载心愿详情失败', e)
+  }
+}
 
 const getTypeLabel = computed(() => {
   const map = {
@@ -137,34 +159,57 @@ const showActions = () => {
   })
 }
 
-const claimWish = () => {
-  wish.value.claimer = currentUserId.value
-  wish.value.claimerName = '爸爸'
-  wish.value.claimerAvatar = '/static/avatar/dad.png'
-  wish.value.claimTime = new Date().toLocaleDateString('zh-CN')
-  uni.showToast({ title: '认领成功', icon: 'success' })
+const claimWish = async () => {
+  try {
+    await wishApi.claim(wishId.value, currentUserId.value)
+    wish.value.claimer = currentUserId.value
+    wish.value.claimerName = '我'
+    wish.value.claimTime = new Date().toLocaleDateString('zh-CN')
+    uni.showToast({ title: '认领成功', icon: 'success' })
+  } catch (e) {
+    console.error('认领失败', e)
+    uni.showToast({ title: '认领失败', icon: 'none' })
+  }
 }
 
 const updateProgress = () => {
   uni.showActionSheet({
     itemList: ['10%', '30%', '50%', '70%', '90%', '100% 已完成'],
-    success: (res) => {
+    success: async (res) => {
       const progresses = [10, 30, 50, 70, 90, 100]
-      wish.value.progress = progresses[res.tapIndex]
-      uni.showToast({ title: '进度已更新', icon: 'success' })
+      const newProgress = progresses[res.tapIndex]
+      try {
+        if (newProgress === 100) {
+          await wishApi.complete(wishId.value)
+          uni.showToast({ title: '心愿已完成！', icon: 'success' })
+        } else {
+          await wishApi.updateProgress(wishId.value, newProgress)
+          uni.showToast({ title: '进度已更新', icon: 'success' })
+        }
+        wish.value.progress = newProgress
+      } catch (e) {
+        console.error('更新进度失败', e)
+        uni.showToast({ title: '更新失败', icon: 'none' })
+      }
     }
   })
 }
 
-const deleteWish = () => {
+const deleteWish = async () => {
   uni.showModal({
     title: '确认删除',
     content: '删除后无法恢复，是否继续？',
     confirmColor: '#FF4D4F',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm) {
-        uni.showToast({ title: '已删除', icon: 'success' })
-        setTimeout(() => uni.navigateBack(), 1500)
+        try {
+          await wishApi.delete(wishId.value)
+          uni.showToast({ title: '已删除', icon: 'success' })
+          setTimeout(() => uni.navigateBack(), 1500)
+        } catch (e) {
+          console.error('删除失败', e)
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
       }
     }
   })
