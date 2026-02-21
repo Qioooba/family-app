@@ -1,8 +1,8 @@
 # QA修复状态追踪
 
 ## 当前状态概览
-- **待修复**: 22 项
-- **已修复**: 0 项
+- **待修复**: 19 项
+- **已修复**: 3 项 (Q001/Q003/Q020/Q021)
 - **验证通过**: 0 项
 - **阻塞中**: 6 项 (P0级别)
 
@@ -63,13 +63,15 @@
 ## P1 - 高优先级（影响功能）
 
 ### Q001/Q003/Q020 - 接口路径不一致
-**状态**: 🟡 待修复
-**负责**: 后端/前端协调
-- Q001: Wish路径不匹配 `/wish` vs `/api/wish`
-- Q003: Schedule路径不匹配 `/schedule` vs `/api/schedule`
-- Q020: User路径不匹配 `/api/user` vs `/user`
+**状态**: ✅ 已修复
+**负责**: 前端
+**修复时间**: 2026-02-22 01:24
+**修复内容**:
+- Q001: Wish API路径统一为 `/api/wish/xxx`
+- Q003: Schedule API路径统一为 `/api/schedule/xxx`
+- Q020: User API路径统一为 `/api/user/xxx`
 
-**建议**: 统一规范为 `/api/{module}` 前缀
+**修改文件**: `frontend/src/api/wish.js`, `schedule.js`, `index.js`
 
 ### Q012 - logout功能不完整
 **状态**: 🟡 待修复
@@ -90,10 +92,15 @@
 - category vs categoryId
 
 ### Q021 - Coupon路径不匹配
-**状态**: 🟡 待修复
-**负责**: 前后端协调
-**问题**: 前端 `/api/coupon/xxx` vs 后端 `/api/game/coupon/xxx`
-**建议**: 统一路径
+**状态**: ✅ 已修复
+**负责**: 前端
+**修复时间**: 2026-02-22 01:24
+**修复内容**:
+- 前端API路径改为 `/api/game/coupon/xxx`，与后端一致
+- 删除独立的 `couponApi`，集成到 `gameApi` 中
+- 更新 `pages/coupon/index.vue` 使用 `gameApi`
+
+**修改文件**: `frontend/src/api/game.js`, `pages/coupon/index.vue`, `api/index.js`
 
 ---
 
