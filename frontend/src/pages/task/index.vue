@@ -21,11 +21,18 @@
       </view>
     </scroll-view>
     
-    <!-- 新增：排班表入口 -->
-    <view class="schedule-entry" @click="goToSchedule">
-      <text class="schedule-icon">📅</text>
-      <text class="schedule-text">查看家务排班表</text>
-      <text class="schedule-arrow">›</text>
+    <!-- 视图切换入口 -->
+    <view class="view-switcher">
+      <view class="view-item" @click="goToCalendar">
+        <text class="view-icon">📅</text>
+        <text class="view-text">日历视图</text>
+        <text class="view-arrow">›</text>
+      </view>
+      <view class="view-item" @click="goToSchedule">
+        <text class="view-icon">📋</text>
+        <text class="view-text">排班表</text>
+        <text class="view-arrow">›</text>
+      </view>
     </view>
     
     <!-- 任务列表 -->
@@ -347,6 +354,10 @@ const goToSchedule = () => {
   uni.navigateTo({ url: '/pages/task/schedule' })
 }
 
+const goToCalendar = () => {
+  uni.navigateTo({ url: '/pages/task/calendar' })
+}
+
 const showAddModal = () => {
   showModal.value = true
 }
@@ -443,28 +454,47 @@ const addTask = async () => {
   }
 }
 
-.schedule-entry {
+.view-switcher {
   display: flex;
-  align-items: center;
+  gap: 10px;
   margin: 10px 15px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
-  border-radius: 12px;
   
-  .schedule-icon {
-    font-size: 20px;
-    margin-right: 10px;
-  }
-  
-  .schedule-text {
+  .view-item {
     flex: 1;
-    font-size: 14px;
-    color: #1976D2;
-  }
-  
-  .schedule-arrow {
-    font-size: 18px;
-    color: #1976D2;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+    border-radius: 12px;
+    
+    &:first-child {
+      background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
+    }
+    
+    .view-icon {
+      font-size: 20px;
+      margin-right: 10px;
+    }
+    
+    .view-text {
+      flex: 1;
+      font-size: 14px;
+      color: #1976D2;
+      font-weight: 500;
+    }
+    
+    &:first-child .view-text {
+      color: #7C3AED;
+    }
+    
+    .view-arrow {
+      font-size: 18px;
+      color: #1976D2;
+    }
+    
+    &:first-child .view-arrow {
+      color: #7C3AED;
+    }
   }
 }
 
