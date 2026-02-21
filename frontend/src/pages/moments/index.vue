@@ -193,6 +193,9 @@ const moments = ref([
   }
 ])
 
+// 使用懒加载列表
+const { displayList: displayMoments, hasMore, loadMore: loadMoreItems } = useLazyList(moments, { pageSize: 10 })
+
 const createMoment = () => {
   uni.navigateTo({ url: '/pages/moments/create' })
 }
@@ -216,9 +219,10 @@ const previewImage = (images, current) => {
 
 const loadMore = () => {
   loading.value = true
+  loadMoreItems()
   setTimeout(() => {
     loading.value = false
-  }, 1000)
+  }, 500)
 }
 </script>
 
@@ -330,10 +334,9 @@ const loadMore = () => {
   margin-bottom: 15px;
   
   .avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
     margin-right: 12px;
+    border-radius: 50%;
+    overflow: hidden;
   }
   
   .user-info {
@@ -379,6 +382,7 @@ const loadMore = () => {
     .grid-image {
       aspect-ratio: 1;
       border-radius: 8px;
+      overflow: hidden;
       
       &.single {
         grid-column: span 2;

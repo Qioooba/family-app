@@ -37,8 +37,8 @@
         <view v-for="(item, index) in sortedList" :key="index" class="track-card" @click="viewDetail(item)">
           <!-- 商品信息 -->
           <view class="product-info">
-            <view class="product-image">
-              <image v-if="item.image" :src="item.image" mode="aspectFill"></image>
+            <view class="product-image-wrapper">
+              <LazyImage v-if="item.image" :src="item.image" mode="aspectFill" width="64px" height="64px" radius="12px"/>
               <text v-else class="placeholder">📦</text>
             </view>
             <view class="product-detail">
@@ -148,8 +148,8 @@
                 class="recent-item"
                 @click="addRecent(product)"
               >
-                <view class="recent-image">
-                  <image v-if="product.image" :src="product.image" mode="aspectFill"></image>
+                <view class="recent-image-wrapper">
+                  <LazyImage v-if="product.image" :src="product.image" mode="aspectFill" width="64px" height="64px" radius="12px"/>
                   <text v-else>📦</text>
                 </view>
                 <text class="recent-name">{{ product.name }}</text>
@@ -256,7 +256,7 @@
 
         <view v-if="compareData" class="modal-body">
           <view class="compare-product">
-            <image v-if="compareData.image" :src="compareData.image" mode="aspectFill"></image>
+            <LazyImage v-if="compareData.image" :src="compareData.image" mode="aspectFill" width="80px" height="80px" radius="12px"/>
             <text class="compare-name">{{ compareData.productName }}</text>
           </view>
 
@@ -285,6 +285,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { shoppingApi } from '../../api/index.js'
+import LazyImage from '@/components/common/LazyImage.vue'
 
 const trackingList = ref([])
 const refreshing = ref(false)
@@ -662,7 +663,7 @@ onMounted(() => {
     gap: 12px;
     margin-bottom: 16px;
 
-    .product-image {
+    .product-image-wrapper {
       width: 64px;
       height: 64px;
       background: rgba(255,255,255,0.05);
@@ -671,11 +672,6 @@ onMounted(() => {
       display: flex;
       align-items: center;
       justify-content: center;
-
-      image {
-        width: 100%;
-        height: 100%;
-      }
 
       .placeholder {
         font-size: 28px;
@@ -983,7 +979,7 @@ onMounted(() => {
   align-items: center;
   margin-right: 12px;
 
-  .recent-image {
+  .recent-image-wrapper {
     width: 64px;
     height: 64px;
     background: rgba(255,255,255,0.05);
@@ -993,11 +989,6 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     margin-bottom: 8px;
-
-    image {
-      width: 100%;
-      height: 100%;
-    }
   }
 
   .recent-name {
@@ -1189,13 +1180,6 @@ onMounted(() => {
 .compare-product {
   text-align: center;
   margin-bottom: 20px;
-
-  image {
-    width: 80px;
-    height: 80px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-  }
 
   .compare-name {
     font-size: 15px;

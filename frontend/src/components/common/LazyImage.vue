@@ -68,6 +68,11 @@ const props = defineProps({
     type: [String, Number],
     default: '100%'
   },
+  // 圆角大小
+  radius: {
+    type: [String, Number],
+    default: 0
+  },
   // 占位图背景色
   placeholderColor: {
     type: String,
@@ -138,6 +143,7 @@ const wrapperStyle = computed(() => {
   const style = {}
   if (props.width) style.width = typeof props.width === 'number' ? `${props.width}rpx` : props.width
   if (props.height) style.height = typeof props.height === 'number' ? `${props.height}rpx` : props.height
+  if (props.radius) style.borderRadius = typeof props.radius === 'number' ? `${props.radius}rpx` : props.radius
   return style
 })
 

@@ -107,14 +107,20 @@
       </view>
       
       <view class="recipe-scroll">
-        <scroll-view scroll-x class="recipe-list">
+        <scroll-view scroll-x class="recipe-list" enhanced :show-scrollbar="false">
           <view 
             v-for="recipe in todayRecipes" 
             :key="recipe.id"
             class="recipe-card"
             @click="goRecipeDetail(recipe)"
           >
-            <image :src="recipe.cover" mode="aspectFill" />
+            <LazyImage 
+              :src="recipe.cover" 
+              mode="aspectFill"
+              width="280rpx"
+              height="180rpx"
+              :threshold="50"
+            />
             
             <view class="recipe-info">
               <text class="recipe-name">{{ recipe.name }}</text>
@@ -170,6 +176,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
+import LazyImage from '@/components/common/LazyImage.vue'
 
 const userStore = useUserStore()
 
@@ -524,11 +531,6 @@ onMounted(() => {
       border-radius: 16rpx;
       overflow: hidden;
       background: #f9f9f9;
-      
-      image {
-        width: 100%;
-        height: 180rpx;
-      }
       
       .recipe-info {
         padding: 16rpx;
