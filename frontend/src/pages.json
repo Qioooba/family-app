@@ -81,6 +81,13 @@
             "navigationBarTitleText": "重复设置",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "drag-sort",
+          "style": {
+            "navigationBarTitleText": "调整优先级",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
