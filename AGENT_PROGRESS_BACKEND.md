@@ -7,11 +7,19 @@
   - 定时任务生成器（每天凌晨2点生成当日任务）
   - 支持重复类型: daily/weekly/monthly/yearly/custom
 
-## 进行中  
-- [ ] 任务提醒后端
+- [x] 任务提醒后端 - 2025-02-22 00:20
+  - POST /api/task/{id}/reminder - 设置任务提醒（支持时间/位置提醒）
+  - GET /api/task/{id}/reminders - 获取任务提醒列表
+  - DELETE /api/task/reminder/{reminderId} - 删除任务提醒
+  - GET /api/task/reminders/pending - 获取用户待处理时间提醒
+  - POST /api/task/location/report - 上报位置触发位置提醒
+  - 定时推送服务（每分钟检查时间提醒）
+  - 地理围栏服务（Haversine公式计算距离）
+
+## 进行中
+- [ ] 心愿预算后端
 
 ## 待完成
-- [ ] 任务提醒后端
 - [ ] 心愿预算后端
 - [ ] 心愿里程碑后端
 - [ ] 扫码录入后端
