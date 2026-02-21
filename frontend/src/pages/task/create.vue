@@ -10,24 +10,24 @@
         <text>保存</text>
       </view>
     </view>
-    
+
     <view class="form-container">
       <!-- 任务标题 -->
       <view class="form-item">
         <text class="label">任务标题</text>
-        <input 
-          v-model="form.title" 
-          placeholder="请输入任务标题" 
+        <input
+          v-model="form.title"
+          placeholder="请输入任务标题"
           class="input"
         />
       </view>
-      
+
       <!-- 任务分类 -->
       <view class="form-item">
         <text class="label">分类</text>
         <view class="category-list">
-          <view 
-            v-for="cat in categories" 
+          <view
+            v-for="cat in categories"
             :key="cat.value"
             class="category-item"
             :class="{ active: form.category === cat.value }"
@@ -37,13 +37,13 @@
           </view>
         </view>
       </view>
-      
+
       <!-- 优先级 -->
       <view class="form-item">
         <text class="label">优先级</text>
         <view class="priority-list">
-          <view 
-            v-for="p in priorities" 
+          <view
+            v-for="p in priorities"
             :key="p.value"
             class="priority-item"
             :class="{ active: form.priority === p.value, [p.class]: true }"
@@ -54,7 +54,7 @@
           </view>
         </view>
       </view>
-      
+
       <!-- 截止时间 -->
       <view class="form-item">
         <text class="label">截止时间</text>
@@ -65,13 +65,13 @@
           </view>
         </picker>
       </view>
-      
+
       <!-- 指派给 -->
       <view class="form-item">
         <text class="label">指派给</text>
         <view class="member-list">
-          <view 
-            v-for="member in members" 
+          <view
+            v-for="member in members"
             :key="member.id"
             class="member-item"
             :class="{ active: form.assigneeId === member.id }"
@@ -82,17 +82,17 @@
           </view>
         </view>
       </view>
-      
+
       <!-- 备注 -->
       <view class="form-item">
         <text class="label">备注</text>
-        <textarea 
-          v-model="form.remark" 
+        <textarea
+          v-model="form.remark"
           placeholder="添加备注说明..."
           class="textarea"
         />
       </view>
-      
+
       <!-- 重复设置 -->
       <view class="form-item">
         <text class="label">重复</text>
@@ -211,7 +211,8 @@ const repeats = [
   { label: '不重复', value: 'none' },
   { label: '每天', value: 'daily' },
   { label: '每周', value: 'weekly' },
-  { label: '每月', value: 'monthly' }
+  { label: '每月', value: 'monthly' },
+  { label: '自定义', value: 'custom' }
 ]
 
 const members = ref([
@@ -220,6 +221,62 @@ const members = ref([
   { id: 3, name: '宝贝', avatar: '/static/avatar/kid.png' }
 ])
 
+// 选择重复类型
+const selectRepeat = (value) => {
+  form.value.repeatType = value
+  if (value !== 'custom') {
+    customRepeat.value.weekdays = []
+  }
+}
+
+// 切换星期选择
+const toggleWeekday = (day) => {
+  const index = customRepeat.value.weekdays.indexOf(day)
+  if (index > -1) {
+    customRepeat.value.weekdays.splice(index, 1)
+  } else {
+    customRepeat.value.weekdays.push(day)
+  }
+}
+
+// 自定义单位变化
+const onCustomUnitChange = (e) => {
+  customRepeat.value.unitIndex = e.detail.value
+  if (customRepeat.value.unitIndex !== 1) {
+    customRepeat.value.weekdays = []
+  }
+}
+
+// 结束日期变化
+const onEndDateChange = (e) => {
+  form.value.repeatEndDate = e.detail.value
+}
+
+// 生成重复规则
+const buildRepeatRule = () => {
+  if (form.value.repeatType === 'none') return null
+
+  let repeatRule = {}
+
+  if (form.value.repeatType === 'custom') {
+    const unitMap = ['day', 'week', 'month']
+    repeatRule = {
+      interval: customRepeat.value.interval || 1,
+      unit: unitMap[customRepeat.value.unitIndex],
+      weekdays: customRepeat.value.weekdays
+    }
+  }
+
+  // 结束条件
+  if (form.value.repeatEndType === 'date') {
+    repeatRule.endDate = form.value.repeatEndDate
+  } else if (form.value.repeatEndType === 'count') {
+    repeatRule.endCount = form.value.repeatCount
+  }
+
+  return JSON.stringify(repeatRule)
+}
+
 // 生成日期选择器数据
 const dateRange = computed(() => {
   const years = []
@@ -227,7 +284,7 @@ const dateRange = computed(() => {
   const days = []
   const hours = []
   const minutes = ['00', '30']
-  
+
   const now = new Date()
   for (let i = now.getFullYear(); i <= now.getFullYear() + 1; i++) {
     years.push(i + '年')
@@ -241,7 +298,7 @@ const dateRange = computed(() => {
   for (let i = 0; i < 24; i++) {
     hours.push(i + '时')
   }
-  
+
   return [years, months, days, hours, minutes]
 })
 
@@ -254,7 +311,7 @@ const onDateChange = (e) => {
   const day = dateRange.value[2][val[2]].replace('日', '').padStart(2, '0')
   const hour = dateRange.value[3][val[3]].replace('时', '').padStart(2, '0')
   const minute = dateRange.value[4][val[4]]
-  
+
   form.value.deadline = `${year}-${month}-${day} ${hour}:${minute}`
 }
 
@@ -267,7 +324,15 @@ const saveTask = async () => {
     uni.showToast({ title: '请输入任务标题', icon: 'none' })
     return
   }
-  
+
+  // 自定义重复验证
+  if (form.value.repeatType === 'custom') {
+    if (customRepeat.value.unitIndex === 1 && customRepeat.value.weekdays.length === 0) {
+      uni.showToast({ title: '请至少选择一天', icon: 'none' })
+      return
+    }
+  }
+
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     const data = {
@@ -278,10 +343,22 @@ const saveTask = async () => {
       deadline: form.value.deadline,
       assigneeId: form.value.assigneeId,
       remark: form.value.remark,
-      repeat: form.value.repeat,
       status: 0
     }
-    await taskApi.create(data)
+
+    // 创建任务
+    const res = await taskApi.create(data)
+    const taskId = res.id
+
+    // 设置重复规则
+    if (form.value.repeatType !== 'none' && taskId) {
+      const repeatRule = buildRepeatRule()
+      await taskApi.setRepeatRule(taskId, {
+        repeatType: form.value.repeatType,
+        repeatRule: repeatRule
+      })
+    }
+
     uni.showToast({ title: '创建成功', icon: 'success' })
     setTimeout(() => {
       uni.navigateBack()
@@ -306,7 +383,7 @@ const saveTask = async () => {
   padding: 20rpx 30rpx;
   padding-top: 60rpx;
   background: #fff;
-  
+
   .back-btn {
     width: 60rpx;
     height: 60rpx;
@@ -314,18 +391,18 @@ const saveTask = async () => {
     align-items: center;
     justify-content: center;
   }
-  
+
   .title {
     font-size: 34rpx;
     font-weight: 600;
     color: #333;
   }
-  
+
   .right-btn {
     padding: 12rpx 30rpx;
     background: #5B8FF9;
     border-radius: 30rpx;
-    
+
     text {
       font-size: 28rpx;
       color: #fff;
@@ -342,7 +419,7 @@ const saveTask = async () => {
   border-radius: 16rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  
+
   .label {
     font-size: 28rpx;
     font-weight: 600;
@@ -350,20 +427,20 @@ const saveTask = async () => {
     display: block;
     margin-bottom: 20rpx;
   }
-  
+
   .input {
     font-size: 30rpx;
     color: #333;
     height: 60rpx;
   }
-  
+
   .textarea {
     font-size: 28rpx;
     color: #333;
     height: 160rpx;
     width: 100%;
   }
-  
+
   .picker-value {
     display: flex;
     align-items: center;
@@ -377,14 +454,14 @@ const saveTask = async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
-  
+
   .category-item {
     padding: 16rpx 32rpx;
     background: #f5f5f5;
     border-radius: 30rpx;
     font-size: 26rpx;
     color: #666;
-    
+
     &.active {
       background: #5B8FF9;
       color: #fff;
@@ -395,7 +472,7 @@ const saveTask = async () => {
 .priority-list {
   display: flex;
   gap: 20rpx;
-  
+
   .priority-item {
     display: flex;
     align-items: center;
@@ -405,14 +482,14 @@ const saveTask = async () => {
     border-radius: 30rpx;
     font-size: 26rpx;
     color: #666;
-    
+
     .dot {
       width: 16rpx;
       height: 16rpx;
       border-radius: 50%;
       background: #ddd;
     }
-    
+
     &.active {
       &.normal {
         background: #E6F7FF;
@@ -436,21 +513,21 @@ const saveTask = async () => {
 .member-list {
   display: flex;
   gap: 30rpx;
-  
+
   .member-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     opacity: 0.5;
-    
+
     &.active {
       opacity: 1;
-      
+
       .avatar {
         border: 4rpx solid #5B8FF9;
       }
     }
-    
+
     .avatar {
       width: 100rpx;
       height: 100rpx;
@@ -458,7 +535,7 @@ const saveTask = async () => {
       margin-bottom: 12rpx;
       border: 4rpx solid transparent;
     }
-    
+
     .name {
       font-size: 24rpx;
       color: #333;
@@ -470,14 +547,14 @@ const saveTask = async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
-  
+
   .repeat-item {
     padding: 16rpx 32rpx;
     background: #f5f5f5;
     border-radius: 30rpx;
     font-size: 26rpx;
     color: #666;
-    
+
     &.active {
       background: #5B8FF9;
       color: #fff;
