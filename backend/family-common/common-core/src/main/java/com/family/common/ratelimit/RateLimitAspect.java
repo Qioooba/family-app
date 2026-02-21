@@ -3,12 +3,13 @@ package com.family.common.ratelimit;
 import com.google.common.util.concurrent.RateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -24,12 +25,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author family
  */
-@Slf4j
 @Aspect
 @Component
 @Order(-1)
 @RequiredArgsConstructor
 public class RateLimitAspect {
+
+    private static final Logger log = LoggerFactory.getLogger(RateLimitAspect.class);
 
     /**
      * 本地限流器缓存
