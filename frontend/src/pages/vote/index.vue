@@ -52,63 +52,76 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { voteApi } from '../../api/index.js'
 
 const tabs = ['进行中', '已结束', '我发起的']
 const currentTab = ref(0)
+const votes = ref([])
+const loading = ref(false)
+const userInfo = ref(uni.getStorageSync('userInfo') || {})
 
-const votes = ref([
-  {
-    id: 1,
-    title: '周末去哪里玩？',
-    ended: false,
-    creator: '妈妈',
-    totalVotes: 3,
-    options: [
-      { name: '动物园', percent: 60, votes: 2 },
-      { name: '科技馆', percent: 40, votes: 1 },
-      { name: '游乐园', percent: 0, votes: 0 }
-    ]
-  },
-  {
-    id: 2,
-    title: '今晚吃什么？',
-    ended: false,
-    creator: '爸爸',
-    totalVotes: 2,
-    options: [
-      { name: '火锅', percent: 50, votes: 1 },
-      { name: '日料', percent: 50, votes: 1 }
-    ]
-  },
-  {
-    id: 3,
-    title: '暑假去哪里旅游？',
-    ended: true,
-    creator: '妈妈',
-    totalVotes: 4,
-    options: [
-      { name: '三亚', percent: 75, votes: 3 },
-      { name: '云南', percent: 25, votes: 1 }
-    ]
+// 加载投票列表
+const loadVotes = async () => {
+  loading.value = true
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const status = currentTab.value === 0 ? 0 : (currentTab.value === 1 ? 1 : undefined)
+    const res = await voteApi.getList(familyId, status)
+    votes.value = res || []
+  } catch (e) {
+    console.error('加载投票失败', e)
+    uni.showToast({ title: '加载投票失败', icon: 'none' })
+  } finally {
+    loading.value = false
   }
-])
+}
 
-const viewVote = (vote) => {
-  if (vote.ended) {
-    uni.showModal({
-      title: vote.title,
-      content: '投票已结束\n\n' + vote.options.map(o => `${o.name}: ${o.votes}票 (${o.percent}%)`).join('\n'),
-      showCancel: false,
-      confirmText: '知道了'
-    })
+// 页面加载时获取数据
+onMounted(() => {
+  loadVotes()
+})
+
+// 切换标签时重新加载
+const currentTab = ref(0)
+
+const viewVote = async (vote) => {
+  if (vote.status === 1 || vote.ended) {
+    // 已结束，显示结果
+    try {
+      const result = await voteApi.getResult(vote.id)
+      const content = result.options?.map(o => `${o.name}: ${o.votes || 0}票`).join('\n') || '暂无投票'
+      uni.showModal({
+        title: vote.title,
+        content: `投票结果:\n\n${content}`,
+        showCancel: false,
+        confirmText: '知道了'
+      })
+    } catch (e) {
+      uni.showToast({ title: '获取结果失败', icon: 'none' })
+    }
   } else {
-    const options = vote.options.map(o => o.name)
+    // 进行中，参与投票
+    const options = vote.options?.map(o => o.name) || []
+    if (options.length === 0) {
+      uni.showToast({ title: '暂无选项', icon: 'none' })
+      return
+    }
+    
     uni.showActionSheet({
       itemList: options,
       title: vote.title,
-      success: (res) => {
-        uni.showToast({ title: `已投：${options[res.tapIndex]}`, icon: 'success' })
+      success: async (res) => {
+        try {
+          const userId = userInfo.value?.id || 1
+          const selectedOption = vote.options[res.tapIndex]
+          await voteApi.doVote(vote.id, userId, [selectedOption.id])
+          uni.showToast({ title: `已投: ${options[res.tapIndex]}`, icon: 'success' })
+          loadVotes()
+        } catch (e) {
+          console.error('投票失败', e)
+          uni.showToast({ title: '投票失败', icon: 'none' })
+        }
       }
     })
   }
@@ -119,9 +132,24 @@ const createVote = () => {
     title: '创建投票',
     editable: true,
     placeholderText: '输入投票主题...',
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm && res.content) {
-        uni.showToast({ title: '创建成功', icon: 'success' })
+        try {
+          const familyId = uni.getStorageSync('currentFamilyId') || 1
+          await voteApi.create({
+            title: res.content,
+            familyId: familyId,
+            options: [
+              { name: '选项1' },
+              { name: '选项2' }
+            ]
+          })
+          uni.showToast({ title: '创建成功', icon: 'success' })
+          loadVotes()
+        } catch (e) {
+          console.error('创建投票失败', e)
+          uni.showToast({ title: '创建失败', icon: 'none' })
+        }
       }
     }
   })
