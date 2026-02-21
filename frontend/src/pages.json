@@ -389,6 +389,13 @@
             "navigationBarTitleText": "我的券包",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "manage",
+          "style": {
+            "navigationBarTitleText": "优惠券管理",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
