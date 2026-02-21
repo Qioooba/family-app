@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
     daily_calories INT COMMENT '每日热量目标',
     open_id VARCHAR(100) COMMENT '微信openId',
     union_id VARCHAR(100) COMMENT '微信unionId',
+    current_family_id BIGINT COMMENT '当前家庭ID',
     login_type TINYINT DEFAULT 1 COMMENT '登录类型 1账号 2微信 3手机号',
     last_login_time DATETIME COMMENT '最后登录时间',
     last_login_ip VARCHAR(50) COMMENT '最后登录IP',

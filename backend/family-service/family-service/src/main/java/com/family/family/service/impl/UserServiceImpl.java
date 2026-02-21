@@ -69,4 +69,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void sendSmsCode(String phone) {
     }
+    
+    @Override
+    public void switchFamily(Long userId, Long familyId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        user.setCurrentFamilyId(familyId);
+        userMapper.updateById(user);
+    }
 }

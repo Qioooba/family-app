@@ -22,4 +22,11 @@ public interface UserService {
     void changePassword(String oldPassword, String newPassword);
     
     void sendSmsCode(String phone);
+    
+    /**
+     * 切换当前家庭
+     * @param userId 用户ID
+     * @param familyId 家庭ID
+     */
+    void switchFamily(Long userId, Long familyId);
 }

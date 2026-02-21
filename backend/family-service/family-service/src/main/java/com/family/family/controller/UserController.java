@@ -62,4 +62,24 @@ public class UserController {
         userService.sendSmsCode(phone);
         return Result.success();
     }
+    
+    /**
+     * 切换当前家庭
+     * POST /api/user/switch-family
+     */
+    @PostMapping("/switch-family")
+    public Result<Void> switchFamily(@RequestBody SwitchFamilyRequest request) {
+        // 从Sa-Token获取当前用户ID
+        Long userId = 1L; // TODO: 使用Sa-Token获取
+        userService.switchFamily(userId, request.getFamilyId());
+        return Result.success();
+    }
+    
+    public static class SwitchFamilyRequest {
+        private Long familyId;
+        
+        public Long getFamilyId() { return familyId; }
+        public void setFamilyId(Long familyId) { this.familyId = familyId; }
+    }
+}
 }

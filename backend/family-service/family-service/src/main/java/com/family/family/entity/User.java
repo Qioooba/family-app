@@ -24,6 +24,7 @@ public class User {
     private Integer gender;
     private LocalDateTime lastLoginTime;
     private Integer status;
+    private Long currentFamilyId; // 当前家庭ID
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     
@@ -57,6 +58,9 @@ public class User {
     
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
+    
+    public Long getCurrentFamilyId() { return currentFamilyId; }
+    public void setCurrentFamilyId(Long currentFamilyId) { this.currentFamilyId = currentFamilyId; }
     
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
