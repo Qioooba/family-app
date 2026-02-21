@@ -17,53 +17,94 @@ import java.time.LocalDate;
 public class BarcodeProduct extends BaseEntity {
     private static final long serialVersionUID = 1L;
     
-    /**
-     * 条形码
-     */
     private String barcode;
-    
-    /**
-     * 商品名称
-     */
     private String productName;
-    
-    /**
-     * 品牌
-     */
     private String brand;
-    
-    /**
-     * 规格
-     */
     private String specification;
-    
-    /**
-     * 类别
-     */
     private String category;
-    
-    /**
-     * 参考价格
-     */
     private BigDecimal referencePrice;
-    
-    /**
-     * 保质期(天)
-     */
     private Integer shelfLifeDays;
-    
-    /**
-     * 商品图片URL
-     */
     private String imageUrl;
-    
-    /**
-     * 数据来源: local-本地库, api-第三方API
-     */
     private String source;
-    
-    /**
-     * 查询次数
-     */
     private Integer queryCount;
+    
+    public String getBarcode() {
+        return barcode;
+    }
+    
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
+    }
+    
+    public String getProductName() {
+        return productName;
+    }
+    
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+    
+    public String getBrand() {
+        return brand;
+    }
+    
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+    
+    public String getSpecification() {
+        return specification;
+    }
+    
+    public void setSpecification(String specification) {
+        this.specification = specification;
+    }
+    
+    public String getCategory() {
+        return category;
+    }
+    
+    public void setCategory(String category) {
+        this.category = category;
+    }
+    
+    public BigDecimal getReferencePrice() {
+        return referencePrice;
+    }
+    
+    public void setReferencePrice(BigDecimal referencePrice) {
+        this.referencePrice = referencePrice;
+    }
+    
+    public Integer getShelfLifeDays() {
+        return shelfLifeDays;
+    }
+    
+    public void setShelfLifeDays(Integer shelfLifeDays) {
+        this.shelfLifeDays = shelfLifeDays;
+    }
+    
+    public String getImageUrl() {
+        return imageUrl;
+    }
+    
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+    
+    public String getSource() {
+        return source;
+    }
+    
+    public void setSource(String source) {
+        this.source = source;
+    }
+    
+    public Integer getQueryCount() {
+        return queryCount;
+    }
+    
+    public void setQueryCount(Integer queryCount) {
+        this.queryCount = queryCount;
+    }
 }

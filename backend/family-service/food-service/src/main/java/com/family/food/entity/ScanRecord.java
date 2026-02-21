@@ -14,48 +14,85 @@ import lombok.EqualsAndHashCode;
 public class ScanRecord extends BaseEntity {
     private static final long serialVersionUID = 1L;
     
-    /**
-     * 用户ID
-     */
     private Long userId;
-    
-    /**
-     * 家庭ID
-     */
     private Long familyId;
-    
-    /**
-     * 扫码类型: barcode-条形码, qrcode-二维码, image-图片识别
-     */
     private String scanType;
-    
-    /**
-     * 扫码内容(条形码/二维码内容或图片Base64摘要)
-     */
     private String scanContent;
-    
-    /**
-     * 识别结果JSON
-     */
     private String resultJson;
-    
-    /**
-     * 识别状态: 1成功 0失败
-     */
     private Integer status;
-    
-    /**
-     * 失败原因
-     */
     private String failReason;
-    
-    /**
-     * 商品名称(识别成功时)
-     */
     private String productName;
-    
-    /**
-     * 是否已添加到库存
-     */
     private Boolean addedToInventory;
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public Long getFamilyId() {
+        return familyId;
+    }
+    
+    public void setFamilyId(Long familyId) {
+        this.familyId = familyId;
+    }
+    
+    public String getScanType() {
+        return scanType;
+    }
+    
+    public void setScanType(String scanType) {
+        this.scanType = scanType;
+    }
+    
+    public String getScanContent() {
+        return scanContent;
+    }
+    
+    public void setScanContent(String scanContent) {
+        this.scanContent = scanContent;
+    }
+    
+    public String getResultJson() {
+        return resultJson;
+    }
+    
+    public void setResultJson(String resultJson) {
+        this.resultJson = resultJson;
+    }
+    
+    public Integer getStatus() {
+        return status;
+    }
+    
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+    
+    public String getFailReason() {
+        return failReason;
+    }
+    
+    public void setFailReason(String failReason) {
+        this.failReason = failReason;
+    }
+    
+    public String getProductName() {
+        return productName;
+    }
+    
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+    
+    public Boolean getAddedToInventory() {
+        return addedToInventory;
+    }
+    
+    public void setAddedToInventory(Boolean addedToInventory) {
+        this.addedToInventory = addedToInventory;
+    }
 }

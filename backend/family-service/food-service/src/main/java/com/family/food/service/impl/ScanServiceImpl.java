@@ -354,7 +354,7 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
             product.setQueryCount(1);
             barcodeProductMapper.insert(product);
         } catch (Exception e) {
-            log.warn("保存到条码库失败(可能已存在): {}", barcode);
+            log.warn("保存到条码库失败(可能已存在): {} - {}", barcode, e.getMessage());
         }
     }
 }
