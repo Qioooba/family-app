@@ -10,43 +10,29 @@ import java.math.BigDecimal;
 @Data
 public class PriceRequest {
     
-    /**
-     * 商品名称
-     */
     private String productName;
-    
-    /**
-     * 条形码
-     */
     private String barcode;
-    
-    /**
-     * 品牌
-     */
     private String brand;
-    
-    /**
-     * 规格
-     */
     private String specification;
-    
-    /**
-     * 当前价格
-     */
     private BigDecimal currentPrice;
-    
-    /**
-     * 商店名称
-     */
     private String storeName;
-    
-    /**
-     * 查询半径(公里)
-     */
     private Integer radiusKm;
-    
-    /**
-     * 排序方式: price_asc-价格升序, price_desc-价格降序, distance-距离
-     */
     private String sortBy;
+    
+    public String getProductName() { return productName; }
+    public void setProductName(String productName) { this.productName = productName; }
+    public String getBarcode() { return barcode; }
+    public void setBarcode(String barcode) { this.barcode = barcode; }
+    public String getBrand() { return brand; }
+    public void setBrand(String brand) { this.brand = brand; }
+    public String getSpecification() { return specification; }
+    public void setSpecification(String specification) { this.specification = specification; }
+    public BigDecimal getCurrentPrice() { return currentPrice; }
+    public void setCurrentPrice(BigDecimal currentPrice) { this.currentPrice = currentPrice; }
+    public String getStoreName() { return storeName; }
+    public void setStoreName(String storeName) { this.storeName = storeName; }
+    public Integer getRadiusKm() { return radiusKm; }
+    public void setRadiusKm(Integer radiusKm) { this.radiusKm = radiusKm; }
+    public String getSortBy() { return sortBy; }
+    public void setSortBy(String sortBy) { this.sortBy = sortBy; }
 }

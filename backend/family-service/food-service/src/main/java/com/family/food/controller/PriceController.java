@@ -4,7 +4,10 @@ import com.family.common.core.Result;
 import com.family.food.dto.request.PriceRequest;
 import com.family.food.dto.response.PriceResponse;
 import com.family.food.dto.response.PriceTrendResponse;
-import lombok.RequiredArgsConstructor;
+import com.family.food.service.PriceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +18,16 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/price")
-@RequiredArgsConstructor
 public class PriceController {
+    
+    private static final Logger log = LoggerFactory.getLogger(PriceController.class);
+    
+    private final PriceService priceService;
+    
+    @Autowired
+    public PriceController(PriceService priceService) {
+        this.priceService = priceService;
+    }
     
     /**
      * 查询商品附近价格
@@ -24,8 +35,14 @@ public class PriceController {
      */
     @PostMapping("/compare")
     public Result<List<PriceResponse>> comparePrice(@RequestBody PriceRequest request) {
-        // TODO: 实现价格对比逻辑
-        return Result.success(null);
+        log.info("价格对比请求: barcode={}, productName={}", request.getBarcode(), request.getProductName());
+        try {
+            List<PriceResponse> responses = priceService.comparePrice(request);
+            return Result.success(responses);
+        } catch (Exception e) {
+            log.error("价格对比失败", e);
+            return Result.error("价格对比失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -35,8 +52,14 @@ public class PriceController {
     @GetMapping("/trend/{barcode}")
     public Result<PriceTrendResponse> getPriceTrend(@PathVariable String barcode,
                                                      @RequestParam(defaultValue = "30") Integer days) {
-        // TODO: 实现价格趋势查询
-        return Result.success(null);
+        log.info("价格趋势请求: barcode={}, days={}", barcode, days);
+        try {
+            PriceTrendResponse response = priceService.getPriceTrend(barcode, days);
+            return Result.success(response);
+        } catch (Exception e) {
+            log.error("获取价格趋势失败", e);
+            return Result.error("获取价格趋势失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -45,8 +68,15 @@ public class PriceController {
      */
     @PostMapping("/submit")
     public Result<Void> submitPrice(@RequestBody PriceRequest request) {
-        // TODO: 实现价格提交逻辑
-        return Result.success(null);
+        log.info("提交价格: barcode={}, store={}, price={}", 
+                request.getBarcode(), request.getStoreName(), request.getCurrentPrice());
+        try {
+            priceService.submitPrice(request);
+            return Result.success();
+        } catch (Exception e) {
+            log.error("提交价格失败", e);
+            return Result.error("提交价格失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -55,8 +85,14 @@ public class PriceController {
      */
     @GetMapping("/alerts/{userId}")
     public Result<List<PriceResponse>> getPriceAlerts(@PathVariable Long userId) {
-        // TODO: 获取用户设置的低价提醒
-        return Result.success(null);
+        log.info("获取价格提醒: userId={}", userId);
+        try {
+            List<PriceResponse> responses = priceService.getPriceAlerts(userId);
+            return Result.success(responses);
+        } catch (Exception e) {
+            log.error("获取价格提醒失败", e);
+            return Result.error("获取价格提醒失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -65,7 +101,14 @@ public class PriceController {
      */
     @PostMapping("/alert")
     public Result<Void> setPriceAlert(@RequestBody PriceRequest request) {
-        // TODO: 设置价格提醒
-        return Result.success(null);
+        log.info("设置价格提醒: barcode={}, targetPrice={}", 
+                request.getBarcode(), request.getCurrentPrice());
+        try {
+            priceService.setPriceAlert(request);
+            return Result.success();
+        } catch (Exception e) {
+            log.error("设置价格提醒失败", e);
+            return Result.error("设置价格提醒失败: " + e.getMessage());
+        }
     }
 }

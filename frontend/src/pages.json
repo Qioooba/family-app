@@ -212,6 +212,32 @@
             "navigationBarTitleText": "数据看板",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "report",
+          "style": {
+            "navigationBarTitleText": "家庭报告",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "export",
+          "style": {
+            "navigationBarTitleText": "数据导出",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/card",
+      "pages": [
+        {
+          "path": "generate",
+          "style": {
+            "navigationBarTitleText": "贺卡生成",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
@@ -312,6 +338,13 @@
           "path": "index",
           "style": {
             "navigationBarTitleText": "优惠券",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "mycoupons",
+          "style": {
+            "navigationBarTitleText": "我的券包",
             "navigationStyle": "custom"
           }
         }

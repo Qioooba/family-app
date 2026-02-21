@@ -11,58 +11,38 @@ import java.time.LocalDateTime;
 @Data
 public class PriceResponse {
     
-    /**
-     * 商店ID
-     */
     private Long storeId;
-    
-    /**
-     * 商店名称
-     */
     private String storeName;
-    
-    /**
-     * 商店地址
-     */
     private String storeAddress;
-    
-    /**
-     * 距离(米)
-     */
     private Integer distance;
-    
-    /**
-     * 商品价格
-     */
     private BigDecimal price;
-    
-    /**
-     * 促销价格
-     */
     private BigDecimal promotionPrice;
-    
-    /**
-     * 促销信息
-     */
     private String promotionInfo;
-    
-    /**
-     * 库存状态: in_stock-有货, out_of_stock-缺货, limited-限量
-     */
     private String stockStatus;
-    
-    /**
-     * 价格更新时间
-     */
     private LocalDateTime updateTime;
-    
-    /**
-     * 是否是最低价
-     */
     private Boolean isLowest;
-    
-    /**
-     * 与当前价格差价
-     */
     private BigDecimal priceDiff;
+    
+    public Long getStoreId() { return storeId; }
+    public void setStoreId(Long storeId) { this.storeId = storeId; }
+    public String getStoreName() { return storeName; }
+    public void setStoreName(String storeName) { this.storeName = storeName; }
+    public String getStoreAddress() { return storeAddress; }
+    public void setStoreAddress(String storeAddress) { this.storeAddress = storeAddress; }
+    public Integer getDistance() { return distance; }
+    public void setDistance(Integer distance) { this.distance = distance; }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+    public BigDecimal getPromotionPrice() { return promotionPrice; }
+    public void setPromotionPrice(BigDecimal promotionPrice) { this.promotionPrice = promotionPrice; }
+    public String getPromotionInfo() { return promotionInfo; }
+    public void setPromotionInfo(String promotionInfo) { this.promotionInfo = promotionInfo; }
+    public String getStockStatus() { return stockStatus; }
+    public void setStockStatus(String stockStatus) { this.stockStatus = stockStatus; }
+    public LocalDateTime getUpdateTime() { return updateTime; }
+    public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
+    public Boolean getIsLowest() { return isLowest; }
+    public void setIsLowest(Boolean isLowest) { this.isLowest = isLowest; }
+    public BigDecimal getPriceDiff() { return priceDiff; }
+    public void setPriceDiff(BigDecimal priceDiff) { this.priceDiff = priceDiff; }
 }
