@@ -121,6 +121,13 @@
             "navigationBarTitleText": "心愿预算",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "milestone",
+          "style": {
+            "navigationBarTitleText": "里程碑",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
