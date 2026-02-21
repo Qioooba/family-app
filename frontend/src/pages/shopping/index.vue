@@ -121,59 +121,61 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { shoppingApi } from '../../api/index.js'
 
-const activeLists = ref([
-  {
-    id: 1,
-    name: '周末采购清单',
-    itemCount: 8,
-    estimatedAmount: 156,
-    progress: 25,
-    assignee: '爸爸',
-    items: [
-      { name: '西红柿', quantity: 2, unit: '斤', checked: true },
-      { name: '鸡蛋', quantity: 20, unit: '个', checked: true },
-      { name: '牛奶', quantity: 2, unit: '盒', checked: false },
-      { name: '面包', quantity: 1, unit: '袋', checked: false }
-    ]
-  },
-  {
-    id: 2,
-    name: '超市大采购',
-    itemCount: 15,
-    estimatedAmount: 328,
-    progress: 0,
-    assignee: '妈妈',
-    items: [
-      { name: '大米', quantity: 10, unit: 'kg', checked: false },
-      { name: '食用油', quantity: 1, unit: '桶', checked: false },
-      { name: '洗衣液', quantity: 2, unit: '瓶', checked: false }
-    ]
+const activeLists = ref([])
+const expiringItems = ref([])
+const loading = ref(false)
+
+// 加载购物清单
+const loadShoppingLists = async () => {
+  loading.value = true
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const res = await shoppingApi.getLists(familyId)
+    activeLists.value = res || []
+  } catch (e) {
+    console.error('加载购物清单失败', e)
+  } finally {
+    loading.value = false
   }
-])
+}
 
-const expiringItems = ref([
-  { name: '酸奶', quantity: 3, unit: '盒', days: 2 },
-  { name: '面包', quantity: 1, unit: '袋', days: 1 },
-  { name: '鸡蛋', quantity: 12, unit: '个', days: 5 },
-  { name: '苹果', quantity: 4, unit: '个', days: -1 }
-])
+// 页面加载时获取数据
+onMounted(() => {
+  loadShoppingLists()
+})
 
 const createList = () => {
-  uni.navigateTo({ url: '/pages/shopping/create' })
+  uni.showModal({
+    title: '新建购物清单',
+    editable: true,
+    placeholderText: '输入清单名称...',
+    success: async (res) => {
+      if (res.confirm && res.content) {
+        try {
+          const familyId = uni.getStorageSync('currentFamilyId') || 1
+          await shoppingApi.createList({
+            name: res.content,
+            familyId: familyId
+          })
+          uni.showToast({ title: '创建成功', icon: 'success' })
+          loadShoppingLists()
+        } catch (e) {
+          uni.showToast({ title: '创建失败', icon: 'none' })
+        }
+      }
+    }
+  })
 }
 
 const goInventory = () => {
-  uni.navigateTo({ url: '/pages/shopping/inventory' })
+  uni.showToast({ title: '库存管理开发中', icon: 'none' })
 }
 
 const scanCode = () => {
-  uni.scanCode({
-    success: (res) => {
-      console.log('扫码结果：', res.result)
-    }
-  })
+  uni.showToast({ title: '扫码功能开发中', icon: 'none' })
 }
 </script>
 
