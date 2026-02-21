@@ -1,17 +1,23 @@
 package com.family.family.service.impl;
 
 import com.family.family.entity.Inventory;
+import com.family.family.entity.PriceHistory;
 import com.family.family.entity.ShoppingList;
 import com.family.family.mapper.InventoryMapper;
+import com.family.family.mapper.PriceHistoryMapper;
 import com.family.family.mapper.ShoppingItemMapper;
 import com.family.family.mapper.ShoppingListMapper;
 import com.family.family.service.ShoppingService;
+import com.family.family.vo.PriceTrendVO;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 购物服务实现
@@ -22,13 +28,16 @@ public class ShoppingServiceImpl implements ShoppingService {
     private final ShoppingListMapper shoppingListMapper;
     private final ShoppingItemMapper shoppingItemMapper;
     private final InventoryMapper inventoryMapper;
+    private final PriceHistoryMapper priceHistoryMapper;
     
     public ShoppingServiceImpl(ShoppingListMapper shoppingListMapper, 
                                ShoppingItemMapper shoppingItemMapper,
-                               InventoryMapper inventoryMapper) {
+                               InventoryMapper inventoryMapper,
+                               PriceHistoryMapper priceHistoryMapper) {
         this.shoppingListMapper = shoppingListMapper;
         this.shoppingItemMapper = shoppingItemMapper;
         this.inventoryMapper = inventoryMapper;
+        this.priceHistoryMapper = priceHistoryMapper;
     }
     
     @Override

@@ -9,15 +9,21 @@
     
     <!-- 今日值班 -->
     <view class="today-section">
-      <view class="section-title">今日值班</view>
+      <view class="section-title">
+        <text>今日值班</text>
+        <text class="today-date">{{ todayDate }}</text>
+      </view>
       <view v-if="todaySchedules.length > 0" class="today-list">
         <view 
           v-for="(item, index) in todaySchedules" 
-          :key="index"
+          :key="item.id"
           class="today-item"
         >
           <view class="today-task">{{ item.taskName }}</view>
-          <view class="today-assignee">👤 {{ getAssigneeName(item.assigneeId) }}</view>
+          <view class="today-assignee">
+            <image :src="getAssigneeAvatar(item.assigneeId)" class="assignee-avatar" />
+            <text>{{ getAssigneeName(item.assigneeId) }}</text>
+          </view>
         </view>
       </view>
       <view v-else class="today-empty">
@@ -29,34 +35,53 @@
     <view class="schedule-section">
       <view class="section-title">周排班表</view>
       
-      <view class="week-header">
-        <view v-for="day in weekDays" :key="day" class="week-day">{{ day }}</view>
-      </view>
-      
-      <view class="schedule-grid">
+      <view class="week-view">
         <view 
-          v-for="(day, dayIndex) in 7" 
+          v-for="(day, dayIndex) in weekDays" 
           :key="dayIndex"
-          class="day-column"
+          class="day-card"
+          :class="{ today: isToday(dayIndex + 1) }"
         >
-          <view 
-            v-for="(schedule, sIndex) in getSchedulesByDay(dayIndex + 1)" 
-            :key="sIndex"
-            class="schedule-item"
-            @click="viewSchedule(schedule)"
-          >
-            <text class="item-name">{{ schedule.taskName }}</text>
-            <text class="item-assignee">{{ getAssigneeName(schedule.assigneeId) }}</text>
+          <view class="day-header">{{ day }}</view>
+          <view class="day-content">
+            <view 
+              v-for="(schedule, sIndex) in getSchedulesByDay(dayIndex + 1)" 
+              :key="schedule.id"
+              class="schedule-item"
+              :class="{ dragging: draggedSchedule?.id === schedule.id }"
+              draggable="true"
+              @longpress="onLongPress(schedule, $event)"
+              @touchstart="onTouchStart(schedule, $event)"
+              @touchend="onTouchEnd"
+              @click="viewSchedule(schedule)"
+            >
+              <text class="item-name">{{ schedule.taskName }}</text>
+              <view class="item-assignee">
+                <image :src="getAssigneeAvatar(schedule.assigneeId)" class="mini-avatar" />
+              </view>
+            </view>
+            <view 
+              v-if="getSchedulesByDay(dayIndex + 1).length === 0" 
+              class="empty-slot"
+              @click="quickAdd(dayIndex + 1)"
+            >
+              <text class="empty-text">+</text>
+            </view>
           </view>
         </view>
       </view>
+    </view>
+    
+    <!-- 拖拽提示 -->
+    <view v-if="draggedSchedule" class="drag-hint">
+      <text>拖拽到其他日期可调整排班</text>
     </view>
     
     <!-- 添加排班弹窗 -->
     <view v-if="showModal" class="modal-overlay" @click="closeModal">
       <view class="modal-content" @click.stop>
         <view class="modal-header">
-          <text>添加排班</text>
+          <text>{{ isEdit ? '编辑排班' : '添加排班' }}</text>
           <text class="close-btn" @click="closeModal">✕</text>
         </view>
         
@@ -75,6 +100,7 @@
               :class="{ active: newSchedule.assigneeId === member.id }"
               @click="newSchedule.assigneeId = member.id"
             >
+              <image :src="member.avatar" class="member-avatar" />
               <text>{{ member.name }}</text>
             </view>
           </view>
@@ -95,7 +121,6 @@
           </view>
         </view>
         
-        
         <view class="form-item">
           <text class="label">周几</text>
           <view class="day-options">
@@ -103,7 +128,7 @@
               v-for="(day, index) in weekDays" 
               :key="index"
               class="day-option"
-              :class="{ active: newSchedule.scheduleDay === index + 1 }"
+              :class="{ active: newSchedule.scheduleDay === index + 1, today: isToday(index + 1) }"
               @click="newSchedule.scheduleDay = index + 1"
             >
               <text>{{ day }}</text>
@@ -111,10 +136,10 @@
           </view>
         </view>
         
-        
         <view class="form-actions">
+          <button v-if="isEdit" class="btn-danger" @click="deleteSchedule">删除</button>
           <button class="btn-cancel" @click="closeModal">取消</button>
-          <button class="btn-confirm" @click="addSchedule">确认添加</button>
+          <button class="btn-confirm" @click="saveSchedule">确认</button>
         </view>
       </view>
     </view>
@@ -122,7 +147,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { scheduleApi, familyApi } from '../../api/index.js'
 
 const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 const scheduleTypes = [
@@ -130,22 +156,15 @@ const scheduleTypes = [
   { label: '每天', value: 'daily' }
 ]
 
-const familyMembers = ref([
-  { id: 1, name: '爸爸' },
-  { id: 2, name: '妈妈' },
-  { id: 3, name: '宝贝' }
-])
-
-const schedules = ref([
-  { id: 1, taskName: '洗碗', assigneeId: 1, scheduleType: 'weekly', scheduleDay: 1, status: 1 },
-  { id: 2, taskName: '拖地', assigneeId: 2, scheduleType: 'weekly', scheduleDay: 2, status: 1 },
-  { id: 3, taskName: '倒垃圾', assigneeId: 3, scheduleType: 'weekly', scheduleDay: 3, status: 1 },
-  { id: 4, taskName: '洗碗', assigneeId: 2, scheduleType: 'weekly', scheduleDay: 4, status: 1 },
-  { id: 5, taskName: '整理房间', assigneeId: 1, scheduleType: 'weekly', scheduleDay: 6, status: 1 }
-])
-
+const familyId = ref(null)
+const familyMembers = ref([])
+const schedules = ref([])
 const todaySchedules = ref([])
 const showModal = ref(false)
+const isEdit = ref(false)
+const editingId = ref(null)
+const draggedSchedule = ref(null)
+const touchStartTime = ref(0)
 
 const newSchedule = ref({
   taskName: '',
@@ -154,78 +173,196 @@ const newSchedule = ref({
   scheduleDay: 1
 })
 
-onMounted(() => {
-  loadTodaySchedules()
+const todayDate = computed(() => {
+  const today = new Date()
+  return `${today.getMonth() + 1}月${today.getDate()}日`
 })
 
-const loadTodaySchedules = () => {
-  const today = new Date().getDay()
-  const dayOfWeek = today === 0 ? 7 : today
-  todaySchedules.value = schedules.value.filter(s => s.scheduleDay === dayOfWeek && s.status === 1)
+onMounted(() => {
+  const pages = getCurrentPages()
+  const currentPage = pages[pages.length - 1]
+  familyId.value = currentPage.options.familyId || uni.getStorageSync('currentFamilyId')
+  
+  if (familyId.value) {
+    loadFamilyMembers()
+    loadSchedules()
+    loadTodaySchedules()
+  }
+})
+
+// 加载家庭成员
+const loadFamilyMembers = async () => {
+  try {
+    const res = await familyApi.getMembers(familyId.value)
+    familyMembers.value = res || []
+    if (familyMembers.value.length > 0 && !newSchedule.value.assigneeId) {
+      newSchedule.value.assigneeId = familyMembers.value[0].id
+    }
+  } catch (e) {
+    console.error('加载家庭成员失败', e)
+  }
 }
 
+// 加载排班列表
+const loadSchedules = async () => {
+  try {
+    const res = await scheduleApi.getList(familyId.value)
+    schedules.value = res || []
+  } catch (e) {
+    console.error('加载排班失败', e)
+    uni.showToast({ title: '加载排班失败', icon: 'none' })
+  }
+}
+
+// 加载今日排班
+const loadTodaySchedules = async () => {
+  try {
+    const res = await scheduleApi.getToday(familyId.value)
+    todaySchedules.value = res || []
+  } catch (e) {
+    console.error('加载今日排班失败', e)
+  }
+}
+
+// 获取成员名称
 const getAssigneeName = (id) => {
   const member = familyMembers.value.find(m => m.id === id)
   return member ? member.name : '未知'
 }
 
+// 获取成员头像
+const getAssigneeAvatar = (id) => {
+  const member = familyMembers.value.find(m => m.id === id)
+  return member ? member.avatar : '/static/avatar/default.png'
+}
+
+// 按日期获取排班
 const getSchedulesByDay = (day) => {
   return schedules.value.filter(s => s.scheduleDay === day && s.status === 1)
 }
 
-const viewSchedule = (schedule) => {
-  uni.showModal({
-    title: schedule.taskName,
-    content: `值班人员：${getAssigneeName(schedule.assigneeId)}\n周期：${schedule.scheduleType === 'weekly' ? '每周' : '每天'}`,
-    showCancel: true,
-    confirmText: '删除',
-    cancelText: '关闭',
-    success: (res) => {
-      if (res.confirm) {
-        deleteSchedule(schedule)
-      }
-    }
-  })
+// 判断是否是今天
+const isToday = (day) => {
+  const today = new Date().getDay()
+  const dayOfWeek = today === 0 ? 7 : today
+  return day === dayOfWeek
 }
 
-const deleteSchedule = (schedule) => {
-  const index = schedules.value.findIndex(s => s.id === schedule.id)
-  if (index > -1) {
-    schedules.value.splice(index, 1)
-    loadTodaySchedules()
-    uni.showToast({ title: '已删除', icon: 'success' })
+// 查看排班详情
+const viewSchedule = (schedule) => {
+  editingId.value = schedule.id
+  newSchedule.value = {
+    taskName: schedule.taskName,
+    assigneeId: schedule.assigneeId,
+    scheduleType: schedule.scheduleType,
+    scheduleDay: schedule.scheduleDay
+  }
+  isEdit.value = true
+  showModal.value = true
+}
+
+// 长按开始拖拽
+const onLongPress = (schedule, e) => {
+  draggedSchedule.value = schedule
+  uni.vibrateShort()
+}
+
+// 触摸开始
+const onTouchStart = (schedule, e) => {
+  touchStartTime.value = Date.now()
+}
+
+// 触摸结束
+const onTouchEnd = () => {
+  const touchDuration = Date.now() - touchStartTime.value
+  if (touchDuration < 300) {
+    // 短按不处理，由 click 事件处理
+    draggedSchedule.value = null
   }
 }
 
+// 显示添加弹窗
 const showAddModal = () => {
+  isEdit.value = false
+  editingId.value = null
   newSchedule.value = {
     taskName: '',
     assigneeId: familyMembers.value[0]?.id,
     scheduleType: 'weekly',
-    scheduleDay: 1
+    scheduleDay: new Date().getDay() || 7
   }
   showModal.value = true
 }
 
-const closeModal = () => {
-  showModal.value = false
+// 快速添加
+const quickAdd = (day) => {
+  isEdit.value = false
+  editingId.value = null
+  newSchedule.value = {
+    taskName: '',
+    assigneeId: familyMembers.value[0]?.id,
+    scheduleType: 'weekly',
+    scheduleDay: day
+  }
+  showModal.value = true
 }
 
-const addSchedule = () => {
-  if (!newSchedule.value.taskName) {
+// 关闭弹窗
+const closeModal = () => {
+  showModal.value = false
+  isEdit.value = false
+  editingId.value = null
+}
+
+// 保存排班
+const saveSchedule = async () => {
+  if (!newSchedule.value.taskName.trim()) {
     uni.showToast({ title: '请输入任务名称', icon: 'none' })
     return
   }
   
-  schedules.value.push({
-    id: Date.now(),
-    ...newSchedule.value,
-    status: 1
+  try {
+    const data = {
+      familyId: familyId.value,
+      taskName: newSchedule.value.taskName.trim(),
+      assigneeId: newSchedule.value.assigneeId,
+      scheduleType: newSchedule.value.scheduleType,
+      scheduleDay: newSchedule.value.scheduleDay
+    }
+    
+    await scheduleApi.create(data)
+    
+    uni.showToast({ title: '添加成功', icon: 'success' })
+    closeModal()
+    await loadSchedules()
+    await loadTodaySchedules()
+  } catch (e) {
+    console.error('保存排班失败', e)
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
+}
+
+// 删除排班
+const deleteSchedule = async () => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定删除这个排班吗？',
+    confirmColor: '#FF4D4F',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await scheduleApi.delete(editingId.value)
+          uni.showToast({ title: '已删除', icon: 'success' })
+          closeModal()
+          await loadSchedules()
+          await loadTodaySchedules()
+        } catch (e) {
+          console.error('删除排班失败', e)
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
+      }
+    }
   })
-  
-  loadTodaySchedules()
-  uni.showToast({ title: '添加成功', icon: 'success' })
-  closeModal()
 }
 </script>
 
@@ -272,10 +409,19 @@ const addSchedule = () => {
   border-radius: 16px;
   
   .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 16px;
     font-weight: 600;
     color: #2C3E50;
     margin-bottom: 15px;
+    
+    .today-date {
+      font-size: 13px;
+      color: #999;
+      font-weight: normal;
+    }
   }
 }
 
@@ -297,8 +443,17 @@ const addSchedule = () => {
     }
     
     .today-assignee {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-size: 13px;
       color: #2196F3;
+      
+      .assignee-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+      }
     }
   }
 }
@@ -324,51 +479,100 @@ const addSchedule = () => {
   }
 }
 
-.week-header {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  margin-bottom: 10px;
+.week-view {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
   
-  .week-day {
-    text-align: center;
-    font-size: 12px;
-    color: #7F8C8D;
-    padding: 8px 0;
+  .day-card {
+    flex: 1;
+    min-width: 80px;
+    background: #F8F9FA;
+    border-radius: 12px;
+    padding: 10px 5px;
+    
+    &.today {
+      background: #E3F2FD;
+      border: 2px solid #2196F3;
+    }
+    
+    .day-header {
+      text-align: center;
+      font-size: 13px;
+      color: #7F8C8D;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    
+    .day-content {
+      min-height: 100px;
+      
+      .schedule-item {
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px 5px;
+        margin-bottom: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        
+        &.dragging {
+          opacity: 0.5;
+          transform: scale(0.95);
+        }
+        
+        .item-name {
+          display: block;
+          font-size: 11px;
+          color: #333;
+          font-weight: 500;
+          margin-bottom: 4px;
+          text-align: center;
+        }
+        
+        .item-assignee {
+          display: flex;
+          justify-content: center;
+          
+          .mini-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+          }
+        }
+      }
+      
+      .empty-slot {
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        
+        .empty-text {
+          font-size: 20px;
+          color: #ccc;
+        }
+        
+        &:active {
+          border-color: #2196F3;
+          background: #E3F2FD;
+        }
+      }
+    }
   }
 }
 
-.schedule-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-  
-  .day-column {
-    min-height: 150px;
-    background: #F8F9FA;
-    border-radius: 8px;
-    padding: 5px;
-  }
-  
-  .schedule-item {
-    background: #E3F2FD;
-    border-radius: 6px;
-    padding: 6px;
-    margin-bottom: 5px;
-    
-    .item-name {
-      display: block;
-      font-size: 11px;
-      color: #1976D2;
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-    
-    .item-assignee {
-      font-size: 10px;
-      color: #2196F3;
-    }
-  }
+.drag-hint {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
 }
 
 .modal-overlay {
@@ -425,12 +629,42 @@ const addSchedule = () => {
   }
 }
 
-.member-list, .type-options, .day-options {
+.member-list {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   
-  .member-option, .type-option, .day-option {
+  .member-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 15px;
+    background: #F5F7FA;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #666;
+    
+    .member-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+    }
+    
+    &.active {
+      background: #E3F2FD;
+      color: #2196F3;
+      border: 2px solid #2196F3;
+    }
+  }
+}
+
+.type-options, .day-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  
+  .type-option, .day-option {
     padding: 10px 20px;
     background: #F5F7FA;
     border-radius: 20px;
@@ -440,6 +674,10 @@ const addSchedule = () => {
     &.active {
       background: #2196F3;
       color: #fff;
+    }
+    
+    &.today {
+      border: 2px solid #2196F3;
     }
   }
 }
@@ -455,6 +693,11 @@ const addSchedule = () => {
     border-radius: 22px;
     font-size: 15px;
     border: none;
+  }
+  
+  .btn-danger {
+    background: #FFF1F0;
+    color: #FF4D4F;
   }
   
   .btn-cancel {
