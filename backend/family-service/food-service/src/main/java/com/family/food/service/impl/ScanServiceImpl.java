@@ -16,9 +16,9 @@ import com.family.food.mapper.BarcodeProductMapper;
 import com.family.food.mapper.ScanRecordMapper;
 import com.family.food.service.IngredientService;
 import com.family.food.service.ScanService;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
  * 扫码识别服务实现
  */
 @Service
-@RequiredArgsConstructor
 public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> implements ScanService {
     
     private static final Logger log = LoggerFactory.getLogger(ScanServiceImpl.class);
@@ -45,6 +44,15 @@ public class ScanServiceImpl extends ServiceImpl<ScanRecordMapper, ScanRecord> i
     
     private static final String UPC_API_URL = "https://api.upcitemdb.com/prod/trial/lookup";
     private static final Pattern BARCODE_PATTERN = Pattern.compile("^[0-9]{8,14}$");
+    
+    @Autowired
+    public ScanServiceImpl(BarcodeProductMapper barcodeProductMapper, 
+                          IngredientService ingredientService, 
+                          StringRedisTemplate redisTemplate) {
+        this.barcodeProductMapper = barcodeProductMapper;
+        this.ingredientService = ingredientService;
+        this.redisTemplate = redisTemplate;
+    }
     
     @Override
     public ScanResponse scanProduct(ScanRequest request) {

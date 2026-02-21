@@ -3,17 +3,21 @@ package com.family.food.controller;
 import com.family.common.core.Result;
 import com.family.food.entity.Ingredient;
 import com.family.food.service.IngredientService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/ingredient")
-@RequiredArgsConstructor
 public class IngredientController {
     
     private final IngredientService ingredientService;
+    
+    @Autowired
+    public IngredientController(IngredientService ingredientService) {
+        this.ingredientService = ingredientService;
+    }
     
     @GetMapping("/list/{familyId}")
     public Result<List<Ingredient>> list(@PathVariable Long familyId) {

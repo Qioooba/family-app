@@ -4,8 +4,9 @@ import com.family.common.core.Result;
 import com.family.food.dto.request.ScanRequest;
 import com.family.food.dto.response.ScanResponse;
 import com.family.food.service.ScanService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,13 +15,18 @@ import java.util.List;
  * 扫码识别控制器
  * 用于扫描商品条形码、二维码和食材图片识别
  */
-@Slf4j
 @RestController
 @RequestMapping("/api/scan")
-@RequiredArgsConstructor
 public class ScanController {
     
+    private static final Logger log = LoggerFactory.getLogger(ScanController.class);
+    
     private final ScanService scanService;
+    
+    @Autowired
+    public ScanController(ScanService scanService) {
+        this.scanService = scanService;
+    }
     
     /**
      * 扫码识别商品
