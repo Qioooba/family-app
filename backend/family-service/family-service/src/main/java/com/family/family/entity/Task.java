@@ -33,6 +33,10 @@ public class Task {
     private LocalDateTime finishTime;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Integer isArchived;
+    private LocalDateTime archiveTime;
+    private Integer isDeleted;
+    private LocalDateTime deleteTime;
     
     public Long getId() {
         return id;
@@ -184,5 +188,37 @@ public class Task {
     
     public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
+    }
+    
+    public Integer getIsArchived() {
+        return isArchived;
+    }
+    
+    public void setIsArchived(Integer isArchived) {
+        this.isArchived = isArchived;
+    }
+    
+    public LocalDateTime getArchiveTime() {
+        return archiveTime;
+    }
+    
+    public void setArchiveTime(LocalDateTime archiveTime) {
+        this.archiveTime = archiveTime;
+    }
+    
+    public Integer getIsDeleted() {
+        return isDeleted;
+    }
+    
+    public void setIsDeleted(Integer isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+    
+    public LocalDateTime getDeleteTime() {
+        return deleteTime;
+    }
+    
+    public void setDeleteTime(LocalDateTime deleteTime) {
+        this.deleteTime = deleteTime;
     }
 }
