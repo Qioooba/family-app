@@ -114,6 +114,13 @@
             "navigationBarTitleText": "心愿详情",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "budget",
+          "style": {
+            "navigationBarTitleText": "心愿预算",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
