@@ -1,6 +1,11 @@
 <template>
   <view class="home-page">
-    <!-- 顶部欢迎区 -->
+    <!-- 骨架屏 -->
+    <Skeleton v-if="pageLoading" type="card" :rows="5" show-image :list-count="3" />
+    
+    <!-- 实际内容 -->
+    <template v-else>
+      <!-- 顶部欢迎区 -->
     <view class="header-section">
       <view class="header-bg"></view>
       <view class="header-content">
@@ -170,15 +175,19 @@
         </text>
       </view>
     </view>
-  </view>
+  </template>
+</view>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import LazyImage from '@/components/common/LazyImage.vue'
+import Skeleton from '@/components/common/Skeleton.vue'
+import { useSkeleton } from '@/utils/performance.js'
 
 const userStore = useUserStore()
+const { loading: pageLoading, hide: hideSkeleton } = useSkeleton({ minDuration: 500 })
 
 // 问候语
 const greeting = computed(() => {
@@ -252,6 +261,10 @@ const goRecipeDetail = (recipe) => {
 
 onMounted(() => {
   // 加载首页数据
+  // 模拟数据加载完成，隐藏骨架屏
+  setTimeout(() => {
+    hideSkeleton()
+  }, 800)
 })
 </script>
 
