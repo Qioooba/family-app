@@ -102,6 +102,13 @@
             "navigationBarTitleText": "任务日历",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "gantt",
+          "style": {
+            "navigationBarTitleText": "任务甘特图",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },

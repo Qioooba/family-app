@@ -70,7 +70,7 @@ public class TaskStatsController {
             .filter(t -> t.getCreateTime() != null && t.getCreateTime().toLocalDate().equals(today))
             .count();
         long todayCompleted = allTasks.stream()
-            .filter(t -> t.getStatus() == 2 && t.getFinishTime() != null &b t.getFinishTime().toLocalDate().equals(today))
+            .filter(t -> t.getStatus() == 2 && t.getFinishTime() != null && t.getFinishTime().toLocalDate().equals(today))
             .count();
         stats.put("todayCreated", todayCreated);
         stats.put("todayCompleted", todayCompleted);
