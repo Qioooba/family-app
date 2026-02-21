@@ -5,7 +5,6 @@ import com.family.family.dto.UserLoginDTO;
 import com.family.family.dto.UserRegisterDTO;
 import com.family.family.service.UserService;
 import com.family.family.vo.UserVO;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -13,10 +12,13 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/user")
-@RequiredArgsConstructor
 public class UserController {
     
     private final UserService userService;
+    
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
     
     @PostMapping("/register")
     public Result<UserVO> register(@RequestBody UserRegisterDTO dto) {

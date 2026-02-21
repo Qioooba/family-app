@@ -3,8 +3,9 @@ import { taskApi } from './task.js'
 import { wishApi } from './wish.js'
 import { recipeApi } from './recipe.js'
 import { anniversaryApi } from './anniversary.js'
+import { voteApi } from './vote.js'
 
-export { taskApi, wishApi, recipeApi, anniversaryApi }
+export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi }
 
 // 食材相关API
 export const ingredientApi = {
@@ -46,27 +47,6 @@ export const dietApi = {
   
   // 删除记录
   delete: (id) => request.delete(`/diet/${id}`)
-}
-
-// 投票相关API
-export const voteApi = {
-  // 获取投票列表
-  getList: (familyId, status) => request.get(`/vote/list/${familyId}`, { status }),
-  
-  // 创建投票
-  create: (data) => request.post('/vote/create', data),
-  
-  // 参与投票
-  doVote: (voteId, userId, options) => request.post(`/vote/do/${voteId}`, { options, userId }),
-  
-  // 结束投票
-  end: (voteId) => request.post(`/vote/end/${voteId}`),
-  
-  // 获取结果
-  getResult: (voteId) => request.get(`/vote/result/${voteId}`),
-  
-  // 删除投票
-  delete: (id) => request.delete(`/vote/${id}`)
 }
 
 // 用户相关API

@@ -5,7 +5,8 @@ import com.family.family.controller.TaskController;
 import com.family.family.entity.Task;
 import com.family.family.mapper.TaskMapper;
 import com.family.family.service.TaskRepeatService;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +24,10 @@ import java.util.Map;
 /**
  * 任务重复服务实现
  */
-@Slf4j
 @Service
 public class TaskRepeatServiceImpl implements TaskRepeatService {
+    
+    private static final Logger log = LoggerFactory.getLogger(TaskRepeatServiceImpl.class);
     
     private final TaskMapper taskMapper;
     
