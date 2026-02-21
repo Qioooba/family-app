@@ -200,11 +200,12 @@ function loadImage(el, src, errorImage) {
 
 /**
  * 批量懒加载 Hook
+ * 适用于分页加载场景
  * @param {Ref<Array>} listRef 数据列表
  * @param {Object} options 配置
  */
 export function useLazyList(listRef, options = {}) {
-  const { pageSize = 20, preloadPages = 1 } = options
+  const { pageSize = 20, preloadPages = 1, immediate = true } = options
   
   const displayList = ref([])
   const currentPage = ref(1)
@@ -238,13 +239,22 @@ export function useLazyList(listRef, options = {}) {
     displayList.value = []
     currentPage.value = 1
     finished.value = false
-    loadMore()
+    if (immediate) {
+      loadMore()
+    }
   }
   
   // 初始化
   onMounted(() => {
-    loadMore()
+    if (immediate) {
+      loadMore()
+    }
   })
+  
+  // 监听数据源变化
+  watch(() => listRef.value, () => {
+    reset()
+  }, { deep: false })
   
   return {
     displayList,
