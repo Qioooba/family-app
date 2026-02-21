@@ -27,4 +27,36 @@ public class ScanRequest {
      * 用户ID
      */
     private Long userId;
+    
+    public String getImageBase64() {
+        return imageBase64;
+    }
+    
+    public void setImageBase64(String imageBase64) {
+        this.imageBase64 = imageBase64;
+    }
+    
+    public String getScanType() {
+        return scanType;
+    }
+    
+    public void setScanType(String scanType) {
+        this.scanType = scanType;
+    }
+    
+    public Long getFamilyId() {
+        return familyId;
+    }
+    
+    public void setFamilyId(Long familyId) {
+        this.familyId = familyId;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 }

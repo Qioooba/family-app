@@ -29,93 +29,9 @@
       }
     },
     {
-      "path": "pages/task/schedule",
-      "style": {
-        "navigationBarTitleText": "家务排班",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/task/create",
-      "style": {
-        "navigationBarTitleText": "创建任务",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/task/detail",
-      "style": {
-        "navigationBarTitleText": "任务详情",
-        "navigationStyle": "custom"
-      }
-    },
-    {
       "path": "pages/wish/index",
       "style": {
         "navigationBarTitleText": "心愿墙",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/wish/create",
-      "style": {
-        "navigationBarTitleText": "添加心愿",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/wish/detail",
-      "style": {
-        "navigationBarTitleText": "心愿详情",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/recipe/index",
-      "style": {
-        "navigationBarTitleText": "菜谱",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/recipe/detail",
-      "style": {
-        "navigationBarTitleText": "菜谱详情",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/food/index",
-      "style": {
-        "navigationBarTitleText": "饮食记录",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/food/record",
-      "style": {
-        "navigationBarTitleText": "记录饮食",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/calendar/index",
-      "style": {
-        "navigationBarTitleText": "纪念日",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/vote/index",
-      "style": {
-        "navigationBarTitleText": "家庭投票",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/vote/create",
-      "style": {
-        "navigationBarTitleText": "发起投票",
         "navigationStyle": "custom"
       }
     },
@@ -127,118 +43,299 @@
       }
     },
     {
-      "path": "pages/family/switch",
-      "style": {
-        "navigationBarTitleText": "切换家庭",
-        "navigationStyle": "custom"
-      }
-    },
-    {
       "path": "pages/profile/index",
       "style": {
         "navigationBarTitleText": "我的",
         "navigationStyle": "custom"
       }
-    },
-    {
-      "path": "pages/ai/index",
-      "style": {
-        "navigationBarTitleText": "AI助手",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/dashboard/index",
-      "style": {
-        "navigationBarTitleText": "数据看板",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/moments/index",
-      "style": {
-        "navigationBarTitleText": "家庭圈",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/moments/create",
-      "style": {
-        "navigationBarTitleText": "发布动态",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/moments/comments",
-      "style": {
-        "navigationBarTitleText": "评论",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/shopping/index",
-      "style": {
-        "navigationBarTitleText": "智能购物",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/shopping/list",
-      "style": {
-        "navigationBarTitleText": "清单详情",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/shopping/inventory",
-      "style": {
-        "navigationBarTitleText": "库存管理",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/shopping/price",
-      "style": {
-        "navigationBarTitleText": "价格追踪",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/game/index",
-      "style": {
-        "navigationBarTitleText": "家庭游戏",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/game/points",
-      "style": {
-        "navigationBarTitleText": "我的积分",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/water/index",
-      "style": {
-        "navigationBarTitleText": "喝水打卡",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/coupon/index",
-      "style": {
-        "navigationBarTitleText": "优惠券",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/nutrition/index",
-      "style": {
-        "navigationBarTitleText": "营养成分",
-        "navigationStyle": "custom"
-      }
     }
   ],
+  "subPackages": [
+    {
+      "root": "pages/task",
+      "pages": [
+        {
+          "path": "schedule",
+          "style": {
+            "navigationBarTitleText": "家务排班",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "create",
+          "style": {
+            "navigationBarTitleText": "创建任务",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "detail",
+          "style": {
+            "navigationBarTitleText": "任务详情",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/wish",
+      "pages": [
+        {
+          "path": "create",
+          "style": {
+            "navigationBarTitleText": "添加心愿",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "detail",
+          "style": {
+            "navigationBarTitleText": "心愿详情",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/recipe",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "菜谱",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "detail",
+          "style": {
+            "navigationBarTitleText": "菜谱详情",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/food",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "饮食记录",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "record",
+          "style": {
+            "navigationBarTitleText": "记录饮食",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/calendar",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "纪念日",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/vote",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "家庭投票",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "create",
+          "style": {
+            "navigationBarTitleText": "发起投票",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/family",
+      "pages": [
+        {
+          "path": "switch",
+          "style": {
+            "navigationBarTitleText": "切换家庭",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/ai",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "AI助手",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "chat",
+          "style": {
+            "navigationBarTitleText": "AI对话",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "voice",
+          "style": {
+            "navigationBarTitleText": "语音助手",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/dashboard",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "数据看板",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/moments",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "家庭圈",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "create",
+          "style": {
+            "navigationBarTitleText": "发布动态",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "comments",
+          "style": {
+            "navigationBarTitleText": "评论",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/shopping",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "智能购物",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "list",
+          "style": {
+            "navigationBarTitleText": "清单详情",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "inventory",
+          "style": {
+            "navigationBarTitleText": "库存管理",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "price",
+          "style": {
+            "navigationBarTitleText": "价格追踪",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/game",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "家庭游戏",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "points",
+          "style": {
+            "navigationBarTitleText": "我的积分",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/water",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "喝水打卡",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/coupon",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "优惠券",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/nutrition",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "营养成分",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/home/index": {
+      "network": "all",
+      "packages": ["pages/task", "pages/wish"]
+    }
+  },
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "家庭小程序",

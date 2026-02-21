@@ -70,4 +70,100 @@ public class ScanResponse {
      * 提示消息
      */
     private String message;
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public String getProductName() {
+        return productName;
+    }
+    
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+    
+    public String getBarcode() {
+        return barcode;
+    }
+    
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
+    }
+    
+    public String getBrand() {
+        return brand;
+    }
+    
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+    
+    public String getSpecification() {
+        return specification;
+    }
+    
+    public void setSpecification(String specification) {
+        this.specification = specification;
+    }
+    
+    public String getCategory() {
+        return category;
+    }
+    
+    public void setCategory(String category) {
+        this.category = category;
+    }
+    
+    public BigDecimal getReferencePrice() {
+        return referencePrice;
+    }
+    
+    public void setReferencePrice(BigDecimal referencePrice) {
+        this.referencePrice = referencePrice;
+    }
+    
+    public LocalDate getProductionDate() {
+        return productionDate;
+    }
+    
+    public void setProductionDate(LocalDate productionDate) {
+        this.productionDate = productionDate;
+    }
+    
+    public Integer getShelfLifeDays() {
+        return shelfLifeDays;
+    }
+    
+    public void setShelfLifeDays(Integer shelfLifeDays) {
+        this.shelfLifeDays = shelfLifeDays;
+    }
+    
+    public LocalDate getExpireDate() {
+        return expireDate;
+    }
+    
+    public void setExpireDate(LocalDate expireDate) {
+        this.expireDate = expireDate;
+    }
+    
+    public String getRawData() {
+        return rawData;
+    }
+    
+    public void setRawData(String rawData) {
+        this.rawData = rawData;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
+    
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }

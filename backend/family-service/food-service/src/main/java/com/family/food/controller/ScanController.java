@@ -3,7 +3,9 @@ package com.family.food.controller;
 import com.family.common.core.Result;
 import com.family.food.dto.request.ScanRequest;
 import com.family.food.dto.response.ScanResponse;
+import com.family.food.service.ScanService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,10 +14,13 @@ import java.util.List;
  * 扫码识别控制器
  * 用于扫描商品条形码、二维码和食材图片识别
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/scan")
 @RequiredArgsConstructor
 public class ScanController {
+    
+    private final ScanService scanService;
     
     /**
      * 扫码识别商品
@@ -23,8 +28,16 @@ public class ScanController {
      */
     @PostMapping("/product")
     public Result<ScanResponse> scanProduct(@RequestBody ScanRequest request) {
-        // TODO: 实现扫码识别逻辑
-        return Result.success(null);
+        log.info("扫码识别请求: userId={}, familyId={}, scanType={}", 
+                request.getUserId(), request.getFamilyId(), request.getScanType());
+        
+        try {
+            ScanResponse response = scanService.scanProduct(request);
+            return Result.success(response);
+        } catch (Exception e) {
+            log.error("扫码识别失败", e);
+            return Result.error("扫码识别失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -33,8 +46,15 @@ public class ScanController {
      */
     @PostMapping("/batch")
     public Result<List<ScanResponse>> scanBatch(@RequestBody List<ScanRequest> requests) {
-        // TODO: 实现批量扫码识别逻辑
-        return Result.success(null);
+        log.info("批量扫码识别请求: 共{}个", requests.size());
+        
+        try {
+            List<ScanResponse> responses = scanService.scanBatch(requests);
+            return Result.success(responses);
+        } catch (Exception e) {
+            log.error("批量扫码识别失败", e);
+            return Result.error("批量扫码识别失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -43,8 +63,15 @@ public class ScanController {
      */
     @PostMapping("/ingredient")
     public Result<ScanResponse> scanIngredient(@RequestBody ScanRequest request) {
-        // TODO: 实现图片识别食材逻辑
-        return Result.success(null);
+        log.info("图片识别食材请求: userId={}", request.getUserId());
+        
+        try {
+            ScanResponse response = scanService.scanIngredient(request);
+            return Result.success(response);
+        } catch (Exception e) {
+            log.error("图片识别失败", e);
+            return Result.error("图片识别失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -54,8 +81,15 @@ public class ScanController {
     @GetMapping("/history/{userId}")
     public Result<List<ScanResponse>> getScanHistory(@PathVariable Long userId,
                                                       @RequestParam(defaultValue = "10") Integer limit) {
-        // TODO: 获取扫码历史记录
-        return Result.success(null);
+        log.info("获取扫码历史: userId={}, limit={}", userId, limit);
+        
+        try {
+            List<ScanResponse> history = scanService.getScanHistory(userId, limit);
+            return Result.success(history);
+        } catch (Exception e) {
+            log.error("获取扫码历史失败", e);
+            return Result.error("获取扫码历史失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -64,7 +98,34 @@ public class ScanController {
      */
     @PostMapping("/add-to-inventory")
     public Result<Void> addToInventory(@RequestBody ScanRequest request) {
-        // TODO: 扫码后直接添加到库存
-        return Result.success(null);
+        log.info("扫码添加到库存: userId={}, familyId={}", request.getUserId(), request.getFamilyId());
+        
+        try {
+            scanService.addToInventory(request);
+            return Result.success();
+        } catch (Exception e) {
+            log.error("添加到库存失败", e);
+            return Result.error("添加到库存失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 从条码库查询商品(直接查询)
+     * GET /api/scan/barcode/{barcode}
+     */
+    @GetMapping("/barcode/{barcode}")
+    public Result<ScanResponse> queryBarcode(@PathVariable String barcode) {
+        log.info("条码库查询: {}", barcode);
+        
+        try {
+            ScanResponse response = scanService.queryFromBarcodeLibrary(barcode);
+            if (response == null) {
+                return Result.error("商品不存在");
+            }
+            return Result.success(response);
+        } catch (Exception e) {
+            log.error("条码查询失败", e);
+            return Result.error("条码查询失败: " + e.getMessage());
+        }
     }
 }
