@@ -2,8 +2,9 @@ import { request } from '../utils/request'
 import { taskApi } from './task.js'
 import { wishApi } from './wish.js'
 import { recipeApi } from './recipe.js'
+import { anniversaryApi } from './anniversary.js'
 
-export { taskApi, wishApi, recipeApi }
+export { taskApi, wishApi, recipeApi, anniversaryApi }
 
 // 食材相关API
 export const ingredientApi = {
@@ -17,7 +18,7 @@ export const ingredientApi = {
   update: (data) => request.put('/ingredient/update', data),
   
   // 图像识别食材
-  recognize: (imageBase64) => request.post('/ingredient/recognize', null, { params: { imageBase64 } }),
+  recognize: (imageBase64) => request.post('/ingredient/recognize', { imageBase64 }),
   
   // 获取即将过期食材
   getExpiring: (familyId) => request.get(`/ingredient/expiring/${familyId}`),
@@ -41,28 +42,10 @@ export const dietApi = {
   getWeekStatistics: (userId) => request.get(`/diet/statistics/week/${userId}`),
   
   // 识别食物
-  recognizeFood: (imageBase64) => request.post('/diet/recognize', null, { params: { imageBase64 } }),
+  recognizeFood: (imageBase64) => request.post('/diet/recognize', { imageBase64 }),
   
   // 删除记录
   delete: (id) => request.delete(`/diet/${id}`)
-}
-
-// 纪念日相关API
-export const anniversaryApi = {
-  // 获取纪念日列表
-  getList: (familyId) => request.get(`/anniversary/list/${familyId}`),
-  
-  // 获取即将到期纪念日
-  getUpcoming: (familyId, days = 30) => request.get(`/anniversary/upcoming/${familyId}`, { days }),
-  
-  // 创建纪念日
-  create: (data) => request.post('/anniversary/create', data),
-  
-  // 获取今日倒计时
-  getToday: (familyId) => request.get(`/anniversary/today/${familyId}`),
-  
-  // 删除纪念日
-  delete: (id) => request.delete(`/anniversary/${id}`)
 }
 
 // 投票相关API
@@ -74,7 +57,7 @@ export const voteApi = {
   create: (data) => request.post('/vote/create', data),
   
   // 参与投票
-  doVote: (voteId, userId, options) => request.post(`/vote/do/${voteId}`, options, { params: { userId } }),
+  doVote: (voteId, userId, options) => request.post(`/vote/do/${voteId}`, { options, userId }),
   
   // 结束投票
   end: (voteId) => request.post(`/vote/end/${voteId}`),
@@ -105,8 +88,8 @@ export const userApi = {
   
   // 修改密码
   changePassword: (oldPassword, newPassword) => 
-    request.post('/user/password', null, { params: { oldPassword, newPassword } }),
+    request.post('/user/password', { oldPassword, newPassword }),
   
   // 发送验证码
-  sendSmsCode: (phone) => request.post('/user/sms-code', null, { params: { phone } })
+  sendSmsCode: (phone) => request.post('/user/sms-code', { phone })
 }
