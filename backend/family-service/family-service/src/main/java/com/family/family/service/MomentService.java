@@ -1,21 +1,25 @@
 package com.family.family.service;
 
 import com.family.family.entity.Moment;
+import com.family.family.entity.MomentComment;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 动态服务
  */
 public interface MomentService {
     
-    Moment createMoment(Moment moment);
+    Long create(Long userId, Object request);
     
-    List<Moment> getFamilyMoments(Long familyId, int page, int size);
+    Map<String, Object> getFeed(Long familyId, Integer page, Integer size);
     
-    void likeMoment(Long momentId, Long userId);
+    Boolean like(Long momentId, Long userId);
     
-    void commentMoment(Long momentId, Long userId, String content);
+    Long comment(Long momentId, Long userId, String content, Long replyTo);
     
-    void deleteMoment(Long momentId);
+    List<MomentComment> getComments(Long momentId);
+    
+    Boolean delete(Long momentId, Long userId);
 }

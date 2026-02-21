@@ -1,5 +1,9 @@
 package com.family.family.service;
 
+import com.family.family.entity.GameWheel;
+import com.family.family.entity.PointsTransaction;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -7,9 +11,19 @@ import java.util.Map;
  */
 public interface GameService {
     
-    Map<String, Object> spinWheel(Long wheelId);
+    Long createWheel(Long userId, Object request);
     
-    Map<String, Object> getPoints(Long userId);
+    List<GameWheel> getWheels(Long familyId);
     
-    void addPoints(Long userId, int points, String reason);
+    String spinWheel(Long wheelId, Long userId);
+    
+    Map<String, Object> getUserPoints(Long userId);
+    
+    List<PointsTransaction> getPointsHistory(Long userId);
+    
+    List<Map<String, Object>> getRankings(Long familyId, String type);
+    
+    List<Map<String, Object>> getAchievements(Long userId);
+    
+    Boolean addPoints(Long userId, Integer points, String reason);
 }
