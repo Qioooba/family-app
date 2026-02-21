@@ -7,6 +7,9 @@ import com.family.family.mapper.TaskMapper;
 import com.family.family.service.TaskReminderService;
 import com.family.family.service.TaskRepeatService;
 import com.family.family.vo.TaskReminderVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/task")
+@Tag(name = "任务管理", description = "任务清单相关接口")
 public class TaskController {
     
     private final TaskMapper taskMapper;
@@ -32,9 +36,11 @@ public class TaskController {
      * 获取家庭任务列表
      */
     @GetMapping("/list")
-    public Result<List<Task>> list(@RequestParam Long familyId,
-                                    @RequestParam(required = false) Long categoryId,
-                                    @RequestParam(required = false) Integer status) {
+    @Operation(summary = "获取任务列表", description = "根据家庭ID获取任务列表")
+    public Result<List<Task>> list(
+            @Parameter(description = "家庭ID") @RequestParam Long familyId,
+            @Parameter(description = "分类ID") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "状态：0待办 1进行中 2已完成") @RequestParam(required = false) Integer status) {
         List<Task> tasks = taskMapper.selectList(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)

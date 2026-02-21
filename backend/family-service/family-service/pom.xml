@@ -68,6 +68,12 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+        
+        <!-- SpringDoc OpenAPI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
 
         <!-- Test -->
         <dependency>
