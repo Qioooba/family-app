@@ -59,46 +59,47 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { recipeApi } from '../../api/index.js'
 
 const searchKey = ref('')
 const categories = ['家常菜', '快手菜', '下饭菜', '汤羹', '面食', '烘焙', '宝宝辅食', '减脂餐']
+const recipes = ref([])
+const loading = ref(false)
+const currentCategory = ref('')
 
-const recipes = ref([
-  {
-    id: 1,
-    name: '番茄炒蛋',
-    image: '/static/recipe/fanqiechaodan.jpg',
-    time: 15,
-    calories: 180,
-    tags: ['家常菜', '快手菜'],
-    isFavorite: true
-  },
-  {
-    id: 2,
-    name: '红烧肉',
-    image: '/static/recipe/hongshaorou.jpg',
-    time: 60,
-    calories: 450,
-    tags: ['下饭菜', '经典'],
-    isFavorite: false
-  },
-  {
-    id: 3,
-    name: '清蒸鲈鱼',
-    image: '/static/recipe/qingzhengluyu.jpg',
-    time: 25,
-    calories: 150,
-    tags: ['健康', '低脂'],
-    isFavorite: false
+// 加载菜谱列表
+const loadRecipes = async () => {
+  loading.value = true
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const params = {
+      familyId: familyId,
+      keyword: searchKey.value || undefined,
+      category: currentCategory.value || undefined
+    }
+    const res = await recipeApi.getFamilyRecipes(familyId)
+    recipes.value = res || []
+  } catch (e) {
+    console.error('加载菜谱失败', e)
+    uni.showToast({ title: '加载菜谱失败', icon: 'none' })
+  } finally {
+    loading.value = false
   }
-])
+}
 
-const search = () => {
-  uni.showToast({ title: `搜索: ${searchKey.value}`, icon: 'none' })
+// 页面加载时获取菜谱
+onMounted(() => {
+  loadRecipes()
+})
+
+const search = async () => {
+  await loadRecipes()
 }
 
 const filterByCategory = (cat) => {
+  currentCategory.value = cat
+  loadRecipes()
   uni.showToast({ title: `筛选: ${cat}`, icon: 'none' })
 }
 
@@ -108,21 +109,35 @@ const viewRecipe = (recipe) => {
   })
 }
 
-const toggleFavorite = (recipe) => {
-  recipe.isFavorite = !recipe.isFavorite
-  uni.showToast({ 
-    title: recipe.isFavorite ? '已收藏' : '取消收藏', 
-    icon: 'none' 
-  })
+const toggleFavorite = async (recipe) => {
+  try {
+    const userId = uni.getStorageSync('userInfo')?.id || 1
+    await recipeApi.favorite(recipe.id, userId)
+    recipe.isFavorite = !recipe.isFavorite
+    uni.showToast({ 
+      title: recipe.isFavorite ? '已收藏' : '取消收藏', 
+      icon: 'none' 
+    })
+  } catch (e) {
+    console.error('收藏失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
 }
 
 const cookIt = (recipe) => {
   uni.showModal({
     title: '确认记录',
     content: `确定要记录做过"${recipe.name}"吗？`,
-    success: (res) => {
+    success: async (res) => {
       if (res.confirm) {
-        uni.showToast({ title: '已记录到做过', icon: 'success' })
+        try {
+          const userId = uni.getStorageSync('userInfo')?.id || 1
+          await recipeApi.recordCooking(recipe.id, userId)
+          uni.showToast({ title: '已记录到做过', icon: 'success' })
+        } catch (e) {
+          console.error('记录失败', e)
+          uni.showToast({ title: '记录失败', icon: 'none' })
+        }
       }
     }
   })
