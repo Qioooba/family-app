@@ -193,3 +193,25 @@
 
 #### 🔴 新发现问题
 - Q031: Shopping价格历史/追踪/比价接口缺失
+
+### 2026-02-22 01:45 第3轮审查 - 编译检查
+
+#### 🔴 严重: family-service编译失败
+编译错误统计:
+- ScheduleController.java: 11个错误 - 缺少Schedule实体类
+- TaskRepeatService.java: 2个错误 - 错误引用TaskController
+- TaskRepeatServiceImpl.java: 3个错误 - 错误引用TaskController  
+- LogAspect.java: 1个错误 - Lombok @Slf4j未生效
+- ExportController.java: 2个错误 - 方法引用无效
+- MomentsController.java: 4个错误 - 类型不匹配
+
+#### 🔴 新增编译问题编号
+| 编号 | 类型 | 描述 |
+|------|------|------|
+| Q032 | 编译错误 | Schedule实体类缺失 |
+| Q033 | 编译错误 | TaskRepeatService错误引用TaskController |
+| Q034 | 编译错误 | LogAspect Lombok问题 |
+| Q035 | 编译错误 | ExportController方法引用错误 |
+| Q036 | 编译错误 | MomentsController类型不匹配 |
+
+**状态**: family-service模块编译失败，阻塞整个项目构建！
