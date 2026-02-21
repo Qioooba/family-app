@@ -123,6 +123,13 @@
             "navigationBarTitleText": "任务时间线",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "dependency",
+          "style": {
+            "navigationBarTitleText": "任务依赖图",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
