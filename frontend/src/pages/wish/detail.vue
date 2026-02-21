@@ -227,8 +227,139 @@ const getTypeLabel = computed(() => {
   return map[wish.value.type] || '其他'
 })
 
+// 预算进度
+const budgetProgress = computed(() => {
+  if (!wish.value.targetAmount || wish.value.targetAmount <= 0) return 0
+  const progress = Math.round(((wish.value.currentAmount || 0) / wish.value.targetAmount) * 100)
+  return Math.min(progress, 100)
+})
+
 const goBack = () => {
   uni.navigateBack()
+}
+
+// 加载里程碑
+const loadMilestones = async (id) => {
+  try {
+    const res = await wishApi.getMilestones(id)
+    milestones.value = res || []
+  } catch (e) {
+    console.error('加载里程碑失败', e)
+  }
+}
+
+// 显示预算弹窗
+const showBudgetModal = () => {
+  budgetForm.value = {
+    targetAmount: wish.value.targetAmount || '',
+    currentAmount: wish.value.currentAmount || ''
+  }
+  budgetModalVisible.value = true
+}
+
+// 关闭预算弹窗
+const closeBudgetModal = () => {
+  budgetModalVisible.value = false
+}
+
+// 保存预算
+const saveBudget = async () => {
+  const target = parseFloat(budgetForm.value.targetAmount)
+  if (!target || target <= 0) {
+    uni.showToast({ title: '请输入有效的目标金额', icon: 'none' })
+    return
+  }
+  
+  try {
+    await wishApi.setBudget(wishId.value, {
+      targetAmount: target,
+      currentAmount: parseFloat(budgetForm.value.currentAmount) || 0
+    })
+    wish.value.targetAmount = target
+    wish.value.currentAmount = parseFloat(budgetForm.value.currentAmount) || 0
+    uni.showToast({ title: '保存成功', icon: 'success' })
+    closeBudgetModal()
+  } catch (e) {
+    console.error('保存预算失败', e)
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
+}
+
+// 显示里程碑弹窗
+const showMilestoneModal = () => {
+  milestoneForm.value = {
+    title: '',
+    targetDate: '',
+    description: ''
+  }
+  milestoneModalVisible.value = true
+}
+
+// 关闭里程碑弹窗
+const closeMilestoneModal = () => {
+  milestoneModalVisible.value = false
+}
+
+// 保存里程碑
+const saveMilestone = async () => {
+  if (!milestoneForm.value.title.trim()) {
+    uni.showToast({ title: '请输入里程碑标题', icon: 'none' })
+    return
+  }
+  
+  try {
+    await wishApi.addMilestone(wishId.value, {
+      title: milestoneForm.value.title,
+      targetDate: milestoneForm.value.targetDate,
+      description: milestoneForm.value.description
+    })
+    uni.showToast({ title: '添加成功', icon: 'success' })
+    closeMilestoneModal()
+    await loadMilestones(wishId.value)
+  } catch (e) {
+    console.error('添加里程碑失败', e)
+    uni.showToast({ title: '添加失败', icon: 'none' })
+  }
+}
+
+// 完成里程碑
+const completeMilestone = async (milestoneId) => {
+  try {
+    await wishApi.completeMilestone(milestoneId)
+    uni.showToast({ title: '已完成', icon: 'success' })
+    await loadMilestones(wishId.value)
+  } catch (e) {
+    console.error('完成里程碑失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  }
+}
+
+// 删除里程碑
+const deleteMilestone = async (milestoneId) => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定删除这个里程碑吗？',
+    confirmColor: '#FF4D4F',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await wishApi.deleteMilestone(milestoneId)
+          uni.showToast({ title: '已删除', icon: 'success' })
+          await loadMilestones(wishId.value)
+        } catch (e) {
+          console.error('删除里程碑失败', e)
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
+      }
+    }
+  })
+}
+
+// 格式化日期
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
 const showActions = () => {
