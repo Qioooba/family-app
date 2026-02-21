@@ -4,25 +4,35 @@
       <view class="header-title">我的</view>
     </view>
     
-    <view class="profile-card">
+    <view class="profile-card" v-if="userInfo">
       <view class="user-info">
-        <view class="avatar">👨‍💼</view>
+        <image class="avatar" :src="userInfo.avatar || '/static/avatar-default.png'" mode="aspectFill" />
         <view class="user-detail">
-          <view class="user-name">张先生</view>
-          <view class="user-id">ID: 888888</view>
+          <view class="user-name">{{ userInfo.nickname || userInfo.username }}</view>
+          <view class="user-id">ID: {{ userInfo.id }}</view>
         </view>
       </view>
       
       <view class="points-section">
         <view class="points-item">
-          <text class="points-num">1250</text>
+          <text class="points-num">{{ userInfo.points || 0 }}</text>
           <text class="points-label">积分</text>
         </view>
         <view class="points-divider"></view>
         
         <view class="points-item">
-          <text class="points-num">8</text>
+          <text class="points-num">{{ userInfo.badgeCount || 0 }}</text>
           <text class="points-label">徽章</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="profile-card" v-else @click="goLogin">
+      <view class="user-info">
+        <view class="avatar">👤</view>
+        <view class="user-detail">
+          <view class="user-name">未登录</view>
+          <view class="user-id">点击登录</view>
         </view>
       </view>
     </view>
@@ -64,15 +74,33 @@
     </view>
     
     
-    <view class="logout-btn" @click="logout">
+    <view class="logout-btn" @click="logout" v-if="isLogin">
       <text>退出登录</text>
     </view>
   </view>
 </template>
 
 <script setup>
+import { computed, onMounted } from 'vue'
+import { useUserStore } from '../../stores/user'
+
+const userStore = useUserStore()
+const userInfo = computed(() => userStore.userInfo)
+const isLogin = computed(() => userStore.isLogin)
+
+onMounted(() => {
+  // 如果已登录，刷新用户信息
+  if (isLogin.value) {
+    userStore.getUserInfo()
+  }
+})
+
 const goToPage = (url) => {
   uni.navigateTo({ url })
+}
+
+const goLogin = () => {
+  uni.navigateTo({ url: '/pages/login/index' })
 }
 
 const showAbout = () => {
@@ -89,10 +117,7 @@ const logout = () => {
     content: '确定要退出登录吗？',
     success: (res) => {
       if (res.confirm) {
-        uni.showToast({ title: '已退出', icon: 'success' })
-        setTimeout(() => {
-          uni.reLaunch({ url: '/pages/login/index' })
-        }, 1500)
+        userStore.logout()
       }
     }
   })

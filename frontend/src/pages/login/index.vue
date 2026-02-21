@@ -121,6 +121,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useUserStore } from '../../stores/user'
+import { userApi } from '../../api/index'
 
 const userStore = useUserStore()
 const loginType = ref('password')
@@ -173,16 +174,20 @@ const sendCode = async () => {
     return
   }
   
-  // TODO: 调用发送验证码接口
-  uni.showToast({ title: '验证码已发送', icon: 'success' })
-  
-  codeCountdown.value = 60
-  const timer = setInterval(() => {
-    codeCountdown.value--
-    if (codeCountdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
+  try {
+    await userApi.sendSmsCode(form.phone)
+    uni.showToast({ title: '验证码已发送', icon: 'success' })
+    
+    codeCountdown.value = 60
+    const timer = setInterval(() => {
+      codeCountdown.value--
+      if (codeCountdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (e) {
+    uni.showToast({ title: e.message || '发送失败', icon: 'none' })
+  }
 }
 
 const goRegister = () => {

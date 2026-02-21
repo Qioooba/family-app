@@ -15,6 +15,13 @@
       }
     },
     {
+      "path": "pages/register/index",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/task/index",
       "style": {
         "navigationBarTitleText": "任务清单",
