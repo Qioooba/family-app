@@ -440,6 +440,27 @@
             "navigationBarTitleText": "切换家庭",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "album",
+          "style": {
+            "navigationBarTitleText": "家庭相册",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "account",
+          "style": {
+            "navigationBarTitleText": "家庭账本",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "files",
+          "style": {
+            "navigationBarTitleText": "文件共享",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
