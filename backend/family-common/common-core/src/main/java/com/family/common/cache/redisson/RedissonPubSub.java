@@ -36,7 +36,7 @@ public class RedissonPubSub {
      * @return 接收消息的客户端数量
      */
     public <T> long publish(String topic, T message) {
-        RTopic<T> rTopic = redissonClient.getTopic(topic);
+        RTopic rTopic = redissonClient.getTopic(topic);
         long clients = rTopic.publish(message);
         log.debug("Message published to topic: {}, clients: {}", topic, clients);
         return clients;
@@ -46,13 +46,14 @@ public class RedissonPubSub {
      * 订阅消息
      *
      * @param topic 主题名称
+     * @param clazz 消息类型
      * @param listener 消息监听器
      * @param <T> 消息类型
      * @return 监听器ID
      */
-    public <T> int subscribe(String topic, MessageListener<T> listener) {
-        RTopic<T> rTopic = redissonClient.getTopic(topic);
-        int listenerId = rTopic.addListener(listener);
+    public <T> int subscribe(String topic, Class<T> clazz, MessageListener<T> listener) {
+        RTopic rTopic = redissonClient.getTopic(topic);
+        int listenerId = rTopic.addListener(clazz, listener);
         listenerMap.put(topic + ":" + listenerId, listenerId);
         log.info("Subscribed to topic: {}, listenerId: {}", topic, listenerId);
         return listenerId;
@@ -62,7 +63,7 @@ public class RedissonPubSub {
      * 取消订阅
      */
     public void unsubscribe(String topic, int listenerId) {
-        RTopic<?> rTopic = redissonClient.getTopic(topic);
+        RTopic rTopic = redissonClient.getTopic(topic);
         rTopic.removeListener(listenerId);
         listenerMap.remove(topic + ":" + listenerId);
         log.info("Unsubscribed from topic: {}, listenerId: {}", topic, listenerId);

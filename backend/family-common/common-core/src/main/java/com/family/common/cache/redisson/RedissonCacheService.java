@@ -149,7 +149,7 @@ public class RedissonCacheService {
     /**
      * 批量添加Set元素
      */
-    public <T> int addAllToSet(String setName, Collection<? extends T> elements) {
+    public <T> boolean addAllToSet(String setName, Collection<? extends T> elements) {
         RSet<T> set = redissonClient.getSet(setName);
         return set.addAll(elements);
     }

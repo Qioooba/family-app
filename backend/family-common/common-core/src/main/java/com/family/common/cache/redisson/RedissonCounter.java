@@ -136,13 +136,10 @@ public class RedissonCounter {
     /**
      * 合并多个HyperLogLog
      */
-    public long mergeHyperLogLogs(String targetName, String... sourceNames) {
+    @SafeVarargs
+    public final long mergeHyperLogLogs(String targetName, String... sourceNames) {
         RHyperLogLog<Object> target = redissonClient.getHyperLogLog(targetName);
-        RHyperLogLog<Object>[] sources = new RHyperLogLog[sourceNames.length];
-        for (int i = 0; i < sourceNames.length; i++) {
-            sources[i] = redissonClient.getHyperLogLog(sourceNames[i]);
-        }
-        return target.countWith(sources);
+        return target.countWith(sourceNames);
     }
 
     /**
