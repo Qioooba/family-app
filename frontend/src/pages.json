@@ -508,6 +508,27 @@
           }
         },
         {
+          "path": "monthly",
+          "style": {
+            "navigationBarTitleText": "月度报告",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "finance",
+          "style": {
+            "navigationBarTitleText": "财务报表",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "yearly-memory",
+          "style": {
+            "navigationBarTitleText": "年度回忆",
+            "navigationStyle": "custom"
+          }
+        },
+        {
           "path": "export",
           "style": {
             "navigationBarTitleText": "数据导出",

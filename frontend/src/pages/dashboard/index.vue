@@ -116,6 +116,39 @@
       </view>
     </view>
 
+    <!-- 高级报表入口 -->
+    <view class="section report-section">
+      <view class="section-title">高级报表</view>
+      <view class="report-grid">
+        <view class="report-card" @click="navigateTo('/pages/dashboard/monthly')">
+          <view class="report-icon monthly">📊</view>
+          <view class="report-info">
+            <text class="report-name">月度报告</text>
+            <text class="report-desc">任务、饮食、心愿统计</text>
+          </view>
+          <text class="report-arrow">›</text>
+        </view>
+        
+        <view class="report-card" @click="navigateTo('/pages/dashboard/finance')">
+          <view class="report-icon finance">💰</view>
+          <view class="report-info">
+            <text class="report-name">财务报表</text>
+            <text class="report-desc">收支、预算、储蓄追踪</text>
+          </view>
+          <text class="report-arrow">›</text>
+        </view>
+        
+        <view class="report-card" @click="navigateTo('/pages/dashboard/yearly-memory')">
+          <view class="report-icon memory">🎞️</view>
+          <view class="report-info">
+            <text class="report-name">年度回忆</text>
+            <text class="report-desc">照片墙、里程碑、徽章</text>
+          </view>
+          <text class="report-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 年度徽章 -->
     <view class="section badges-section" v-if="badges.length > 0"
   >
@@ -239,6 +272,11 @@ const loadData = async () => {
 
 const formatDate = (date) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+// 页面导航
+const navigateTo = (url) => {
+  uni.navigateTo({ url })
 }
 
 onMounted(() => {
@@ -578,6 +616,74 @@ onMounted(() => {
         font-size: 22rpx;
         color: #999;
       }
+    }
+  }
+}
+
+// 高级报表入口
+.report-section {
+  .report-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20rpx;
+  }
+  
+  .report-card {
+    display: flex;
+    align-items: center;
+    padding: 30rpx;
+    background: #f8f9fa;
+    border-radius: 20rpx;
+    transition: all 0.3s ease;
+    
+    &:active {
+      background: #f0f0f0;
+      transform: scale(0.98);
+    }
+    
+    .report-icon {
+      width: 88rpx;
+      height: 88rpx;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44rpx;
+      margin-right: 24rpx;
+      
+      &.monthly {
+        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      }
+      
+      &.finance {
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      }
+      
+      &.memory {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      }
+    }
+    
+    .report-info {
+      flex: 1;
+      
+      .report-name {
+        display: block;
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8rpx;
+      }
+      
+      .report-desc {
+        font-size: 24rpx;
+        color: #999;
+      }
+    }
+    
+    .report-arrow {
+      font-size: 40rpx;
+      color: #ccc;
     }
   }
 }
