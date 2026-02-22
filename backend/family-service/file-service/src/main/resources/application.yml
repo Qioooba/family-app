@@ -1,0 +1,77 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: file-service
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/family_app?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+  
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DB:0}
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 500MB
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+sa-token:
+  token-name: Authorization
+  timeout: 2592000
+  activity-timeout: -1
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: false
+
+# 文件存储配置
+file:
+  storage:
+    # 本地存储路径
+    local:
+      path: ${FILE_STORAGE_PATH:/Users/qi/Documents/family-app/files}
+      # 分片存储路径
+      chunk-path: ${FILE_CHUNK_PATH:/Users/qi/Documents/family-app/chunks}
+    # 访问URL前缀
+    url-prefix: ${FILE_URL_PREFIX:http://localhost:8084/files}
+  # 分片上传配置
+  upload:
+    # 分片大小(默认5MB)
+    chunk-size: 5242880
+    # 最大文件大小(默认1GB)
+    max-file-size: 1073741824
+    # 临时文件过期时间(小时)
+    temp-expire-hours: 24
+
+logging:
+  level:
+    com.family: DEBUG
