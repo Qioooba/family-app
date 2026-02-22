@@ -1,10 +1,10 @@
 package com.family.calendar.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.family.calendar.dto.AnniversaryReminderDTO;
 import com.family.calendar.entity.AnniversaryReminder;
 import com.family.calendar.mapper.AnniversaryReminderMapper;
 import com.family.common.core.Result;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,10 +14,13 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/anniversary/reminder")
-@RequiredArgsConstructor
 public class AnniversaryReminderController {
     
     private final AnniversaryReminderMapper reminderMapper;
+    
+    public AnniversaryReminderController(AnniversaryReminderMapper reminderMapper) {
+        this.reminderMapper = reminderMapper;
+    }
     
     /**
      * 设置纪念日提醒
@@ -26,11 +29,10 @@ public class AnniversaryReminderController {
     @PostMapping
     public Result<AnniversaryReminder> setReminder(@RequestBody AnniversaryReminderDTO dto) {
         // 检查是否已存在
-        AnniversaryReminder existing = reminderMapper.selectOne(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AnniversaryReminder>()
-                .eq(AnniversaryReminder::getAnniversaryId, dto.getAnniversaryId())
-                .eq(AnniversaryReminder::getReminderDays, dto.getReminderDays())
-        );
+        QueryWrapper<AnniversaryReminder> wrapper = new QueryWrapper<>();
+        wrapper.eq("anniversary_id", dto.getAnniversaryId())
+               .eq("reminder_days", dto.getReminderDays());
+        AnniversaryReminder existing = reminderMapper.selectOne(wrapper);
         
         AnniversaryReminder reminder;
         if (existing != null) {
@@ -56,11 +58,10 @@ public class AnniversaryReminderController {
      */
     @GetMapping("/{anniversaryId}")
     public Result<List<AnniversaryReminder>> getReminders(@PathVariable Long anniversaryId) {
-        List<AnniversaryReminder> reminders = reminderMapper.selectList(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AnniversaryReminder>()
-                .eq(AnniversaryReminder::getAnniversaryId, anniversaryId)
-                .orderByAsc(AnniversaryReminder::getReminderDays)
-        );
+        QueryWrapper<AnniversaryReminder> wrapper = new QueryWrapper<>();
+        wrapper.eq("anniversary_id", anniversaryId)
+               .orderByAsc("reminder_days");
+        List<AnniversaryReminder> reminders = reminderMapper.selectList(wrapper);
         return Result.success(reminders);
     }
     

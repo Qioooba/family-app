@@ -50,20 +50,6 @@
       }
     }
   ],
-    {
-      "path": "pages/demo/pull-refresh-2",
-      "style": {
-        "navigationBarTitleText": "下拉刷新2.0",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/demo/load-more-2",
-      "style": {
-        "navigationBarTitleText": "上拉加载2.0",
-        "navigationStyle": "custom"
-      }
-    },
   "subPackages": [
     {
       "root": "pages/task",
@@ -605,6 +591,20 @@
           "path": "comments",
           "style": {
             "navigationBarTitleText": "评论",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "notifications",
+          "style": {
+            "navigationBarTitleText": "消息通知",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "announcements",
+          "style": {
+            "navigationBarTitleText": "家庭公告",
             "navigationStyle": "custom"
           }
         }

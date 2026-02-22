@@ -17,7 +17,7 @@
     </view>
 
     <!-- 公告栏 -->
-    <view class="announcement-bar" v-if="announcement">
+    <view class="announcement-bar" v-if="announcement" @click="showAnnouncements">
       <text class="announcement-icon">📢</text>
       <text class="announcement-text">{{ announcement.title }}</text>
       <text class="announcement-more">查看 ›</text>
@@ -205,6 +205,10 @@ const createMoment = () => {
 
 const showNotifications = () => {
   uni.navigateTo({ url: '/pages/moments/notifications' })
+}
+
+const showAnnouncements = () => {
+  uni.navigateTo({ url: '/pages/moments/announcements' })
 }
 
 const toggleLike = (moment) => {

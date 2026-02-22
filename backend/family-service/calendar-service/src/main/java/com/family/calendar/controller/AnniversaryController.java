@@ -4,7 +4,6 @@ import com.family.common.core.Result;
 import com.family.calendar.entity.Anniversary;
 import com.family.calendar.service.AnniversaryService;
 import com.family.calendar.util.LunarCalendarUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -14,10 +13,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/anniversary")
-@RequiredArgsConstructor
 public class AnniversaryController {
     
     private final AnniversaryService anniversaryService;
+    
+    public AnniversaryController(AnniversaryService anniversaryService) {
+        this.anniversaryService = anniversaryService;
+    }
     
     @GetMapping("/list/{familyId}")
     public Result<List<Anniversary>> list(@PathVariable Long familyId) {
