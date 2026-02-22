@@ -50,6 +50,13 @@
       }
     }
   ],
+    {
+      "path": "pages/demo/pull-refresh-2",
+      "style": {
+        "navigationBarTitleText": "下拉刷新2.0",
+        "navigationStyle": "custom"
+      }
+    },
   "subPackages": [
     {
       "root": "pages/task",

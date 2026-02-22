@@ -1,7 +1,14 @@
 <template>
   <view class="home-page">
-    <!-- 骨架屏 -->
-    <Skeleton v-if="pageLoading" type="card" :rows="5" show-image :list-count="3" />
+    <PullRefresh2
+      ref="pullRefreshRef"
+      :enabled="true"
+      :threshold="80"
+      :haptic-enabled="true"
+      @refresh="onRefresh"
+    >
+      <!-- 骨架屏 -->
+      <Skeleton v-if="pageLoading" type="card" :rows="5" show-image :list-count="3" />
     
     <!-- 实际内容 -->
     <template v-else>
@@ -176,7 +183,8 @@
       </view>
     </view>
   </template>
-</view>
+    </PullRefresh2>
+  </view>
 </template>
 
 <script setup>
@@ -184,9 +192,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import LazyImage from '@/components/common/LazyImage.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
+import PullRefresh2 from '@/components/common/PullRefresh2.vue'
 import { useSkeleton } from '@/utils/performance.js'
 
 const userStore = useUserStore()
+const pullRefreshRef = ref(null)
 const { loading: pageLoading, hide: hideSkeleton } = useSkeleton({ minDuration: 500 })
 
 // 问候语
@@ -257,6 +267,24 @@ const goTaskDetail = (task) => {
 
 const goRecipeDetail = (recipe) => {
   uni.navigateTo({ url: `/pages/recipe/detail?id=${recipe.id}` })
+}
+
+// 下拉刷新
+const onRefresh = async ({ finish, success, error }) => {
+  try {
+    // 模拟数据刷新
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // 随机刷新数据（模拟）
+    todayTasks.value = todayTasks.value.map(task => ({
+      ...task,
+      status: Math.random() > 0.7 ? 2 : task.status
+    }))
+    
+    success()
+  } catch (e) {
+    error()
+  }
 }
 
 onMounted(() => {
