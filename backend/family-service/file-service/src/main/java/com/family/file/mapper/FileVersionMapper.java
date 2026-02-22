@@ -17,7 +17,7 @@ public interface FileVersionMapper extends BaseMapper<FileVersion> {
     /**
      * 获取文件的所有版本
      */
-    @Select("SELECT * FROM file_version WHERE file_id = #{fileId} AND status = 1 ORDER BY version DESC")
+    @Select("SELECT id, file_id, version, storage_path, file_size, file_md5, description, creator_id, create_time, update_time, status FROM file_version WHERE file_id = #{fileId} AND status = 1 ORDER BY version DESC")
     List<FileVersion> selectByFileId(@Param("fileId") Long fileId);
     
     /**
@@ -29,6 +29,6 @@ public interface FileVersionMapper extends BaseMapper<FileVersion> {
     /**
      * 获取指定版本的文件
      */
-    @Select("SELECT * FROM file_version WHERE file_id = #{fileId} AND version = #{version} AND status = 1")
+    @Select("SELECT id, file_id, version, storage_path, file_size, file_md5, description, creator_id, create_time, update_time, status FROM file_version WHERE file_id = #{fileId} AND version = #{version} AND status = 1")
     FileVersion selectByFileIdAndVersion(@Param("fileId") Long fileId, @Param("version") Integer version);
 }

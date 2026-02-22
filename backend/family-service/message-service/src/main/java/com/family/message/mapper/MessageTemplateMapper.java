@@ -12,6 +12,6 @@ public interface MessageTemplateMapper extends BaseMapper<MessageTemplate> {
     /**
      * 根据编码查询模板
      */
-    @Select("SELECT * FROM message_template WHERE code = #{code} AND is_enabled = 1")
+    @Select("SELECT id, code, name, type, title_template, content_template, params, biz_type, is_enabled, description, create_time, update_time, status FROM message_template WHERE code = #{code} AND is_enabled = 1")
     MessageTemplate selectByCode(String code);
 }
