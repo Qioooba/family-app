@@ -2,6 +2,7 @@ package com.family.message.websocket;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -66,7 +67,7 @@ public class MessageWebSocketHandler extends TextWebSocketHandler {
         log.debug("收到消息: {}", payload);
         
         try {
-            Map<String, Object> msg = objectMapper.readValue(payload, Map.class);
+            Map<String, Object> msg = objectMapper.readValue(payload, new TypeReference<Map<String, Object>>() {});
             String type = (String) msg.get("type");
             
             if ("ping".equals(type)) {
