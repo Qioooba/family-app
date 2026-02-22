@@ -137,6 +137,13 @@
             "navigationBarTitleText": "任务热力图",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "quickview",
+          "style": {
+            "navigationBarTitleText": "任务速览",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
