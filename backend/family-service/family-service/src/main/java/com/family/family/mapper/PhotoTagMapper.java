@@ -14,7 +14,7 @@ public interface PhotoTagMapper extends BaseMapper<PhotoTag> {
     /**
      * 根据照片ID查询标签
      */
-    @Select("SELECT * FROM photo_tag WHERE photo_id = #{photoId} AND status = 1")
+    @Select("SELECT id, photo_id, family_id, tag_name, tag_type, user_id, status, create_time, update_time FROM photo_tag WHERE photo_id = #{photoId} AND status = 1")
     List<PhotoTag> selectByPhotoId(@Param("photoId") Long photoId);
     
     /**
@@ -26,6 +26,6 @@ public interface PhotoTagMapper extends BaseMapper<PhotoTag> {
     /**
      * 根据标签类型查询标签
      */
-    @Select("SELECT * FROM photo_tag WHERE family_id = #{familyId} AND tag_type = #{tagType} AND status = 1")
+    @Select("SELECT id, photo_id, family_id, tag_name, tag_type, user_id, status, create_time, update_time FROM photo_tag WHERE family_id = #{familyId} AND tag_type = #{tagType} AND status = 1")
     List<PhotoTag> selectByTagType(@Param("familyId") Long familyId, @Param("tagType") Integer tagType);
 }

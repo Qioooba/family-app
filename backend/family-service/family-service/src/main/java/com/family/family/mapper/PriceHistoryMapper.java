@@ -17,6 +17,6 @@ public interface PriceHistoryMapper extends BaseMapper<PriceHistory> {
     /**
      * 查询商品最近的价格记录
      */
-    @Select("SELECT * FROM price_history WHERE item_name = #{itemName} OR barcode = #{barcode} ORDER BY purchase_date DESC LIMIT 10")
+    @Select("SELECT id, item_name, barcode, price, store_name, purchase_date, family_id, create_time FROM price_history WHERE item_name = #{itemName} OR barcode = #{barcode} ORDER BY purchase_date DESC LIMIT 10")
     List<PriceHistory> selectRecentPrices(@Param("itemName") String itemName, @Param("barcode") String barcode);
 }

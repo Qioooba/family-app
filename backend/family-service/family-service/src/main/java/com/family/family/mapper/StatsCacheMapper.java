@@ -17,7 +17,7 @@ public interface StatsCacheMapper extends BaseMapper<StatsCache> {
     /**
      * 获取缓存
      */
-    @Select("SELECT * FROM stats_cache WHERE stat_type = #{statType} AND target_id = #{targetId} AND stat_date = #{statDate}")
+    @Select("SELECT id, stat_type, target_id, stat_date, data, create_time, update_time FROM stats_cache WHERE stat_type = #{statType} AND target_id = #{targetId} AND stat_date = #{statDate}")
     StatsCache selectByTypeTargetDate(@Param("statType") String statType, 
                                        @Param("targetId") Long targetId, 
                                        @Param("statDate") LocalDate statDate);
