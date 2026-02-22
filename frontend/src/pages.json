@@ -165,6 +165,27 @@
             "navigationBarTitleText": "拍照创建",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "location",
+          "style": {
+            "navigationBarTitleText": "地理位置",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "weather",
+          "style": {
+            "navigationBarTitleText": "天气关联",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "mood",
+          "style": {
+            "navigationBarTitleText": "心情记录",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
