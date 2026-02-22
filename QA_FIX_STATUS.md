@@ -1,9 +1,10 @@
 # QA修复状态追踪
 
 ## 当前状态概览
-- **待修复**: 19 项
+- **待修复**: 23 项
 - **已修复**: 3 项 (Q001/Q003/Q020/Q021)
-- **验证通过**: 0 项
+- **验证通过**: 1 项 (Q011)
+- **验证失败**: 4 项 (Q008/Q014/Q019/Q023)
 - **阻塞中**: 6 项 (P0级别)
 
 ---
@@ -11,10 +12,29 @@
 ## P0 - 阻塞级别（影响编译/启动/安全）
 
 ### Q023 - 编译错误 (CacheAspect Lombok)
-**状态**: ✅ 已修复 (git a8945a5)
-**验证时间**: 2026-02-22 01:35
-**验证结果**: pom.xml配置Lombok annotationProcessorPaths (v1.18.30)后，common-core编译成功
-**修复内容**: 添加maven-compiler-plugin配置
+**状态**: 🔴 **验证失败 - 仍需修复**
+**验证时间**: 2026-02-22 09:42
+**验证结果**: 
+- ⚠️ common-core编译通过（有警告）
+- ❌ family-service编译失败 - LogAspect.java第107行找不到`log`变量
+- ❌ 根pom.xml的maven-compiler-plugin缺少`annotationProcessorPaths`配置
+**问题根因**: @Slf4j注解未生效，Lombok处理器未正确配置
+**修复内容**: 需要在根pom.xml中添加:
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+```
 ```xml
 <annotationProcessorPaths>
     <path>
@@ -36,21 +56,27 @@
 **问题**: bucket4j-core 8.7.0 依赖无法从Maven Central下载
 
 ### Q008 - 架构问题 (TaskController重复)
-**状态**: ✅ 已修复 (git f501c2c)
-**验证时间**: 2026-02-22 01:30
-**验证结果**: 只存在一个TaskController在task-service中
+**状态**: 🔴 **验证失败 - 仍需修复**
+**验证时间**: 2026-02-22 09:43
+**验证结果**: ❌ 仍然存在两个TaskController：
+1. task-service/src/main/java/com/family/task/controller/TaskController.java
+2. family-service/src/main/java/com/family/family/controller/TaskController.java
+**问题**: family-service中的TaskController仍然存在，应删除
+
+## P0 - 阻塞级别（影响编译/启动/安全）
 
 ### Q011 - 安全问题 (ExportController无权限)
-**状态**: ✅ 已修复 (git f501c2c)
-**验证时间**: 2026-02-22 01:33
-**验证结果**: 已有`@SaCheckLogin`和用户家庭权限校验
-**建议方案**: 添加@SaCheckLogin和用户家庭权限校验
+**状态**: ✅ **已验证通过**
+**验证时间**: 2026-02-22 09:43
+**验证结果**: ExportController已有`@SaCheckLogin`注解，权限校验正确
 
 ### Q014 - 架构问题 (UserController重复)
-**状态**: 🔴 待修复
-**负责**: 后端
-**问题**: user-service和family-service各有一个UserController
-**建议方案**: 删除family-service中的UserController
+**状态**: 🔴 **验证失败 - 仍需修复**
+**验证时间**: 2026-02-22 09:43
+**验证结果**: ❌ 仍然存在两个UserController：
+1. user-service/src/main/java/com/family/user/controller/UserController.java ✅
+2. family-service/src/main/java/com/family/family/controller/UserController.java ❌ 应删除
+**建议方案**: 删除family-service中的UserController，前端应调用user-service的接口
 
 ### Q018 - Controller缺失 (Moments)
 **状态**: 🔴 待修复
@@ -59,12 +85,17 @@
 **建议方案**: 创建MomentsController实现6个接口
 
 ### Q019 - Controller缺失 (Schedule)
-**状态**: ⚠️ 部分修复 (git f501c2c)
-**验证时间**: 2026-02-22 01:37
+**状态**: 🔴 **验证失败 - 仍需修复**
+**验证时间**: 2026-02-22 09:42
 **验证结果**: 
 - ✅ ScheduleController已创建
-- ⚠️ 但缺少Schedule实体类和ScheduleService，导致编译失败
-- 🔴 编译错误: 找不到符号 Schedule, ScheduleService
+- ❌ 缺少Schedule实体类（entity.Schedule不存在，只有TaskSchedule）
+- ❌ 缺少ScheduleService接口和实现类
+- ❌ 导致family-service编译失败（11个编译错误）
+**修复内容**: 需要创建:
+1. com.family.family.entity.Schedule 实体类
+2. com.family.family.service.ScheduleService 接口
+3. com.family.family.service.impl.ScheduleServiceImpl 实现类
 
 ---
 
@@ -215,3 +246,54 @@
 | Q036 | 编译错误 | MomentsController类型不匹配 |
 
 **状态**: family-service模块编译失败，阻塞整个项目构建！
+
+---
+
+## QA验证报告 - 2026-02-22 09:40
+
+### 验证人: QA验证子代理
+### 验证范围: P0级别问题修复状态
+
+### 验证结果汇总
+
+| 编号 | 问题 | 原状态 | 验证结果 | 备注 |
+|------|------|--------|----------|------|
+| Q008 | TaskController重复 | ✅已修复 | 🔴验证失败 | 两个TaskController仍然存在 |
+| Q011 | ExportController权限 | ✅已修复 | ✅验证通过 | @SaCheckLogin已添加 |
+| Q014 | UserController重复 | 🔴待修复 | 🔴验证失败 | 两个UserController仍然存在 |
+| Q019 | ScheduleController缺失 | ⚠️部分修复 | 🔴验证失败 | 缺少Schedule实体和Service |
+| Q023 | Lombok编译错误 | ✅已修复 | 🔴验证失败 | 根pom.xml缺少annotationProcessorPaths配置 |
+
+### 新增发现问题
+
+| 编号 | 类型 | 优先级 | 描述 |
+|------|------|--------|------|
+| Q037 | 接口不匹配 | P1 | MomentService接口与MomentsController调用不匹配 |
+| Q038 | Lombok问题 | P0 | 所有@Data注解实体类getter/setter未生成，导致TaskAttachment/TaskComment等Controller编译失败 |
+
+### 编译错误统计 (family-service)
+
+```
+总错误数: 40+ 个
+- ScheduleController.java: 11个错误
+- LogAspect.java: 1个错误 (Lombok @Slf4j)
+- ExportController.java: 2个错误
+- MomentsController.java: 4个错误
+- TaskAttachmentController.java: 11个错误 (实体类getter/setter)
+- TaskCommentController.java: 11个错误 (实体类getter/setter)
+- TaskFilterController.java: 1个错误
+```
+
+### 阻塞问题
+
+1. **P0: Q023 Lombok配置问题** - 导致所有实体类无法编译
+2. **P0: Q019 Schedule实体缺失** - 导致ScheduleController无法编译
+3. **P1: Q037 MomentService接口不匹配** - 导致MomentsController无法编译
+
+### 建议优先修复顺序
+
+1. 🔴 修复根pom.xml的Lombok配置 (Q023)
+2. 🔴 删除重复的Controller (Q008, Q014)
+3. 🔴 创建Schedule实体和Service (Q019)
+4. 🔴 修复MomentService接口 (Q037)
+5. 🟡 修复ExportController方法引用 (Q035)

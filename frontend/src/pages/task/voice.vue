@@ -221,11 +221,9 @@ const initRecorder = () => {
   recorderManager = uni.getRecorderManager()
   
   recorderManager.onStart(() => {
-    console.log('录音开始')
   })
   
   recorderManager.onStop((res) => {
-    console.log('录音结束', res)
     // 这里应该调用语音识别API
     // 暂时使用模拟数据
     simulateRecognition()

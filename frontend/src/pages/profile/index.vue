@@ -65,6 +65,12 @@
           <text class="menu-arrow">›</text>
         </view>
         
+        <view class="menu-item" @click="toggleTheme">
+          <text class="menu-icon">{{ isDarkMode ? '🌙' : '☀️' }}</text>
+          <text class="menu-text">{{ isDarkMode ? '深色模式' : '浅色模式' }}</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        
         <view class="menu-item" @click="showAbout">
           <text class="menu-icon">ℹ️</text>
           <text class="menu-text">关于我们</text>
@@ -84,6 +90,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { gameApi } from '../../api/game'
+import { isDarkMode, toggleTheme } from '../../utils/theme.js'
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)

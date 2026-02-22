@@ -501,7 +501,6 @@ const confirmDate = () => {
 
 const loadDataForDate = (date) => {
   // 模拟加载数据
-  console.log('加载日期数据', date.format('YYYY-MM-DD'))
 }
 
 const showAllMicros = () => {

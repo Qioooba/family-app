@@ -15,9 +15,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from './stores/user'
+import { initTheme } from './utils/theme.js'
 
 const userStore = useUserStore()
 const current = ref(0)
+
+// 初始化主题
+onMounted(() => {
+  initTheme()
+})
 
 const tabList = [
   {

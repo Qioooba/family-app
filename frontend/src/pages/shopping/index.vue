@@ -66,7 +66,7 @@
         >
           <view 
             v-for="(item, i) in list.items.slice(0, 3)" 
-            :key="i"
+            :key="item.id || i"
             class="list-item"
             :class="{ checked: item.checked }"
           >
@@ -335,7 +335,6 @@ const scanCode = () => {
     onlyFromCamera: false,
     scanType: ['barCode', 'qrCode'],
     success: (res) => {
-      console.log('扫码结果:', res)
       handleScanResult(res.result)
     },
     fail: (err) => {

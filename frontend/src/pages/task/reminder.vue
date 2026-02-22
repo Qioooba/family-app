@@ -421,7 +421,6 @@ const getCurrentLocation = () => {
 const reverseGeocode = (latitude, longitude) => {
   // 这里应该调用地图SDK的逆地理编码
   // 简化处理，仅更新坐标
-  console.log('反向地理编码', latitude, longitude)
 }
 
 // 范围变化

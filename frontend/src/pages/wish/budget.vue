@@ -414,7 +414,6 @@ const showFilterModal = () => {
   uni.showActionSheet({
     itemList: ['全部', '收入', '支出', '本月', '上月'],
     success: (res) => {
-      console.log('筛选', res.tapIndex)
     }
   })
 }

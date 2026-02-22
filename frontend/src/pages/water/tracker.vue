@@ -446,14 +446,12 @@ const toggleReminder = (e) => {
 const scheduleReminders = () => {
   // #ifdef APP-PLUS
   // 实际应用中这里使用原生通知
-  console.log('设置喝水提醒', reminderInterval.value)
   // #endif
 }
 
 // 取消提醒
 const cancelReminders = () => {
   // #ifdef APP-PLUS
-  console.log('取消喝水提醒')
   // #endif
 }
 
