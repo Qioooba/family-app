@@ -256,6 +256,27 @@
             "navigationBarTitleText": "个性化首页",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "ar",
+          "style": {
+            "navigationBarTitleText": "AR增强现实",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "recommend",
+          "style": {
+            "navigationBarTitleText": "智能推荐",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "abtest",
+          "style": {
+            "navigationBarTitleText": "A/B测试",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
