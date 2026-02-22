@@ -1,5 +1,6 @@
 package com.family.common.cache;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/cache/admin")
+@SaCheckLogin
 public class CacheAdminController {
 
     private static final Logger log = LoggerFactory.getLogger(CacheAdminController.class);
