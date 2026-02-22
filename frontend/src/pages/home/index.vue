@@ -38,17 +38,17 @@
       >
         <view class="icon-box" :style="{ background: item.bgColor }">
           <u-icon :name="item.icon" size="40" color="#fff"></u-icon>
-        </text>
+        </view>
         <text class="action-name">{{ item.name }}</text>
-      </text>
-    </text>
+      </view>
+    </view>
     
     <!-- 今日概览 -->
     <view class="section-card">
       <view class="section-header">
         <text class="section-title">📋 今日待办</text>
         <text class="more" @click="navigateTo('/pages/task/index')">更多 ></text>
-      </text>
+      </view>
       
       <view v-if="todayTasks.length > 0" class="task-list">
         <view 
@@ -58,24 +58,24 @@
           @click="goTaskDetail(task)"
         >
           <view class="task-checkbox" @click.stop="toggleTask(task)">
-            <view v-if="task.status === 2" class="checked"></text>
-            <view v-else class="unchecked"></text>
-          </text>
+            <view v-if="task.status === 2" class="checked"></view>
+            <view v-else class="unchecked"></view>
+          </view>
           
           <view class="task-info">
             <text class="task-title" :class="{ completed: task.status === 2 }">
               {{ task.title }}
             </text>
             <text class="task-meta">{{ task.assigneeName }} · {{ task.time }}</text>
-          </text>
+          </view>
           
           <view 
             class="task-priority"
             :class="{ high: task.priority === 2, medium: task.priority === 1 }"
           >
-          </text>
-        </text>
-      </text>
+          </view>
+        </view>
+      </view>
       
       <view v-else class="empty-state">
         <u-icon name="checkmark-circle" size="60" color="#ddd"></u-icon>
