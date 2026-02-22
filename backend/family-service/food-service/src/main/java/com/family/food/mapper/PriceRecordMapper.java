@@ -12,9 +12,9 @@ import java.util.List;
 @Mapper
 public interface PriceRecordMapper extends BaseMapper<PriceRecord> {
     
-    @Select("SELECT * FROM price_record WHERE barcode = #{barcode} AND price_date >= #{startDate} ORDER BY price_date")
+    @Select("SELECT id, barcode, product_name, brand, specification, store_id, store_name, price, promotion_price, promotion_info, stock_status, price_date, latitude, longitude, submitter_id, verify_status, source, create_time, update_time, status FROM price_record WHERE barcode = #{barcode} AND price_date >= #{startDate} ORDER BY price_date")
     List<PriceRecord> selectPriceHistory(@Param("barcode") String barcode, @Param("startDate") LocalDateTime startDate);
     
-    @Select("SELECT * FROM price_record WHERE barcode = #{barcode} AND store_id = #{storeId} ORDER BY price_date DESC LIMIT 1")
+    @Select("SELECT id, barcode, product_name, brand, specification, store_id, store_name, price, promotion_price, promotion_info, stock_status, price_date, latitude, longitude, submitter_id, verify_status, source, create_time, update_time, status FROM price_record WHERE barcode = #{barcode} AND store_id = #{storeId} ORDER BY price_date DESC LIMIT 1")
     PriceRecord selectLatestByBarcodeAndStore(@Param("barcode") String barcode, @Param("storeId") Long storeId);
 }
