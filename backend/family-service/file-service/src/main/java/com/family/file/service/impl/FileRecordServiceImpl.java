@@ -22,6 +22,8 @@ import com.family.file.vo.FileUploadInitVO;
 import com.family.file.vo.FileVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,13 +47,27 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FileRecordServiceImpl extends ServiceImpl<FileRecordMapper, FileRecord> implements FileRecordService {
     
     private final FileStorageProperties storageProperties;
     private final FileUploadProperties uploadProperties;
-    private final FileVersionService fileVersionService;
+    private FileVersionService fileVersionService;
     private final StringRedisTemplate redisTemplate;
+    
+    @Autowired
+    public FileRecordServiceImpl(FileStorageProperties storageProperties, 
+                                  FileUploadProperties uploadProperties,
+                                  StringRedisTemplate redisTemplate) {
+        this.storageProperties = storageProperties;
+        this.uploadProperties = uploadProperties;
+        this.redisTemplate = redisTemplate;
+    }
+    
+    @Autowired
+    @Lazy
+    public void setFileVersionService(FileVersionService fileVersionService) {
+        this.fileVersionService = fileVersionService;
+    }
     
     private static final String UPLOAD_TASK_KEY = "file:upload:";
     

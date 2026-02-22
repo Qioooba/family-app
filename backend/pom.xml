@@ -43,6 +43,7 @@
         <module>family-service/vote-service</module>
         <module>family-service/wish-service</module>
         <module>family-service/food-service</module>
+        <module>family-service/anniversary-service</module>
     </modules>
 
     <dependencyManagement>
@@ -123,6 +124,13 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

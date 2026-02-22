@@ -1,0 +1,60 @@
+# 后端服务 Dockerfile
+FROM --platform=linux/amd64 eclipse-temurin:17-jre-alpine
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装必要的工具
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制 Maven 配置
+COPY pom.xml .
+COPY family-common/pom.xml family-common/
+COPY family-service/user-service/pom.xml family-service/user-service/
+COPY family-service/family-service/pom.xml family-service/family-service/
+COPY family-service/ai-service/pom.xml family-service/ai-service/
+COPY family-service/message-service/pom.xml family-service/message-service/
+COPY family-service/notify-service/pom.xml family-service/notify-service/
+COPY family-service/file-service/pom.xml family-service/file-service/
+COPY family-service/calendar-service/pom.xml family-service/calendar-service/
+COPY family-service/health-service/pom.xml family-service/health-service/
+COPY family-service/recipe-service/pom.xml family-service/recipe-service/
+COPY family-service/task-service/pom.xml family-service/task-service/
+COPY family-service/vote-service/pom.xml family-service/vote-service/
+COPY family-service/wish-service/pom.xml family-service/wish-service/
+COPY family-service/food-service/pom.xml family-service/food-service/
+
+# 复制源码
+COPY family-common/src family-common/src
+COPY family-service/user-service/src family-service/user-service/src
+COPY family-service/family-service/src family-service/family-service/src
+COPY family-service/ai-service/src family-service/ai-service/src
+COPY family-service/message-service/src family-service/message-service/src
+COPY family-service/notify-service/src family-service/notify-service/src
+COPY family-service/file-service/src family-service/file-service/src
+COPY family-service/calendar-service/src family-service/calendar-service/src
+COPY family-service/health-service/src family-service/health-service/src
+COPY family-service/recipe-service/src family-service/recipe-service/src
+COPY family-service/task-service/src family-service/task-service/src
+COPY family-service/vote-service/src family-service/vote-service/src
+COPY family-service/wish-service/src family-service/wish-service/src
+COPY family-service/food-service/src family-service/food-service/src
+
+# 构建项目
+RUN ./mvnw clean package -DskipTests -q || \
+    (apt-get update && apt-get install -y maven && \
+     mvn clean package -DskipTests -q)
+
+# 暴露端口
+EXPOSE 8080 8081 8082 8083 8084 8085 8086 8087 8088 8089 8090 8091 8092 8093 8094
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# 启动命令
+CMD ["java", "-jar", "-Xmx512m", "-Xms256m", "-Djava.security.egd=file:/dev/./urandom", \
+     "-Dspring.profiles.active=docker", \
+     "family-service/gateway/target/gateway-1.0.0.jar"]

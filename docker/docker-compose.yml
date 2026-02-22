@@ -1,307 +1,107 @@
 version: '3.8'
 
 services:
-  # MySQL
-  mysql:
-    image: mysql:8.0
-    container_name: family-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-your_mysql_password}
-      MYSQL_DATABASE: family_app
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ../database/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "3306:3306"
-    command: --default-authentication-plugin=mysql_native_password
-    networks:
-      - family-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # 前端 Nginx（暂时注释，等待网络恢复后构建）
+  # nginx:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: ../docker/Dockerfile.frontend
+  #   container_name: family-app-nginx
+  #   ports:
+  #     - "80:80"
+  #   # depends_on:
+  #   #   - gateway
+  #   networks:
+  #     - family-network
+  #   restart: unless-stopped
 
-  # Redis
-  redis:
-    image: redis:7-alpine
-    container_name: family-redis
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    command: redis-server --appendonly yes
-    networks:
-      - family-network
-
-  # MinIO
-  minio:
-    image: minio/minio:latest
-    container_name: family-minio
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-your_minio_password}
-    volumes:
-      - minio_data:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    command: server /data --console-address ":9001"
-    networks:
-      - family-network
-
-  # RabbitMQ
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: family-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-your_rabbitmq_password}
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - family-network
-
-  # Elasticsearch
-  elasticsearch:
-    image: elasticsearch:8.11.0
-    container_name: family-es
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-    networks:
-      - family-network
-
-  # Nginx
-  nginx:
-    image: nginx:alpine
-    container_name: family-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./nginx/html:/usr/share/nginx/html:ro
-    depends_on:
-      - gateway
-    networks:
-      - family-network
-
-  # 网关服务
+  # API 网关
   gateway:
-    image: family/gateway:latest
-    container_name: family-gateway
     build:
-      context: ../backend/family-gateway
-      dockerfile: Dockerfile
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+      platforms:
+        - linux/amd64
+    container_name: family-app-gateway
+    platform: linux/amd64
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - REDIS_HOST=redis
-    depends_on:
-      - redis
-    networks:
-      - family-network
-
-  # 用户服务
-  user-service:
-    image: family/user-service:latest
-    container_name: family-user-service
-    build:
-      context: ../backend/family-service/user-service
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_DB=family_app
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=${MYSQL_ROOT_PASSWORD:-your_mysql_password}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    networks:
-      - family-network
-
-  # 家庭服务
-  family-service:
-    image: family/family-service:latest
-    container_name: family-family-service
-    build:
-      context: ../backend/family-service/family-service
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/family_app?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD:-root123}
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_PASSWORD=${REDIS_PASSWORD:-}
     depends_on:
       - mysql
       - redis
     networks:
       - family-network
+    restart: unless-stopped
 
-  # 任务服务
-  task-service:
-    image: family/task-service:latest
-    container_name: family-task-service
-    build:
-      context: ../backend/family-service/task-service
-      dockerfile: Dockerfile
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: family-app-mysql
+    ports:
+      - "3306:3306"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-    depends_on:
-      - mysql
-      - redis
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root123}
+      - MYSQL_DATABASE=family_app
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - family-network
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
-  # 心愿服务
-  wish-service:
-    image: family/wish-service:latest
-    container_name: family-wish-service
-    build:
-      context: ../backend/family-service/wish-service
-      dockerfile: Dockerfile
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: family-app-redis
+    ports:
+      - "6379:6379"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-    depends_on:
-      - mysql
-      - redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    volumes:
+      - redis-data:/data
     networks:
       - family-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
 
-  # 菜谱服务
-  recipe-service:
-    image: family/recipe-service:latest
-    container_name: family-recipe-service
-    build:
-      context: ../backend/family-service/recipe-service
-      dockerfile: Dockerfile
+  # MinIO 文件存储
+  minio:
+    image: minio/minio:latest
+    container_name: family-app-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-      - ES_HOST=elasticsearch
-    depends_on:
-      - mysql
-      - redis
-      - elasticsearch
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio-data:/data
     networks:
       - family-network
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
 
-  # 食材服务
-  food-service:
-    image: family/food-service:latest
-    container_name: family-food-service
-    build:
-      context: ../backend/family-service/food-service
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-      - MINIO_HOST=minio
-    depends_on:
-      - mysql
-      - redis
-      - minio
-    networks:
-      - family-network
-
-  # 健康服务
-  health-service:
-    image: family/health-service:latest
-    container_name: family-health-service
-    build:
-      context: ../backend/family-service/health-service
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - family-network
-
-  # 日历服务
-  calendar-service:
-    image: family/calendar-service:latest
-    container_name: family-calendar-service
-    build:
-      context: ../backend/family-service/calendar-service
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - family-network
-
-  # 投票服务
-  vote-service:
-    image: family/vote-service:latest
-    container_name: family-vote-service
-    build:
-      context: ../backend/family-service/vote-service
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - family-network
-
-  # AI助手服务
-  ai-service:
-    image: family/ai-service:latest
-    container_name: family-ai-service
-    build:
-      context: ../backend/family-service/ai-service
-      dockerfile: Dockerfile
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - MYSQL_HOST=mysql
-      - REDIS_HOST=redis
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - family-network
-
+# 数据卷
 volumes:
-  mysql_data:
-  redis_data:
-  minio_data:
-  rabbitmq_data:
-  es_data:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
 
+# 网络
 networks:
   family-network:
     driver: bridge

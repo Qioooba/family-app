@@ -2,20 +2,27 @@ server:
   port: 8080
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: family-service
+  autoconfigure:
+    exclude:
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
   
   datasource:
     url: jdbc:mysql://localhost:3306/family_app?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:}
+    password: your_secure_mysql_password
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
+    password: your_secure_redis_password
     database: ${REDIS_DB:0}
+  redisson:
+    password: your_secure_redis_password
 
 mybatis-plus:
   configuration:
