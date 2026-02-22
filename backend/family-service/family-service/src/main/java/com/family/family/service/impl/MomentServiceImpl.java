@@ -1,5 +1,6 @@
 package com.family.family.service.impl;
 
+import com.family.common.core.PageResult;
 import com.family.family.entity.Moment;
 import com.family.family.entity.MomentComment;
 import com.family.family.mapper.MomentCommentMapper;
@@ -28,6 +29,17 @@ public class MomentServiceImpl implements MomentService {
     }
     
     @Override
+    public PageResult<Moment> list(Long familyId, Long userId, Integer page, Integer size) {
+        return PageResult.empty();
+    }
+    
+    @Override
+    public Moment create(Moment moment, Long userId) {
+        momentMapper.insert(moment);
+        return moment;
+    }
+    
+    @Override
     public Long create(Long userId, Object request) {
         Moment moment = new Moment();
         momentMapper.insert(moment);
@@ -48,9 +60,18 @@ public class MomentServiceImpl implements MomentService {
     }
     
     @Override
+    public MomentComment comment(MomentComment comment, Long userId) {
+        momentCommentMapper.insert(comment);
+        return comment;
+    }
+    
+    @Override
     public Long comment(Long momentId, Long userId, String content, Long replyTo) {
         MomentComment comment = new MomentComment();
         comment.setMomentId(momentId);
+        comment.setUserId(userId);
+        comment.setContent(content);
+        comment.setReplyTo(replyTo);
         momentCommentMapper.insert(comment);
         return comment.getId();
     }
@@ -58,6 +79,11 @@ public class MomentServiceImpl implements MomentService {
     @Override
     public List<MomentComment> getComments(Long momentId) {
         return new ArrayList<>();
+    }
+    
+    @Override
+    public Moment detail(Long momentId, Long userId) {
+        return momentMapper.selectById(momentId);
     }
     
     @Override

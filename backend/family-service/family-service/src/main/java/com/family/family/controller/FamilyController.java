@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/family")
+@RequestMapping("/api/family")
 public class FamilyController {
     
     private final FamilyService familyService;

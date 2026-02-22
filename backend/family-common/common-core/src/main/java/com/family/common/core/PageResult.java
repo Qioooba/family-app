@@ -64,4 +64,24 @@ public class PageResult<T> {
         result.setRecords(page.getRecords());
         return result;
     }
+
+    public static <T> PageResult<T> empty() {
+        PageResult<T> result = new PageResult<>();
+        result.setTotal(0L);
+        result.setPages(0L);
+        result.setCurrent(1L);
+        result.setSize(10L);
+        result.setRecords(java.util.Collections.emptyList());
+        return result;
+    }
+
+    public static <T> PageResult<T> of(List<T> records, long total, long current, long size) {
+        PageResult<T> result = new PageResult<>();
+        result.setTotal(total);
+        result.setPages((total + size - 1) / size);
+        result.setCurrent(current);
+        result.setSize(size);
+        result.setRecords(records);
+        return result;
+    }
 }

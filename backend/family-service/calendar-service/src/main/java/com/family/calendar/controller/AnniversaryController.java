@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/anniversary")
+@RequestMapping("/api/anniversary")
 @RequiredArgsConstructor
 public class AnniversaryController {
     

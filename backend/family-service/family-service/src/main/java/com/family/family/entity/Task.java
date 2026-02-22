@@ -37,7 +37,8 @@ public class Task {
     private LocalDateTime archiveTime;
     private Integer isDeleted;
     private LocalDateTime deleteTime;
-    
+    private Integer sortOrder;
+
     public Long getId() {
         return id;
     }
@@ -220,5 +221,13 @@ public class Task {
     
     public void setDeleteTime(LocalDateTime deleteTime) {
         this.deleteTime = deleteTime;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }
