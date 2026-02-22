@@ -200,6 +200,34 @@
             "navigationBarTitleText": "积分成就",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "pwa",
+          "style": {
+            "navigationBarTitleText": "PWA安装",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "statistics",
+          "style": {
+            "navigationBarTitleText": "数据统计",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "signature",
+          "style": {
+            "navigationBarTitleText": "电子签名",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "version",
+          "style": {
+            "navigationBarTitleText": "版本对比",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
