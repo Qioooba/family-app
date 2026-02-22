@@ -1,7 +1,7 @@
 
 package com.family.notify.controller;
-
-import com.family.common.core.Result;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.notify.entity.NotificationSetting;
 import com.family.notify.service.NotificationSettingService;
 import lombok.RequiredArgsConstructor;

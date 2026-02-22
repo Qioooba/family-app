@@ -4,37 +4,37 @@ import com.family.family.entity.Schedule;
 import java.util.List;
 
 /**
- * 日程服务接口
+ * 排班服务接口
  */
 public interface ScheduleService {
 
     /**
-     * 创建日程
+     * 获取排班列表
      */
-    Schedule createSchedule(Schedule schedule);
+    List<Schedule> list(Long familyId, String startDate, String endDate, Long userId);
 
     /**
-     * 更新日程
+     * 创建排班
      */
-    Schedule updateSchedule(Schedule schedule);
+    Schedule create(Schedule schedule, Long userId);
 
     /**
-     * 删除日程
+     * 更新排班
      */
-    void deleteSchedule(Long id);
+    Schedule update(Schedule schedule, Long userId);
 
     /**
-     * 根据ID查询日程
+     * 删除排班
      */
-    Schedule getScheduleById(Long id);
+    void delete(Long scheduleId, Long userId);
 
     /**
-     * 查询家庭所有日程
+     * 获取我的排班
      */
-    List<Schedule> getSchedulesByFamilyId(Long familyId);
+    List<Schedule> mySchedule(Long userId, String startDate, String endDate);
 
     /**
-     * 查询用户的日程
+     * 交换排班
      */
-    List<Schedule> getSchedulesByUserId(Long userId);
+    void swap(Long scheduleId1, Long scheduleId2, Long userId);
 }
