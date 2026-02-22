@@ -11,6 +11,6 @@ import java.util.List;
 @Mapper
 public interface PriceAlertMapper extends BaseMapper<PriceAlert> {
     
-    @Select("SELECT * FROM price_alert WHERE user_id = #{userId} AND status = 1")
+    @Select("SELECT id, user_id, barcode, product_name, target_price, alert_type, status, create_time, update_time FROM price_alert WHERE user_id = #{userId} AND status = 1")
     List<PriceAlert> selectActiveAlertsByUserId(@Param("userId") Long userId);
 }
