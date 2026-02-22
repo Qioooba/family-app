@@ -18,19 +18,19 @@ public interface FileRecordMapper extends BaseMapper<FileRecord> {
     /**
      * 根据MD5获取文件
      */
-    @Select("SELECT * FROM file_record WHERE file_md5 = #{md5} AND status = 1 LIMIT 1")
+    @Select("SELECT id, file_name, original_name, file_type, mime_type, file_size, storage_path, url, folder_id, uploader_id, version, is_latest, file_md5, permission, download_count, last_download_time, create_time, update_time, status FROM file_record WHERE file_md5 = #{md5} AND status = 1 LIMIT 1")
     FileRecord selectByMd5(@Param("md5") String md5);
     
     /**
      * 获取文件夹下的文件列表
      */
-    @Select("SELECT * FROM file_record WHERE folder_id = #{folderId} AND status = 1 AND is_latest = 1 ORDER BY create_time DESC")
+    @Select("SELECT id, file_name, original_name, file_type, mime_type, file_size, storage_path, url, folder_id, uploader_id, version, is_latest, file_md5, permission, download_count, last_download_time, create_time, update_time, status FROM file_record WHERE folder_id = #{folderId} AND status = 1 AND is_latest = 1 ORDER BY create_time DESC")
     List<FileRecord> selectByFolderId(@Param("folderId") Long folderId);
     
     /**
      * 获取用户的文件列表
      */
-    @Select("SELECT * FROM file_record WHERE uploader_id = #{uploaderId} AND status = 1 AND is_latest = 1 ORDER BY create_time DESC")
+    @Select("SELECT id, file_name, original_name, file_type, mime_type, file_size, storage_path, url, folder_id, uploader_id, version, is_latest, file_md5, permission, download_count, last_download_time, create_time, update_time, status FROM file_record WHERE uploader_id = #{uploaderId} AND status = 1 AND is_latest = 1 ORDER BY create_time DESC")
     List<FileRecord> selectByUploaderId(@Param("uploaderId") Long uploaderId);
     
     /**
