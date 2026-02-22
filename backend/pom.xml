@@ -23,7 +23,9 @@
         <sa-token.version>1.37.0</sa-token.version>
         <hutool.version>5.8.23</hutool.version>
         <lombok.version>1.18.38</lombok.version>
+        <!---->
         <springdoc.version>2.2.0</springdoc.version>
+        <fastjson2.version>2.0.43</fastjson2.version>
     </properties>
 
     <modules>
@@ -31,6 +33,7 @@
         <module>family-service/user-service</module>
         <module>family-service/family-service</module>
         <module>family-service/ai-service</module>
+        <module>family-service/message-service</module>
     </modules>
 
     <dependencyManagement>
@@ -81,6 +84,12 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
+            </dependency>
+            <!-- Fastjson2 -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
