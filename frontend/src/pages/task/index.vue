@@ -45,7 +45,7 @@
         @click="viewTask(task)"
       >
         <view class="task-header">
-          <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></text>
+          <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></view>
           <view class="task-title">{{ task.title }}</view>
           <view class="task-priority" :class="'priority-' + task.priority">{{ priorityText(task.priority) }}</view>
         </view>
@@ -58,7 +58,7 @@
         <!-- 子任务进度 -->
         <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
           <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></text>
+            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
           </view>
           <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
         </view>
@@ -71,7 +71,7 @@
             class="subtask-item"
             @click.stop="toggleSubtask(task, sub)"
           >
-            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></text>
+            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
             <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
           </view>
           <view class="add-subtask" @click.stop="addSubtask(task)">

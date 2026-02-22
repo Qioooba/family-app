@@ -15,14 +15,12 @@
     <view class="task-selector" @click="showTaskSelector">
       <view class="selected-task" v-if="currentTask">
         <text class="task-icon">📋</text>
-        <view class="task-info"
->
+        <view class="task-info">
           <text class="task-title">{{ currentTask.title }}</text>
           <text class="task-status" :class="'status-' + currentTask.status">{{ getStatusText(currentTask) }}</text>
         </view>
       </view>
-      <view class="selected-task empty" v-else
->
+      <view class="selected-task empty" v-else>
         <text class="placeholder">选择任务查看历史</text>
       </view>
       <text class="arrow-icon">›</text>
@@ -34,13 +32,12 @@
         <text class="stat-value">{{ timelineStats.totalEvents }}</text>
         <text class="stat-label">操作记录</text>
       </view>
-      <view class="stat-divider"></text>
-      <view class="stat-item"
->
+      <view class="stat-divider"></view>
+      <view class="stat-item">
         <text class="stat-value">{{ timelineStats.duration }}</text>
         <text class="stat-label">持续天数</text>
       </view>
-      <view class="stat-divider"></text>
+      <view class="stat-divider"></view>
       <view class="stat-item">
         <text class="stat-value">{{ timelineStats.updates }}</text>
         <text class="stat-label">修改次数</text>
@@ -49,8 +46,7 @@
     
     <!-- 时间线主体 -->
     <scroll-view class="timeline-container" scroll-y v-if="currentTask">
-      <view class="timeline"
->
+      <view class="timeline">
         <!-- 时间线起点 -->
         <view class="timeline-start">
           <view class="start-node">
@@ -79,15 +75,14 @@
           }"
         >
           <view class="timeline-marker">
-            <view class="marker-line-top"></text>
+            <view class="marker-line-top"></view>
             <view class="marker-dot">
               <text class="marker-icon">{{ getEventIcon(event) }}</text>
             </view>
-            <view class="marker-line-bottom"></text>
+            <view class="marker-line-bottom"></view>
           </view>
           
-          <view class="timeline-content"
->
+          <view class="timeline-content">
             <view class="event-header">
               <text class="event-title">{{ event.title }}</text>
               <text class="event-time">{{ formatRelativeTime(event.time) }}</text>
@@ -97,12 +92,10 @@
               <text>{{ event.detail }}</text>
             </view>
             
-            <view class="event-changes" v-if="event.changes?.length"
->
+            <view class="event-changes" v-if="event.changes?.length">
               <view v-for="(change, cidx) in event.changes" :key="cidx" class="change-item">
                 <text class="change-label">{{ change.field }}:</text>
-                <view class="change-values"
->
+                <view class="change-values">
                   <text class="old-value">{{ change.oldValue || '空' }}</text>
                   <text class="arrow">➜</text>
                   <text class="new-value">{{ change.newValue || '空' }}</text>
@@ -118,8 +111,7 @@
         
         <!-- 时间线终点 -->
         <view class="timeline-end" v-if="currentTask.status === 2">
-          <view class="end-node"
->
+          <view class="end-node">
             <text class="end-icon">✓</text>
           </view>
           <view class="end-content">
@@ -129,11 +121,9 @@
         </view>
         
         <!-- 当前状态 -->
-        <view class="timeline-current" v-else
->
-          <view class="current-node"
->
-            <view class="pulse-ring"></text>
+        <view class="timeline-current" v-else>
+          <view class="current-node">
+            <view class="pulse-ring"></view>
             <text class="current-icon">⏳</text>
           </view>
           <view class="current-content">
@@ -144,17 +134,15 @@
       </view>
       
       <!-- 底部空间 -->
-      <view class="bottom-space"></text>
+      <view class="bottom-space"></view>
     </scroll-view>
     
     <!-- 空状态 -->
-    <view class="empty-state" v-else
->
+    <view class="empty-state" v-else>
       <text class="empty-icon">📊</text>
       <text class="empty-title">选择任务查看时间线</text>
       <text class="empty-desc">查看任务从创建到完成的完整历史记录</text>
-      <view class="empty-action" @click="showTaskSelector"
->
+      <view class="empty-action" @click="showTaskSelector">
         <text>选择任务</text>
       </view>
     </view>
