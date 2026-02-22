@@ -144,6 +144,13 @@
             "navigationBarTitleText": "任务速览",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "voice",
+          "style": {
+            "navigationBarTitleText": "语音创建",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
