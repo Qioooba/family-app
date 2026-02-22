@@ -3,7 +3,6 @@ package com.family.user.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.family.common.core.ErrorCode;
 import com.family.common.core.exception.BusinessException;
@@ -16,6 +15,7 @@ import com.family.user.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     
     private final StringRedisTemplate redisTemplate;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
     @Override
     public UserVO register(UserRegisterDTO dto) {
@@ -53,7 +54,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 创建用户
         User user = new User();
         BeanUtil.copyProperties(dto, user);
-        user.setPassword(DigestUtil.md5Hex(dto.getPassword()));
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setStatus(1);
         save(user);
         
@@ -77,7 +78,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .eq(User::getPhone, dto.getUsername())
                     .one();
             
-            if (user == null || !DigestUtil.md5Hex(dto.getPassword()).equals(user.getPassword())) {
+            if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
                 throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR);
             }
         } else if (StrUtil.isNotBlank(dto.getPhone())) {
@@ -148,11 +149,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         Long userId = StpUtil.getLoginIdAsLong();
         User user = getById(userId);
         
-        if (!DigestUtil.md5Hex(oldPassword).equals(user.getPassword())) {
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new BusinessException("原密码错误");
         }
         
-        user.setPassword(DigestUtil.md5Hex(newPassword));
+        user.setPassword(passwordEncoder.encode(newPassword));
         updateById(user);
     }
     

@@ -2,8 +2,8 @@ package com.family.family.service;
 
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 简单商品条码库服务
@@ -11,8 +11,8 @@ import java.util.Map;
 @Service
 public class BarcodeService {
     
-    // 内置常见商品条码库（可扩展为数据库）
-    private static final Map<String, ProductInfo> BARCODE_DB = new HashMap<>();
+    // 内置常见商品条码库（可扩展为数据库）- 使用ConcurrentHashMap保证线程安全
+    private static final Map<String, ProductInfo> BARCODE_DB = new ConcurrentHashMap<>();
     
     static {
         // 常见商品数据示例
