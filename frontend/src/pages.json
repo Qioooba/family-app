@@ -228,6 +228,34 @@
             "navigationBarTitleText": "版本对比",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "i18n",
+          "style": {
+            "navigationBarTitleText": "国际化",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "collaborate",
+          "style": {
+            "navigationBarTitleText": "协作编辑",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "3d",
+          "style": {
+            "navigationBarTitleText": "3D展示",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "personalize",
+          "style": {
+            "navigationBarTitleText": "个性化首页",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
