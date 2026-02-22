@@ -487,6 +487,41 @@
             "navigationBarTitleText": "语音助手",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "nutritionist",
+          "style": {
+            "navigationBarTitleText": "AI营养师",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "shopping-assistant",
+          "style": {
+            "navigationBarTitleText": "购物助手",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "voice-input",
+          "style": {
+            "navigationBarTitleText": "语音输入",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "morning-report",
+          "style": {
+            "navigationBarTitleText": "早安日报",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "night-summary",
+          "style": {
+            "navigationBarTitleText": "晚安总结",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },

@@ -11,21 +11,44 @@
 
     <!-- 快捷功能入口 -->
     <view class="quick-actions">
-      <view class="action-item" @click="quickAsk('今晚吃什么？')">
-        <text class="action-icon">🍳</text>
-        <text class="action-text">菜谱推荐</text>
-      </view>
-      <view class="action-item" @click="quickAsk('帮我分析今日饮食')">
+      <view class="action-item" @click="goToPage('nutritionist')">
         <text class="action-icon">🥗</text>
-        <text class="action-text">营养分析</text>
+        <text class="action-text">AI营养师</text>
       </view>
-      <view class="action-item" @click="quickAsk('生成购物清单')">
+      <view class="action-item" @click="goToPage('shopping-assistant')">
         <text class="action-icon">🛒</text>
         <text class="action-text">购物助手</text>
       </view>
-      <view class="action-item" @click="quickAsk('今天有什么待办？')">
-        <text class="action-icon">📋</text>
-        <text class="action-text">待办提醒</text>
+      <view class="action-item" @click="goToPage('voice-input')">
+        <text class="action-icon">🎤</text>
+        <text class="action-text">语音输入</text>
+      </view>
+      <view class="action-item" @click="goToPage('morning-report')">
+        <text class="action-icon">☀️</text>
+        <text class="action-text">早安日报</text>
+      </view>
+    </view>
+
+    <!-- 高级功能入口 -->
+    <view class="advanced-features">
+      <view class="feature-title">更多功能</view>
+      <view class="feature-grid">
+        <view class="feature-item" @click="goToPage('night-summary')">
+          <view class="feature-icon">🌙</view>
+          <text class="feature-text">晚安总结</text>
+        </view>
+        <view class="feature-item" @click="quickAsk('今晚吃什么？')">
+          <view class="feature-icon">🍳</view>
+          <text class="feature-text">菜谱推荐</text>
+        </view>
+        <view class="feature-item" @click="quickAsk('今天有什么待办？')">
+          <view class="feature-icon">📋</view>
+          <text class="feature-text">待办提醒</text>
+        </view>
+        <view class="feature-item" @click="quickAsk('生成家庭周报')">
+          <view class="feature-icon">📊</view>
+          <text class="feature-text">家庭报告</text>
+        </view>
       </view>
     </view>
 
@@ -108,6 +131,13 @@ const sessionId = ref('')
 const quickAsk = (question) => {
   inputMessage.value = question
   sendMessage()
+}
+
+// 跳转到页面
+const goToPage = (page) => {
+  uni.navigateTo({
+    url: `/pages/ai/${page}`
+  })
 }
 
 // 发送消息
@@ -234,6 +264,57 @@ const formatTime = (timestamp) => {
     .action-text {
       font-size: 24rpx;
       color: #666;
+    }
+  }
+}
+
+.advanced-features {
+  margin: 0 20rpx 20rpx;
+  padding: 24rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  
+  .feature-title {
+    font-size: 28rpx;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20rpx;
+  }
+  
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16rpx;
+    
+    .feature-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20rpx 10rpx;
+      background: #f8f9fa;
+      border-radius: 16rpx;
+      
+      &:active {
+        background: #f0f0f0;
+      }
+      
+      .feature-icon {
+        width: 72rpx;
+        height: 72rpx;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36rpx;
+        margin-bottom: 12rpx;
+      }
+      
+      .feature-text {
+        font-size: 22rpx;
+        color: #666;
+      }
     }
   }
 }
