@@ -27,8 +27,7 @@
         <text class="label">分类</text>
         <view class="category-list">
           <view
-            v-for="cat in categories"
-            :key="cat.value"
+            v-for="(cat, index) in categories" :key="cat.id || index"
             class="category-item"
             :class="{ active: form.category === cat.value }"
             @click="form.category = cat.value"
@@ -43,8 +42,7 @@
         <text class="label">优先级</text>
         <view class="priority-list">
           <view
-            v-for="p in priorities"
-            :key="p.value"
+            v-for="(p, index) in priorities" :key="p.id || index"
             class="priority-item"
             :class="{ active: form.priority === p.value, [p.class]: true }"
             @click="form.priority = p.value"
@@ -71,8 +69,7 @@
         <text class="label">指派给</text>
         <view class="member-list">
           <view
-            v-for="member in members"
-            :key="member.id"
+            v-for="(member, index) in members" :key="member.id || index"
             class="member-item"
             :class="{ active: form.assigneeId === member.id }"
             @click="form.assigneeId = member.id"
@@ -98,8 +95,7 @@
         <text class="label">重复</text>
         <view class="repeat-list">
           <view
-            v-for="r in repeats"
-            :key="r.value"
+            v-for="(r, index) in repeats" :key="r.id || index"
             class="repeat-item"
             :class="{ active: form.repeatType === r.value }"
             @click="selectRepeat(r.value)"
@@ -137,8 +133,7 @@
           <text class="sub-label">结束</text>
           <view class="end-options">
             <view
-              v-for="opt in endOptions"
-              :key="opt.value"
+              v-for="(opt, index) in endOptions" :key="opt.id || index"
               class="end-option"
               :class="{ active: form.repeatEndType === opt.value }"
               @click="form.repeatEndType = opt.value"

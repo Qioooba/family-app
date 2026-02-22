@@ -16,12 +16,11 @@
       <!-- 波纹动画 -->
       <view class="wave-container">
         <view 
-          v-for="n in 5" 
-          :key="n"
+          v-for="(n, index) in 5" :key="index" 
           class="wave-ring"
           :class="{ active: isRecording }"
           :style="getWaveStyle(n)"
-        ></view>
+        ></text>
         
         <!-- 麦克风按钮 -->
         <view 
@@ -45,7 +44,7 @@
       <view v-if="isRecording || recordTime > 0" class="record-timer">
         <text class="timer-display">{{ formatTime(recordTime) }}</text>
         <view class="timer-progress">
-          <view class="timer-bar" :style="{ width: (recordTime / maxRecordTime * 100) + '%' }"></view>
+          <view class="timer-bar" :style="{ width: (recordTime / maxRecordTime * 100) + '%' }"></text>
         </view>
         <text class="timer-limit">{{ maxRecordTime }}s</text>
       </view>
@@ -64,7 +63,7 @@
       <view class="transcript-content">
         <!-- 转录中状态 -->
         <view v-if="isTranscribing" class="transcribing-state">
-          <view class="loading-spinner"></view>
+          <view class="loading-spinner"></text>
           <text>正在识别语音...</text>
         </view>
         

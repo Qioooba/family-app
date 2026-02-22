@@ -1,12 +1,12 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">电子签名</view>
     </view>
     
     <view class="signature-area"
-003e
+>
       <canvas 
         canvas-id="signatureCanvas" 
         class="signature-canvas"
@@ -16,17 +16,17 @@
       ></canvas>
       
       <view v-if="!hasDrawn" class="signature-hint"
-003e
+>
         <text>✍️ 在此区域签名</text>
       </view>
     </view>
     
     <view class="signature-actions"
-003e
+>
       <view class="action-btn" @click="clear"
-003e清空</view>
+清空</view>
       <view class="action-btn primary" @click="save"
-003e保存签名</view>
+保存签名</view>
     </view>
   </view>
 </template>

@@ -1,44 +1,44 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">A/B测试</view>
     </view>
     
     <view class="ab-section"
-003e
+>
       <view class="section-title">当前测试</view>
       
       <view v-for="test in abTests" :key="test.id" class="test-card"
-003e
+>
         <view class="test-header"
-003e
+>
           <text class="test-name">{{ test.name }}</text>
           <view class="test-status" :class="test.status">{{ test.statusText }}</view>
         </view>
         
         <view class="test-variants"
-003e
+>
           <view v-for="(v, i) in test.variants" :key="i" class="variant-bar"
-003e
+>
             <text class="variant-label">{{ v.name }}</text>
             <view class="variant-progress"
-003e
-              <view class="variant-fill" :style="{ width: v.percent + '%', background: v.color }"></view>
+>
+              <view class="variant-fill" :style="{ width: v.percent + '%', background: v.color }"></text>
             </view>
             <text class="variant-value">{{ v.percent }}%</text>
           </view>
         </view>
         
         <view class="test-stats"
-003e
+>
           <view class="stat"
-003e
+>
             <text class="stat-value">{{ test.users }}</text>
             <text class="stat-label">参与用户</text>
           </view>
           <view class="stat"
-003e
+>
             <text class="stat-value">{{ test.conversion }}%</text>
             <text class="stat-label">转化率</text>
           </view>

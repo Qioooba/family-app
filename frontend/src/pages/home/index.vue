@@ -47,7 +47,7 @@
     <view class="section-card">
       <view class="section-header">
         <text class="section-title">📋 今日待办</text>
-        <text class="more" @click="navigateTo('/pages/task/index')">更多 ></text>
+        <text class="more" @click="navigateTo('/pages/task/index')">更多 ></view>
       </view>
       
       <view v-if="todayTasks.length > 0" class="task-list">
@@ -65,8 +65,8 @@
           <view class="task-info">
             <text class="task-title" :class="{ completed: task.status === 2 }">
               {{ task.title }}
-            </text>
-            <text class="task-meta">{{ task.assigneeName }} · {{ task.time }}</text>
+            </view>
+            <text class="task-meta">{{ task.assigneeName }} · {{ task.time }}</view>
           </view>
           
           <view 
@@ -86,8 +86,8 @@
     <!-- 纪念日提醒 -->
     <view class="section-card" v-if="upcomingAnniversaries.length > 0">
       <view class="section-header">
-        <text class="section-title">💝 近期纪念</text>
-        <text class="more" @click="navigateTo('/pages/calendar/index')">更多 ></text>
+        <text class="section-title">💝 近期纪念</view>
+        <text class="more" @click="navigateTo('/pages/calendar/index')">更多 ></view>
       </view>
       
       <view class="anniversary-list">
@@ -99,13 +99,13 @@
           <view class="anni-icon">{{ item.icon }}</view>
           
           <view class="anni-info">
-            <text class="anni-title">{{ item.title }}</text>
-            <text class="anni-date">{{ item.date }}</text>
+            <text class="anni-title">{{ item.title }}</view>
+            <text class="anni-date">{{ item.date }}</view>
           </view>
           
           <view class="anni-days">
-            <text class="days-num">{{ item.days }}</text>
-            <text class="days-label">{{ item.days > 0 ? '天后' : '今天' }}</text>
+            <text class="days-num">{{ item.days }}</view>
+            <text class="days-label">{{ item.days > 0 ? '天后' : '今天' }}</view>
           </view>
         </view>
       </view>
@@ -114,8 +114,8 @@
     <!-- 今日菜谱推荐 -->
     <view class="section-card">
       <view class="section-header">
-        <text class="section-title">🍳 今日菜谱</text>
-        <text class="more" @click="navigateTo('/pages/recipe/index')">更多 ></text>
+        <text class="section-title">🍳 今日菜谱</view>
+        <text class="more" @click="navigateTo('/pages/recipe/index')">更多 ></view>
       </view>
       
       <view class="recipe-scroll">
@@ -135,10 +135,10 @@
             />
             
             <view class="recipe-info">
-              <text class="recipe-name">{{ recipe.name }}</text>
+              <text class="recipe-name">{{ recipe.name }}</view>
               <view class="recipe-meta">
-                <text>⏱️ {{ recipe.time }}分钟</text>
-                <text>🔥 {{ recipe.calories }}卡</text>
+                <text>⏱️ {{ recipe.time }}分钟</view>
+                <text>🔥 {{ recipe.calories }}卡</view>
               </view>
             </view>
           </view>
@@ -149,24 +149,24 @@
     <!-- 健康数据概览 -->
     <view class="section-card">
       <view class="section-header">
-        <text class="section-title">💪 健康概览</text>
-        <text class="more" @click="navigateTo('/pages/food/record')">记录 ></text>
+        <text class="section-title">💪 健康概览</view>
+        <text class="more" @click="navigateTo('/pages/food/record')">记录 ></view>
       </view>
       
       <view class="health-stats">
         <view class="stat-item">
-          <text class="stat-value">{{ healthData.calories }}</text>
-          <text class="stat-label">已摄入(卡)</text>
+          <text class="stat-value">{{ healthData.calories }}</view>
+          <text class="stat-label">已摄入(卡)</view>
         </view>
         
         <view class="stat-item">
-          <text class="stat-value">{{ healthData.target - healthData.calories }}</text>
-          <text class="stat-label">剩余(卡)</text>
+          <text class="stat-value">{{ healthData.target - healthData.calories }}</view>
+          <text class="stat-label">剩余(卡)</view>
         </view>
         
         <view class="stat-item">
-          <text class="stat-value">{{ healthData.water }}</text>
-          <text class="stat-label">饮水(杯)</text>
+          <text class="stat-value">{{ healthData.water }}</view>
+          <text class="stat-label">饮水(杯)</view>
         </view>
       </view>
       
@@ -179,7 +179,7 @@
         </view>
         <text class="progress-text">
           {{ healthData.calories }}/{{ healthData.target }} 卡 ({{ Math.round(healthData.calories / healthData.target * 100) }}%)
-        </text>
+        </view>
       </view>
     </view>
   </template>

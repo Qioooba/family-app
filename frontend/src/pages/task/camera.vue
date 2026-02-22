@@ -1,36 +1,36 @@
 <template>
   <view class="page-container"
-003e
+>
     <view class="header"
-003e
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">拍照创建</view>
     </view>
     
     <view class="camera-section" v-if="!imageUrl"
-003e
+>
       <view class="camera-placeholder" @click="takePhoto"
-003e
+>
         <text class="camera-icon">📷</text>
         <text class="camera-text">点击拍照</text>
         <text class="camera-hint">拍摄清单、便签、白板等内容</text>
       </view>
       
       <view class="album-btn" @click="chooseFromAlbum"
-003e
+>
         <text>从相册选择</text>
       </view>
     </view>
     
     <view class="preview-section" v-else
-003e
+>
       <image class="preview-image" :src="imageUrl" mode="widthFix" />
       
       <view class="preview-actions"
-003e
+>
         <view class="action-btn" @click="retake">重拍</view>
         <view class="action-btn primary" :class="{ loading: isProcessing }" @click="processImage"
-003e
+>
           <text v-if="!isProcessing">识别内容</text>
           <text v-else>识别中...</text>
         </view>
@@ -38,40 +38,40 @@
     </view>
     
     <view class="results-section" v-if="recognizedItems.length > 0"
-003e
+>
       <view class="results-header"
-003e
+>
         <text>识别结果</text>
         <text class="count">{{ recognizedItems.length }}项</text>
       </view>
       
       <view class="results-list"
-003e
+>
         <view v-for="(item, index) in recognizedItems" :key="index" class="result-item"
-003e
+>
           <view class="item-checkbox" :class="{ checked: item.selected }" @click="toggleItem(index)"
-003e</view>
+</view>
           <input class="item-input" v-model="item.text" />
           <text class="item-delete" @click="removeItem(index)">✕</text>
         </view>
       </view>
       
       <view class="add-item-btn" @click="addItem"
-003e
+>
         <text>+ 添加项目</text>
       </view>
       
       <view class="create-btn" @click="createTasks"
-003e
+>
         <text>创建任务</text>
       </view>
     </view>
     
     <view class="tips-section"
-003e
+>
       <text class="tips-title">💡 拍照技巧</text>
       <view class="tip-item" v-for="(tip, i) in tips" :key="i"
-003e
+>
         <text>{{ tip }}</text>
       </view>
     </view>

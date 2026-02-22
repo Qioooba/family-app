@@ -84,7 +84,7 @@
       <view class="agreement">
         <u-checkbox v-model="agreed" shape="circle" size="14">
           <text class="agreement-text">
-            我已阅读并同意<text class="link" @click.stop="showAgreement">《用户协议》</text>和<text class="link" @click.stop="showPrivacy">《隐私政策》</text>
+            我已阅读并同意<text class="link" @click.stop="showAgreement">《用户协议》</text>和<text @click.stop="showPrivacy">《隐私政策》</text>
           </text>
         </u-checkbox>
       </view>

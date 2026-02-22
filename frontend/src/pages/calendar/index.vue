@@ -52,7 +52,7 @@
         >
           <text class="solar">{{ day }}</text>
           <text v-if="showLunar" class="lunar">{{ getLunarDay(day) }}</text>
-          <view v-if="hasEvent(day)" class="event-dot"></view>
+          <view v-if="hasEvent(day)" class="event-dot"></text>
           <view v-if="isFestival(day)" class="festival-dot">🎉</view>
         </view>
       </view>

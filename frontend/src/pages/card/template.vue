@@ -17,7 +17,7 @@
     <view class="content">
       <!-- 贺卡预览 -->
       <view class="preview-section"
-003e
+>
         <view 
           class="card-preview"
           :style="{ background: currentTemplate?.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }"
@@ -25,7 +25,7 @@
           <view class="card-decoration top">{{ currentTemplate?.decoration?.[0] || '✨' }}</view>
           
           <view class="card-content"
-003e
+>
             <text class="card-to">{{ form.to || '致亲爱的你' }}</text>
             
             <view class="card-message-wrap">
@@ -41,7 +41,7 @@
 
       <!-- 模板选择 -->
       <view class="templates-section"
-003e
+>
         <text class="section-title">选择模板</text>
         
         <scroll-view class="template-list" scroll-x>
@@ -116,14 +116,14 @@
         </view>
         
         <view class="action-row"
-003e
+>
           <view class="action-btn secondary" @click="saveToAlbum">
             <u-icon name="download" size="28" color="#5B8FF9"></u-icon>
             <text>保存</text>
           </view>
           
           <view class="action-btn secondary" @click="shareCard"
-003e
+>
             <u-icon name="share" size="28" color="#52C41A"></u-icon>
             <text>分享</text>
           </view>
@@ -137,7 +137,7 @@
       mode="center"
     >
       <view class="preview-modal"
-003e
+>
         <view 
           class="generated-card"
           :style="{ background: currentTemplate?.gradient }"
@@ -148,7 +148,7 @@
             <text class="card-to">{{ form.to }}</text>
             
             <view class="card-message-wrap"
-003e
+>
               <text class="card-message">{{ form.message }}</text>
             </view>
             

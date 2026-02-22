@@ -1,19 +1,19 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">心情记录</view>
     </view>
     
     <view class="today-mood"
-003e
+>
       <text class="mood-title">今天的心情如何？</text>
       
       <view class="mood-options"
-003e
+>
         <view 
-          v-for="mood in moods" 
-          :key="mood.value"
+          v-for="(mood, index) in moods" :key="mood.id || index" 
+          
           class="mood-item"
           :class="{ selected: selectedMood === mood.value }"
           @click="selectMood(mood.value)"
@@ -25,34 +25,34 @@
     </view>
     
     <view class="mood-note"
-003e
+>
       <text class="note-label">记录一下</text>
       <textarea class="note-input" v-model="moodNote" placeholder="写下今天的心情..." />
     </view>
     
     <view class="save-btn" @click="saveMood"
-003e
+>
       <text>保存记录</text>
     </view>
     
     <view class="history-section"
-003e
+>
       <view class="section-title">历史记录</view>
       
       <view class="mood-chart"
-003e
+>
         <view class="chart-placeholder">
           <text>📊 心情趋势图</text>
         </view>
       </view>
       
       <view class="history-list"
-003e
-        <view v-for="record in moodHistory" :key="record.id" class="history-item"
-003e
+>
+        <view v-for="(record, index) in moodHistory" :key="record.id || index"  class="history-item"
+>
           <text class="history-emoji">{{ record.emoji }}</text>
           <view class="history-content"
-003e
+>
             <text class="history-note">{{ record.note || record.label }}</text>
             <text class="history-date">{{ record.date }}</text>
           </view>

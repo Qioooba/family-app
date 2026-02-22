@@ -22,9 +22,9 @@
         </view>
 
         <view class="today-lunar"
-003e
+>
           <view class="lunar-main"
-003e
+>
             <text class="lunar-month">{{ today.lunarMonth }}</text>
             <text class="lunar-day">{{ today.lunarDay }}</text>
           </view>          
@@ -108,7 +108,7 @@
               {{ day.lunarText }}
             </text>
             
-            <view v-if="day.festival" class="festival-dot"></view>
+            <view v-if="day.festival" class="festival-dot"></text>
           </view>
         </view>
       </view>
@@ -132,7 +132,7 @@
 >
               <text class="date-day">{{ festival.day }}</text>
               <text class="date-month"
-003e{{ festival.month }}月</text>
+{{ festival.month }}月</text>
             </view>            
             
             <view class="festival-info"
@@ -181,12 +181,12 @@
           </view>
 
           <view class="detail-yiji"
-003e
+>
             <view class="yiji-row yi"
 >
               <text class="yiji-label">宜</text>
               <view class="yiji-tags"
-003e
+>
                 <text v-for="(yi, i) in selectedDay.yi" :key="i" class="tag">{{ yi }}</text>
               </view>
             </view>
@@ -195,7 +195,7 @@
 >
               <text class="yiji-label">忌</text>
               <view class="yiji-tags"
-003e
+>
                 <text v-for="(ji, i) in selectedDay.ji" :key="i" class="tag">{{ ji }}</text>
               </view>
             </view>
@@ -209,7 +209,7 @@
             </view>
             
             <view class="action-btn" @click="shareDate"
-003e
+>
               <u-icon name="share" size="32" color="#52C41A"></u-icon>
               <text>分享</text>
             </view>

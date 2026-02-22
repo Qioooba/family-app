@@ -1,13 +1,13 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">地理位置</view>
     </view>
     
     <view class="map-container">
       <view class="map-placeholder"
-003e
+>
         <text class="map-icon">🗺️</text>
         <text class="map-text">地图展示区域</text>
         <text class="map-hint">显示任务相关位置标记</text>
@@ -15,29 +15,29 @@
     </view>
     
     <view class="location-list"
-003e
+>
       <view class="list-header">
         <text>位置任务</text>
         <text class="count">{{ locationTasks.length }}个</text>
       </view>
       
       <view v-for="task in locationTasks" :key="task.id" class="location-card"
-003e
+>
         <view class="location-marker"
-003e📍</view>
+📍</view>
         <view class="task-info"
-003e
+>
           <text class="task-title">{{ task.title }}</text>
           <text class="task-address">{{ task.address }}</text>
           <text class="task-distance">{{ task.distance }}</text>
         </view>
         <view class="navigate-btn" @click="navigate(task)"
-003e导航</view>
+导航</view>
       </view>
     </view>
     
     <view class="add-location-btn" @click="addLocationTask"
-003e
+>
       <text>+ 添加位置任务</text>
     </view>
   </view>

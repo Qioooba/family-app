@@ -50,7 +50,7 @@
         </view>
         
         <view v-if="wish.progress > 0" class="progress-bar">
-          <view class="progress-fill" :style="{ width: wish.progress + '%' }"></view>
+          <view class="progress-fill" :style="{ width: wish.progress + '%' }"></text>
         </view>
       </view>
     </scroll-view>

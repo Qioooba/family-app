@@ -1,26 +1,26 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">积分成就</view>
     </view>
     
     <view class="score-card"
-003e
+>
       <view class="score-main"
-003e
+>
         <text class="score-label">我的积分</text>
         <text class="score-value">{{ userScore }}</text>
         <text class="score-rank">家庭排名 #{{ userRank }}</text>
       </view>
       
       <view class="score-level"
-003e
+>
         <text class="level-name">{{ currentLevel.name }}</text>
         <view class="level-progress"
-003e
+>
           <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: levelProgress + '%' }"></view>
+            <view class="progress-fill" :style="{ width: levelProgress + '%' }"></text>
           </view>
           <text class="progress-text">{{ currentLevel.progress }}/{{ currentLevel.max }}</text>
         </view>
@@ -28,13 +28,13 @@
     </view>
     
     <view class="achievements-section"
-003e
+>
       <view class="section-title">🏆 成就徽章</view>
       
       <view class="achievements-grid"
-003e
+>
         <view v-for="ach in achievements" :key="ach.id" class="achievement-card" :class="{ unlocked: ach.unlocked }"
-003e
+>
           <view class="achievement-icon">{{ ach.icon }}</view>
           <text class="achievement-name">{{ ach.name }}</text>
           <text v-if="ach.unlocked" class="achievement-date">{{ ach.date }}</text>
@@ -44,13 +44,13 @@
     </view>
     
     <view class="leaderboard-section"
-003e
+>
       <view class="section-title">📊 家庭排行榜</view>
       
       <view class="leaderboard-list"
-003e
+>
         <view v-for="(user, index) in leaderboard" :key="user.id" class="leaderboard-item" :class="{ 'is-me': user.isMe }"
-003e
+>
           <text class="rank">{{ index + 1 }}</text>
           <view class="user-avatar">{{ user.avatar }}</view>
           <text class="user-name">{{ user.name }}</text>

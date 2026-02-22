@@ -26,8 +26,8 @@
           <text class="mood-label">今日心情</text>
           <view class="mood-options">
             <text 
-              v-for="mood in moods" 
-              :key="mood.value"
+              v-for="(mood, index) in moods" :key="mood.id || index" 
+              
               class="mood-item"
               :class="{ active: selectedMood === mood.value }"
               @click="selectMood(mood.value)"
@@ -76,7 +76,7 @@
           <text class="completion-percent">{{ completionRate }}%</text>
         </view>
         <view class="completion-bar">
-          <view class="completion-fill" :style="{ width: completionRate + '%' }"></view>
+          <view class="completion-fill" :style="{ width: completionRate + '%' }"></text>
         </view>
         <text class="completion-desc">{{ completionText }}</text>
       </view>
@@ -137,7 +137,7 @@
           <view v-for="(event, index) in tomorrowEvents" :key="index" class="schedule-item">
             <view class="item-time">{{ event.time }}</view>
             <view class="item-content">
-              <view class="item-dot" :style="{ background: event.color }"></view>
+              <view class="item-dot" :style="{ background: event.color }"></text>
               <text class="item-title">{{ event.title }}</text>
             </view>
           </view>

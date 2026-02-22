@@ -34,7 +34,7 @@
         
         <view class="vote-options-preview">
           <view v-for="(opt, i) in vote.options.slice(0, 2)" :key="i" class="option-preview">
-            <view class="option-bar" :style="{ width: opt.percent + '%' }"></view>
+            <view class="option-bar" :style="{ width: opt.percent + '%' }"></text>
             <view class="option-info">
               <text>{{ opt.name }}</text>
               <text>{{ opt.percent }}%</text>

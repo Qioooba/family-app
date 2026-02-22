@@ -2,7 +2,7 @@
   <view class="nutrition-page">
     <!-- 顶部导航 -->
     <view class="nav-bar"
-003e
+>
       <view class="back-btn" @click="goBack"
 >
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
@@ -15,7 +15,7 @@
     </view>
 
     <view class="content"
-003e
+>
       <!-- 今日概览卡片 -->
       <view class="overview-card"
 >
@@ -35,7 +35,7 @@
             <!-- 简化的环形图实现 -->
             <view class="donut-chart"
 >
-              <view class="donut-ring"></view>
+              <view class="donut-ring"></text>
               <view class="donut-segments"
 >
                 <view 
@@ -43,7 +43,7 @@
                   :key="index"
                   class="segment"
                   :style="segment.style"
-                ></view>
+                ></text>
               </view>
               <view class="donut-center"
 >
@@ -56,11 +56,11 @@
           <!-- 图例 -->
           <view class="chart-legend">
             <view
-              v-for="item in nutritionLegend"
-              :key="item.name"
+              v-for="(item, index) in nutritionLegend" :key="item.id || index"
+              
               class="legend-item"
             >
-              <view class="legend-dot" :style="{ background: item.color }"></view>
+              <view class="legend-dot" :style="{ background: item.color }"></text>
               <view class="legend-info"
 >
                 <text class="legend-name">{{ item.name }}</text>
@@ -77,14 +77,14 @@
         <text class="section-title">三大营养素</text>
         
         <view class="macro-list"
-003e
+>
           <view
-            v-for="macro in macros"
-            :key="macro.name"
+            v-for="(macro, index) in macros" :key="macro.id || index"
+            
             class="macro-item"
           >
             <view class="macro-header"
-003e
+>
               <view class="macro-info">
                 <text class="macro-icon">{{ macro.icon }}</text>
                 <view class="macro-text">
@@ -96,12 +96,12 @@
             </view>
 
             <view class="macro-progress">
-              <view class="progress-track"></view>
+              <view class="progress-track"></text>
               <view 
                 class="progress-fill"
                 :class="macro.status"
                 :style="{ width: Math.min(macro.percent, 100) + '%' }"
-              ></view>
+              ></text>
             </view>
 
             <text class="macro-hint">{{ macro.hint }}</text>
@@ -119,8 +119,8 @@
 
         <view class="micro-grid">
           <view
-            v-for="micro in micros"
-            :key="micro.name"
+            v-for="(micro, index) in micros" :key="micro.id || index"
+            
             class="micro-item"
             :class="micro.status"
           >
@@ -134,7 +134,7 @@
               <view 
                 class="micro-fill"
                 :style="{ width: Math.min(micro.percent, 100) + '%', background: micro.color }"
-              ></view>
+              ></text>
             </view>
             
             <view class="micro-values">
@@ -154,8 +154,8 @@
 
         <view class="meal-list">
           <view
-            v-for="meal in meals"
-            :key="meal.type"
+            v-for="(meal, index) in meals" :key="meal.id || index"
+            
             class="meal-card"
             @click="showMealDetail(meal)"
           >
@@ -191,13 +191,13 @@
 
       <!-- 摄入建议 -->
       <view class="advice-section"
-003e
+>
         <text class="section-title">摄入建议</text>
         
         <view class="advice-list">
           <view
-            v-for="advice in advices"
-            :key="advice.id"
+            v-for="(advice, index) in advices" :key="advice.id || index"
+            
             class="advice-card"
             :class="advice.type"
           >
@@ -206,7 +206,7 @@
             </view>
             
             <view class="advice-content"
-003e
+>
               <text class="advice-title">{{ advice.title }}</text>
               <text class="advice-desc">{{ advice.description }}</text>
             </view>
@@ -222,7 +222,7 @@
       round
     >
       <view class="date-picker-content"
-003e
+>
         <view class="picker-header">
           <text>选择日期</text>
         </view>
@@ -233,13 +233,13 @@
           @change="onDatePickerChange"
         >
           <picker-view-column>
-            <view v-for="year in years" :key="year" class="picker-item">{{ year }}年</view>
+            <view v-for="(year, index) in years" :key="year.id || index"  class="picker-item">{{ year }}年</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="month in months" :key="month" class="picker-item">{{ month }}月</view>
+            <view v-for="(month, index) in months" :key="month.id || index"  class="picker-item">{{ month }}月</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="day in days" :key="day" class="picker-item">{{ day }}日</view>
+            <view v-for="(day, index) in days" :key="day.id || index"  class="picker-item">{{ day }}日</view>
           </picker-view-column>
         </picker-view>
         

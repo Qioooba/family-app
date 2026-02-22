@@ -76,7 +76,7 @@
             <view 
               class="progress-fill" 
               :style="{ width: (challenge.current / challenge.target * 100) + '%' }"
-            ></view>
+            ></text>
           </view>
         </view>
 

@@ -22,7 +22,7 @@
         </view>
         
         <view class="progress-bar">
-          <view class="progress-fill" :style="{ width: progressPercent + '%' }"></view>
+          <view class="progress-fill" :style="{ width: progressPercent + '%' }"></text>
         </view>
         
         <view class="stats-footer">
@@ -46,8 +46,8 @@
       <!-- 记录方式选择 -->
       <view class="record-type">
         <view 
-          v-for="type in recordTypes" 
-          :key="type.value"
+          v-for="(type, index) in recordTypes" :key="type.id || index" 
+          
           class="type-item"
           :class="{ active: currentType === type.value }"
           @click="currentType = type.value"
@@ -62,8 +62,8 @@
         <!-- 餐别选择 -->
         <view class="meal-selector">
           <view 
-            v-for="meal in meals" 
-            :key="meal.value"
+            v-for="(meal, index) in meals" :key="meal.id || index" 
+            
             class="meal-item"
             :class="{ active: form.meal === meal.value }"
             @click="form.meal = meal.value"
@@ -117,8 +117,8 @@
             <text class="section-title">常用食物</text>
             <view class="food-tags">
               <view 
-                v-for="food in quickFoods" 
-                :key="food.name"
+                v-for="(food, index) in quickFoods" :key="food.id || index" 
+                
                 class="food-tag"
                 @click="selectQuickFood(food)"
               >
@@ -168,8 +168,8 @@
           <!-- 快速选择 -->
           <view class="quick-weights">
             <view 
-              v-for="w in quickWeights" 
-              :key="w"
+              v-for="(w, index) in quickWeights" :key="w.id || index" 
+              
               class="quick-weight-item"
               :class="{ active: weightInput === w.toString() }"
               @click="weightInput = w.toString()"

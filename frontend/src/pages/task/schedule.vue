@@ -94,8 +94,7 @@
           <text class="label">值班人员</text>
           <view class="member-list">
             <view 
-              v-for="member in familyMembers" 
-              :key="member.id"
+              v-for="(member, index) in familyMembers" :key="member.id || index"
               class="member-option"
               :class="{ active: newSchedule.assigneeId === member.id }"
               @click="newSchedule.assigneeId = member.id"

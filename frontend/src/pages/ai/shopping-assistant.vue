@@ -85,7 +85,7 @@
           <view class="stock-info">
             <text class="stock-name">{{ item.name }}</text>
             <view class="stock-bar">
-              <view class="stock-progress" :style="{ width: item.percent + '%', background: item.color }"></view>
+              <view class="stock-progress" :style="{ width: item.percent + '%', background: item.color }"></text>
             </view>
             <text class="stock-status">剩余 {{ item.current }}/{{ item.max }} {{ item.unit }}</text>
           </view>

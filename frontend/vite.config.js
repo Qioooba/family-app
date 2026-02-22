@@ -3,7 +3,7 @@ import uni from '@dcloudio/vite-plugin-uni'
 import { resolve } from 'path'
 
 // 分析依赖大小的插件（可选，构建时开启）
-import { visualizer } from 'rollup-plugin-visualizer'
+// import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
   plugins: [

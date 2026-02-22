@@ -1,35 +1,35 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">天气关联</view>
     </view>
     
     <view class="weather-card">
       <view class="weather-main"
-003e
+>
         <text class="weather-icon">{{ weather.icon }}</text>
         <view class="weather-info"
-003e
+>
           <text class="temperature">{{ weather.temp }}°C</text>
           <text class="condition">{{ weather.condition }}</text>
         </view>
       </view>
       
       <view class="weather-details"
-003e
+>
         <view class="detail-item"
-003e
+>
           <text class="label">湿度</text>
           <text class="value">{{ weather.humidity }}%</text>
         </view>
         <view class="detail-item"
-003e
+>
           <text class="label">风速</text>
           <text class="value">{{ weather.wind }}级</text>
         </view>
         <view class="detail-item"
-003e
+>
           <text class="label">空气质量</text>
           <text class="value">{{ weather.aqi }}</text>
         </view>
@@ -37,32 +37,32 @@
     </view>
     
     <view class="weather-tasks"
-003e
+>
       <view class="section-title">🌤️ 天气相关任务</view>
       
       <view v-for="task in weatherTasks" :key="task.id" class="task-card" :class="task.type"
-003e
+>
         <view class="task-icon">{{ task.icon }}</view>
         <view class="task-content"
-003e
+>
           <text class="task-title">{{ task.title }}</text>
           <text class="task-desc">{{ task.description }}</text>
         </view>
         <view class="task-action" @click="handleTask(task)"
-003e
+>
           <text>{{ task.action }}</text>
         </view>
       </view>
     </view>
     
     <view class="forecast-section"
-003e
+>
       <view class="section-title">📅 未来天气</view>
       
       <view class="forecast-list"
-003e
+>
         <view v-for="day in forecast" :key="day.date" class="forecast-item"
-003e
+>
           <text class="day">{{ day.day }}</text>
           <text class="icon">{{ day.icon }}</text>
           <text class="temp">{{ day.temp }}°</text>

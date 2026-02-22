@@ -1,17 +1,17 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">协作编辑</view>
     </view>
     
     <view class="collab-info"
-003e
+>
       <view class="online-users"
-003e
+>
         <text class="users-label">在线成员</text>
         <view class="users-avatars"
-003e
+>
           <view v-for="user in onlineUsers" :key="user.id" class="user-avatar" :style="{ background: user.color }">
             {{ user.name[0] }}
           </view>
@@ -21,17 +21,17 @@
     </view>
     
     <view class="edit-area"
-003e
+>
       <input class="title-input" v-model="taskTitle" placeholder="任务标题" />
       <textarea class="content-input" v-model="taskContent" placeholder="任务描述..." />
     </view>
     
     <view class="collab-actions"
-003e
+>
       <view class="action-btn" @click="invite"
-003e邀请</view>
+邀请</view>
       <view class="action-btn primary" @click="save"
-003e保存</view>
+保存</view>
     </view>
   </view>
 </template>

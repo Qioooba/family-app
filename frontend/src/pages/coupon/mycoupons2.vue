@@ -2,7 +2,7 @@
   <view class="mycoupons-page">
     <!-- 顶部导航 -->
     <view class="nav-bar"
-003e
+>
       <view class="back-btn" @click="goBack"
 >
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
@@ -19,23 +19,23 @@
         <view class="stats-card"
 >
           <view class="stat-item"
-003e
+>
             <text class="stat-value">{{ stats.total }}</text>
             <text class="stat-label">全部券</text>
           </view>
           
-          <view class="stat-divider"></view>
+          <view class="stat-divider"></text>
           
           <view class="stat-item highlight"
-003e
+>
             <text class="stat-value">{{ stats.available }}</text>
             <text class="stat-label">未使用</text>
           </view>
           
-          <view class="stat-divider"></view>
+          <view class="stat-divider"></text>
           
           <view class="stat-item"
-003e
+>
             <text class="stat-value">¥{{ stats.totalValue }}</text>
             <text class="stat-label">总价值</text>
           </view>
@@ -74,11 +74,11 @@
 >{{ coupon.icon }}</view>
             
             <view class="coupon-amount"
-003e
+>
               <text v-if="coupon.type === 'discount'" class="discount-text"
 >{{ coupon.discount }}折</text>
               <view v-else class="amount-wrap"
-003e
+>
                 <text class="amount-symbol">¥</text>
                 <text class="amount-value">{{ coupon.amount }}</text>
               </view>
@@ -91,9 +91,9 @@
           <view class="coupon-right"
 >
             <view class="coupon-header"
-003e
+>
               <view class="coupon-info"
-003e
+>
                 <text class="coupon-name">{{ coupon.name }}</text>
                 <text class="coupon-shop">{{ coupon.shop }}</text>
               </view>
@@ -104,7 +104,7 @@
             </view>
 
             <view class="coupon-validity"
-003e
+>
               <text>有效期至 {{ coupon.expiryDate }}</text>
               <text v-if="coupon.daysLeft > 0 && coupon.status === 'available'" class="days-left"
 >
@@ -114,7 +114,7 @@
 
             <!-- 核销码区域 -->
             <view v-if="coupon.status === 'available'" class="coupon-code-section"
-003e
+>
               <view class="code-toggle" @click="toggleCode(coupon)">
                 <text>{{ coupon.showCode ? '隐藏核销码' : '查看核销码' }}</text>
                 <u-icon :name="coupon.showCode ? 'eye-off' : 'eye'" size="24" color="#5B8FF9"></u-icon>
@@ -123,33 +123,33 @@
               <view v-if="coupon.showCode" class="code-display"
 >
                 <view class="barcode"
-003e
+>
                   <view class="barcode-line"
-003e
+>
                     <view 
                       v-for="n in 30" 
                       :key="n"
                       class="bar"
                       :style="{ width: Math.random() * 4 + 2 + 'px' }"
-                    ></view>
+                    ></text>
                   </view>
                   <text class="barcode-num">{{ coupon.code }}</text>
                 </view>
                 
                 <view class="qrcode"
-003e
+>
                   <view class="qr-grid">
                     <view 
                       v-for="n in 36" 
                       :key="n"
                       class="qr-cell"
                       :class="{ filled: Math.random() > 0.5 }"
-                    ></view>
+                    ></text>
                   </view>
                 </view>
 
                 <view class="code-actions"
-003e
+>
                   <text class="action-link" @click="copyCode(coupon.code)">复制</text>
                   <text class="action-link" @click="shareCode(coupon)">分享</text>
                 </view>
@@ -167,7 +167,7 @@
 
         <!-- 空状态 -->
         <view v-if="filteredCoupons.length === 0" class="empty-state"
-003e
+>
           <u-icon name="ticket" size="100" color="#ddd"></u-icon>
           <text class="empty-text">暂无优惠券</text>
           <text class="empty-hint" @click="goToGet">去领券中心 ›</text>
@@ -183,7 +183,7 @@
       closeable
     >
       <view v-if="selectedCoupon" class="detail-modal"
-003e
+>
         <view class="detail-header"
 >
           <view 
@@ -232,7 +232,7 @@
           </view>          
           
           <view v-if="selectedCoupon.description" class="info-row"
-003e
+>
             <text class="info-label">使用说明</text>
             <text class="info-value">{{ selectedCoupon.description }}</text>
           </view>

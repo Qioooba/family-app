@@ -53,7 +53,7 @@
         </view>
 
         <view class="family-list"
-003e
+>
           <view
             v-for="family in otherFamilies"
             :key="family.id"
@@ -78,7 +78,7 @@
             </view>            
             
             <view class="item-action"
-003e
+>
               <text class="switch-btn">切换</text>
             </view>
           </view>
@@ -87,7 +87,7 @@
 
       <!-- 快捷操作 -->
       <view class="quick-actions"
-003e
+>
         <view class="action-card" @click="createFamily">
           <view class="action-icon create"
 >
@@ -103,7 +103,7 @@
         </view>
 
         <view class="action-card" @click="showJoinModal"
-003e
+>
           <view class="action-icon join"
 >
             <u-icon name="user-plus" size="40" color="#fff"></u-icon>
@@ -125,7 +125,7 @@
         
         <view class="manage-list">
           <view class="manage-item" @click="manageMembers"
-003e
+>
             <u-icon name="account" size="36" color="#5B8FF9"></u-icon>
             <text class="item-label">成员管理</text>
             <text class="item-value">{{ currentFamily.members.length }}人</text>
@@ -133,7 +133,7 @@
           </view>          
           
           <view class="manage-item" @click="setDefault"
-003e
+>
             <u-icon name="star" size="36" color="#FAAD14"></u-icon>
             <text class="item-label">设为默认</text>
             <text class="item-value">{{ currentFamily.isDefault ? '已是默认' : '' }}</text>
@@ -141,7 +141,7 @@
           </view>          
           
           <view class="manage-item" @click="familySettings"
-003e
+>
             <u-icon name="setting" size="36" color="#52C41A"></u-icon>
             <text class="item-label">家庭设置</text>
             <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
@@ -170,7 +170,7 @@
         </text>        
         
         <view class="modal-info"
-003e
+>
           <text>角色：{{ selectedFamily?.myRole }}</text>
           <text>成员：{{ selectedFamily?.members.length }}人</text>
         </view>
@@ -192,7 +192,7 @@
       closeable
     >
       <view class="join-modal"
-003e
+>
         <view class="modal-header"
 >
           <text class="modal-title">加入家庭</text>

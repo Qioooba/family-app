@@ -1,14 +1,14 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">屏幕共享</view>
     </view>
     
     <view class="screen-preview"
-003e
+>
       <view class="screen-content"
-003e
+>
         <text class="screen-icon">🖥️</text>
         <text class="screen-text">屏幕共享预览</text>
         <text class="screen-status">{{ isSharing ? '共享中' : '未开始' }}</text>
@@ -16,9 +16,9 @@
     </view>
     
     <view class="share-controls"
-003e
+>
       <view class="control-btn" :class="{ active: isSharing }" @click="toggleShare"
-003e
+>
         <text>{{ isSharing ? '停止共享' : '开始共享' }}</text>
       </view>
     </view>

@@ -6,7 +6,7 @@
         <text class="icon">←</text>
       </view>
       <text class="title">贺卡生成</text>
-      <view class="placeholder"></view>
+      <view class="placeholder"></text>
     </view>
 
     <!-- 模板选择 -->
@@ -51,7 +51,7 @@
           <text class="card-title"
           >{{ cardTitle || currentTemplate.defaultTitle }}</text>
           <view class="card-divider"
-          ></view>
+          ></text>
           <text class="card-message"
           >{{ cardMessage || currentTemplate.defaultMessage }}</text>
         </view>
@@ -134,7 +134,7 @@
     <!-- 生成结果弹窗 -->
     <view v-if="showResultModal" class="modal-overlay"
     >
-      <view class="modal-mask" @click="closeResultModal"></view>
+      <view class="modal-mask" @click="closeResultModal"></text>
       <view class="modal-content"
       >
         <view class="result-card" :style="{ background: currentTemplate.bgStyle }"
@@ -153,7 +153,7 @@
         >{{ cardTitle || currentTemplate.defaultTitle }}</text>
             <view class="card-divider"
         
-          ></view>
+          ></text>
             <text class="card-message"
         >{{ cardMessage || currentTemplate.defaultMessage }}</text>
           </view>

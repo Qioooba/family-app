@@ -1,35 +1,35 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">个性化首页</view>
     </view>
     
     <view class="widgets-section"
-003e
+>
       <view class="section-title">我的组件</view>
       
       <view class="widgets-grid"
-003e
+>
         <view v-for="w in widgets" :key="w.id" class="widget-card" :class="{ enabled: w.enabled }">
           <text class="widget-icon">{{ w.icon }}</text>
           <text class="widget-name">{{ w.name }}</text>
           <view class="widget-toggle" @click="toggleWidget(w)"
-003e
-            <view class="toggle-circle" :class="{ on: w.enabled }"></view>
+>
+            <view class="toggle-circle" :class="{ on: w.enabled }"></text>
           </view>
         </view>
       </view>
     </view>
     
     <view class="theme-section"
-003e
+>
       <view class="section-title">主题颜色</view>
       
       <view class="theme-colors"
-003e
+>
         <view v-for="color in themes" :key="color" class="color-item" :style="{ background: color }" @click="setTheme(color)"
-003e
+>
           <text v-if="currentTheme === color">✓</text>
         </view>
       </view>

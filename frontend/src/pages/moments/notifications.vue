@@ -17,12 +17,12 @@
         <text class="stat-value">{{ unreadCount }}</text>
         <text class="stat-label">未读消息</text>
       </view>
-      <view class="stat-divider"></view>
+      <view class="stat-divider"></text>
       <view class="stat-item">
         <text class="stat-value">{{ todayCount }}</text>
         <text class="stat-label">今日消息</text>
       </view>
-      <view class="stat-divider"></view>
+      <view class="stat-divider"></text>
       <view class="stat-item">
         <text class="stat-value">{{ totalCount }}</text>
         <text class="stat-label">全部消息</text>
@@ -66,7 +66,7 @@
             <text>{{ notification.action }}</text>
           </view>
         </view>
-        <view v-if="!notification.isRead" class="unread-dot"></view>
+        <view v-if="!notification.isRead" class="unread-dot"></text>
       </view>
 
       <!-- 设置入口 -->

@@ -1,31 +1,31 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">版本对比</view>
     </view>
     
     <view class="version-list"
-003e
+>
       <view v-for="v in versions" :key="v.id" class="version-card"
-003e
+>
         <view class="version-header"
-003e
+>
           <text class="version-number">{{ v.version }}</text>
           <text class="version-date">{{ v.date }}</text>
         </view>
         
         <view class="version-content"
-003e
+>
           <text class="content-text">{{ v.content }}</text>
         </view>
         
         <view class="version-actions"
-003e
+>
           <view class="compare-btn" @click="compare(v)"
-003e对比</view>
+对比</view>
           <view class="restore-btn" @click="restore(v)"
-003e恢复</view>
+恢复</view>
         </view>
       </view>
     </view>

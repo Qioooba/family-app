@@ -1,12 +1,12 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">习惯打卡</view>
     </view>
     
     <view class="habit-stats"
-003e
+>
       <view class="stat-item">
         <text class="stat-num">{{ stats.total }}</text>
         <text class="stat-label">习惯数</text>
@@ -22,26 +22,26 @@
     </view>
     
     <view class="habits-list"
-003e
+>
       <view v-for="habit in habits" :key="habit.id" class="habit-card"
-003e
+>
         <view class="habit-icon" :style="{ background: habit.color }">{{ habit.emoji }}</view>
         
         <view class="habit-info"
-003e
+>
           <text class="habit-name">{{ habit.name }}</text>
           <view class="habit-progress"
-003e
+>
             <view class="progress-dots"
-003e
-              <view v-for="n in 7" :key="n" class="dot" :class="{ active: n <= habit.weekProgress }"></view>
+>
+              <view v-for="n in 7" :key="n" class="dot" :class="{ active: n <= habit.weekProgress }"></text>
             </view>
             <text class="streak-text">连续{{ habit.streak }}天</text>
           </view>
         </view>
         
         <view class="check-btn" :class="{ checked: habit.todayDone }" @click="toggleHabit(habit)"
-003e
+>
           <text v-if="!habit.todayDone">✓</text>
           <text v-else>✓</text>
         </view>

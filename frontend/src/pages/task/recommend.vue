@@ -1,51 +1,51 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">推荐任务</view>
     </view>
     
     <view class="recommend-section"
-003e
+>
       <view class="section-header"
-003e
+>
         <text class="section-title">为您推荐</text>
         <text class="section-subtitle">基于您的习惯智能推荐</text>
       </view>
       
       <view class="recommend-list"
-003e
+>
         <view v-for="item in recommendations" :key="item.id" class="recommend-card"
-003e
+>
           <view class="card-image" :style="{ background: item.color }">
             <text>{{ item.icon }}</text>
           </view>
           
           <view class="card-content"
-003e
+>
             <text class="card-title">{{ item.title }}</text>
             <text class="card-reason">{{ item.reason }}</text>
             <view class="card-tags"
-003e
+>
               <text v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</text>
             </view>
           </view>
           
           <view class="add-btn" @click="addTask(item)"
-003e+ 添加</view>
++ 添加</view>
         </view>
       </view>
     </view>
     
     <view class="history-section"
-003e
+>
       <view class="section-title">📈 历史趋势</view>
       
       <view class="trend-chart"
-003e
+>
         <view v-for="(bar, index) in trends" :key="index" class="trend-bar"
-003e
-          <view class="bar-fill" :style="{ height: bar.value + '%', background: bar.color }"></view>
+>
+          <view class="bar-fill" :style="{ height: bar.value + '%', background: bar.color }"></text>
           <text class="bar-label">{{ bar.day }}</text>
         </view>
       </view>

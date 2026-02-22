@@ -12,7 +12,7 @@
     <scroll-view class="category-tabs" scroll-x>
       <view 
         v-for="(cat, index) in categories" 
-        :key="index"
+        :key="cat.id || index"
         class="category-tab"
         :class="{ active: currentCategory === index }"
         @click="switchCategory(index)"
@@ -39,13 +39,13 @@
     <scroll-view class="task-list" scroll-y>
       <view 
         v-for="(task, index) in filteredTasks" 
-        :key="index"
+        :key="task.id || index"
         class="task-card"
         :class="{ completed: task.status === 2, expanded: task.showSubtasks }"
         @click="viewTask(task)"
       >
         <view class="task-header">
-          <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></view>
+          <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></text>
           <view class="task-title">{{ task.title }}</view>
           <view class="task-priority" :class="'priority-' + task.priority">{{ priorityText(task.priority) }}</view>
         </view>
@@ -58,7 +58,7 @@
         <!-- 子任务进度 -->
         <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
           <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
+            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></text>
           </view>
           <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
         </view>
@@ -67,11 +67,11 @@
         <view v-if="task.showSubtasks && task.subtasks" class="subtask-list">
           <view 
             v-for="(sub, sidx) in task.subtasks" 
-            :key="sidx"
+            :key="sub.id || sidx"
             class="subtask-item"
             @click.stop="toggleSubtask(task, sub)"
           >
-            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
+            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></text>
             <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
           </view>
           <view class="add-subtask" @click.stop="addSubtask(task)">
@@ -121,10 +121,10 @@
             <view v-if="selectedTask.subtasks && selectedTask.subtasks.length > 0" class="subtask-list-detail">
               <view 
                 v-for="(sub, idx) in selectedTask.subtasks" 
-                :key="idx"
+                :key="sub.id || idx"
                 class="subtask-item-detail"
               >
-                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></view>
+                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></text>
                 <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
                 <text class="delete-btn" @click="deleteSubtask(selectedTask, sub, idx)">🗑️</text>
               </view>
@@ -162,7 +162,7 @@
           <view class="priority-options">
             <view 
               v-for="(p, i) in priorities" 
-              :key="i"
+              :key="p || i"
               class="priority-option"
               :class="{ active: newTask.priority === i }"
               @click="newTask.priority = i"

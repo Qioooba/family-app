@@ -15,7 +15,7 @@
         <view class="card-value">{{ todayCalories }}</view>
         <view class="card-unit">千卡 / 目标 2000</view>
         <view class="mini-progress">
-          <view class="mini-fill" :style="{ width: Math.min(todayCalories/2000*100, 100) + '%' }"></view>
+          <view class="mini-fill" :style="{ width: Math.min(todayCalories/2000*100, 100) + '%' }"></text>
         </view>
       </view>
       
@@ -44,7 +44,7 @@
           </view>
           
           <view class="nutrition-bar">
-            <view class="nutrition-fill" :style="{ width: Math.min(item.current/item.target*100, 100) + '%', background: item.color }"></view>
+            <view class="nutrition-fill" :style="{ width: Math.min(item.current/item.target*100, 100) + '%', background: item.color }"></text>
           </view>
         </view>
       </view>
@@ -151,7 +151,7 @@
               :key="idx"
               class="trend-point"
               :style="{ height: calculateTrendHeight(w.weight) }"
-            ></view>
+            ></text>
           </view>
         </view>
       </view>
@@ -160,7 +160,7 @@
     
     <!-- 体重历史弹窗 -->
     <view v-if="showHistoryDlg" class="modal-overlay" @click="closeHistoryModal"
-003e
+>
       <view class="modal-content history-modal" @click.stop>
         <view class="modal-header">
           <text>体重趋势</text>

@@ -5,7 +5,7 @@
       <view class="header-left" @click="goBack">
         <text class="back-icon">‹</text>
       </view>
-      <view class="header-title">任务甘特图</text>
+      <view class="header-title">任务甘特图</view>
       <view class="header-action" @click="showSettings">
         <text class="icon">⚙️</text>
       </view>
@@ -34,8 +34,8 @@
     <!-- 时间范围选择器 -->
     <view class="time-range-selector">
       <view 
-        v-for="range in timeRanges" 
-        :key="range.value"
+        v-for="(range, index) in timeRanges" :key="range.id || index" 
+        
         class="range-option"
         :class="{ active: currentRange === range.value }"
         @click="changeTimeRange(range.value)"
@@ -121,7 +121,7 @@
                 :key="index"
                 class="grid-line"
                 :class="{ 'is-today': date.isToday, weekend: date.isWeekend }"
-              ></view>
+              />
             </view>
             
             <!-- 当前时间线 -->
@@ -158,7 +158,7 @@
                   v-if="task.status === 2 || (task.subtasks && task.subtasks.length > 0)"
                   class="progress-overlay"
                   :style="{ width: getTaskProgress(task) + '%' }"
-                ></view>
+                />
               </view>
               
               <!-- 里程碑标记 -->

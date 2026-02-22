@@ -1,42 +1,42 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">AR增强现实</view>
     </view>
     
     <view class="ar-container"
-003e
+>
       <view class="camera-view"
-003e
+>
         <text class="ar-icon">📷</text>
         <text class="ar-text">AR相机视图</text>
         <text class="ar-hint">将任务标记放置在现实场景中</text>
       </view>
       
       <view class="ar-markers"
-003e
+>
         <view v-for="marker in markers" :key="marker.id" class="ar-marker" :style="{ left: marker.x + '%', top: marker.y + '%' }"
-003e
+>
           <text>📍</text>
         </view>
       </view>
     </view>
     
     <view class="ar-tasks"
-003e
+>
       <view class="section-title">附近的任务</view>
       
       <view v-for="task in nearbyTasks" :key="task.id" class="task-item"
-003e
+>
         <text class="task-icon">{{ task.icon }}</text>
         <view class="task-info"
-003e
+>
           <text class="task-title">{{ task.title }}</text>
           <text class="task-distance">{{ task.distance }}</text>
         </view>
         <view class="place-btn" @click="placeMarker(task)"
-003e放置</view>
+放置</view>
       </view>
     </view>
   </view>

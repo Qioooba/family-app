@@ -1,15 +1,15 @@
 <template>
   <view class="page-container"
-003e
+>
     <view class="header"
-003e
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">AI智能分类</view>
-      <view class="header-action" @click="showHelp"><text>❓</text></view>
+      <view class="header-action" @click="showHelp"><text>❓</text></text>
     </view>
     
     <view class="input-section"
-003e
+>
       <textarea 
         class="task-input" 
         v-model="taskText" 
@@ -20,50 +20,50 @@
     </view>
     
     <view class="classify-btn" :class="{ active: taskText.length > 0 }" @click="classifyTask"
-003e
+>
       <text v-if="!isClassifying">🤖 AI分类</text>
       <text v-else>分析中...</text>
     </view>
     
     <view class="result-section" v-if="classificationResult"
-003e
-      <view class="result-header"><text>📊 分类结果</text></view>
+>
+      <view class="result-header"><text>📊 分类结果</text></text>
       
       <view class="category-card"
-003e
+>
         <view class="category-icon" :style="{ background: classificationResult.color }">
           <text>{{ classificationResult.icon }}</text>
         </view>
         <view class="category-info"
-003e
+>
           <text class="category-name">{{ classificationResult.category }}</text>
           <text class="confidence">置信度 {{ classificationResult.confidence }}%</text>
         </view>
       </view>
       
       <view class="suggestions-list" v-if="classificationResult.suggestions?.length"
-003e
+>
         <text class="suggestions-title">💡 建议</text>
         <view v-for="(s, i) in classificationResult.suggestions" :key="i" class="suggestion-item"
-003e
+>
           <text>{{ s }}</text>
         </view>
       </view>
       
       <view class="action-buttons"
-003e
+>
         <view class="btn-secondary" @click="reset">重新输入</view>
         <view class="btn-primary" @click="createTask">创建任务</view>
       </view>
     </view>
     
     <view class="categories-grid"
-003e
+>
       <text class="grid-title">分类类型</text>
       <view class="grid"
-003e
+>
         <view v-for="cat in categories" :key="cat.name" class="cat-item"
-003e
+>
           <text class="cat-icon">{{ cat.icon }}</text>
           <text class="cat-name">{{ cat.name }}</text>
         </view>

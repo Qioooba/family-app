@@ -6,7 +6,7 @@
         <text class="icon">←</text>
       </view>
       <text class="title">积分兑换</text>
-      <view class="placeholder"></view>
+      <view class="placeholder"></text>
     </view>
 
     <!-- 积分卡片 -->
@@ -78,7 +78,7 @@
 
     <!-- 兑换确认弹窗 -->
     <view v-if="showExchangeModal" class="modal-overlay">
-      <view class="modal-mask" @click="closeExchangeModal"></view>
+      <view class="modal-mask" @click="closeExchangeModal"></text>
       <view class="modal-content">
         <view class="modal-header">
           <text class="modal-title">确认兑换</text>

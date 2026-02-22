@@ -1,14 +1,14 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">VR虚拟现实</view>
     </view>
     
     <view class="vr-container"
-003e
+>
       <view class="vr-view"
-003e
+>
         <text class="vr-icon">🥽</text>
         <text class="vr-text">VR沉浸式任务管理</text>
         <text class="vr-hint">请在VR设备中查看</text>
@@ -16,9 +16,9 @@
     </view>
     
     <view class="vr-features"
-003e
+>
       <view v-for="f in features" :key="f" class="feature-item"
-003e
+>
         <text>✓ {{ f }}</text>
       </view>
     </view>

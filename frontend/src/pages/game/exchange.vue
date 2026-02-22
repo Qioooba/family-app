@@ -3,7 +3,7 @@
 >
     <!-- 顶部导航 -->
     <view class="nav-bar"
-003e
+>
       <view class="back-btn" @click="goBack"
 >
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
@@ -21,16 +21,16 @@
         <view class="points-bg"></view>
         
         <view class="points-content"
-003e
+>
           <text class="points-label">我的积分</text>          
           <view class="points-value-wrap"
-003e
+>
             <text class="points-value" :class="{ 'animate-pulse': isAnimating }">{{ userPoints }}</text>
             <text class="points-unit">分</text>
           </view>
           
           <view class="points-info"
-003e
+>
             <text class="info-item">
               累计获得 {{ totalEarned }}
             </text>
@@ -49,7 +49,7 @@
 
       <!-- 积分动画展示区域 -->
       <view v-if="showPointsAnimation" class="points-animation"
-003e
+>
         <view class="floating-points"
 >
           <text v-for="n in 5" :key="n" class="floating-point" :style="getFloatingStyle(n)">+{{ recentPoints }}</text>
@@ -148,7 +148,7 @@
           </view>
           
           <view v-if="exchangeHistory.length === 0" class="empty-history"
-003e
+>
             <u-icon name="file-text" size="60" color="#ddd"></u-icon>
             <text>暂无兑换记录</text>
           </view>
@@ -164,16 +164,16 @@
       closeable
     >
       <view v-if="selectedGoods" class="exchange-modal"
-003e
+>
         <view class="modal-header"
-003e
+>
           <text class="modal-title">确认兑换</text>
         </view>
 
         <view class="modal-body"
 >
           <view class="goods-preview"
-003e
+>
             <view class="preview-icon"
 >{{ selectedGoods.icon }}</view>
             
@@ -197,14 +197,14 @@
             </view>            
             
             <view class="info-row total"
-003e
+>
               <text class="info-label">兑换后剩余</text>
               <text class="info-value remain">{{ userPoints - selectedGoods.points }} 积分</text>
             </view>
           </view>
 
           <view class="exchange-notice"
-003e
+>
             <u-icon name="info-circle" size="28" color="#FAAD14"></u-icon>
             <text>兑换后积分将立即扣除，虚拟商品将发送至账户</text>
           </view>
@@ -226,21 +226,21 @@
       <view class="success-modal"
 >
         <view class="success-animation"
-003e
+>
           <view class="success-circle"
-003e
+>
             <u-icon name="checkmark" size="60" color="#fff"></u-icon>
           </view>          
           
           <view class="confetti"
-003e
+>
             <text v-for="n in 6" :key="n" class="confetti-piece" :style="getConfettiStyle(n)">🎉</text>
           </view>
         </view>
 
         <text class="success-title">兑换成功！</text>        
         <text class="success-desc"
-003e
+>
           您已成功兑换 {{ exchangedGoods?.name }}
         </text>        
         
@@ -252,7 +252,7 @@
         <view class="success-actions"
 >
           <view class="btn-continue" @click="successModalVisible = false"
-003e
+>
             继续兑换
           </view>          
           

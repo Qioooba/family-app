@@ -1,18 +1,18 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">PWA安装</view>
     </view>
     
     <view class="pwa-content"
-003e
+>
       <view class="pwa-icon">📱</view>
       <text class="pwa-title">安装到主屏幕</text>
       <text class="pwa-desc">像原生应用一样使用，无需下载</text>
       
       <view class="features-list"
-003e
+>
         <view class="feature-item" v-for="f in features" :key="f">
           <text class="check">✓</text>
           <text>{{ f }}</text>
@@ -20,7 +20,7 @@
       </view>
       
       <view class="install-btn" @click="installPWA"
-003e
+>
         <text>立即安装</text>
       </view>
     </view>

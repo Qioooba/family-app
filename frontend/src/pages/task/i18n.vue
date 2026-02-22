@@ -1,27 +1,27 @@
 <template>
   <view class="page-container">
     <view class="header"
-003e
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">国际化</view>
     </view>
     
     <view class="language-section"
-003e
+>
       <text class="section-title">选择语言</text>
       
       <view class="language-list"
-003e
+>
         <view 
-          v-for="lang in languages" 
-          :key="lang.code"
+          v-for="(lang, index) in languages" :key="lang.id || index" 
+          
           class="language-item"
           :class="{ active: currentLang === lang.code }"
           @click="selectLang(lang.code)"
         >
           <text class="lang-flag">{{ lang.flag }}</text>
           <view class="lang-info"
-003e
+>
             <text class="lang-name">{{ lang.name }}</text>
             <text class="lang-local">{{ lang.localName }}</text>
           </view>
@@ -31,11 +31,11 @@
     </view>
     
     <view class="preview-section"
-003e
+>
       <text class="section-title">预览</text>
       
       <view class="preview-card"
-003e
+>
         <text class="preview-label">{{ t('welcome') }}</text>
         <text class="preview-text">{{ t('taskCount', { count: 5 }) }}</text>
       </view>

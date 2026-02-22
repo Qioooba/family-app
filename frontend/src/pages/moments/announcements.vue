@@ -10,7 +10,7 @@
       >
         <text class="icon">✏️</text>
       </view>
-      <view v-else class="navbar-placeholder"></view>
+      <view v-else class="navbar-placeholder"></text>
     </view>
 
     <!-- 置顶公告区 -->

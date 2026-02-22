@@ -1,22 +1,22 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">文件协作</view>
     </view>
     
     <view class="files-list"
-003e
+>
       <view v-for="file in files" :key="file.id" class="file-card"
-003e
+>
         <text class="file-icon">{{ file.icon }}</text>
         <view class="file-info"
-003e
+>
           <text class="file-name">{{ file.name }}</text>
           <text class="file-meta">{{ file.size }} · {{ file.date }}</text>
         </view>
         <view class="file-actions"
-003e
+>
           <text @click="preview(file)">👁️</text>
           <text @click="share(file)">📤</text>
         </view>
@@ -24,7 +24,7 @@
     </view>
     
     <view class="upload-btn" @click="upload"
-003e
+>
       <text>+ 上传文件</text>
     </view>
   </view>

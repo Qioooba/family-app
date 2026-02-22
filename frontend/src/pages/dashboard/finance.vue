@@ -68,7 +68,7 @@
           
           <view class="trend-lines-area">
             <view class="grid-lines">
-              <view v-for="i in 5" :key="i" class="grid-line"></view>
+              <view v-for="i in 5" :key="i" class="grid-line"></text>
             </view>
             
             <!-- SVG 双折线图 -->
@@ -128,11 +128,11 @@
       
       <view class="trend-legend">
         <view class="legend-item">
-          <view class="legend-line income"></view>
+          <view class="legend-line income"></text>
           <text>收入</text>
         </view>
         <view class="legend-item">
-          <view class="legend-line expense"></view>
+          <view class="legend-line expense"></text>
           <text>支出</text>
         </view>
       </view>
@@ -175,7 +175,7 @@
                   background: budget.color
                 }"
                 :class="{ warning: budget.spent / budget.total > 0.8 }"
-              ></view>
+              ></text>
             </view>
             <text class="progress-percent">{{ Math.round((budget.spent / budget.total) * 100) }}%</text>
           </view>
@@ -267,7 +267,7 @@
               :key="index"
               class="pie-slice"
               :style="getPieSliceStyle(index)"
-            ></view>
+            ></text>
             <view class="pie-center">
               <text class="pie-total">¥{{ financeData.totalExpense }}</text>
               <text class="pie-label">总支出</text>
@@ -282,7 +282,7 @@
             class="legend-row"
           >
             <view class="legend-marker">
-              <view class="marker-dot" :style="{ background: item.color }"></view>
+              <view class="marker-dot" :style="{ background: item.color }"></text>
               <text class="marker-label">{{ item.name }}</text>
             </view>
             <view class="legend-values">
@@ -296,7 +296,7 @@
 
     <!-- 周期选择弹窗 -->
     <view v-if="showPeriodPicker" class="modal-overlay">
-      <view class="modal-mask" @click="showPeriodPicker = false"></view>
+      <view class="modal-mask" @click="showPeriodPicker = false"></text>
       <view class="modal-content">
         <view class="modal-header">
           <text>选择周期</text>

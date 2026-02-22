@@ -1,14 +1,14 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">3D展示</view>
     </view>
     
     <view class="three-d-container"
-003e
+>
       <view class="placeholder-3d"
-003e
+>
         <text class="icon-3d">🧊</text>
         <text class="text-3d">3D任务视图</text>
         <text class="hint-3d">旋转查看任务立方体</text>
@@ -16,7 +16,7 @@
     </view>
     
     <view class="controls"
-003e
+>
       <view class="control-btn" v-for="btn in controls" :key="btn" @click="rotate(btn)">
         {{ btn }}
       </view>

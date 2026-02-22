@@ -13,12 +13,12 @@
     
     <!-- 语音识别状态 -->
     <view class="voice-status"
-003e
+>
       <view class="status-animation" :class="{ recording: isRecording }"
-003e
+>
         <view class="voice-waves"
-003e
-          <view v-for="i in 5" :key="i" class="wave-bar" :style="getWaveStyle(i)"></view>
+>
+          <view v-for="(i, index) in 5" :key="i.id || index"  class="wave-bar" :style="getWaveStyle(i)"></text>
         </view>
         
         <view class="voice-icon">
@@ -34,15 +34,15 @@
     
     <!-- 识别结果区域 -->
     <view class="result-section" v-if="recognizedText || parsedTask.title"
-003e
+>
       <view class="section-header"
-003e
+>
         <text class="section-title">识别结果</text>
         <text class="edit-btn" @click="editText">编辑</text>
       </view>
       
       <view class="result-content"
-003e
+>
         <text v-if="!isEditing">{{ recognizedText || parsedTask.title }}</text>
         <textarea 
           v-else
@@ -55,43 +55,43 @@
       
       <!-- 解析的任务信息 -->
       <view class="parsed-info" v-if="parsedTask.title"
-003e
+>
         <view class="info-header">
           <text>📋 解析出的任务信息</text>
         </view>
         
         <view class="info-item"
-003e
+>
           <text class="info-label">任务标题</text>
           <text class="info-value">{{ parsedTask.title }}</text>
         </view>
         
         <view class="info-item" v-if="parsedTask.dueDate"
-003e
+>
           <text class="info-label">截止日期</text>
           <text class="info-value">{{ parsedTask.dueDate }}</text>
         </view>
         
         <view class="info-item" v-if="parsedTask.dueTime"
-003e
+>
           <text class="info-label">截止时间</text>
           <text class="info-value">{{ parsedTask.dueTime }}</text>
         </view>
         
         <view class="info-item" v-if="parsedTask.priority"
-003e
+>
           <text class="info-label">优先级</text>
           <text class="info-value priority" :class="'p' + parsedTask.priority">{{ getPriorityText(parsedTask.priority) }}</text>
         </view>
         
         <view class="info-item" v-if="parsedTask.category"
-003e
+>
           <text class="info-label">分类</text>
           <text class="info-value">{{ parsedTask.category }}</text>
         </view>
         
         <view class="info-item" v-if="parsedTask.assignee"
-003e
+>
           <text class="info-label">负责人</text>
           <text class="info-value">{{ parsedTask.assignee }}</text>
         </view>
@@ -100,11 +100,10 @@
     
     <!-- 示例语音指令 -->
     <view class="examples-section" v-if="!isRecording && !recognizedText"
-003e
-      <view class="section-title">可以说</text>
+>
+      <view class="section-title">可以说</view>
       
-      <view class="examples-list"
-003e
+      <view class="examples-list">
         <view 
           v-for="(example, index) in examples" 
           :key="index"
@@ -119,14 +118,13 @@
     
     <!-- 快捷输入栏 -->
     <view class="quick-input-section" v-if="!isRecording"
-003e
-      <view class="section-title">快捷输入</text>
+>
+      <view class="section-title">快捷输入</view>
       
-      <view class="quick-tags"
-003e
+      <view class="quick-tags">
         <text 
-          v-for="tag in quickTags" 
-          :key="tag"
+          v-for="(tag, index) in quickTags" :key="tag.id || index" 
+          
           class="quick-tag"
           @click="appendTag(tag)"
         >{{ tag }}</text>
@@ -135,43 +133,43 @@
     
     <!-- 底部操作栏 -->
     <view class="bottom-actions"
-003e
+>
       <view v-if="!isRecording" class="action-row"
-003e
+>
         <view class="action-btn secondary" @click="goBack">
           <text>取消</text>
         </view>
         
         <view class="action-btn primary record" @touchstart="startRecording" @touchend="stopRecording"
-003e
+>
           <text class="record-icon">🎤</text>
           <text>按住说话</text>
         </view>
       </view>
       
       <view v-else class="action-row recording"
-003e
+>
         <view class="action-btn secondary" @click="cancelRecording"
-003e
+>
           <text>取消</text>
         </view>
         
         <view class="recording-indicator"
-003e
-          <view class="recording-dot"></view>
+>
+          <view class="recording-dot"></text>
           <text>录音中...</text>
         </view>
       </view>
       
       <view v-if="recognizedText && !isRecording" class="action-row"
-003e
+>
         <view class="action-btn secondary" @click="clearResult"
-003e
+>
           <text>重新录制</text>
         </view>
         
         <view class="action-btn primary" @click="createTask"
-003e
+>
           <text>创建任务</text>
         </view>
       </view>

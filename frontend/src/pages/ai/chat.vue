@@ -9,12 +9,12 @@
       <view class="ai-info">
         <text class="ai-name">AI助手</text>
         <view class="ai-status">
-          <view class="status-dot"></view>
+          <view class="status-dot"></text>
           <text>在线</text>
         </view>
       </view>
       
-      <view class="right-placeholder"></view>
+      <view class="right-placeholder"></text>
     </view>
     
     <!-- 消息列表 -->
@@ -32,8 +32,8 @@
           
           <view class="suggestion-list">
             <view 
-              v-for="suggestion in suggestions" 
-              :key="suggestion"
+              v-for="(suggestion, index) in suggestions" 
+              :key="index"
               class="suggestion-item"
               @click="sendMessage(suggestion)"
             >
@@ -75,8 +75,8 @@
           <!-- 按钮组 -->
           <view v-if="msg.actions" class="message-actions">
             <view 
-              v-for="action in msg.actions" 
-              :key="action.text"
+              v-for="(action, index) in msg.actions" 
+              :key="index"
               class="action-btn"
               @click="handleAction(action)"
             >

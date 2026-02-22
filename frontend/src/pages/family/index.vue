@@ -1,37 +1,36 @@
 <template>
-  <view class="family-page"
-003e
+  <view class="family-page">
     <!-- 家庭信息卡 -->
-    <view class="family-header"
-      <view class="header-bg"></view>
+    <view class="family-header">
+      <view class="header-bg"></text>
       
-      <view class="family-info"
+      <view class="family-info">
         <image class="family-avatar" src="/static/family-avatar.jpg" />
         
-        <view class="family-detail"
+        <view class="family-detail">
           <text class="family-name">幸福小家</text>
           
           <text class="family-id">家庭ID: 88273651</text>
           
-          <view class="member-count"
+          <view class="member-count">
             <u-icon name="account" size="24" color="#fff"></u-icon>
             <text>5位成员</text>
           </view>
         </view>
         
-        <view class="invite-btn" @click="showInvite"
+        <view class="invite-btn" @click="showInvite">
           <text>邀请成员</text>
         </view>
       </view>
     </view>
     
     <!-- 成员列表 -->
-    <view class="members-section"
-      <view class="section-header"
+    <view class="members-section">
+      <view class="section-header">
         <text class="section-title">👨‍👩‍👧‍👦 家庭成员</text>
       </view>
       
-      <view class="member-list"
+      <view class="member-list">
         <view 
           v-for="member in members" 
           :key="member.id"
@@ -39,8 +38,8 @@
         >
           <image class="member-avatar" :src="member.avatar" />
           
-          <view class="member-info"
-            <view class="name-row"
+          <view class="member-info">
+            <view class="name-row">
               <text class="member-name">{{ member.nickname }}</text>
               
               <view v-if="member.role === 'owner'" class="role-tag owner">家主</view>
@@ -57,19 +56,19 @@
     </view>
     
     <!-- 家庭功能 -->
-    <view class="family-features"
-      <view class="section-header"
+    <view class="family-features">
+      <view class="section-header">
         <text class="section-title">🏠 家庭空间</text>
       </view>
       
-      <view class="feature-grid"
+      <view class="feature-grid">
         <view 
           v-for="(feature, index) in features" 
           :key="index"
           class="feature-item"
           @click="goFeature(feature)"
         >
-          <view class="feature-icon" :style="{ background: feature.bgColor }"
+          <view class="feature-icon" :style="{ background: feature.bgColor }">
             <u-icon :name="feature.icon" size="44" color="#fff"></u-icon>
           </view>
           
@@ -79,28 +78,28 @@
     </view>
     
     <!-- 家庭统计数据 -->
-    <view class="family-stats"
-      <view class="section-header"
+    <view class="family-stats">
+      <view class="section-header">
         <text class="section-title">📊 本月统计</text>
       </view>
       
-      <view class="stats-grid"
-        <view class="stat-card"
+      <view class="stats-grid">
+        <view class="stat-card">
           <text class="stat-num">{{ stats.tasksCompleted }}</text>
           <text class="stat-label">任务完成</text>
         </view>
         
-        <view class="stat-card"
+        <view class="stat-card">
           <text class="stat-num">{{ stats.wishesCompleted }}</text>
           <text class="stat-label">心愿实现</text>
         </view>
         
-        <view class="stat-card"
+        <view class="stat-card">
           <text class="stat-num">{{ stats.mealsCooked }}</text>
           <text class="stat-label">家常菜谱</text>
         </view>
         
-        <view class="stat-card"
+        <view class="stat-card">
           <text class="stat-num">{{ stats.photos }}</text>
           <text class="stat-label">家庭照片</text>
         </view>

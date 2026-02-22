@@ -5,7 +5,7 @@
       <view class="header-left" @click="goBack">
         <text class="back-icon">‹</text>
       </view>
-      <view class="header-title">任务时间线</text>
+      <view class="header-title">任务时间线</view>
       <view class="header-action" @click="showFilterModal">
         <text class="icon">🔍</text>
       </view>
@@ -16,13 +16,13 @@
       <view class="selected-task" v-if="currentTask">
         <text class="task-icon">📋</text>
         <view class="task-info"
-003e
+>
           <text class="task-title">{{ currentTask.title }}</text>
           <text class="task-status" :class="'status-' + currentTask.status">{{ getStatusText(currentTask) }}</text>
         </view>
       </view>
       <view class="selected-task empty" v-else
-003e
+>
         <text class="placeholder">选择任务查看历史</text>
       </view>
       <text class="arrow-icon">›</text>
@@ -34,13 +34,13 @@
         <text class="stat-value">{{ timelineStats.totalEvents }}</text>
         <text class="stat-label">操作记录</text>
       </view>
-      <view class="stat-divider"></view>
+      <view class="stat-divider"></text>
       <view class="stat-item"
-003e
+>
         <text class="stat-value">{{ timelineStats.duration }}</text>
         <text class="stat-label">持续天数</text>
       </view>
-      <view class="stat-divider"></view>
+      <view class="stat-divider"></text>
       <view class="stat-item">
         <text class="stat-value">{{ timelineStats.updates }}</text>
         <text class="stat-label">修改次数</text>
@@ -50,7 +50,7 @@
     <!-- 时间线主体 -->
     <scroll-view class="timeline-container" scroll-y v-if="currentTask">
       <view class="timeline"
-003e
+>
         <!-- 时间线起点 -->
         <view class="timeline-start">
           <view class="start-node">
@@ -79,15 +79,15 @@
           }"
         >
           <view class="timeline-marker">
-            <view class="marker-line-top"></view>
+            <view class="marker-line-top"></text>
             <view class="marker-dot">
               <text class="marker-icon">{{ getEventIcon(event) }}</text>
             </view>
-            <view class="marker-line-bottom"></view>
+            <view class="marker-line-bottom"></text>
           </view>
           
           <view class="timeline-content"
-003e
+>
             <view class="event-header">
               <text class="event-title">{{ event.title }}</text>
               <text class="event-time">{{ formatRelativeTime(event.time) }}</text>
@@ -98,11 +98,11 @@
             </view>
             
             <view class="event-changes" v-if="event.changes?.length"
-003e
+>
               <view v-for="(change, cidx) in event.changes" :key="cidx" class="change-item">
                 <text class="change-label">{{ change.field }}:</text>
                 <view class="change-values"
-003e
+>
                   <text class="old-value">{{ change.oldValue || '空' }}</text>
                   <text class="arrow">➜</text>
                   <text class="new-value">{{ change.newValue || '空' }}</text>
@@ -119,7 +119,7 @@
         <!-- 时间线终点 -->
         <view class="timeline-end" v-if="currentTask.status === 2">
           <view class="end-node"
-003e
+>
             <text class="end-icon">✓</text>
           </view>
           <view class="end-content">
@@ -130,10 +130,10 @@
         
         <!-- 当前状态 -->
         <view class="timeline-current" v-else
-003e
+>
           <view class="current-node"
-003e
-            <view class="pulse-ring"></view>
+>
+            <view class="pulse-ring"></text>
             <text class="current-icon">⏳</text>
           </view>
           <view class="current-content">
@@ -144,32 +144,30 @@
       </view>
       
       <!-- 底部空间 -->
-      <view class="bottom-space"></view>
+      <view class="bottom-space"></text>
     </scroll-view>
     
     <!-- 空状态 -->
     <view class="empty-state" v-else
-003e
+>
       <text class="empty-icon">📊</text>
       <text class="empty-title">选择任务查看时间线</text>
       <text class="empty-desc">查看任务从创建到完成的完整历史记录</text>
       <view class="empty-action" @click="showTaskSelector"
-003e
+>
         <text>选择任务</text>
       </view>
     </view>
     
     <!-- 任务选择弹窗 -->
     <view v-if="showTaskModal" class="modal-overlay" @click="closeTaskModal">
-      <view class="modal-content" @click.stop
-003e
+      <view class="modal-content" @click.stop>
         <view class="modal-header">
           <text class="modal-title">选择任务</text>
           <text class="close-btn" @click="closeTaskModal">✕</text>
         </view>
         
-        <view class="search-bar"
-003e
+        <view class="search-bar">
           <input 
             class="search-input" 
             v-model="searchKeyword" 
@@ -178,17 +176,15 @@
           />
         </view>
         
-        <scroll-view class="task-list" scroll-y
-003e
+        <scroll-view class="task-list" scroll-y>
           <view 
-            v-for="task in filteredTasks" 
-            :key="task.id"
+            v-for="(task, index) in filteredTasks" :key="task.id || index" 
+            
             class="task-option"
             :class="{ active: currentTask?.id === task.id }"
             @click="selectTask(task)"
           >
-            <view class="option-status" :class="'status-' + task.status"
-003e</view>
+            <view class="option-status" :class="'status-' + task.status"></view>
             <view class="option-info">
               <text class="option-title">{{ task.title }}</text>
               <text class="option-date">{{ formatDate(task.createdAt) }}</text>
@@ -196,8 +192,7 @@
             <text v-if="currentTask?.id === task.id" class="check-icon">✓</text>
           </view>
           
-          <view v-if="filteredTasks.length === 0" class="no-result"
-003e
+          <view v-if="filteredTasks.length === 0" class="no-result">
             <text>没有找到任务</text>
           </view>
         </scroll-view>

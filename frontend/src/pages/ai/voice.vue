@@ -5,21 +5,21 @@
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">语音输入</text>
-      <view class="right-placeholder"></view>
+      <view class="right-placeholder"></text>
     </view>
     
     <view class="voice-container">
       <!-- 声波动画 -->
       <view class="wave-container">
         <view 
-          v-for="n in 20" 
-          :key="n"
+          v-for="(n, index) in 20" :key="n.id || index" 
+          
           class="wave-bar"
           :style="{ 
             height: isRecording ? (Math.random() * 60 + 20) + '%' : '20%',
             animationDelay: (n * 0.1) + 's'
           }"
-        ></view>
+        ></text>
       </view>
       
       <!-- 录音时间 -->
@@ -81,8 +81,8 @@
         
         <view class="commands-list">
           <view 
-            v-for="cmd in quickCommands" 
-            :key="cmd"
+            v-for="(cmd, index) in quickCommands" :key="cmd.id || index" 
+            
             class="command-item"
             @click="quickRecord(cmd)"
           >

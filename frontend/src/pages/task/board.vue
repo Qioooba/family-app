@@ -5,7 +5,7 @@
       <view class="header-left" @click="goBack">
         <text class="back-icon">‹</text>
       </view>
-      <view class="header-title">任务看板</text>
+      <view class="header-title">任务看板</view>
       <view class="header-right">
         <view class="filter-btn" @click="showFilterOptions">
           <text class="filter-icon">🔍</text>
@@ -44,7 +44,7 @@
         >
           <view class="column-header">
             <view class="column-title">
-              <view class="status-dot" style="background: #6B7280;"></view>
+              <view class="status-dot" style="background: #6B7280;"></text>
               <text>待办</text>
               <text class="count-badge">{{ todoTasks.length }}</text>
             </view>
@@ -86,10 +86,9 @@
                 </text>
               </view>
               
-              <view v-if="task.subtasks?.length > 0" class="card-progress"
-003e
+              <view v-if="task.subtasks?.length > 0" class="card-progress">
                 <view class="mini-progress">
-                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></view>
+                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></text>
                 </view>
                 <text class="progress-text">{{ getProgress(task) }}%</text>
               </view>
@@ -117,7 +116,7 @@
         >
           <view class="column-header blue">
             <view class="column-title">
-              <view class="status-dot" style="background: #3B82F6;"></view>
+              <view class="status-dot" style="background: #3B82F6;"></text>
               <text>进行中</text>
               <text class="count-badge">{{ doingTasks.length }}</text>
             </view>
@@ -158,7 +157,7 @@
               
               <view v-if="task.subtasks?.length > 0" class="card-progress">
                 <view class="mini-progress">
-                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></view>
+                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></text>
                 </view>
                 <text class="progress-text">{{ getProgress(task) }}%</text>
               </view>
@@ -185,7 +184,7 @@
         >
           <view class="column-header green">
             <view class="column-title">
-              <view class="status-dot" style="background: #10B981;"></view>
+              <view class="status-dot" style="background: #10B981;"></text>
               <text>已完成</text>
               <text class="count-badge">{{ doneTasks.length }}</text>
             </view>
@@ -262,8 +261,7 @@
           <text class="close-btn" @click="closeModal">✕</text>
         </view>
         
-        <view class="form-item"
-003e
+        <view class="form-item">
           <text class="label">任务标题</text>
           <input class="input" v-model="newTask.title" placeholder="输入任务标题" />
         </view>
@@ -272,13 +270,13 @@
           <text class="label">状态</text>
           <view class="status-options">
             <view 
-              v-for="status in statuses" 
-              :key="status.value"
+              v-for="(status, index) in statuses" :key="status.id || index" 
+              
               class="status-option"
               :class="{ active: newTask.status === status.value }"
               @click="newTask.status = status.value"
             >
-              <view class="status-dot" :style="{ background: status.color }"></view>
+              <view class="status-dot" :style="{ background: status.color }"></text>
               <text>{{ status.label }}</text>
             </view>
           </view>
@@ -293,8 +291,7 @@
         
         <view class="form-item">
           <text class="label">优先级</text>
-          <view class="priority-options"
-003e
+          <view class="priority-options">
             <view 
               v-for="(p, i) in priorities" 
               :key="i"
@@ -655,7 +652,7 @@ const showFilterOptions = () => {
     success: (res) => {
       uni.showToast({ title: '筛选功能开发中', icon: 'none' })
     }
-  }}
+  })
 }
 
 const switchView = (view) => {

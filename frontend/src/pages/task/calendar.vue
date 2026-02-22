@@ -76,7 +76,7 @@
                     'high-priority': task.priority === 2 && task.status !== 2,
                     'medium-priority': task.priority === 1 && task.status !== 2
                   }"
-                ></view>
+                ></text>
                 <text v-if="day.tasks.length > 3" class="more-tasks">+{{ day.tasks.length - 3 }}</text>
               </view>
               
@@ -153,7 +153,7 @@
             <!-- 子任务进度 -->
             <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
               <view class="progress-bar">
-                <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
+                <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></text>
               </view>
               <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
             </view>
@@ -309,7 +309,7 @@
               class="subtask-item"
               @click="toggleSubtask(sub)"
             >
-              <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
+              <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></text>
               <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
             </view>
           </view>

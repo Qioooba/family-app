@@ -8,7 +8,7 @@
       <view class="header-title">任务依赖图</view>
       <view class="header-right">
         <view class="action-btn" @click="toggleLayout"
-003e
+>
           <text class="btn-icon">🔄</text>
         </view>
         <view class="action-btn" @click="showHelp">
@@ -23,18 +23,18 @@
         <text class="stat-value">{{ stats.total }}</text>
         <text class="stat-label">总任务</text>
       </view>
-      <view class="stat-divider"></view>
+      <view class="stat-divider"></text>
       <view class="stat-item">
         <text class="stat-value">{{ stats.independent }}</text>
         <text class="stat-label">独立任务</text>
       </view>
-      <view class="stat-divider"></view>
+      <view class="stat-divider"></text>
       <view class="stat-item"
-003e
+>
         <text class="stat-value">{{ stats.withDependencies }}</text>
         <text class="stat-label">有依赖</text>
       </view>
-      <view class="stat-divider"></view>
+      <view class="stat-divider"></text>
       <view class="stat-item">
         <text class="stat-value" :class="{ warning: stats.circular > 0 }">{{ stats.circular }}</text>
         <text class="stat-label">循环依赖</text>
@@ -54,19 +54,19 @@
       <!-- 图例 -->
       <view class="legend">
         <view class="legend-item">
-          <view class="legend-dot" style="background: #10B981;"></view>
+          <view class="legend-dot" style="background: #10B981;"></text>
           <text>已完成</text>
         </view>
         <view class="legend-item">
-          <view class="legend-dot" style="background: #3B82F6;"></view>
+          <view class="legend-dot" style="background: #3B82F6;"></text>
           <text>进行中</text>
         </view>
         <view class="legend-item">
-          <view class="legend-dot" style="background: #6B7280;"></view>
+          <view class="legend-dot" style="background: #6B7280;"></text>
           <text>待办</text>
         </view>
         <view class="legend-item">
-          <view class="legend-line"></view>
+          <view class="legend-line"></text>
           <text>依赖关系</text>
         </view>
       </view>
@@ -111,8 +111,8 @@
           
           <!-- 任务节点 -->
           <view 
-            v-for="node in nodes" 
-            :key="node.id"
+            v-for="(node, index) in nodes" :key="node.id || index" 
+            
             class="task-node"
             :class="{
               'status-done': node.status === 2,
@@ -131,10 +131,9 @@
               <text class="node-title">{{ truncateText(node.title, 6) }}</text>
               
               <view class="node-meta">
-                <text v-if="node.dueDate" class="node-date"
-003e{{ formatDate(node.dueDate) }}</text>
+                <text v-if="node.dueDate" class="node-date">{{ formatDate(node.dueDate) }}</text>
                 <view v-if="node.dependencies?.length > 0" class="dependency-badge"
-003e
+>
                   <text>🔗{{ node.dependencies.length }}</text>
                 </view>
               </view>
@@ -142,7 +141,7 @@
             
             <!-- 依赖指示器 -->
             <view v-if="node.dependencies?.length > 0" class="dependency-indicator in"
-003e
+>
               <text>←</text>
             </view>
             <view v-if="node.isDependency" class="dependency-indicator out">
@@ -152,7 +151,7 @@
           
           <!-- 空状态 -->
           <view v-if="nodes.length === 0" class="graph-empty"
-003e
+>
             <text class="empty-icon">🔗</text>
             <text class="empty-text">暂无任务依赖关系</text>
             <text class="empty-hint">在任务详情中设置前置任务来创建依赖</text>
@@ -163,10 +162,10 @@
     
     <!-- 选中节点详情 -->
     <view v-if="selectedNode" class="node-detail-panel"
-003e
+>
       <view class="panel-header">
         <view class="panel-title">
-          <view class="status-dot" :class="'status-' + selectedNode.status"></view>
+          <view class="status-dot" :class="'status-' + selectedNode.status"></text>
           <text>{{ selectedNode.title }}</text>
         </view>
         <text class="close-btn" @click="selectedNode = null">✕</text>

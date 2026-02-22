@@ -17,12 +17,12 @@
         <text class="stats-num">{{ stats.unused }}</text>
         <text class="stats-label">未使用</text>
       </view>
-      <view class="stats-divider"></view>
+      <view class="stats-divider"></text>
       <view class="stats-item">
         <text class="stats-num used">{{ stats.used }}</text>
         <text class="stats-label">已使用</text>
       </view>
-      <view class="stats-divider"></view>
+      <view class="stats-divider"></text>
       <view class="stats-item">
         <text class="stats-num expired">{{ stats.expired }}</text>
         <text class="stats-label">已过期</text>
@@ -39,7 +39,7 @@
         @click="currentTab = tab.value"
       >
         <text>{{ tab.label }}</text>
-        <view v-if="currentTab === tab.value" class="tab-line"></view>
+        <view v-if="currentTab === tab.value" class="tab-line"></text>
       </view>
     </view>
 
@@ -203,7 +203,7 @@
             <text class="label">有效期至</text>
             <view class="date-picker" @click="showDatePicker">
               <text :class="{ 'placeholder': !form.expireDate }"
-003e
+>
                 {{ form.expireDate || '请选择到期日期' }}
               </text>
               <u-icon name="calendar" size="32" color="#999"></u-icon>

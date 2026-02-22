@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">实时同步</view>
       <view class="sync-status" :class="{ online: isOnline }">
         <text>{{ isOnline ? '在线' : '离线' }}</text>
@@ -9,32 +9,32 @@
     </view>
     
     <view class="sync-stats"
-003e
+>
       <view class="stat-item"
-003e
+>
         <text class="stat-value">{{ syncStats.pending }}</text>
         <text class="stat-label">待同步</text>
       </view>
       <view class="stat-item"
-003e
+>
         <text class="stat-value">{{ syncStats.synced }}</text>
         <text class="stat-label">已同步</text>
       </view>
       <view class="stat-item"
-003e
+>
         <text class="stat-value">{{ syncStats.conflicts }}</text>
         <text class="stat-label">冲突</text>
       </view>
     </view>
     
     <view class="sync-log"
-003e
+>
       <view class="section-title">同步日志</view>
       
       <view class="log-list"
-003e
+>
         <view v-for="(log, index) in syncLogs" :key="index" class="log-item" :class="log.type"
-003e
+>
           <text class="log-time">{{ log.time }}</text>
           <text class="log-message">{{ log.message }}</text>
         </view>
@@ -42,9 +42,9 @@
     </view>
     
     <view class="sync-actions"
-003e
+>
       <view class="action-btn" @click="forceSync"
-003e强制同步</view>
+强制同步</view>
       <view class="action-btn secondary" @click="clearCache">清除缓存</view>
     </view>
   </view>

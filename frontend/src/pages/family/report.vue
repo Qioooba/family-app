@@ -4,7 +4,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack"
-003e
+>
         <u-icon name="arrow-left" size="40" color="#fff"></u-icon>
       </view>
       <text class="title">家庭报告</text>
@@ -45,16 +45,16 @@
             <view 
               class="ring-progress"
               :style="{ transform: `rotate(${reportData.score * 3.6}deg)` }"
-            ></view>
+            ></text>
             <view class="ring-center"
-003e
+>
               <text class="score-value">{{ reportData.score }}</text>
               <text class="score-label">家庭分</text>
             </view>
           </view>
           
           <view class="score-rank"
-003e
+>
             <text class="rank-text">超越 {{ reportData.rank }}% 家庭</text>
             <view class="trend-badge" :class="reportData.trend"
 >
@@ -69,7 +69,7 @@
         </view>
 
         <view class="score-dimensions"
-003e
+>
           <view
             v-for="dim in reportData.dimensions"
             :key="dim.name"
@@ -86,7 +86,7 @@
               <view 
                 class="dim-fill"
                 :style="{ width: dim.score + '%', background: dim.color }"
-              ></view>
+              ></text>
             </view>
           </view>
         </view>
@@ -94,14 +94,14 @@
 
       <!-- 成员贡献排行 -->
       <view class="members-section"
-003e
+>
         <view class="section-header">
           <text class="section-title">成员贡献</text>
           <text class="view-detail" @click="viewMemberDetail">查看详情 ›</text>
         </view>
 
         <view class="members-list"
-003e
+>
           <view
             v-for="(member, index) in reportData.members"
             :key="member.name"
@@ -137,7 +137,7 @@
         </view>
 
         <view class="tasks-stats"
-003e
+>
           <view class="stat-item"
 >
             <text class="stat-num">{{ reportData.tasks.total }}</text>
@@ -145,7 +145,7 @@
           </view>          
           
           <view class="stat-item completed"
-003e
+>
             <text class="stat-num">{{ reportData.tasks.completed }}</text>
             <text class="stat-label">已完成</text>
           </view>          
@@ -164,24 +164,24 @@
         </view>
 
         <view class="tasks-chart"
-003e
+>
           <text class="chart-title">任务类型分布</text>          
           
           <view class="chart-bars"
-003e
+>
             <view
               v-for="type in reportData.tasks.byType"
               :key="type.name"
               class="chart-bar-item"
             >
               <view class="bar-label"
-003e{{ type.name }}</view>              
+{{ type.name }}</view>              
               
               <view class="bar-visual">
                 <view 
                   class="bar-fill"
                   :style="{ width: type.percent + '%', background: type.color }"
-                ></view>
+                ></text>
                 <text class="bar-value">{{ type.count }}</text>
               </view>            
             </view>
@@ -199,7 +199,7 @@
         </view>
 
         <view class="expense-chart"
-003e
+>
           <view class="pie-chart">
             <view class="pie-center">
               <text class="center-label">总支出</text>
@@ -213,7 +213,7 @@
               :key="item.name"
               class="legend-item"
             >
-              <view class="legend-dot" :style="{ background: item.color }"></view>
+              <view class="legend-dot" :style="{ background: item.color }"></text>
               <view class="legend-info"
 >
                 <text class="legend-name">{{ item.name }}</text>
@@ -229,7 +229,7 @@
       <!-- 心情趋势 -->
       <view class="mood-section">
         <view class="section-header"
-003e
+>
           <text class="section-title">家庭心情指数</text>
           <view class="mood-average"
 >
@@ -239,7 +239,7 @@
         </view>
 
         <view class="mood-chart"
-003e
+>
           <view class="mood-timeline"
 >
             <view

@@ -49,7 +49,7 @@
                 class="bar" 
                 :style="{ height: getBarHeight(item.calories) + '%' }"
                 :class="{ high: item.calories > 2500, low: item.calories < 1500 }"
-              ></view>
+              ></text>
             </view>
             <view class="bar-label">{{ getWeekDay(index) }}</view>
             <view class="bar-value">{{ item.calories }}</view>
@@ -70,8 +70,8 @@
       <view class="stats-row">
         <view class="stat-circle">
           <view class="circle-chart">
-            <view class="circle-bg"></view>
-            <view class="circle-progress" :style="{ '--progress': taskCompletionRate + '%' }"></view>
+            <view class="circle-bg"></text>
+            <view class="circle-progress" :style="{ '--progress': taskCompletionRate + '%' }"></text>
             <view class="circle-text">
               <text class="percentage">{{ taskCompletionRate }}%</text>
               <text class="label">完成率</text>
@@ -84,7 +84,7 @@
                 v-for="(item, index) in taskStatusList" 
                 :key="index"
           >
-            <view class="detail-dot" :style="{ background: item.color }"></view>
+            <view class="detail-dot" :style="{ background: item.color }"></text>
             <view class="detail-info">
               <text class="detail-value">{{ item.count }}</text>
               <text class="detail-label">{{ item.label }}</text>

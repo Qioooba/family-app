@@ -20,17 +20,17 @@
           <view class="water-drop"
 >
             <view class="drop-bg"
-></view>
+></text>
             <view 
               class="drop-fill"
               :style="{ height: waterPercent + '%' }"
             >
-              <view class="wave wave1"></view>
-              <view class="wave wave2"></view>
+              <view class="wave wave1"></text>
+              <view class="wave wave2"></text>
             </view>
             
             <view class="drop-content"
-003e
+>
               <text class="water-amount">{{ todayIntake }}</text>
               <text class="water-unit">毫升</text>
               <text class="water-target">目标 {{ dailyTarget }}ml</text>
@@ -46,7 +46,7 @@
 
         <!-- 8杯水进度 -->
         <view class="cups-section"
-003e
+>
           <text class="cups-title">今日8杯水</text>
           
           <view class="cups-grid"
@@ -68,7 +68,7 @@
               </view>
               
               <text class="cup-label"
-003e
+>
                 {{ cupLabels[index] || `第${index + 1}杯` }}
               </text>
             </view>
@@ -112,7 +112,7 @@
             class="record-item"
           >
             <view class="record-info"
-003e
+>
               <view class="record-icon">{{ record.icon }}</view>
               <view class="record-detail">
                 <text class="record-name">{{ record.name }}</text>
@@ -132,7 +132,7 @@
           </view>
           
           <view v-if="waterRecords.length === 0" class="empty-records"
-003e
+>
             <u-icon name="file-text" size="60" color="#ddd"></u-icon>
             <text>今天还没有喝水记录</text>
           </view>
@@ -141,11 +141,11 @@
 
       <!-- 喝水提醒 -->
       <view class="reminder-section"
-003e
+>
         <view class="reminder-card"
 >
           <view class="reminder-info"
-003e
+>
             <u-icon name="bell" size="40" color="#1890FF"></u-icon>
             <view class="reminder-text"
 >
@@ -193,7 +193,7 @@
                 class="bar-fill"
                 :style="{ height: (day.amount / dailyTarget * 100) + '%' }"
                 :class="{ completed: day.amount >= dailyTarget }"
-              ></view>
+              ></text>
             </view>
             
             <text class="day-label">{{ day.short }}</text>
@@ -212,7 +212,7 @@
       closeable
     >
       <view class="settings-content"
-003e
+>
         <view class="settings-header"
 >
           <text class="settings-title">喝水设置</text>

@@ -17,8 +17,7 @@
         <text class="section-title">重复频率</text>
         <view class="repeat-type-tabs">
           <view
-            v-for="type in repeatTypes"
-            :key="type.value"
+            v-for="(type, index) in repeatTypes" :key="type.id || index"
             class="type-tab"
             :class="{ active: repeatType === type.value }"
             @click="selectRepeatType(type.value)"
@@ -120,8 +119,7 @@
           <view v-if="monthlyType === 'date'" class="date-selector">
             <view class="date-grid">
               <view
-                v-for="date in 31"
-                :key="date"
+                v-for="(date, index) in 31" :key="index"
                 class="date-item"
                 :class="{ active: selectedDates.includes(date) }"
                 @click="toggleDate(date)"
@@ -149,8 +147,7 @@
               <text class="week-label">第</text>
               <view class="week-number-list">
                 <view
-                  v-for="n in 5"
-                  :key="n"
+                  v-for="(n, index) in 5" :key="index"
                   class="week-number"
                   :class="{ active: selectedWeekNumbers.includes(n) }"
                   @click="toggleWeekNumber(n)"
@@ -196,14 +193,13 @@
         <text class="section-title">结束方式</text>
         <view class="end-options">
           <view
-            v-for="option in endOptions"
-            :key="option.value"
+            v-for="(option, index) in endOptions" :key="option.id || index"
             class="end-option-card"
             :class="{ active: endType === option.value }"
             @click="selectEndType(option.value)"
           >
             <view class="option-radio">
-              <view class="radio-inner" v-if="endType === option.value"></view>
+              <view class="radio-inner" v-if="endType === option.value"></text>
             </view>
             <view class="option-content">
               <text class="option-title">{{ option.label }}</text>

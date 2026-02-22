@@ -1,49 +1,49 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">数据统计</view>
     </view>
     
     <view class="stats-overview"
-003e
+>
       <view class="overview-card"
-003e
+>
         <text class="card-value">{{ stats.total }}</text>
         <text class="card-label">总任务</text>
       </view>
       <view class="overview-card"
-003e
+>
         <text class="card-value">{{ stats.completed }}</text>
         <text class="card-label">已完成</text>
       </view>
       <view class="overview-card"
-003e
+>
         <text class="card-value">{{ stats.rate }}%</text>
         <text class="card-label">完成率</text>
       </view>
     </view>
     
     <view class="charts-section"
-003e
+>
       <view class="section-title">任务趋势</view>
       <view class="chart-placeholder"
-003e
+>
         <text>📈 图表区域</text>
       </view>
     </view>
     
     <view class="distribution-section"
-003e
+>
       <view class="section-title">分类分布</view>
       
       <view class="distribution-list"
-003e
+>
         <view v-for="item in distribution" :key="item.name" class="dist-item"
-003e
+>
           <text class="dist-name">{{ item.name }}</text>
           <view class="dist-bar">
-            <view class="dist-fill" :style="{ width: item.percent + '%', background: item.color }"></view>
+            <view class="dist-fill" :style="{ width: item.percent + '%', background: item.color }"></text>
           </view>
           <text class="dist-value">{{ item.value }}</text>
         </view>

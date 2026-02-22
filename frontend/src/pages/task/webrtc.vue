@@ -1,16 +1,16 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></view>
+      <view class="header-left" @click="goBack"><text>‹</text></text>
       <view class="header-title">WebRTC视频</view>
     </view>
     
     <view class="video-section"
-003e
+>
       <view class="video-grid"
-003e
+>
         <view v-for="user in users" :key="user.id" class="video-item"
-003e
+>
           <view class="video-placeholder" :style="{ background: user.color }">
             <text>{{ user.name[0] }}</text>
           </view>
@@ -20,7 +20,7 @@
     </view>
     
     <view class="controls-bar"
-003e
+>
       <view class="control-btn" @click="toggleMic">🎤</view>
       <view class="control-btn" @click="toggleCam">📹</view>
       <view class="control-btn end" @click="endCall">📞</view>

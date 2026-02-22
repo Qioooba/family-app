@@ -24,15 +24,15 @@
         <view class="cup-container">
           <view class="cup">
             <view class="water" :style="{ height: waterPercent + '%' }">
-              <view class="water-wave"></view>
+              <view class="water-wave"></text>
             </view>
             <view class="cup-markings">
-              <view class="marking" style="top: 25%"></view>
-              <view class="marking" style="top: 50%"></view>
-              <view class="marking" style="top: 75%"></view>
+              <view class="marking" style="top: 25%"></text>
+              <view class="marking" style="top: 50%"></text>
+              <view class="marking" style="top: 75%"></text>
             </view>
           </view>
-          <view class="cup-stand"></view>
+          <view class="cup-stand"></text>
         </view>
 
         <!-- 喝水数据 -->

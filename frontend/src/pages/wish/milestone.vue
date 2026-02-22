@@ -21,7 +21,7 @@
           
           <view class="wish-progress">
             <view class="progress-bar">
-              <view class="progress-fill" :style="{ width: wish.progress + '%' }"></view>
+              <view class="progress-fill" :style="{ width: wish.progress + '%' }"></text>
             </view>
             <text class="progress-text">{{ wish.progress }}%</text>
           </view>
@@ -57,7 +57,7 @@
           <text class="section-title">实现路径</text>
           
           <view class="filter-tabs"
-003e
+>
             <view
               v-for="tab in filterTabs"
               :key="tab.value"
@@ -84,7 +84,7 @@
             >
               <!-- 时间线左侧 -->
               <view class="timeline-left"
-003e
+>
                 <text class="milestone-date">{{ formatDate(milestone.date) }}</text>
                 <text class="milestone-time">{{ milestone.time || '' }}</text>
               </view>
@@ -98,17 +98,17 @@
                     size="20" 
                     color="#fff"
                   ></u-icon>
-                  <view v-else-if="milestone.status === 'active'" class="pulse-dot"></view>
+                  <view v-else-if="milestone.status === 'active'" class="pulse-dot"></text>
                 </view>
-                <view v-if="index !== filteredMilestones.length - 1" class="axis-line"></view>
+                <view v-if="index !== filteredMilestones.length - 1" class="axis-line"></text>
               </view>
 
               <!-- 时间线内容 -->
               <view class="timeline-content">
                 <view class="milestone-card" @click="showMilestoneDetail(milestone)"
-003e
+>
                   <view class="milestone-header"
-003e
+>
                     <text class="milestone-title">{{ milestone.title }}</text>
                     
                     <view class="milestone-status" :class="milestone.status">
@@ -186,7 +186,7 @@
     >
       <view class="modal-content">
         <view class="modal-header"
-003e
+>
           <text class="modal-title">{{ isEditing ? '编辑里程碑' : '添加里程碑' }}</text>
         </view>
 
@@ -201,7 +201,7 @@
           </view>
 
           <view class="form-item"
-003e
+>
             <text class="form-label">描述</text>
             <textarea
               v-model="milestoneForm.description"
@@ -223,7 +223,7 @@
             <view class="form-item half">
               <text class="form-label">时间</text>
               <picker mode="time" :value="milestoneForm.time" @change="onTimeChange"
-003e
+>
                 <view class="picker-value">
                   {{ milestoneForm.time || '选择时间' }}
                 </view>

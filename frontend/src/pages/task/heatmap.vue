@@ -6,8 +6,7 @@
         <text class="back-icon">‹</text>
       </view>
       <view class="header-title">任务热力图</view>
-      <view class="header-action" @click="showDatePicker"
-003e
+      <view class="header-action" @click="showDatePicker">
         <text class="icon">📅</text>
       </view>
     </view>
@@ -18,18 +17,15 @@
         <text class="stat-number">{{ stats.total }}</text>
         <text class="stat-label">年度完成</text>
       </view>
-      <view class="stat-card streak"
-003e
+      <view class="stat-card streak">
         <text class="stat-number">{{ stats.streak }}</text>
         <text class="stat-label">连续天数</text>
       </view>
-      <view class="stat-card best"
-003e
+      <view class="stat-card best">
         <text class="stat-number">{{ stats.best }}</text>
         <text class="stat-label">单日最佳</text>
       </view>
-      <view class="stat-card avg"
-003e
+      <view class="stat-card avg">
         <text class="stat-number">{{ stats.avg }}</text>
         <text class="stat-label">日均完成</text>
       </view>
@@ -38,14 +34,12 @@
     <!-- 当前月份/年份显示 -->
     <view class="date-display">
       <text class="year-text">{{ currentYear }}年</text>
-      <view class="month-selector"
-003e
+      <view class="month-selector">
         <text class="nav-arrow" @click="prevYear">‹</text>
-        <view class="months-row"
-003e
+        <view class="months-row">
           <text 
-            v-for="m in 12" 
-            :key="m"
+            v-for="(m, index) in 12" :key="m.id || index" 
+            
             class="month-tag"
             :class="{ active: selectedMonth === m }"
             @click="selectMonth(m)"
@@ -56,35 +50,29 @@
     </view>
     
     <!-- 热力图主体 -->
-    <view class="heatmap-container"
-003e
-      <view class="heatmap-header"
-003e
+    <view class="heatmap-container">
+      <view class="heatmap-header">
         <text class="heatmap-title">{{ selectedMonth }}月完成热力图</text>
-        <view class="level-legend"
-003e
+        <view class="level-legend">
           <text>少</text>
-          <view class="level-box level-0"></view>
-          <view class="level-box level-1"></view>
-          <view class="level-box level-2"></view>
-          <view class="level-box level-3"></view>
-          <view class="level-box level-4"></view>
+          <view class="level-box level-0"></text>
+          <view class="level-box level-1"></text>
+          <view class="level-box level-2"></text>
+          <view class="level-box level-3"></text>
+          <view class="level-box level-4"></text>
           <text>多</text>
         </view>
       </view>
       
       <!-- 月份热力图 -->
-      <view class="month-heatmap"
-003e
+      <view class="month-heatmap">
         <!-- 星期标题 -->
-        <view class="weekday-labels"
-003e
-          <text v-for="day in weekdays" :key="day">{{ day }}</text>
+        <view class="weekday-labels">
+          <text v-for="(day, index) in weekdays" :key="day.id || index" >{{ day }}</text>
         </view>
         
         <!-- 日期网格 -->
-        <view class="days-grid"
-003e
+        <view class="days-grid">
           <view 
             v-for="(day, index) in monthDays" 
             :key="index"
@@ -110,8 +98,7 @@
         <text class="section-subtitle">{{ yearTotalCompleted }} 次完成</text>
       </view>
       
-      <view class="year-grid"
-003e
+      <view class="year-grid">
         <view 
           v-for="(week, wIndex) in yearWeeks" 
           :key="wIndex"
@@ -123,40 +110,34 @@
             class="year-day"
             :class="{ [`level-${day.level}`]: day.level >= 0 }"
             @click="showDayDetail(day)"
-          ></view>
+          ></text>
         </view>
       </view>
       
-      <view class="year-labels"
-003e
+      <view class="year-labels">
         <text v-for="month in [1,4,7,10]" :key="month">{{ month }}月</text>
       </view>
     </view>
     
     <!-- 分类统计 -->
-    <view class="category-stats" v-if="categoryStats.length > 0"
-003e
-      <view class="section-header"
-003e
+    <view class="category-stats" v-if="categoryStats.length > 0">
+      <view class="section-header">
         <text class="section-title">分类统计</text>
       </view>
       
-      <view class="category-list"
-003e
+      <view class="category-list">
         <view 
-          v-for="cat in categoryStats" 
-          :key="cat.name"
+          v-for="(cat, index) in categoryStats" :key="cat.id || index" 
+          
           class="category-item"
         >
-          <view class="category-info"
-003e
+          <view class="category-info">
             <text class="category-name">{{ cat.name }}</text>
             <text class="category-count">{{ cat.count }} 次</text>
           </view>
           
-          <view class="category-bar"
-003e
-            <view class="category-progress" :style="{ width: cat.percentage + '%', background: cat.color }"></view>
+          <view class="category-bar">
+            <view class="category-progress" :style="{ width: cat.percentage + '%', background: cat.color }"></text>
           </view>
           
           <text class="category-percent">{{ cat.percentage }}%</text>
@@ -165,25 +146,20 @@
     </view>
     
     <!-- 每日详情弹窗 -->
-    <view v-if="selectedDay" class="modal-overlay" @click="closeDayDetail"
-003e
-      <view class="modal-content" @click.stop
-003e
+    <view v-if="selectedDay" class="modal-overlay" @click="closeDayDetail">
+      <view class="modal-content" @click.stop>
         <view class="modal-header">
           <text class="modal-title">{{ selectedDay.fullDate }} 完成详情</text>
           <text class="close-btn" @click="closeDayDetail">✕</text>
         </view>
         
-        <view class="modal-body"
-003e
-          <view class="day-summary"
-003e
+        <view class="modal-body">
+          <view class="day-summary">
             <text class="summary-number">{{ selectedDay.count }}</text>
             <text class="summary-label">完成任务数</text>
           </view>
           
-          <view class="completed-list" v-if="selectedDay.tasks?.length > 0"
-003e
+          <view class="completed-list" v-if="selectedDay.tasks?.length > 0">
             <view 
               v-for="task in selectedDay.tasks" 
               :key="task.id"
@@ -195,8 +171,7 @@
             </view>
           </view>
           
-          <view v-else class="empty-day"
-003e
+          <view v-else class="empty-day">
             <text>这一天没有完成任务</text>
           </view>
         </view>

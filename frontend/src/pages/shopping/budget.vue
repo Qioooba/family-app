@@ -32,7 +32,7 @@
             <text class="info-value" :class="{ danger: usedPercent > 80 }">{{ usedPercent }}%</text>
             <text class="info-label">已使用</text>
           </view>
-          <view class="info-divider"></view>
+          <view class="info-divider"></text>
           <view class="info-item">
             <text class="info-value">¥{{ remainingAmount }}</text>
             <text class="info-label">剩余预算</text>
@@ -75,7 +75,7 @@
             class="progress-bar" 
             :style="{ width: category.percent + '%' }"
             :class="{ warning: category.percent > 80, danger: category.percent > 100 }"
-          ></view>
+          ></text>
         </view>
 
         <view class="category-footer">
@@ -103,12 +103,12 @@
             <view 
               class="budget-bar" 
               :style="{ height: month.budgetPercent + '%' }"
-            ></view>
+            ></text>
             <view 
               class="used-bar" 
               :style="{ height: month.usedPercent + '%' }"
               :class="{ over: month.usedPercent > month.budgetPercent }"
-            ></view>
+            ></text>
           </view>
           <text class="amount-label">¥{{ month.used }}</text>
         </view>
@@ -116,11 +116,11 @@
 
       <view class="legend">
         <view class="legend-item">
-          <view class="legend-dot budget"></view>
+          <view class="legend-dot budget"></text>
           <text>预算</text>
         </view>
         <view class="legend-item">
-          <view class="legend-dot used"></view>
+          <view class="legend-dot used"></text>
           <text>实际支出</text>
         </view>
       </view>

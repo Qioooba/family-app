@@ -35,8 +35,8 @@
         <text class="results-count">{{ searchResults.length }}个结果</text>
       </view>
       <view
-        v-for="food in searchResults"
-        :key="food.id"
+        v-for="(food, index) in searchResults" :key="food.id || index"
+        
         class="food-item"
         @click="showFoodDetail(food)"
       >
@@ -55,8 +55,8 @@
       <view class="category-tabs">
         <scroll-view scroll-x class="tabs-scroll">
           <view
-            v-for="cat in categories"
-            :key="cat.value"
+            v-for="(cat, index) in categories" :key="cat.id || index"
+            
             class="tab-item"
             :class="{ active: currentCategory === cat.value }"
             @click="switchCategory(cat.value)"
@@ -70,8 +70,8 @@
       <view class="category-content">
         <view class="foods-grid">
           <view
-            v-for="food in categoryFoods"
-            :key="food.id"
+            v-for="(food, index) in categoryFoods" :key="food.id || index"
+            
             class="food-card"
             @click="showFoodDetail(food)"
           >
@@ -90,8 +90,8 @@
       </view>
       <view class="favorites-list">
         <view
-          v-for="food in favorites"
-          :key="food.id"
+          v-for="(food, index) in favorites" :key="food.id || index"
+          
           class="favorite-item"
           @click="showFoodDetail(food)"
         >
@@ -149,8 +149,8 @@
           <view class="detail-item">
             <text class="item-label">蛋白质</text>
             <view class="item-bar"
-003e
-              <view class="bar-fill protein" :style="{ width: getPercent('protein') }"></view>
+>
+              <view class="bar-fill protein" :style="{ width: getPercent('protein') }"></text>
             </view>
             <text class="item-value">{{ currentFood.protein || 0 }}g</text>
           </view>
@@ -158,7 +158,7 @@
           <view class="detail-item">
             <text class="item-label">脂肪</text>
             <view class="item-bar">
-              <view class="bar-fill fat" :style="{ width: getPercent('fat') }"></view>
+              <view class="bar-fill fat" :style="{ width: getPercent('fat') }"></text>
             </view>
             <text class="item-value">{{ currentFood.fat || 0 }}g</text>
           </view>
@@ -166,7 +166,7 @@
           <view class="detail-item">
             <text class="item-label">碳水化合物</text>
             <view class="item-bar">
-              <view class="bar-fill carbs" :style="{ width: getPercent('carbohydrates') }"></view>
+              <view class="bar-fill carbs" :style="{ width: getPercent('carbohydrates') }"></text>
             </view>
             <text class="item-value">{{ currentFood.carbohydrates || 0 }}g</text>
           </view>

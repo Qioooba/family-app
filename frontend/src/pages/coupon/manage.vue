@@ -8,7 +8,7 @@
       </view>
       <text class="title">优惠券</text>
       <view class="right-btn" @click="showAddModal"
-003e
+>
         <u-icon name="plus" size="36" color="#fff"></u-icon>
       </view>
     </view>
@@ -106,7 +106,7 @@
               </view>
 
               <view class="coupon-footer"
-003e
+>
                 <view class="coupon-time">
                   <u-icon name="clock" size="20" color="#999"></u-icon>
                   <text :class="{ urgent: coupon.isExpiring }">{{ formatExpiry(coupon) }}</text>
@@ -131,7 +131,7 @@
 
               <!-- 即将过期提醒 -->
               <view v-if="coupon.isExpiring && coupon.status === 'active'" class="expiring-badge"
-003e
+>
                 <u-icon name="bell" size="20" color="#fff"></u-icon>
                 <text>{{ coupon.daysLeft }}天后过期</text>
               </view>
@@ -158,7 +158,7 @@
     >
       <view class="modal-content">
         <view class="modal-header"
-003e
+>
           <text class="modal-title">添加优惠券</text>
         </view>
 
@@ -174,7 +174,7 @@
               @click="addType = type.value"
             >
               <u-icon :name="type.icon" size="32" :color="addType === type.value ? '#5B8FF9' : '#999'"
-003e</u-icon>
+</u-icon>
               {{ type.label }}
             </view>
           </view>
@@ -191,11 +191,11 @@
 
           <!-- 手动添加 -->
           <view v-if="addType === 'manual'" class="form-section"
-003e
+>
             <view class="form-row"
-003e
+>
               <view class="form-item"
-003e
+>
                 <text class="form-label">券类型</text>
                 <view class="type-options"
 >
@@ -214,7 +214,7 @@
 
             <view class="form-row">
               <view class="form-item"
-003e
+>
                 <text class="form-label">{{ couponForm.type === 'discount' ? '折扣' : '金额' }}</text>
                 <view class="amount-input-wrap"
 >
@@ -231,9 +231,9 @@
             </view>
 
             <view class="form-row"
-003e
+>
               <view class="form-item full"
-003e
+>
                 <text class="form-label">使用门槛</text>
                 <input
                   v-model="couponForm.condition"
@@ -245,7 +245,7 @@
 
             <view class="form-row">
               <view class="form-item full"
-003e
+>
                 <text class="form-label">券名称</text>
                 <input
                   v-model="couponForm.title"
@@ -257,7 +257,7 @@
 
             <view class="form-row">
               <view class="form-item full"
-003e
+>
                 <text class="form-label">适用商家</text>
                 <input
                   v-model="couponForm.shop"
@@ -268,9 +268,9 @@
             </view>
 
             <view class="form-row"
-003e
+>
               <view class="form-item"
-003e
+>
                 <text class="form-label">有效期至</text>
                 <picker mode="date" :value="couponForm.expiryDate" @change="onExpiryChange">
                   <view class="picker-value">
@@ -282,7 +282,7 @@
 
             <view class="form-row">
               <view class="form-item full"
-003e
+>
                 <text class="form-label">备注（可选）</text>
                 <textarea
                   v-model="couponForm.description"
@@ -293,7 +293,7 @@
             </view>
 
             <view class="reminder-setting"
-003e
+>
               <text class="reminder-label">到期提醒</text>
               <view class="reminder-options">
                 <view
@@ -311,7 +311,7 @@
         </view>
 
         <view class="modal-footer"
-003e
+>
           <view class="btn-cancel" @click="addModalVisible = false">取消</view>
           <view class="btn-confirm" @click="saveCoupon">添加</view>
         </view>
@@ -325,9 +325,9 @@
       round
     >
       <view v-if="selectedCoupon" class="detail-modal"
-003e
+>
         <view class="detail-header"
-003e
+>
           <text class="detail-title">{{ selectedCoupon.title }}</text>
           <view class="detail-status" :class="selectedCoupon.status"
 >
@@ -341,7 +341,7 @@
             {{ selectedCoupon.discount }}折
           </text>
           <view v-else class="amount-wrap"
-003e
+>
             <text class="amount-symbol">¥</text>
             <text class="amount-value">{{ selectedCoupon.amount }}</text>
           </view>
@@ -349,20 +349,20 @@
         </view>
 
         <view class="detail-info"
-003e
+>
           <view class="info-row">
             <text class="info-label">适用商家</text>
             <text class="info-value">{{ selectedCoupon.shop }}</text>
           </view>
           
           <view class="info-row"
-003e
+>
             <text class="info-label">有效期</text>
             <text class="info-value">至 {{ selectedCoupon.expiryDate }}</text>
           </view>
           
           <view class="info-row"
-003e
+>
             <text class="info-label">券码</text>
             <view class="code-wrap">
               <text class="info-value code">{{ selectedCoupon.code || 'N/A' }}</text>
@@ -371,7 +371,7 @@
           </view>
           
           <view v-if="selectedCoupon.description" class="info-row vertical"
-003e
+>
             <text class="info-label">备注</text>
             <text class="info-value">{{ selectedCoupon.description }}</text>
           </view>

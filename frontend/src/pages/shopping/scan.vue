@@ -26,11 +26,11 @@
 
       <!-- 扫描框 -->
       <view v-if="!scanResult && !showAlbum" class="scan-frame">
-        <view class="frame-corner top-left"></view>
-        <view class="frame-corner top-right"></view>
-        <view class="frame-corner bottom-left"></view>
-        <view class="frame-corner bottom-right"></view>
-        <view class="scan-line"></view>
+        <view class="frame-corner top-left"></text>
+        <view class="frame-corner top-right"></text>
+        <view class="frame-corner bottom-left"></text>
+        <view class="frame-corner bottom-right"></text>
+        <view class="scan-line"></text>
         
         <view class="scan-tips">
           <text>将二维码/条形码放入框内</text>
@@ -146,9 +146,9 @@
       </view>
 
       <view class="action-item" @click="toggleInputMode"
-003e
+>
         <view class="action-icon"
-003e
+>
           <u-icon name="edit-pen" size="40" color="#fff"></u-icon>
         </view>
         <text>手动输入</text>
@@ -217,7 +217,7 @@
         >
           <image v-if="item.image" :src="item.image" class="history-image" mode="aspectFill" />
           <view v-else class="history-icon"
-003e
+>
             <u-icon :name="item.type === 'url' ? 'link' : 'barcode'" size="40" color="#999"></u-icon>
           </view>
           

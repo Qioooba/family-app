@@ -1,14 +1,14 @@
 <template>
   <view class="page-container">
     <!-- 状态栏背景 -->
-    <view class="status-bar-bg"></view>
+    <view class="status-bar-bg"></text>
     
     <!-- 顶部快捷入口 -->
     <view class="quick-access">
       <view class="access-item" v-for="(item, index) in quickAccess" :key="index" @click="handleQuickAccess(item)"
-003e
+>
         <view class="access-icon" :style="{ background: item.color }"
-003e
+>
           <text>{{ item.icon }}</text>
         </view>
         <text class="access-label">{{ item.label }}</text>
@@ -18,18 +18,18 @@
     <!-- 今日概览卡片 -->
     <view class="overview-section">
       <view class="section-title"
-003e
+>
         <text>今日概览</text>
         <text class="date-text">{{ todayDate }}</text>
       </view>
       
       <view class="overview-grid"
-003e
+>
         <view class="overview-card primary" @click="goToTodayTasks"
-003e
+>
           <view class="card-bg-icon">📋</view>
           <view class="card-content"
-003e
+>
             <text class="card-number">{{ todayStats.pending }}</text>
             <text class="card-label">待办任务</text>
           </view>
@@ -37,20 +37,20 @@
         </view>
         
         <view class="overview-card success" @click="goToCompleted"
-003e
+>
           <view class="card-bg-icon">✓</view>
           <view class="card-content"
-003e
+>
             <text class="card-number">{{ todayStats.completed }}</text>
             <text class="card-label">已完成</text>
           </view>
         </view>
         
         <view class="overview-card warning" @click="goToOverdue"
-003e
+>
           <view class="card-bg-icon">⚠️</view>
           <view class="card-content"
-003e
+>
             <text class="card-number">{{ todayStats.overdue }}</text>
             <text class="card-label">已逾期</text>
           </view>
@@ -58,10 +58,10 @@
         </view>
         
         <view class="overview-card info" @click="goToStats"
-003e
+>
           <view class="card-bg-icon">📊</view>
           <view class="card-content"
-003e
+>
             <text class="card-number">{{ completionRate }}%</text>
             <text class="card-label">完成率</text>
           </view>
@@ -71,22 +71,22 @@
     
     <!-- 快速操作卡片 -->
     <view class="quick-actions-section"
-003e
+>
       <view class="section-header"
-003e
+>
         <text class="section-title">快速操作</text>
       </view>
       
       <view class="actions-grid"
-003e
+>
         <view class="action-card" v-for="(action, index) in quickActions" :key="index" @click="handleAction(action)"
-003e
+>
           <view class="action-icon" :style="{ background: action.bgColor }"
-003e
+>
             <text>{{ action.icon }}</text>
           </view>
           <view class="action-info"
-003e
+>
             <text class="action-title">{{ action.title }}</text>
             <text class="action-desc">{{ action.description }}</text>
           </view>
@@ -97,25 +97,25 @@
     
     <!-- 最近任务卡片 -->
     <view class="recent-tasks-section" v-if="recentTasks.length > 0"
-003e
+>
       <view class="section-header"
-003e
+>
         <text class="section-title">最近更新</text>
         <text class="view-all" @click="viewAllTasks">查看全部 ›</text>
       </view>
       
       <view class="recent-list"
-003e
+>
         <view 
           v-for="task in recentTasks.slice(0, 5)" 
           :key="task.id"
           class="recent-item"
           @click="goToTask(task)"
         >
-          <view class="item-status" :class="'status-' + task.status"></view>
+          <view class="item-status" :class="'status-' + task.status"></text>
           
           <view class="item-content"
-003e
+>
             <text class="item-title">{{ task.title }}</text>
             <text class="item-meta">{{ getTaskMeta(task) }}</text>
           </view>
@@ -130,16 +130,16 @@
     
     <!-- 快捷视图卡片 -->
     <view class="quick-views-section"
-003e
+>
       <view class="section-header"
-003e
+>
         <text class="section-title">快捷视图</text>
       </view>
       
       <view class="views-row"
-003e
+>
         <view class="view-item" v-for="(view, index) in quickViews" :key="index" @click="goToView(view)"
-003e
+>
           <view class="view-icon">{{ view.icon }}</view>
           <text class="view-name">{{ view.name }}</text>
         </view>
@@ -148,14 +148,14 @@
     
     <!-- 智能建议卡片 -->
     <view class="suggestions-section" v-if="suggestions.length > 0"
-003e
+>
       <view class="section-header"
-003e
+>
         <text class="section-title">💡 智能建议</text>
       </view>
       
       <view class="suggestion-list"
-003e
+>
         <view 
           v-for="(suggestion, index) in suggestions" 
           :key="index"
@@ -166,7 +166,7 @@
           <text class="suggestion-icon">{{ suggestion.icon }}</text>
           
           <view class="suggestion-content"
-003e
+>
             <text class="suggestion-title">{{ suggestion.title }}</text>
             <text class="suggestion-desc">{{ suggestion.description }}</text>
           </view>
@@ -175,11 +175,11 @@
     </view>
     
     <!-- 底部空间 -->
-    <view class="bottom-space"></view>
+    <view class="bottom-space"></text>
     
     <!-- 悬浮添加按钮 -->
     <view class="fab-add" @click="quickAddTask"
-003e
+>
       <text>+</text>
     </view>
   </view>

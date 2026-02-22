@@ -29,16 +29,16 @@
           <!-- 进度条 -->
           <view class="progress-section">
             <view class="progress-bar">
-              <view class="progress-track"></view>
+              <view class="progress-track"></text>
               <view 
                 class="progress-fill" 
                 :class="progressClass"
                 :style="{ width: progressPercent + '%' }"
-              ></view>
+              ></text>
               <view 
                 class="progress-marker"
                 :style="{ left: progressPercent + '%' }"
-              ></view>
+              ></text>
             </view>
             
             <view class="progress-labels">
@@ -53,17 +53,17 @@
               <text class="stat-value">{{ wishStats.total }}</text>
               <text class="stat-label">心愿总数</text>
             </view>
-            <view class="stat-divider"></view>
+            <view class="stat-divider"></text>
             <view class="stat-item">
               <text class="stat-value">{{ wishStats.claimed }}</text>
               <text class="stat-label">已认领</text>
             </view>
-            <view class="stat-divider"></view>
+            <view class="stat-divider"></text>
             <view class="stat-item">
               <text class="stat-value">{{ wishStats.completed }}</text>
               <text class="stat-label">已实现</text>
             </view>
-            <view class="stat-divider"></view>
+            <view class="stat-divider"></text>
             <view class="stat-item">
               <text class="stat-value highlight">{{ wishStats.pending }}</text>
               <text class="stat-label">待实现</text>
@@ -87,7 +87,7 @@
             @click="showCategoryDetail(cat)"
           >
             <view class="category-icon" :style="{ background: cat.color + '20', color: cat.color }"
-003e
+>
               <text>{{ cat.icon }}</text>
             </view>
             
@@ -106,7 +106,7 @@
                       width: (cat.used / cat.budget * 100) + '%',
                       background: cat.color
                     }"
-                  ></view>
+                  ></text>
                 </view>
                 <text class="category-percent">{{ Math.round(cat.used / cat.budget * 100) }}%</text>
               </view>
@@ -118,7 +118,7 @@
       <!-- 心愿支出明细 -->
       <view class="section">
         <view class="section-header"
-003e
+>
           <text class="section-title">支出明细</text>
           <text class="section-action" @click="showFilterModal">筛选</text>
         </view>

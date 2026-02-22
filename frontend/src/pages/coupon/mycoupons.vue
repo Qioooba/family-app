@@ -110,7 +110,7 @@
     <!-- 券详情弹窗 -->
     <view v-if="showDetailModal" class="modal-overlay"
     >
-      <view class="modal-mask" @click="closeDetailModal"></view>
+      <view class="modal-mask" @click="closeDetailModal"></text>
       <view class="modal-content"
       >
         <view v-if="selectedCoupon" class="coupon-detail"
@@ -142,7 +142,7 @@
               <view class="code-barcode"
           >
                 <view class="barcode-line" v-for="i in 30" :key="i" :style="{ width: Math.random() * 4 + 2 + 'px' }"
-          ></view>
+          ></text>
               </view>
             </view>
             <text class="code-tip"

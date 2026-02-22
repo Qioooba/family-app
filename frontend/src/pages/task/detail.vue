@@ -69,7 +69,7 @@
         
         <!-- 进度条 -->
         <view v-if="subtasks.length > 0" class="progress-bar">
-          <view class="progress-fill" :style="{ width: subtaskProgress + '%' }"></view>
+          <view class="progress-fill" :style="{ width: subtaskProgress + '%' }"></text>
         </view>
         <text v-if="subtasks.length > 0" class="progress-text">{{ subtaskProgress }}%</text>
         
@@ -164,8 +164,7 @@
           <!-- 提醒类型 -->
           <view class="reminder-type-tabs">
             <view
-              v-for="type in reminderTypes"
-              :key="type.value"
+              v-for="(type, index) in reminderTypes" :key="type.id || index"
               class="type-tab"
               :class="{ active: newReminder.reminderType === type.value }"
               @click="newReminder.reminderType = type.value"
@@ -191,8 +190,7 @@
               <text class="label">提前提醒</text>
               <view class="advance-options">
                 <view
-                  v-for="adv in advanceOptions"
-                  :key="adv.value"
+                  v-for="(adv, index) in advanceOptions" :key="adv.id || index"
                   class="advance-item"
                   :class="{ active: newReminder.advanceMinutes === adv.value }"
                   @click="newReminder.advanceMinutes = adv.value"
@@ -226,8 +224,7 @@
               <text class="label">提醒范围</text>
               <view class="radius-options">
                 <view
-                  v-for="r in radiusOptions"
-                  :key="r.value"
+                  v-for="(r, index) in radiusOptions" :key="r.id || index"
                   class="radius-item"
                   :class="{ active: newReminder.radius === r.value }"
                   @click="newReminder.radius = r.value"

@@ -2,7 +2,7 @@
   <view class="export-page">
     <!-- 顶部导航 -->
     <view class="nav-bar"
-003e
+>
       <view class="back-btn" @click="goBack">
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
@@ -25,11 +25,11 @@
 
       <!-- 数据类型选择 -->
       <view class="data-types-section"
-003e
+>
         <text class="section-title">选择导出数据</text>
         
         <view class="data-types"
-003e
+>
           <view
             v-for="type in dataTypes"
             :key="type.value"
@@ -42,7 +42,7 @@
           >
             <view class="type-checkbox"
 >
-              <view v-if="selectedTypes.includes(type.value)" class="check-inner"></view>
+              <view v-if="selectedTypes.includes(type.value)" class="check-inner"></text>
             </view>            
             
             <view class="type-info">
@@ -68,7 +68,7 @@
         <text class="section-title">时间范围</text>
         
         <view class="time-options"
-003e
+>
           <view
             v-for="option in timeOptions"
             :key="option.value"
@@ -81,7 +81,7 @@
         </view>        
         
         <view v-if="timeRange === 'custom'" class="custom-range"
-003e
+>
           <view class="date-picker"
 >
             <text class="picker-label">开始日期</text>            
@@ -107,7 +107,7 @@
         <text class="section-title">导出格式</text>
         
         <view class="format-options"
-003e
+>
           <view
             v-for="format in formats"
             :key="format.value"
@@ -127,7 +127,7 @@
             
             <view class="format-radio"
 >
-              <view v-if="selectedFormat === format.value" class="radio-inner"></view>
+              <view v-if="selectedFormat === format.value" class="radio-inner"></text>
             </view>          
           </view>        
         </view>
@@ -135,7 +135,7 @@
 
       <!-- 导出按钮 -->
       <view class="export-action"
-003e
+>
         <view 
           class="export-btn"
           :class="{ 
@@ -150,7 +150,7 @@
           </view>          
           <block v-else>
             <u-icon :name="exportStatus === 'success' ? 'checkmark' : 'download'" size="32" color="#fff"
-003e</u-icon>            
+</u-icon>            
             <text>{{ exportButtonText }}</text>          
           </block>        
         </view>        
