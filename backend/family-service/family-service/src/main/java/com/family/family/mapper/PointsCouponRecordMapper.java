@@ -17,6 +17,6 @@ public interface PointsCouponRecordMapper extends BaseMapper<PointsCouponRecord>
     /**
      * 查询用户的兑换记录
      */
-    @Select("SELECT * FROM points_coupon_record WHERE user_id = #{userId} ORDER BY create_time DESC")
+    @Select("SELECT id, user_id, coupon_id, points_spent, status, expire_date, create_time FROM points_coupon_record WHERE user_id = #{userId} ORDER BY create_time DESC")
     List<PointsCouponRecord> selectByUserId(@Param("userId") Long userId);
 }

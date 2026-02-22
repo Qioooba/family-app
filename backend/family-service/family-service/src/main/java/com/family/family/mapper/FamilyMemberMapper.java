@@ -12,6 +12,6 @@ public interface FamilyMemberMapper extends BaseMapper<FamilyMember> {
     /**
      * 根据用户ID和家庭ID查询成员信息
      */
-    @Select("SELECT * FROM family_member WHERE user_id = #{userId} AND family_id = #{familyId}")
+    @Select("SELECT id, family_id, user_id, role, nickname, join_time FROM family_member WHERE user_id = #{userId} AND family_id = #{familyId}")
     FamilyMember selectByUserIdAndFamilyId(@Param("userId") Long userId, @Param("familyId") Long familyId);
 }
