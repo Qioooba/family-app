@@ -70,8 +70,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public String login(UserLoginDTO dto) {
         User user = null;
         
-        if (StrUtil.isNotBlank(dto.getUsername())) {
+        // 根据登录类型进行不同的验证
+        if ("password".equals(dto.getLoginType())) {
             // 用户名密码登录
+            if (StrUtil.isBlank(dto.getUsername())) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "用户名不能为空");
+            }
+            if (StrUtil.isBlank(dto.getPassword())) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "密码不能为空");
+            }
+            
             user = lambdaQuery()
                     .eq(User::getUsername, dto.getUsername())
                     .or()
@@ -79,10 +87,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .one();
             
             if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-                throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR);
+                throw new BusinessException(ErrorCode.USER_PASSWORD_ERROR.getCode(), "用户名或密码错误");
             }
-        } else if (StrUtil.isNotBlank(dto.getPhone())) {
+        } else if ("sms".equals(dto.getLoginType())) {
             // 手机号验证码登录
+            if (StrUtil.isBlank(dto.getPhone())) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "手机号不能为空");
+            }
+            if (StrUtil.isBlank(dto.getCode())) {
+                throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "验证码不能为空");
+            }
+            
             String codeKey = "sms:code:" + dto.getPhone();
             String cacheCode = redisTemplate.opsForValue().get(codeKey);
             if (!dto.getCode().equals(cacheCode)) {
@@ -100,6 +115,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             
             redisTemplate.delete(codeKey);
+        } else {
+            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "不支持的登录类型");
         }
         
         if (user == null) {

@@ -14,6 +14,14 @@ const CONFIG = {
   RETRY_DELAY: 1000
 }
 
+// H5开发模式下使用代理（修复手机访问问题）
+const isH5 = typeof window !== 'undefined' && window.location
+const isDev = isH5 && (window.location.hostname === 'localhost' || window.location.hostname === '192.168.1.209')
+if (isH5 && isDev) {
+  CONFIG.BASE_URL = ''
+  CONFIG.USER_SERVICE_URL = ''
+}
+
 // 请求队列（用于防止重复请求）
 const pendingRequests = new Map()
 

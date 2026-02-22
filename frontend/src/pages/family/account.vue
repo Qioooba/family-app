@@ -151,7 +151,9 @@
         </view>
       </view>
       
-      <u-loadmore :status="loadStatus" />
+      <view class="load-more">
+        <text class="load-text">{{ loadStatus === 'nomore' ? '没有更多了' : (loadStatus === 'loading' ? '加载中...' : '上拉加载更多') }}</text>
+      </view>
     </scroll-view>
     
     <!-- 记帐弹窗 -->
@@ -200,12 +202,15 @@
         </view>
         
         <view class="form-fields">
-          <u-input
-            v-model="recordForm.note"
-            placeholder="添加备注（可选）"
-            border="surround"
-            clearable
-          ></u-input>
+          <view class="note-input-wrapper">
+            <input
+              v-model="recordForm.note"
+              class="note-input"
+              placeholder="添加备注（可选）"
+              placeholder-class="note-placeholder"
+              type="text"
+            />
+          </view>
           <u-datetime-picker
             :show="showDatePicker"
             v-model="recordForm.datetime"
@@ -220,7 +225,9 @@
         </view>
         
         <view class="popup-actions">
-          <u-button type="primary" text="保存" @click="saveRecord" :loading="saving"></u-button>
+          <button class="save-btn" :loading="saving" :disabled="saving" @click="saveRecord">
+            <text class="btn-text">保存</text>
+          </button>
         </view>
       </view>
     </u-popup>
@@ -236,8 +243,12 @@
           class="budget-input"
         />
         <view class="popup-actions">
-          <u-button text="取消" @click="showBudgetPopup = false"></u-button>
-          <u-button type="primary" text="确定" @click="saveBudget"></u-button>
+          <button class="cancel-btn" @click="showBudgetPopup = false">
+            <text class="btn-text">取消</text>
+          </button>
+          <button class="confirm-btn" @click="saveBudget">
+            <text class="btn-text">确定</text>
+          </button>
         </view>
       </view>
     </u-popup>
@@ -955,6 +966,106 @@ const saveBudget = () => {
   .popup-actions {
     display: flex;
     gap: 20rpx;
+    
+    .cancel-btn, .confirm-btn {
+      flex: 1;
+      height: 80rpx;
+      border-radius: 40rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      
+      .btn-text {
+        font-size: 30rpx;
+        font-weight: 500;
+      }
+    }
+    
+    .cancel-btn {
+      background: #f5f5f5;
+      
+      .btn-text {
+        color: #666;
+      }
+    }
+    
+    .confirm-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      
+      .btn-text {
+        color: #fff;
+      }
+    }
   }
 }
+
+/* 修复后的组件样式 */
+.note-input-wrapper {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid #e8e8e8;
+  
+  .note-input {
+    width: 100%;
+    height: 80rpx;
+    font-size: 28rpx;
+    color: #333;
+    background: transparent;
+  }
+  
+  .note-placeholder {
+    color: #bbb;
+    font-size: 28rpx;
+  }
+}
+
+.save-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: 0 8rpx 20rpx rgba(102, 126, 234, 0.4);
+  
+  .btn-text {
+    color: #fff;
+    font-size: 32rpx;
+    font-weight: 600;
+  }
+  
+  &:active {
+    transform: translateY(2rpx);
+    box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+  }
+}
+
+.load-more {
+  padding: 30rpx 0;
+  text-align: center;
+  
+  .load-text {
+    font-size: 24rpx;
+    color: #999;
+  }
+}
+
+/* H5 兼容性 */
+/* #ifdef H5 */
+input, button {
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  border: none;
+  background: transparent;
+}
+
+button::after {
+  border: none;
+}
+/* #endif */
 </style>

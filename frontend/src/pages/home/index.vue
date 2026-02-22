@@ -14,7 +14,9 @@
     <template v-else>
       <!-- 顶部欢迎区 -->
     <view class="header-section">
-      <view class="header-bg"></view>
+      <view class="header-bg">
+        <view class="bg-pattern"></view>
+      </view>
       <view class="header-content">
         <view class="greeting">
           <text class="time-label">{{ greeting }}</text>
@@ -23,7 +25,9 @@
         
         <view class="family-selector" @click="selectFamily">
           <text class="family-name">{{ currentFamily?.name || '选择家庭' }}</text>
-          <u-icon name="arrow-down" size="24" color="#fff"></u-icon>
+          <view class="selector-arrow">
+            <u-icon name="arrow-down" size="20" color="#fff"></u-icon>
+          </view>
         </view>
       </view>
     </view>
@@ -34,31 +38,43 @@
         v-for="(item, index) in quickActions" 
         :key="index"
         class="action-item"
+        :class="`item-${index}`"
         @click="navigateTo(item.path)"
+        :style="{ animationDelay: `${index * 0.05}s` }"
       >
-        <view class="icon-box" :style="{ background: item.bgColor }">
-          <u-icon :name="item.icon" size="40" color="#fff"></u-icon>
+        <view class="icon-box" :style="{ background: item.bgColor, boxShadow: item.shadow }">
+          <u-icon :name="item.icon" size="38" color="#fff"></u-icon>
         </view>
         <text class="action-name">{{ item.name }}</text>
       </view>
     </view>
     
     <!-- 今日概览 -->
-    <view class="section-card">
+    <view class="section-card animate-in">
       <view class="section-header">
-        <text class="section-title">📋 今日待办</text>
-        <text class="more" @click="navigateTo('/pages/task/index')">更多 ></text>
+        <view class="title-wrapper">
+          <text class="section-icon">📋</text>
+          <text class="section-title">今日待办</text>
+        </view>
+        <view class="more-btn" @click="navigateTo('/pages/task/index')">
+          <text>更多</text>
+          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
+        </view>
       </view>
       
       <view v-if="todayTasks.length > 0" class="task-list">
         <view 
-          v-for="task in todayTasks" 
+          v-for="(task, index) in todayTasks" 
           :key="task.id"
           class="task-item"
+          :class="{ completed: task.status === 2 }"
+          :style="{ animationDelay: `${index * 0.08}s` }"
           @click="goTaskDetail(task)"
         >
           <view class="task-checkbox" @click.stop="toggleTask(task)">
-            <view v-if="task.status === 2" class="checked"></view>
+            <view v-if="task.status === 2" class="checked">
+              <u-icon name="checkmark" size="20" color="#fff"></u-icon>
+            </view>
             <view v-else class="unchecked"></view>
           </view>
           
@@ -66,79 +82,114 @@
             <text class="task-title" :class="{ completed: task.status === 2 }">
               {{ task.title }}
             </text>
-            <text class="task-meta">{{ task.assigneeName }} · {{ task.time }}</text>
+            <text class="task-meta">
+              <text class="assignee">{{ task.assigneeName }}</text>
+              <text class="divider">·</text>
+              <text class="time">{{ task.time }}</text>
+            </text>
           </view>
           
           <view 
             class="task-priority"
-            :class="{ high: task.priority === 2, medium: task.priority === 1 }"
+            :class="{ high: task.priority === 2, medium: task.priority === 1, low: task.priority === 0 }"
           >
+            <text v-if="task.priority === 2">紧急</text>
+            <text v-else-if="task.priority === 1">重要</text>
+            <text v-else>普通</text>
           </view>
         </view>
       </view>
       
       <view v-else class="empty-state">
-        <u-icon name="checkmark-circle" size="60" color="#ddd"></u-icon>
-        <text>今天没有待办事项，享受生活吧！</text>
+        <view class="empty-icon-wrapper">
+          <text class="empty-icon">✨</text>
+        </view>
+        <text class="empty-text">今天没有待办事项</text>
+        <text class="empty-subtext">享受生活吧！</text>
       </view>
     </view>
     
     <!-- 纪念日提醒 -->
-    <view class="section-card" v-if="upcomingAnniversaries.length > 0">
+    <view class="section-card anniversary-card animate-in" v-if="upcomingAnniversaries.length > 0">
       <view class="section-header">
-        <text class="section-title">💝 近期纪念</text>
-        <text class="more" @click="navigateTo('/pages/calendar/index')">更多 ></text>
+        <view class="title-wrapper">
+          <text class="section-icon">💝</text>
+          <text class="section-title">近期纪念</text>
+        </view>
+        <view class="more-btn" @click="navigateTo('/pages/calendar/index')">
+          <text>更多</text>
+          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
+        </view>
       </view>
       
       <view class="anniversary-list">
         <view 
-          v-for="item in upcomingAnniversaries" 
+          v-for="(item, index) in upcomingAnniversaries" 
           :key="item.id"
           class="anni-item"
+          :style="{ animationDelay: `${index * 0.1}s` }"
         >
-          <view class="anni-icon">{{ item.icon }}</view>
+          <view class="anni-icon-wrapper" :class="{ urgent: item.days <= 3 }">
+            <text class="anni-icon">{{ item.icon }}</text>
+          </view>
           
           <view class="anni-info">
             <text class="anni-title">{{ item.title }}</text>
-            <text class="anni-date">{{ item.date }}</text>
+            <view class="anni-date-wrapper">
+              <text class="anni-date">{{ item.date }}</text>
+            </view>
           </view>
           
-          <view class="anni-days">
-            <text class="days-num">{{ item.days }}</text>
-            <text class="days-label">{{ item.days > 0 ? '天后' : '今天' }}</text>
+          <view class="anni-days" :class="{ today: item.days === 0, soon: item.days <= 3 && item.days > 0 }">
+            <text class="days-num">{{ item.days === 0 ? '今天' : item.days }}</text>
+            <text class="days-label">{{ item.days > 0 ? '天后' : '' }}</text>
           </view>
         </view>
       </view>
     </view>
     
     <!-- 今日菜谱推荐 -->
-    <view class="section-card">
+    <view class="section-card recipe-section animate-in">
       <view class="section-header">
-        <text class="section-title">🍳 今日菜谱</text>
-        <text class="more" @click="navigateTo('/pages/recipe/index')">更多 ></text>
+        <view class="title-wrapper">
+          <text class="section-icon">🍳</text>
+          <text class="section-title">今日菜谱</text>
+        </view>
+        <view class="more-btn" @click="navigateTo('/pages/recipe/index')">
+          <text>更多</text>
+          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
+        </view>
       </view>
       
       <view class="recipe-scroll">
         <scroll-view scroll-x class="recipe-list" enhanced :show-scrollbar="false">
           <view 
-            v-for="recipe in todayRecipes" 
+            v-for="(recipe, index) in todayRecipes" 
             :key="recipe.id"
             class="recipe-card"
+            :style="{ animationDelay: `${index * 0.1}s` }"
             @click="goRecipeDetail(recipe)"
           >
-            <LazyImage 
-              :src="recipe.cover" 
-              mode="aspectFill"
-              width="280rpx"
-              height="180rpx"
-              :threshold="50"
-            />
+            <view class="recipe-image-wrapper">
+              <LazyImage 
+                :src="recipe.cover" 
+                mode="aspectFill"
+                width="280rpx"
+                height="180rpx"
+                :threshold="50"
+              />
+              <view class="recipe-overlay">
+                <text class="cook-time">⏱️ {{ recipe.time }}分</text>
+              </view>
+            </view>
             
             <view class="recipe-info">
               <text class="recipe-name">{{ recipe.name }}</text>
               <view class="recipe-meta">
-                <text>⏱️ {{ recipe.time }}分钟</text>
-                <text>🔥 {{ recipe.calories }}卡</text>
+                <view class="meta-item">
+                  <text class="meta-icon">🔥</text>
+                  <text class="meta-text">{{ recipe.calories }}卡</text>
+                </view>
               </view>
             </view>
           </view>
@@ -147,38 +198,59 @@
     </view>
     
     <!-- 健康数据概览 -->
-    <view class="section-card">
+    <view class="section-card health-card animate-in">
       <view class="section-header">
-        <text class="section-title">💪 健康概览</text>
-        <text class="more" @click="navigateTo('/pages/food/record')">记录 ></text>
+        <view class="title-wrapper">
+          <text class="section-icon">💪</text>
+          <text class="section-title">健康概览</text>
+        </view>
+        <view class="more-btn" @click="navigateTo('/pages/food/record')">
+          <text>记录</text>
+          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
+        </view>
       </view>
       
       <view class="health-stats">
         <view class="stat-item">
+          <view class="stat-icon-wrapper" style="background: linear-gradient(135deg, #FF6B6B, #FF8E8E);">
+            <text class="stat-icon">🍽️</text>
+          </view>
           <text class="stat-value">{{ healthData.calories }}</text>
           <text class="stat-label">已摄入(卡)</text>
         </view>
         
         <view class="stat-item">
+          <view class="stat-icon-wrapper" style="background: linear-gradient(135deg, #4ECDC4, #44A08D);">
+            <text class="stat-icon">✨</text>
+          </view>
           <text class="stat-value">{{ healthData.target - healthData.calories }}</text>
           <text class="stat-label">剩余(卡)</text>
         </view>
         
         <view class="stat-item">
+          <view class="stat-icon-wrapper" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+            <text class="stat-icon">💧</text>
+          </view>
           <text class="stat-value">{{ healthData.water }}</text>
           <text class="stat-label">饮水(杯)</text>
         </view>
       </view>
       
       <view class="calorie-progress">
+        <view class="progress-header">
+          <text class="progress-title">今日摄入进度</text>
+          <text class="progress-percent">{{ Math.round(healthData.calories / healthData.target * 100) }}%</text>
+        </view>
         <view class="progress-bar">
           <view 
             class="progress-fill"
             :style="{ width: (healthData.calories / healthData.target * 100) + '%' }"
-          ></view>
+          >
+            <view class="progress-shine"></view>
+          </view>
         </view>
         <text class="progress-text">
-          {{ healthData.calories }}/{{ healthData.target }} 卡 ({{ Math.round(healthData.calories / healthData.target * 100) }}%)
+          {{ healthData.calories }} / {{ healthData.target }} 千卡
         </text>
       </view>
     </view>
@@ -212,14 +284,14 @@ const greeting = computed(() => {
 
 const currentFamily = ref({ name: '幸福小家' })
 
-// 快捷功能
+// 快捷功能 - 添加阴影
 const quickActions = [
-  { name: '添加任务', icon: 'file-text', bgColor: '#5B8FF9', path: '/pages/task/create' },
-  { name: '记录饮食', icon: 'photo', bgColor: '#5AD8A6', path: '/pages/food/record' },
-  { name: '喝水打卡', icon: 'minus-circle', bgColor: '#2E6AD8', path: '/pages/water/index' },
-  { name: '优惠券', icon: 'coupon', bgColor: '#FF6B6B', path: '/pages/coupon/index' },
-  { name: '营养成分', icon: 'file-text', bgColor: '#52C41A', path: '/pages/nutrition/index' },
-  { name: 'AI助手', icon: 'robot', bgColor: '#9B59B6', path: '/pages/ai/index' }
+  { name: '添加任务', icon: 'file-text', bgColor: '#6B8DD6', shadow: '0 8rpx 20rpx rgba(107, 141, 214, 0.35)', path: '/pages/task/create' },
+  { name: '记录饮食', icon: 'photo', bgColor: '#68d391', shadow: '0 8rpx 20rpx rgba(104, 211, 145, 0.35)', path: '/pages/food/record' },
+  { name: '喝水打卡', icon: 'minus-circle', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/water/index' },
+  { name: '优惠券', icon: 'coupon', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/coupon/index' },
+  { name: '营养成分', icon: 'file-text', bgColor: '#52C41A', shadow: '0 8rpx 20rpx rgba(82, 196, 26, 0.35)', path: '/pages/nutrition/index' },
+  { name: 'AI助手', icon: 'robot', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/ai/index' }
 ]
 
 // 今日任务
@@ -299,14 +371,15 @@ onMounted(() => {
 <style lang="scss" scoped>
 .home-page {
   min-height: 100vh;
-  background: #f5f6fa;
-  padding-bottom: 120rpx;
+  background: linear-gradient(180deg, #f8f9fc 0%, #f0f4f8 100%);
+  padding-bottom: 140rpx;
 }
 
+// 顶部欢迎区
 .header-section {
   position: relative;
-  padding: 40rpx;
-  padding-top: 80rpx;
+  padding: 40rpx 32rpx 60rpx;
+  padding-top: 100rpx;
   overflow: hidden;
   
   .header-bg {
@@ -314,9 +387,21 @@ onMounted(() => {
     top: 0;
     left: 0;
     right: 0;
-    height: 400rpx;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 0 0 40rpx 40rpx;
+    height: 420rpx;
+    background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 50%, #A78BFA 100%);
+    border-radius: 0 0 60rpx 60rpx;
+    box-shadow: 0 20rpx 60rpx rgba(107, 141, 214, 0.3);
+    
+    .bg-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      opacity: 0.1;
+      background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.8) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.6) 0%, transparent 40%);
+    }
   }
   
   .header-content {
@@ -325,19 +410,22 @@ onMounted(() => {
   }
   
   .greeting {
-    margin-bottom: 20rpx;
+    margin-bottom: 24rpx;
     
     .time-label {
       display: block;
       font-size: 28rpx;
-      color: rgba(255,255,255,0.8);
-      margin-bottom: 8rpx;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 12rpx;
+      font-weight: 500;
+      letter-spacing: 1rpx;
     }
     
     .user-name {
-      font-size: 44rpx;
-      font-weight: bold;
+      font-size: 48rpx;
+      font-weight: 700;
       color: #fff;
+      text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
     }
   }
   
@@ -345,112 +433,216 @@ onMounted(() => {
     display: inline-flex;
     align-items: center;
     background: rgba(255,255,255,0.2);
-    padding: 12rpx 24rpx;
-    border-radius: 30rpx;
+    backdrop-filter: blur(10rpx);
+    padding: 16rpx 28rpx;
+    border-radius: 40rpx;
+    border: 1rpx solid rgba(255,255,255,0.15);
+    transition: all 0.25s ease;
+    
+    &:active {
+      transform: scale(0.96);
+      background: rgba(255,255,255,0.25);
+    }
     
     .family-name {
       font-size: 26rpx;
       color: #fff;
-      margin-right: 8rpx;
+      margin-right: 12rpx;
+      font-weight: 500;
+    }
+    
+    .selector-arrow {
+      opacity: 0.8;
     }
   }
 }
 
+// 快捷功能入口
 .quick-actions {
   display: flex;
-  justify-content: space-around;
-  padding: 30rpx 20rpx;
-  margin: 0 30rpx;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 36rpx 28rpx;
+  margin: 0 32rpx;
   background: #fff;
-  border-radius: 20rpx;
-  margin-top: -60rpx;
+  border-radius: 28rpx;
+  margin-top: -50rpx;
   position: relative;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
+  box-shadow: 0 12rpx 40rpx rgba(107, 141, 214, 0.12), 0 4rpx 12rpx rgba(0,0,0,0.04);
+  z-index: 2;
   
   .action-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: calc(33.33% - 16rpx);
+    margin-bottom: 28rpx;
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+    
+    &:nth-child(n+4) {
+      margin-bottom: 0;
+    }
+    
+    &:active {
+      transform: scale(0.92);
+    }
     
     .icon-box {
-      width: 100rpx;
-      height: 100rpx;
-      border-radius: 24rpx;
+      width: 96rpx;
+      height: 96rpx;
+      border-radius: 28rpx;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 16rpx;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:active {
+        transform: scale(0.9);
+      }
     }
     
     .action-name {
       font-size: 24rpx;
-      color: #666;
+      color: #5a6c7d;
+      font-weight: 500;
     }
   }
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 卡片基础样式
 .section-card {
   background: #fff;
-  border-radius: 20rpx;
-  margin: 30rpx;
-  padding: 30rpx;
+  border-radius: 28rpx;
+  margin: 28rpx 32rpx;
+  padding: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(107, 141, 214, 0.08), 0 2rpx 8rpx rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+  
+  &.animate-in {
+    animation: slideIn 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  
+  &:active {
+    transform: scale(0.995);
+  }
   
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24rpx;
+    margin-bottom: 28rpx;
     
-    .section-title {
-      font-size: 32rpx;
-      font-weight: 600;
-      color: #333;
+    .title-wrapper {
+      display: flex;
+      align-items: center;
+      
+      .section-icon {
+        font-size: 36rpx;
+        margin-right: 12rpx;
+      }
+      
+      .section-title {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #2d3748;
+        letter-spacing: -0.3rpx;
+      }
     }
     
-    .more {
-      font-size: 26rpx;
-      color: #999;
+    .more-btn {
+      display: flex;
+      align-items: center;
+      padding: 10rpx 16rpx;
+      background: rgba(107, 141, 214, 0.08);
+      border-radius: 24rpx;
+      transition: all 0.2s ease;
+      
+      &:active {
+        background: rgba(107, 141, 214, 0.15);
+        transform: scale(0.95);
+      }
+      
+      text {
+        font-size: 24rpx;
+        color: #6B8DD6;
+        font-weight: 500;
+        margin-right: 6rpx;
+      }
     }
   }
 }
 
+@keyframes slideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 任务列表
 .task-list {
   .task-item {
     display: flex;
     align-items: center;
-    padding: 20rpx 0;
-    border-bottom: 2rpx solid #f5f5f5;
+    padding: 24rpx 0;
+    border-bottom: 2rpx solid #f1f5f9;
+    transition: all 0.2s ease;
+    animation: fadeInUp 0.4s ease-out forwards;
+    opacity: 0;
     
     &:last-child {
       border-bottom: none;
     }
     
+    &:active {
+      background: #f8f9fc;
+      border-radius: 16rpx;
+      margin: 0 -16rpx;
+      padding-left: 16rpx;
+      padding-right: 16rpx;
+    }
+    
+    &.completed {
+      .task-title {
+        color: #8b9aad;
+      }
+    }
+    
     .task-checkbox {
-      margin-right: 20rpx;
+      margin-right: 24rpx;
       
       .unchecked {
-        width: 40rpx;
-        height: 40rpx;
-        border: 2rpx solid #ddd;
+        width: 44rpx;
+        height: 44rpx;
+        border: 3rpx solid #e2e8f0;
         border-radius: 50%;
+        transition: all 0.2s ease;
       }
       
       .checked {
-        width: 40rpx;
-        height: 40rpx;
-        background: #5AD8A6;
+        width: 44rpx;
+        height: 44rpx;
+        background: linear-gradient(135deg, #68d391, #48bb78);
         border-radius: 50%;
-        position: relative;
-        
-        &::after {
-          content: '✓';
-          color: #fff;
-          font-size: 24rpx;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-        }
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4rpx 12rpx rgba(104, 211, 145, 0.35);
       }
     }
     
@@ -458,141 +650,267 @@ onMounted(() => {
       flex: 1;
       
       .task-title {
-        font-size: 28rpx;
-        color: #333;
+        font-size: 30rpx;
+        color: #2d3748;
         display: block;
-        margin-bottom: 8rpx;
+        margin-bottom: 10rpx;
+        font-weight: 500;
+        transition: all 0.2s ease;
         
         &.completed {
           text-decoration: line-through;
-          color: #999;
+          color: #8b9aad;
         }
       }
       
       .task-meta {
         font-size: 24rpx;
-        color: #999;
+        color: #8b9aad;
+        
+        .assignee {
+          color: #6B8DD6;
+          font-weight: 500;
+        }
+        
+        .divider {
+          margin: 0 8rpx;
+          opacity: 0.5;
+        }
       }
     }
     
     .task-priority {
-      width: 8rpx;
-      height: 8rpx;
-      border-radius: 50%;
-      background: #ddd;
+      padding: 8rpx 18rpx;
+      border-radius: 24rpx;
+      font-size: 22rpx;
+      font-weight: 500;
       
       &.high {
-        background: #ff4d4f;
+        background: rgba(252, 129, 129, 0.12);
+        color: #fc8181;
       }
       
       &.medium {
-        background: #faad14;
+        background: rgba(246, 173, 85, 0.12);
+        color: #f6ad55;
+      }
+      
+      &.low {
+        background: rgba(104, 211, 145, 0.12);
+        color: #68d391;
       }
     }
   }
 }
 
+// 空状态
 .empty-state {
   text-align: center;
   padding: 60rpx 0;
   
-  text {
-    display: block;
-    margin-top: 20rpx;
-    font-size: 26rpx;
-    color: #999;
+  .empty-icon-wrapper {
+    width: 120rpx;
+    height: 120rpx;
+    background: linear-gradient(135deg, #f0fff4, #e6fffa);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24rpx;
+    
+    .empty-icon {
+      font-size: 60rpx;
+    }
   }
+  
+  .empty-text {
+    display: block;
+    font-size: 30rpx;
+    color: #5a6c7d;
+    font-weight: 500;
+    margin-bottom: 8rpx;
+  }
+  
+  .empty-subtext {
+    display: block;
+    font-size: 26rpx;
+    color: #8b9aad;
+  }
+}
+
+// 纪念日卡片
+.anniversary-card {
+  background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
 }
 
 .anniversary-list {
   .anni-item {
     display: flex;
     align-items: center;
-    padding: 20rpx 0;
-    border-bottom: 2rpx solid #f5f5f5;
+    padding: 24rpx 0;
+    border-bottom: 2rpx solid rgba(226, 232, 240, 0.5);
+    animation: fadeInUp 0.4s ease-out forwards;
+    opacity: 0;
     
     &:last-child {
       border-bottom: none;
     }
     
-    .anni-icon {
-      width: 80rpx;
-      height: 80rpx;
-      background: #FFF0F6;
-      border-radius: 20rpx;
+    .anni-icon-wrapper {
+      width: 88rpx;
+      height: 88rpx;
+      background: linear-gradient(135deg, #fff0f6, #ffe4e6);
+      border-radius: 24rpx;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 40rpx;
-      margin-right: 20rpx;
+      font-size: 44rpx;
+      margin-right: 24rpx;
+      transition: all 0.3s ease;
+      
+      &.urgent {
+        background: linear-gradient(135deg, #fc8181, #f56565);
+        box-shadow: 0 8rpx 24rpx rgba(252, 129, 129, 0.35);
+      }
     }
     
     .anni-info {
       flex: 1;
       
       .anni-title {
-        font-size: 28rpx;
-        color: #333;
+        font-size: 30rpx;
+        color: #2d3748;
         display: block;
-        margin-bottom: 8rpx;
+        margin-bottom: 10rpx;
+        font-weight: 500;
       }
       
-      .anni-date {
-        font-size: 24rpx;
-        color: #999;
+      .anni-date-wrapper {
+        .anni-date {
+          font-size: 24rpx;
+          color: #8b9aad;
+        }
       }
     }
     
     .anni-days {
-      text-align: right;
+      text-align: center;
+      padding: 16rpx 24rpx;
+      background: rgba(107, 141, 214, 0.08);
+      border-radius: 20rpx;
+      min-width: 100rpx;
+      
+      &.today {
+        background: linear-gradient(135deg, #68d391, #48bb78);
+        box-shadow: 0 8rpx 24rpx rgba(104, 211, 145, 0.35);
+        
+        .days-num, .days-label {
+          color: #fff;
+        }
+      }
+      
+      &.soon {
+        background: linear-gradient(135deg, #fc8181, #f56565);
+        box-shadow: 0 8rpx 24rpx rgba(252, 129, 129, 0.35);
+        
+        .days-num, .days-label {
+          color: #fff;
+        }
+      }
       
       .days-num {
         font-size: 36rpx;
-        font-weight: bold;
-        color: #E8684A;
+        font-weight: 700;
+        color: #6B8DD6;
         display: block;
+        line-height: 1.2;
       }
       
       .days-label {
         font-size: 22rpx;
-        color: #999;
+        color: #8b9aad;
       }
     }
   }
 }
 
-.recipe-scroll {
+// 菜谱区域
+.recipe-section {
+  .recipe-scroll {
+    margin: 0 -32rpx;
+    padding: 0 32rpx;
+  }
+  
   .recipe-list {
     white-space: nowrap;
     
     .recipe-card {
       display: inline-block;
-      width: 280rpx;
-      margin-right: 20rpx;
-      border-radius: 16rpx;
+      width: 300rpx;
+      margin-right: 24rpx;
+      border-radius: 24rpx;
       overflow: hidden;
-      background: #f9f9f9;
+      background: #fff;
+      box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.5s ease-out forwards;
+      opacity: 0;
+      
+      &:active {
+        transform: scale(0.96);
+      }
+      
+      &:last-child {
+        margin-right: 0;
+      }
+      
+      .recipe-image-wrapper {
+        position: relative;
+        
+        .recipe-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 20rpx;
+          background: linear-gradient(transparent, rgba(0,0,0,0.6));
+          
+          .cook-time {
+            font-size: 24rpx;
+            color: #fff;
+            font-weight: 500;
+          }
+        }
+      }
       
       .recipe-info {
-        padding: 16rpx;
+        padding: 20rpx;
         
         .recipe-name {
-          font-size: 28rpx;
-          color: #333;
+          font-size: 30rpx;
+          color: #2d3748;
           display: block;
-          margin-bottom: 12rpx;
+          margin-bottom: 16rpx;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          font-weight: 500;
         }
         
         .recipe-meta {
-          display: flex;
-          justify-content: space-between;
-          
-          text {
-            font-size: 22rpx;
-            color: #999;
+          .meta-item {
+            display: flex;
+            align-items: center;
+            
+            .meta-icon {
+              font-size: 24rpx;
+              margin-right: 8rpx;
+            }
+            
+            .meta-text {
+              font-size: 24rpx;
+              color: #8b9aad;
+            }
           }
         }
       }
@@ -600,52 +918,117 @@ onMounted(() => {
   }
 }
 
+// 健康卡片
+.health-card {
+  background: linear-gradient(135deg, #fff 0%, #f0fff4 100%);
+}
+
 .health-stats {
   display: flex;
   justify-content: space-around;
-  padding: 20rpx 0;
+  padding: 28rpx 0;
   
   .stat-item {
     text-align: center;
+    flex: 1;
+    
+    .stat-icon-wrapper {
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 24rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16rpx;
+      box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.15);
+      
+      .stat-icon {
+        font-size: 36rpx;
+      }
+    }
     
     .stat-value {
       font-size: 40rpx;
-      font-weight: bold;
-      color: #5B8FF9;
+      font-weight: 700;
+      color: #2d3748;
       display: block;
+      line-height: 1.3;
     }
     
     .stat-label {
       font-size: 24rpx;
-      color: #999;
+      color: #8b9aad;
       margin-top: 8rpx;
+      display: block;
     }
   }
 }
 
 .calorie-progress {
-  margin-top: 20rpx;
+  margin-top: 28rpx;
+  padding-top: 28rpx;
+  border-top: 2rpx solid #f1f5f9;
+  
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16rpx;
+    
+    .progress-title {
+      font-size: 26rpx;
+      color: #5a6c7d;
+      font-weight: 500;
+    }
+    
+    .progress-percent {
+      font-size: 32rpx;
+      font-weight: 700;
+      color: #6B8DD6;
+    }
+  }
   
   .progress-bar {
     height: 16rpx;
-    background: #f0f0f0;
+    background: #e2e8f0;
     border-radius: 8rpx;
     overflow: hidden;
     
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #5B8FF9, #5AD8A6);
+      background: linear-gradient(90deg, #6B8DD6, #68d391);
       border-radius: 8rpx;
-      transition: width 0.3s;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      
+      .progress-shine {
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        animation: shine 2s infinite;
+      }
     }
   }
   
   .progress-text {
     display: block;
     text-align: center;
-    font-size: 24rpx;
-    color: #666;
-    margin-top: 12rpx;
+    font-size: 26rpx;
+    color: #8b9aad;
+    margin-top: 16rpx;
+  }
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
   }
 }
 </style>

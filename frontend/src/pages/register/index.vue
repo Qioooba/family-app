@@ -8,98 +8,128 @@
     
     <view class="register-form">
       <view class="form-item">
-        <u-input
-          v-model="form.username"
-          placeholder="请输入用户名"
-          prefixIcon="account"
-          :prefixIconStyle="{ color: '#999' }"
-          maxlength="20"
-        />
+        <text class="input-label">用户名</text>
+        <view class="input-wrapper">
+          <text class="input-icon">👤</text>
+          <input
+            v-model="form.username"
+            class="register-input"
+            placeholder="请输入用户名"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+            type="text"
+          />
+        </view>
       </view>
       
       <view class="form-item">
-        <u-input
-          v-model="form.nickname"
-          placeholder="请输入昵称"
-          prefixIcon="man-add"
-          :prefixIconStyle="{ color: '#999' }"
-          maxlength="20"
-        />
+        <text class="input-label">昵称</text>
+        <view class="input-wrapper">
+          <text class="input-icon">😊</text>
+          <input
+            v-model="form.nickname"
+            class="register-input"
+            placeholder="请输入昵称"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+            type="text"
+          />
+        </view>
       </view>
       
       <view class="form-item">
-        <u-input
-          v-model="form.phone"
-          placeholder="请输入手机号"
-          prefixIcon="phone"
-          :prefixIconStyle="{ color: '#999' }"
-          maxlength="11"
-          type="number"
-        />
+        <text class="input-label">手机号</text>
+        <view class="input-wrapper">
+          <text class="input-icon">📱</text>
+          <input
+            v-model="form.phone"
+            class="register-input"
+            placeholder="请输入手机号"
+            placeholder-class="input-placeholder"
+            maxlength="11"
+            type="number"
+          />
+        </view>
       </view>
       
       <view class="form-item code-item">
-        <u-input
-          v-model="form.code"
-          placeholder="请输入验证码"
-          prefixIcon="email"
-          :prefixIconStyle="{ color: '#999' }"
-          maxlength="6"
-          type="number"
+        <view class="code-input-wrapper">
+          <text class="input-label">验证码</text>
+          <view class="input-wrapper">
+            <text class="input-icon">✉️</text>
+            <input
+              v-model="form.code"
+              class="register-input"
+              placeholder="请输入验证码"
+              placeholder-class="input-placeholder"
+              maxlength="6"
+              type="number"
+            />
+          </view>
+        </view>
+        <view 
+          class="code-btn" 
+          :class="{ disabled: codeCountdown > 0 }"
+          @click="sendCode"
         >
-          <template #suffix>
-            <view 
-              class="code-btn" 
-              :class="{ disabled: codeCountdown > 0 }"
-              @click="sendCode"
-            >
-              {{ codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码' }}
-            </view>
-          </template>
-        </u-input>
+          {{ codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码' }}
+        </view>
       </view>
       
       <view class="form-item">
-        <u-input
-          v-model="form.password"
-          type="password"
-          placeholder="请设置密码（6-20位）"
-          prefixIcon="lock"
-          :prefixIconStyle="{ color: '#999' }"
-          maxlength="20"
-        />
+        <text class="input-label">密码</text>
+        <view class="input-wrapper">
+          <text class="input-icon">🔒</text>
+          <input
+            v-model="form.password"
+            class="register-input"
+            password
+            placeholder="请设置密码（6-20位）"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+          />
+        </view>
       </view>
       
       <view class="form-item">
-        <u-input
-          v-model="form.confirmPassword"
-          type="password"
-          placeholder="请确认密码"
-          prefixIcon="lock-fill"
-          :prefixIconStyle="{ color: '#999' }"
-          maxlength="20"
-        />
+        <text class="input-label">确认密码</text>
+        <view class="input-wrapper">
+          <text class="input-icon">🔐</text>
+          <input
+            v-model="form.confirmPassword"
+            class="register-input"
+            password
+            placeholder="请确认密码"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+          />
+        </view>
       </view>
       
       <view class="agreement">
-        <u-checkbox v-model="agreed" shape="circle" size="14">
+        <view class="checkbox-wrapper" @click="agreed = !agreed">
+          <view class="checkbox" :class="{ checked: agreed }">
+            <text v-if="agreed" class="check-icon">✓</text>
+          </view>
           <text class="agreement-text">
-            我已阅读并同意<text class="link" @click.stop="showAgreement">《用户协议》</text>和<text @click.stop="showPrivacy">《隐私政策》</text>
+            我已阅读并同意<text class="link" @click.stop="showAgreement">《用户协议》</text>和<text class="link" @click.stop="showPrivacy">《隐私政策》</text>
           </text>
-        </u-checkbox>
+        </view>
       </view>
       
-      <u-button 
-        type="primary" 
-        size="large" 
+      <button 
+        class="register-btn" 
         :loading="loading"
+        :disabled="loading"
         @click="handleRegister"
       >
-        注册
-      </u-button>
+        <text v-if="!loading" class="btn-text">注 册</text>
+        <text v-else class="btn-text">注册中...</text>
+      </button>
       
       <view class="login-link">
-        已有账号？<text @click="goLogin">立即登录</text>
+        <text class="link-text">已有账号？</text>
+        <text class="link-action" @click="goLogin">立即登录</text>
       </view>
     </view>
   </view>
@@ -238,82 +268,310 @@ const showPrivacy = () => {
 </script>
 
 <style lang="scss" scoped>
+/* H5 兼容性重置 */
+page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* #ifdef H5 */
+input, button {
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  border: none;
+  background: transparent;
+}
+
+button::after {
+  border: none;
+}
+/* #endif */
+
 .register-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 60rpx 40rpx;
+  padding: 40rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .register-header {
   text-align: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 40rpx;
+  flex-shrink: 0;
   
   .logo {
-    width: 160rpx;
-    height: 160rpx;
-    margin-bottom: 30rpx;
+    width: 140rpx;
+    height: 140rpx;
+    margin-bottom: 20rpx;
     background: #fff;
-    border-radius: 40rpx;
-    padding: 20rpx;
+    border-radius: 32rpx;
+    padding: 16rpx;
   }
   
   .title {
-    font-size: 48rpx;
+    font-size: 44rpx;
     font-weight: bold;
     color: #fff;
-    margin-bottom: 16rpx;
+    margin-bottom: 12rpx;
+    line-height: 1.4;
   }
   
   .subtitle {
-    font-size: 28rpx;
-    color: rgba(255,255,255,0.8);
+    font-size: 26rpx;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.4;
   }
 }
 
 .register-form {
   background: #fff;
   border-radius: 24rpx;
-  padding: 40rpx;
+  padding: 32rpx;
+  flex-shrink: 0;
+  box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.15);
 }
 
 .form-item {
-  margin-bottom: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.input-label {
+  display: block;
+  font-size: 26rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+  font-weight: 500;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  height: 84rpx;
+  padding: 0 20rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  border: 2rpx solid #e8e8e8;
+  
+  .input-icon {
+    font-size: 32rpx;
+    margin-right: 16rpx;
+    flex-shrink: 0;
+  }
+  
+  .register-input {
+    flex: 1;
+    height: 100%;
+    font-size: 28rpx;
+    color: #333;
+    background: transparent;
+    border: none;
+    
+    /* #ifdef H5 */
+    line-height: normal;
+    /* #endif */
+  }
+  
+  &:focus-within {
+    border-color: #5B8FF9;
+    background: #fff;
+  }
+}
+
+.input-placeholder {
+  color: #bbb;
+  font-size: 28rpx;
+}
+
+.code-item {
+  display: flex;
+  align-items: flex-end;
+  gap: 16rpx;
+  
+  .code-input-wrapper {
+    flex: 1;
+  }
 }
 
 .code-btn {
-  padding: 12rpx 24rpx;
-  background: #5B8FF9;
+  padding: 0 24rpx;
+  height: 84rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
-  border-radius: 8rpx;
-  font-size: 24rpx;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 500;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
   
   &.disabled {
     background: #ccc;
+    box-shadow: none;
+  }
+  
+  &:active:not(.disabled) {
+    opacity: 0.9;
+    transform: translateY(2rpx);
   }
 }
 
 .agreement {
-  margin-bottom: 40rpx;
+  margin: 24rpx 0 32rpx;
   
-  .agreement-text {
-    font-size: 24rpx;
-    color: #999;
+  .checkbox-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12rpx;
+    
+    .checkbox {
+      width: 32rpx;
+      height: 32rpx;
+      border-radius: 50%;
+      border: 2rpx solid #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2rpx;
+      
+      &.checked {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+      }
+      
+      .check-icon {
+        color: #fff;
+        font-size: 20rpx;
+        font-weight: bold;
+      }
+    }
+    
+    .agreement-text {
+      font-size: 24rpx;
+      color: #666;
+      line-height: 1.5;
+    }
+    
+    .link {
+      color: #5B8FF9;
+    }
+  }
+}
+
+/* 注册按钮 - 优化样式 */
+.register-btn {
+  width: 100%;
+  height: 92rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 46rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+  margin: 0;
+  padding: 0;
+  
+  .btn-text {
+    color: #fff;
+    font-size: 32rpx;
+    font-weight: 600;
   }
   
-  .link {
-    color: #5B8FF9;
+  &:active {
+    transform: translateY(2rpx);
+    box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.3);
+  }
+  
+  &[disabled] {
+    opacity: 0.7;
   }
 }
 
 .login-link {
   text-align: center;
-  margin-top: 30rpx;
-  font-size: 26rpx;
-  color: #999;
+  margin-top: 24rpx;
+  padding: 12rpx 0;
   
-  text {
+  .link-text {
+    font-size: 26rpx;
+    color: #999;
+  }
+  
+  .link-action {
+    font-size: 26rpx;
     color: #5B8FF9;
+    font-weight: 500;
     margin-left: 8rpx;
+  }
+}
+
+/* 响应式适配 - 小屏幕手机 */
+@media screen and (max-height: 700px) {
+  .register-header {
+    margin-bottom: 24rpx;
+    
+    .logo {
+      width: 100rpx;
+      height: 100rpx;
+    }
+    
+    .title {
+      font-size: 36rpx;
+    }
+    
+    .subtitle {
+      font-size: 22rpx;
+    }
+  }
+  
+  .register-form {
+    padding: 24rpx;
+  }
+  
+  .form-item {
+    margin-bottom: 16rpx;
+  }
+  
+  .input-wrapper {
+    height: 76rpx;
+  }
+  
+  .code-btn {
+    height: 76rpx;
+  }
+  
+  .register-btn {
+    height: 84rpx;
+  }
+}
+
+/* 大屏适配 */
+@media screen and (min-width: 768px) {
+  .register-page {
+    padding: 60rpx 80rpx;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .register-form {
+    max-width: 600rpx;
+    width: 100%;
+    padding: 40rpx;
+  }
+  
+  .register-header {
+    max-width: 600rpx;
+    width: 100%;
   }
 }
 </style>

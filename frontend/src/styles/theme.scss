@@ -1,52 +1,56 @@
 /** 主题变量定义 */
 
-/* ==================== 浅色主题（默认） ==================== */
+/* ==================== 浅色主题（默认）- 小清新风格 ==================== */
 :root,
 [data-theme="light"] {
-  /* 背景色 */
-  --bg-primary: #f5f6fa;
+  /* 背景色 - 更温暖的色调 */
+  --bg-primary: #f8f9fc;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f8f9fa;
+  --bg-tertiary: #f5f7fa;
   --bg-card: #ffffff;
-  --bg-hover: #f0f0f0;
-  --bg-active: #e8e8e8;
+  --bg-hover: #f0f4f8;
+  --bg-active: #e8eef5;
   
   /* 文字色 */
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --text-tertiary: #999999;
+  --text-primary: #2d3748;
+  --text-secondary: #5a6c7d;
+  --text-tertiary: #8b9aad;
   --text-inverse: #ffffff;
-  --text-link: #5B8FF9;
+  --text-link: #6B8DD6;
   
   /* 边框色 */
-  --border-primary: #e8e8e8;
-  --border-secondary: #f0f0f0;
-  --border-focus: #5B8FF9;
+  --border-primary: #e2e8f0;
+  --border-secondary: #edf2f7;
+  --border-focus: #6B8DD6;
   
-  /* 阴影 */
-  --shadow-sm: 0 2rpx 8rpx rgba(0,0,0,0.05);
-  --shadow-md: 0 4rpx 16rpx rgba(0,0,0,0.08);
-  --shadow-lg: 0 8rpx 24rpx rgba(0,0,0,0.12);
+  /* 阴影 - 更柔和的多层阴影 */
+  --shadow-sm: 0 2rpx 12rpx rgba(107, 141, 214, 0.06);
+  --shadow-md: 0 8rpx 24rpx rgba(107, 141, 214, 0.08), 0 2rpx 8rpx rgba(0,0,0,0.04);
+  --shadow-lg: 0 12rpx 40rpx rgba(107, 141, 214, 0.12), 0 4rpx 12rpx rgba(0,0,0,0.06);
+  --shadow-hover: 0 16rpx 48rpx rgba(107, 141, 214, 0.15), 0 8rpx 24rpx rgba(0,0,0,0.08);
   
-  /* 主色调 */
-  --primary-color: #5B8FF9;
-  --primary-light: #e6f7ff;
-  --primary-dark: #4a7de4;
+  /* 主色调 - 更柔和的蓝色 */
+  --primary-color: #6B8DD6;
+  --primary-light: #e8f0fe;
+  --primary-dark: #5a7dc8;
   
-  /* 功能色 */
-  --success-color: #52c41a;
-  --success-bg: #f6ffed;
-  --warning-color: #faad14;
-  --warning-bg: #fffbe6;
-  --error-color: #ff4d4f;
-  --error-bg: #fff2f0;
-  --info-color: #1890ff;
-  --info-bg: #e6f7ff;
+  /* 功能色 - 降低饱和度更清新 */
+  --success-color: #68d391;
+  --success-bg: #f0fff4;
+  --warning-color: #f6ad55;
+  --warning-bg: #fffaf0;
+  --error-color: #fc8181;
+  --error-bg: #fff5f5;
+  --info-color: #63b3ed;
+  --info-bg: #ebf8ff;
   
-  /* 渐变色 */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-success: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
-  --gradient-warning: linear-gradient(135deg, #faad14 0%, #d48806 100%);
+  /* 渐变色 - 更柔和的渐变 */
+  --gradient-primary: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
+  --gradient-success: linear-gradient(135deg, #68d391 0%, #48bb78 100%);
+  --gradient-warning: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+  --gradient-warm: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-cool: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --gradient-fresh: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
 /* ==================== 深色主题 ==================== */

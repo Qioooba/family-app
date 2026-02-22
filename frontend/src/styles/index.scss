@@ -1,33 +1,45 @@
 // 引入主题变量
 @import './theme.scss';
 
-// 全局样式变量
+// 全局样式变量 - 小清新圆润风格
 :root {
-  --primary-color: #5B8FF9;
-  --success-color: #5AD8A6;
-  --warning-color: #FAAD14;
-  --error-color: #FF4D4F;
-  --info-color: #1890FF;
+  // 主色调 - 更柔和
+  --primary-color: #6B8DD6;
+  --primary-light: #e8f0fe;
+  --primary-dark: #5a7dc8;
   
-  --text-primary: #333333;
-  --text-secondary: #666666;
-  --text-tertiary: #999999;
+  --success-color: #68d391;
+  --warning-color: #f6ad55;
+  --error-color: #fc8181;
+  --info-color: #63b3ed;
   
-  --bg-primary: #F5F6FA;
-  --bg-white: #FFFFFF;
-  --bg-gray: #F0F0F0;
+  // 文字色
+  --text-primary: #2d3748;
+  --text-secondary: #5a6c7d;
+  --text-tertiary: #8b9aad;
   
-  --border-color: #EEEEEE;
-  --divider-color: #F5F5F5;
+  // 背景色 - 温暖舒适
+  --bg-primary: #f8f9fc;
+  --bg-white: #ffffff;
+  --bg-gray: #f1f5f9;
   
-  --shadow-sm: 0 2rpx 8rpx rgba(0,0,0,0.06);
-  --shadow-md: 0 4rpx 20rpx rgba(0,0,0,0.08);
-  --shadow-lg: 0 8rpx 30rpx rgba(0,0,0,0.12);
+  --border-color: #e2e8f0;
+  --divider-color: #f1f5f9;
   
-  --radius-sm: 8rpx;
-  --radius-md: 16rpx;
-  --radius-lg: 24rpx;
+  // 阴影 - 柔和多层
+  --shadow-sm: 0 2rpx 12rpx rgba(107, 141, 214, 0.06);
+  --shadow-md: 0 8rpx 24rpx rgba(107, 141, 214, 0.08), 0 2rpx 8rpx rgba(0,0,0,0.04);
+  --shadow-lg: 0 12rpx 40rpx rgba(107, 141, 214, 0.12), 0 4rpx 12rpx rgba(0,0,0,0.06);
+  --shadow-hover: 0 16rpx 48rpx rgba(107, 141, 214, 0.15), 0 8rpx 24rpx rgba(0,0,0,0.08);
+  --shadow-btn: 0 4rpx 14rpx rgba(107, 141, 214, 0.3);
+  
+  // 圆角 - 更圆润
+  --radius-xs: 8rpx;
+  --radius-sm: 12rpx;
+  --radius-md: 20rpx;
+  --radius-lg: 28rpx;
   --radius-xl: 40rpx;
+  --radius-full: 9999rpx;
 }
 
 // 全局样式
@@ -35,16 +47,24 @@ page {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: var(--text-primary);
   background-color: var(--bg-primary);
-  line-height: 1.6;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-// 通用卡片样式
+// 通用卡片样式 - 圆润清新
 .card {
   background: var(--bg-white);
   border-radius: var(--radius-md);
-  padding: 30rpx;
-  margin: 20rpx 30rpx;
+  padding: 32rpx;
+  margin: 24rpx 30rpx;
   box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 // 通用标题样式
@@ -53,49 +73,92 @@ page {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 24rpx;
+  letter-spacing: -0.2rpx;
 }
 
-// 通用按钮样式
+// 通用按钮样式 - 丝滑圆润
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
   color: #fff;
   border-radius: var(--radius-xl);
-  padding: 24rpx 48rpx;
+  padding: 26rpx 52rpx;
   font-size: 30rpx;
   font-weight: 500;
   text-align: center;
   border: none;
+  box-shadow: var(--shadow-btn);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    transform: scale(0.96);
+    box-shadow: 0 2rpx 8rpx rgba(107, 141, 214, 0.2);
+  }
 }
 
 .btn-success {
-  background: var(--success-color);
+  background: linear-gradient(135deg, #68d391 0%, #48bb78 100%);
   color: #fff;
   border-radius: var(--radius-xl);
-  padding: 24rpx 48rpx;
+  padding: 26rpx 52rpx;
   font-size: 30rpx;
   font-weight: 500;
   text-align: center;
   border: none;
+  box-shadow: 0 4rpx 14rpx rgba(104, 211, 145, 0.3);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+.btn-secondary {
+  background: var(--bg-gray);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xl);
+  padding: 26rpx 52rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  text-align: center;
+  border: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    transform: scale(0.96);
+    background: var(--border-color);
+  }
 }
 
 // 渐变背景
 .gradient-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
 }
 
 .gradient-success {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: linear-gradient(135deg, #68d391 0%, #48bb78 100%);
 }
 
 .gradient-warning {
+  background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+}
+
+.gradient-warm {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.gradient-cool {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.gradient-fresh {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
 }
 
 // 动画
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20rpx);
+    transform: translateY(30rpx);
   }
   to {
     opacity: 1;
@@ -112,19 +175,65 @@ page {
   }
 }
 
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10rpx);
+  }
+}
+
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .animate-slide-in {
   animation: slideIn 0.3s ease-out;
 }
 
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+// 列表项进入动画
+@keyframes listItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-item-animate {
+  animation: listItemIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
 // 加载状态
 .skeleton {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
+  border-radius: var(--radius-sm);
 }
 
 @keyframes skeleton-loading {
@@ -145,4 +254,86 @@ page {
 .safe-area-bottom {
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+// 通用标签样式 - 圆润
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 8rpx 20rpx;
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-radius: var(--radius-full);
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.tag-success {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+.tag-warning {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+}
+
+// 输入框样式 - 圆润
+.input-rounded {
+  width: 100%;
+  height: 88rpx;
+  background: var(--bg-gray);
+  border-radius: var(--radius-lg);
+  padding: 0 28rpx;
+  font-size: 28rpx;
+  color: var(--text-primary);
+  border: 2rpx solid transparent;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    border-color: var(--primary-color);
+    background: var(--bg-white);
+    box-shadow: 0 0 0 4rpx var(--primary-light);
+  }
+  
+  &::placeholder {
+    color: var(--text-tertiary);
+  }
+}
+
+// 图标容器 - 圆润可爱
+.icon-box-rounded {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+// 悬浮效果
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover, &:active {
+    transform: translateY(-4rpx);
+    box-shadow: var(--shadow-hover);
+  }
+}
+
+// 玻璃态效果
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+}
+
+// 深色模式下的玻璃态
+.dark .glass {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1rpx solid rgba(255, 255, 255, 0.1);
 }

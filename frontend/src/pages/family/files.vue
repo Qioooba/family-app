@@ -189,8 +189,8 @@
           focus
         />
         <view class="popup-actions">
-          <u-button text="取消" @click="showFolderPopup = false"></u-button>
-          <u-button type="primary" text="确定" @click="createFolder"></u-button>
+          <button class="dialog-btn cancel" @click="showFolderPopup = false">取消</button>
+          <button class="dialog-btn primary" @click="createFolder">确定</button>
         </view>
       </view>
     </u-popup>
@@ -206,8 +206,8 @@
           focus
         />
         <view class="popup-actions">
-          <u-button text="取消" @click="showRenamePopup = false"></u-button>
-          <u-button type="primary" text="确定" @click="confirmRename"></u-button>
+          <button class="dialog-btn cancel" @click="showRenamePopup = false">取消</button>
+          <button class="dialog-btn primary" @click="confirmRename">确定</button>
         </view>
       </view>
     </u-popup>
@@ -1011,6 +1011,33 @@ const loadMore = () => {
   .popup-actions {
     display: flex;
     gap: 20rpx;
+    
+    .dialog-btn {
+      flex: 1;
+      height: 80rpx;
+      border-radius: 40rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30rpx;
+      font-weight: 500;
+      border: none;
+      
+      &.cancel {
+        background: #f5f5f5;
+        color: #666;
+      }
+      
+      &.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+      }
+      
+      &:active {
+        opacity: 0.9;
+        transform: translateY(2rpx);
+      }
+    }
   }
 }
 </style>

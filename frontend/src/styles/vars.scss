@@ -1,2 +1,67 @@
-// 变量定义文件
-// 此文件保留给未来使用的SCSS变量
+// 变量定义文件 - 小清新圆润风格
+
+// 颜色变量
+$primary-color: #6B8DD6;
+$primary-light: #e8f0fe;
+$primary-dark: #5a7dc8;
+
+$success-color: #68d391;
+$warning-color: #f6ad55;
+$error-color: #fc8181;
+$info-color: #63b3ed;
+
+// 文字色
+$text-primary: #2d3748;
+$text-secondary: #5a6c7d;
+$text-tertiary: #8b9aad;
+
+// 背景色
+$bg-primary: #f8f9fc;
+$bg-white: #ffffff;
+$bg-gray: #f1f5f9;
+
+// 边框色
+$border-color: #e2e8f0;
+$divider-color: #f1f5f9;
+
+// 阴影
+$shadow-sm: 0 2rpx 12rpx rgba(107, 141, 214, 0.06);
+$shadow-md: 0 8rpx 24rpx rgba(107, 141, 214, 0.08), 0 2rpx 8rpx rgba(0,0,0,0.04);
+$shadow-lg: 0 12rpx 40rpx rgba(107, 141, 214, 0.12), 0 4rpx 12rpx rgba(0,0,0,0.06);
+$shadow-hover: 0 16rpx 48rpx rgba(107, 141, 214, 0.15), 0 8rpx 24rpx rgba(0,0,0,0.08);
+$shadow-btn: 0 4rpx 14rpx rgba(107, 141, 214, 0.3);
+
+// 圆角
+$radius-xs: 8rpx;
+$radius-sm: 12rpx;
+$radius-md: 20rpx;
+$radius-lg: 28rpx;
+$radius-xl: 40rpx;
+$radius-full: 9999rpx;
+
+// 间距
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+
+// 字体大小
+$font-xs: 22rpx;
+$font-sm: 24rpx;
+$font-md: 28rpx;
+$font-lg: 32rpx;
+$font-xl: 36rpx;
+$font-xxl: 44rpx;
+
+// 过渡
+$transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Z-index
+$z-dropdown: 100;
+$z-sticky: 200;
+$z-modal: 300;
+$z-toast: 400;
+$z-popup: 500;

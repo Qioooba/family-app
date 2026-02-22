@@ -1,5 +1,6 @@
 package com.family.task.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.family.common.core.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +13,8 @@ public class Task extends BaseEntity {
     private static final long serialVersionUID = 1L;
     
     private Long familyId;
+    
+    @TableField(exist = false)
     private Long categoryId;
     private String title;
     private String content;

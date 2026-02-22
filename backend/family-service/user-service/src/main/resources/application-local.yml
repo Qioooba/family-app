@@ -7,32 +7,20 @@ spring:
   autoconfigure:
     exclude:
       - org.redisson.spring.starter.RedissonAutoConfigurationV2
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
   application:
     name: family-app
   
   datasource:
     url: jdbc:mysql://localhost:3306/family_app?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: ${MYSQL_USERNAME:root}
-    password: your_secure_mysql_password
+    username: root
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
       idle-timeout: 300000
       connection-timeout: 20000
-  
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
-    database: ${REDIS_DB:0}
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-  redisson:
-    password: ${REDIS_PASSWORD:}
   
   servlet:
     multipart:
@@ -69,33 +57,22 @@ family:
   
   # 文件存储
   storage:
-    type: minio
-    minio:
-      endpoint: http://localhost:9000
-      access-key: minioadmin
-      secret-key: minioadmin
-      bucket-name: family-app
+    type: local
+    local:
+      path: /tmp/family-app/uploads
   
   # AI服务
   ai:
-    # DeepSeek/文心一言等
     api-key: your-api-key
     api-url: https://api.deepseek.com/v1/chat/completions
   
   # 短信服务
   sms:
-    provider: aliyun
-    access-key: your-access-key
-    secret-key: your-secret-key
-    sign-name: 家庭小程序
-    template-code: SMS_12345678
+    provider: mock
   
   # 图像识别
   ocr:
-    provider: baidu
-    app-id: your-app-id
-    api-key: your-api-key
-    secret-key: your-secret-key
+    provider: mock
 
 logging:
   level:
