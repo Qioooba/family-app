@@ -7,7 +7,7 @@ import com.family.file.entity.FileShare;
 import com.family.file.vo.FileShareVO;
 import com.family.file.vo.FileVO;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
