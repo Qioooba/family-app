@@ -151,6 +151,20 @@
             "navigationBarTitleText": "语音创建",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "ai-classify",
+          "style": {
+            "navigationBarTitleText": "AI分类",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "camera",
+          "style": {
+            "navigationBarTitleText": "拍照创建",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
