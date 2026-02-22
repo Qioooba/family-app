@@ -4,7 +4,6 @@ import com.family.common.core.Result;
 import com.family.health.entity.WaterRecord;
 import com.family.health.mapper.WaterRecordMapper;
 import com.family.health.vo.WaterTodayVO;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -16,13 +15,16 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/diet/water")
-@RequiredArgsConstructor
 public class WaterController {
     
     private final WaterRecordMapper waterRecordMapper;
     
     // 默认每日目标饮水量 2000ml
     private static final int DEFAULT_TARGET = 2000;
+    
+    public WaterController(WaterRecordMapper waterRecordMapper) {
+        this.waterRecordMapper = waterRecordMapper;
+    }
     
     /**
      * 记录喝水

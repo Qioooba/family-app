@@ -1,22 +1,84 @@
 package com.family.health.vo;
 
 import com.family.health.entity.WaterRecord;
-import lombok.Data;
 
 import java.util.List;
 
 /**
  * 今日喝水统计VO
  */
-@Data
 public class WaterTodayVO {
     
     private Long userId;
     private String date;
-    private Integer todayAmount;  // 今日已喝量(ml)
-    private Integer targetAmount; // 目标量(ml)
-    private Integer percent;      // 完成百分比
-    private String status;        // completed/half/ongoing
-    private String message;       // 提示信息
-    private List<WaterRecord> records; // 今日记录列表
+    private Integer todayAmount;
+    private Integer targetAmount;
+    private Integer percent;
+    private String status;
+    private String message;
+    private List<WaterRecord> records;
+    
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public String getDate() {
+        return date;
+    }
+    
+    public void setDate(String date) {
+        this.date = date;
+    }
+    
+    public Integer getTodayAmount() {
+        return todayAmount;
+    }
+    
+    public void setTodayAmount(Integer todayAmount) {
+        this.todayAmount = todayAmount;
+    }
+    
+    public Integer getTargetAmount() {
+        return targetAmount;
+    }
+    
+    public void setTargetAmount(Integer targetAmount) {
+        this.targetAmount = targetAmount;
+    }
+    
+    public Integer getPercent() {
+        return percent;
+    }
+    
+    public void setPercent(Integer percent) {
+        this.percent = percent;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
+    
+    public void setMessage(String message) {
+        this.message = message;
+    }
+    
+    public List<WaterRecord> getRecords() {
+        return records;
+    }
+    
+    public void setRecords(List<WaterRecord> records) {
+        this.records = records;
+    }
 }

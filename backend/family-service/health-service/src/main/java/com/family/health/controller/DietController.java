@@ -4,7 +4,6 @@ import com.family.common.core.Result;
 import com.family.health.service.DietService;
 import com.family.health.vo.DailyNutritionVO;
 import com.family.health.vo.WeeklyNutritionVO;
-import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +15,13 @@ import java.time.LocalDate;
  */
 @RestController
 @RequestMapping("/api/diet")
-@RequiredArgsConstructor
 public class DietController {
     
     private final DietService dietService;
+    
+    public DietController(DietService dietService) {
+        this.dietService = dietService;
+    }
     
     /**
      * 获取每日营养分析

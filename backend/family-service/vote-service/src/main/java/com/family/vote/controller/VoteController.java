@@ -3,17 +3,19 @@ package com.family.vote.controller;
 import com.family.common.core.Result;
 import com.family.vote.entity.Vote;
 import com.family.vote.service.VoteService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/vote")
-@RequiredArgsConstructor
 public class VoteController {
     
     private final VoteService voteService;
+    
+    public VoteController(VoteService voteService) {
+        this.voteService = voteService;
+    }
     
     @GetMapping("/list/{familyId}")
     public Result<List<Vote>> list(@PathVariable Long familyId,
