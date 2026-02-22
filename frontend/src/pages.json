@@ -57,6 +57,13 @@
         "navigationStyle": "custom"
       }
     },
+    {
+      "path": "pages/demo/load-more-2",
+      "style": {
+        "navigationBarTitleText": "上拉加载2.0",
+        "navigationStyle": "custom"
+      }
+    },
   "subPackages": [
     {
       "root": "pages/task",
