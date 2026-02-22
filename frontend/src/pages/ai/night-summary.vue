@@ -76,7 +76,7 @@
           <text class="completion-percent">{{ completionRate }}%</text>
         </view>
         <view class="completion-bar">
-          <view class="completion-fill" :style="{ width: completionRate + '%' }"></text>
+          <view class="completion-fill" :style="{ width: completionRate + '%' }"></view>
         </view>
         <text class="completion-desc">{{ completionText }}</text>
       </view>
@@ -137,7 +137,7 @@
           <view v-for="(event, index) in tomorrowEvents" :key="index" class="schedule-item">
             <view class="item-time">{{ event.time }}</view>
             <view class="item-content">
-              <view class="item-dot" :style="{ background: event.color }"></text>
+              <view class="item-dot" :style="{ background: event.color }"></view>
               <text class="item-title">{{ event.title }}</text>
             </view>
           </view>

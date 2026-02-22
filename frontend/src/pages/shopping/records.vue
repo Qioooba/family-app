@@ -61,7 +61,7 @@
                 class="bar-fill" 
                 :style="{ height: item.percent + '%' }"
                 :class="{ highlight: item.isToday }"
-              ></text>
+              ></view>
             </view>
             <text class="bar-label">{{ item.day }}</text>
             <text v-if="item.amount > 0" class="bar-value">¥{{ item.amount }}</text>
@@ -78,7 +78,7 @@
               <view 
                 class="freq-bar" 
                 :style="{ width: item.percent + '%' }"
-              ></text>
+              ></view>
             </view>
             <text class="freq-count">{{ item.count }}次</text>
           </view>

@@ -108,7 +108,7 @@
               {{ day.lunarText }}
             </text>
             
-            <view v-if="day.festival" class="festival-dot"></text>
+            <view v-if="day.festival" class="festival-dot"></view>
           </view>
         </view>
       </view>

@@ -70,18 +70,15 @@
           <view 
             class="theme-option" 
             :class="{ active: currentTheme === 'default' }"
-            @click="currentTheme = 'default'"
-          >默认</view>
+            @click="currentTheme = 'default'">          >默认</view>
           <view 
             class="theme-option" 
             :class="{ active: currentTheme === 'simple' }"
-            @click="currentTheme = 'simple'"
-          >简约</view>
+            @click="currentTheme = 'simple'">          >简约</view>
           <view 
             class="theme-option" 
             :class="{ active: currentTheme === 'card' }"
-            @click="currentTheme = 'card'"
-          >卡片</view>
+            @click="currentTheme = 'card'">          >卡片</view>
         </view>
       </view>
       

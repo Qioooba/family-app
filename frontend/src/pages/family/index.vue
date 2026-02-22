@@ -2,7 +2,7 @@
   <view class="family-page">
     <!-- 家庭信息卡 -->
     <view class="family-header">
-      <view class="header-bg"></text>
+      <view class="header-bg"></view>
       
       <view class="family-info">
         <image class="family-avatar" src="/static/family-avatar.jpg" />

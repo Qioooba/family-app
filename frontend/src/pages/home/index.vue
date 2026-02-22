@@ -80,15 +80,15 @@
       <view v-else class="empty-state">
         <u-icon name="checkmark-circle" size="60" color="#ddd"></u-icon>
         <text>今天没有待办事项，享受生活吧！</text>
-      </text>
-    </text>
+      </view>
+    </view>
     
     <!-- 纪念日提醒 -->
     <view class="section-card" v-if="upcomingAnniversaries.length > 0">
       <view class="section-header">
         <text class="section-title">💝 近期纪念</text>
         <text class="more" @click="navigateTo('/pages/calendar/index')">更多 ></text>
-      </text>
+      </view>
       
       <view class="anniversary-list">
         <view 
@@ -96,27 +96,27 @@
           :key="item.id"
           class="anni-item"
         >
-          <view class="anni-icon">{{ item.icon }}</text>
+          <view class="anni-icon">{{ item.icon }}</view>
           
           <view class="anni-info">
             <text class="anni-title">{{ item.title }}</text>
             <text class="anni-date">{{ item.date }}</text>
-          </text>
+          </view>
           
           <view class="anni-days">
             <text class="days-num">{{ item.days }}</text>
             <text class="days-label">{{ item.days > 0 ? '天后' : '今天' }}</text>
-          </text>
-        </text>
-      </text>
-    </text>
+          </view>
+        </view>
+      </view>
+    </view>
     
     <!-- 今日菜谱推荐 -->
     <view class="section-card">
       <view class="section-header">
         <text class="section-title">🍳 今日菜谱</text>
         <text class="more" @click="navigateTo('/pages/recipe/index')">更多 ></text>
-      </text>
+      </view>
       
       <view class="recipe-scroll">
         <scroll-view scroll-x class="recipe-list" enhanced :show-scrollbar="false">
@@ -139,52 +139,52 @@
               <view class="recipe-meta">
                 <text>⏱️ {{ recipe.time }}分钟</text>
                 <text>🔥 {{ recipe.calories }}卡</text>
-              </text>
-            </text>
-          </text>
+              </view>
+            </view>
+          </view>
         </scroll-view>
-      </text>
-    </text>
+      </view>
+    </view>
     
     <!-- 健康数据概览 -->
     <view class="section-card">
       <view class="section-header">
         <text class="section-title">💪 健康概览</text>
         <text class="more" @click="navigateTo('/pages/food/record')">记录 ></text>
-      </text>
+      </view>
       
       <view class="health-stats">
         <view class="stat-item">
           <text class="stat-value">{{ healthData.calories }}</text>
           <text class="stat-label">已摄入(卡)</text>
-        </text>
+        </view>
         
         <view class="stat-item">
           <text class="stat-value">{{ healthData.target - healthData.calories }}</text>
           <text class="stat-label">剩余(卡)</text>
-        </text>
+        </view>
         
         <view class="stat-item">
           <text class="stat-value">{{ healthData.water }}</text>
           <text class="stat-label">饮水(杯)</text>
-        </text>
-      </text>
+        </view>
+      </view>
       
       <view class="calorie-progress">
         <view class="progress-bar">
           <view 
             class="progress-fill"
             :style="{ width: (healthData.calories / healthData.target * 100) + '%' }"
-          ></text>
-        </text>
+          ></view>
+        </view>
         <text class="progress-text">
           {{ healthData.calories }}/{{ healthData.target }} 卡 ({{ Math.round(healthData.calories / healthData.target * 100) }}%)
         </text>
-      </text>
-    </text>
+      </view>
+    </view>
   </template>
     </PullRefresh2>
-  </text>
+  </view>
 </template>
 
 <script setup>

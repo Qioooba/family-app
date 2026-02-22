@@ -66,7 +66,7 @@
           <text class="condition">{{ coupon.condition }}</text>
         </view>
 
-        <view class="coupon-divider"></text>
+        <view class="coupon-divider"></view>
 
         <view class="coupon-right">
           <view class="coupon-header">

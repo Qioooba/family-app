@@ -55,11 +55,11 @@
         <text class="heatmap-title">{{ selectedMonth }}月完成热力图</text>
         <view class="level-legend">
           <text>少</text>
-          <view class="level-box level-0"></text>
-          <view class="level-box level-1"></text>
-          <view class="level-box level-2"></text>
-          <view class="level-box level-3"></text>
-          <view class="level-box level-4"></text>
+          <view class="level-box level-0"></view>
+          <view class="level-box level-1"></view>
+          <view class="level-box level-2"></view>
+          <view class="level-box level-3"></view>
+          <view class="level-box level-4"></view>
           <text>多</text>
         </view>
       </view>
@@ -109,8 +109,7 @@
             :key="dIndex"
             class="year-day"
             :class="{ [`level-${day.level}`]: day.level >= 0 }"
-            @click="showDayDetail(day)"
-          ></text>
+            @click="showDayDetail(day)">          ></view>
         </view>
       </view>
       
@@ -137,7 +136,7 @@
           </view>
           
           <view class="category-bar">
-            <view class="category-progress" :style="{ width: cat.percentage + '%', background: cat.color }"></text>
+            <view class="category-progress" :style="{ width: cat.percentage + '%', background: cat.color }"></view>
           </view>
           
           <text class="category-percent">{{ cat.percentage }}%</text>

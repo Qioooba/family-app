@@ -20,13 +20,13 @@
           <view class="water-drop"
 >
             <view class="drop-bg"
-></text>
+></view>
             <view 
               class="drop-fill"
               :style="{ height: waterPercent + '%' }"
             >
-              <view class="wave wave1"></text>
-              <view class="wave wave2"></text>
+              <view class="wave wave1"></view>
+              <view class="wave wave2"></view>
             </view>
             
             <view class="drop-content"
@@ -193,7 +193,7 @@
                 class="bar-fill"
                 :style="{ height: (day.amount / dailyTarget * 100) + '%' }"
                 :class="{ completed: day.amount >= dailyTarget }"
-              ></text>
+              ></view>
             </view>
             
             <text class="day-label">{{ day.short }}</text>

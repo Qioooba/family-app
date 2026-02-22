@@ -21,7 +21,7 @@
           
           <view class="wish-progress">
             <view class="progress-bar">
-              <view class="progress-fill" :style="{ width: wish.progress + '%' }"></text>
+              <view class="progress-fill" :style="{ width: wish.progress + '%' }"></view>
             </view>
             <text class="progress-text">{{ wish.progress }}%</text>
           </view>
@@ -98,9 +98,9 @@
                     size="20" 
                     color="#fff"
                   ></u-icon>
-                  <view v-else-if="milestone.status === 'active'" class="pulse-dot"></text>
+                  <view v-else-if="milestone.status === 'active'" class="pulse-dot"></view>
                 </view>
-                <view v-if="index !== filteredMilestones.length - 1" class="axis-line"></text>
+                <view v-if="index !== filteredMilestones.length - 1" class="axis-line"></view>
               </view>
 
               <!-- 时间线内容 -->

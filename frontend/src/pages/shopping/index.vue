@@ -70,7 +70,7 @@
             class="list-item"
             :class="{ checked: item.checked }"
           >
-            <view class="checkbox" :class="{ checked: item.checked }"></text>
+            <view class="checkbox" :class="{ checked: item.checked }"></view>
             <text class="item-name">{{ item.name }}</text>
             <text class="item-qty">{{ item.quantity }}{{ item.unit }}</text>
           </view>
@@ -122,7 +122,7 @@
     
     <!-- 扫码结果弹窗 -->
     <view v-if="showScanModal" class="scan-modal">
-      <view class="scan-modal-mask" @click="closeScanModal"></text>
+      <view class="scan-modal-mask" @click="closeScanModal"></view>
       
       <view class="scan-modal-content">
         <view class="scan-modal-header">
@@ -131,7 +131,7 @@
         </view>
         
         <view v-if="scanLoading" class="scan-loading">
-          <view class="loading-spinner"></text>
+          <view class="loading-spinner"></view>
           <text class="loading-text">正在识别商品...</text>
         </view>
         

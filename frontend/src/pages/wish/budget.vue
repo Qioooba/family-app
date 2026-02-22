@@ -29,16 +29,16 @@
           <!-- 进度条 -->
           <view class="progress-section">
             <view class="progress-bar">
-              <view class="progress-track"></text>
+              <view class="progress-track"></view>
               <view 
                 class="progress-fill" 
                 :class="progressClass"
                 :style="{ width: progressPercent + '%' }"
-              ></text>
+              ></view>
               <view 
                 class="progress-marker"
                 :style="{ left: progressPercent + '%' }"
-              ></text>
+              ></view>
             </view>
             
             <view class="progress-labels">
@@ -53,17 +53,17 @@
               <text class="stat-value">{{ wishStats.total }}</text>
               <text class="stat-label">心愿总数</text>
             </view>
-            <view class="stat-divider"></text>
+            <view class="stat-divider"></view>
             <view class="stat-item">
               <text class="stat-value">{{ wishStats.claimed }}</text>
               <text class="stat-label">已认领</text>
             </view>
-            <view class="stat-divider"></text>
+            <view class="stat-divider"></view>
             <view class="stat-item">
               <text class="stat-value">{{ wishStats.completed }}</text>
               <text class="stat-label">已实现</text>
             </view>
-            <view class="stat-divider"></text>
+            <view class="stat-divider"></view>
             <view class="stat-item">
               <text class="stat-value highlight">{{ wishStats.pending }}</text>
               <text class="stat-label">待实现</text>
@@ -106,7 +106,7 @@
                       width: (cat.used / cat.budget * 100) + '%',
                       background: cat.color
                     }"
-                  ></text>
+                  ></view>
                 </view>
                 <text class="category-percent">{{ Math.round(cat.used / cat.budget * 100) }}%</text>
               </view>

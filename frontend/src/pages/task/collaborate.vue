@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">协作编辑</view>
     </view>
     
@@ -28,10 +28,8 @@
     
     <view class="collab-actions"
 >
-      <view class="action-btn" @click="invite"
-邀请</view>
-      <view class="action-btn primary" @click="save"
-保存</view>
+      <view class="action-btn" @click="invite">邀请</view>
+      <view class="action-btn primary" @click="save">保存</view>
     </view>
   </view>
 </template>

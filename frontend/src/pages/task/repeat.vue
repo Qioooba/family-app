@@ -199,7 +199,7 @@
             @click="selectEndType(option.value)"
           >
             <view class="option-radio">
-              <view class="radio-inner" v-if="endType === option.value"></text>
+              <view class="radio-inner" v-if="endType === option.value"></view>
             </view>
             <view class="option-content">
               <text class="option-title">{{ option.label }}</text>

@@ -18,7 +18,7 @@
           <text class="points-num">{{ points }}</text>
           <text class="points-label">积分</text>
         </view>
-        <view class="points-divider"></text>
+        <view class="points-divider"></view>
         
         <view class="points-item">
           <text class="points-num">{{ badgeCount }}</text>

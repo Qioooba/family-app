@@ -6,7 +6,7 @@
     </view>
     <view class="list">
       <view class="item" v-for="item in items" :key="item.id" @click="toggleItem(item)">
-        <view class="checkbox" :class="{ checked: item.checked }"></text>
+        <view class="checkbox" :class="{ checked: item.checked }"></view>
         <text class="name" :class="{ done: item.checked }">{{ item.name }}</text>
         <text class="quantity">x{{ item.quantity }}</text>
       </view>

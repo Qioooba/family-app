@@ -3,9 +3,9 @@
 >
     <view class="header"
 >
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">AI智能分类</view>
-      <view class="header-action" @click="showHelp"><text>❓</text></text>
+      <view class="header-action" @click="showHelp"><text>❓</text></view>
     </view>
     
     <view class="input-section"
@@ -27,7 +27,7 @@
     
     <view class="result-section" v-if="classificationResult"
 >
-      <view class="result-header"><text>📊 分类结果</text></text>
+      <view class="result-header"><text>📊 分类结果</text></view>
       
       <view class="category-card"
 >

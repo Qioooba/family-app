@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">A/B测试</view>
     </view>
     
@@ -24,7 +24,7 @@
             <text class="variant-label">{{ v.name }}</text>
             <view class="variant-progress"
 >
-              <view class="variant-fill" :style="{ width: v.percent + '%', background: v.color }"></text>
+              <view class="variant-fill" :style="{ width: v.percent + '%', background: v.color }"></view>
             </view>
             <text class="variant-value">{{ v.percent }}%</text>
           </view>

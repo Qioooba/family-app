@@ -81,7 +81,7 @@
         <view class="header-right">
           <text class="progress-text">{{ completedCount }}/{{ todos.length }}</text>
           <view class="progress-ring">
-            <view class="progress-fill" :style="{ width: todoProgress + '%' }"></text>
+            <view class="progress-fill" :style="{ width: todoProgress + '%' }"></view>
           </view>
         </view>
       </view>
@@ -138,7 +138,7 @@
         >
           <view class="schedule-time">
             <text class="time-start">{{ event.startTime }}</text>
-            <view class="time-line"></text>
+            <view class="time-line"></view>
             <text class="time-end">{{ event.endTime }}</text>
           </view>
           <view class="schedule-content">

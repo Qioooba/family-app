@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">习惯打卡</view>
     </view>
     
@@ -34,7 +34,7 @@
 >
             <view class="progress-dots"
 >
-              <view v-for="n in 7" :key="n" class="dot" :class="{ active: n <= habit.weekProgress }"></text>
+              <view v-for="n in 7" :key="n" class="dot" :class="{ active: n <= habit.weekProgress }"></view>
             </view>
             <text class="streak-text">连续{{ habit.streak }}天</text>
           </view>

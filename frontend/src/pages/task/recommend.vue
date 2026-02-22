@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">推荐任务</view>
     </view>
     
@@ -31,8 +31,7 @@
             </view>
           </view>
           
-          <view class="add-btn" @click="addTask(item)"
-+ 添加</view>
+          <view class="add-btn" @click="addTask(item)">+ 添加</view>
         </view>
       </view>
     </view>
@@ -45,7 +44,7 @@
 >
         <view v-for="(bar, index) in trends" :key="index" class="trend-bar"
 >
-          <view class="bar-fill" :style="{ height: bar.value + '%', background: bar.color }"></text>
+          <view class="bar-fill" :style="{ height: bar.value + '%', background: bar.color }"></view>
           <text class="bar-label">{{ bar.day }}</text>
         </view>
       </view>

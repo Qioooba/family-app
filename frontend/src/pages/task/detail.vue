@@ -69,7 +69,7 @@
         
         <!-- 进度条 -->
         <view v-if="subtasks.length > 0" class="progress-bar">
-          <view class="progress-fill" :style="{ width: subtaskProgress + '%' }"></text>
+          <view class="progress-fill" :style="{ width: subtaskProgress + '%' }"></view>
         </view>
         <text v-if="subtasks.length > 0" class="progress-text">{{ subtaskProgress }}%</text>
         

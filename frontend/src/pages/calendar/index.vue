@@ -52,7 +52,7 @@
         >
           <text class="solar">{{ day }}</text>
           <text v-if="showLunar" class="lunar">{{ getLunarDay(day) }}</text>
-          <view v-if="hasEvent(day)" class="event-dot"></text>
+          <view v-if="hasEvent(day)" class="event-dot"></view>
           <view v-if="isFestival(day)" class="festival-dot">🎉</view>
         </view>
       </view>
@@ -100,8 +100,7 @@
           </view>
         </view>
         
-        <view v-if="filteredEvents.length === 0" class="empty-state"
-3e
+        <view v-if="filteredEvents.length === 0" class="empty-state">
           <text class="empty-icon">🎊</text>
           <text class="empty-text">暂无纪念日</text>
         </view>
@@ -204,13 +203,11 @@
                 :key="opt.value"
                 class="remind-option"
                 :class="{ active: newEvent.remindDays === opt.value }"
-                @click="newEvent.remindDays = opt.value"
-              >{{ opt.label }}</view>
+                @click="newEvent.remindDays = opt.value">              >{{ opt.label }}</view>
             </view>
           </view>
           
-          <view class="submit-btn" @click="submitEvent"
-          >确认添加</view>
+          <view class="submit-btn" @click="submitEvent">          >确认添加</view>
         </view>
       </view>
     </view>

@@ -18,7 +18,7 @@
 >
         <view class="voice-waves"
 >
-          <view v-for="(i, index) in 5" :key="i.id || index"  class="wave-bar" :style="getWaveStyle(i)"></text>
+          <view v-for="(i, index) in 5" :key="i.id || index"  class="wave-bar" :style="getWaveStyle(i)"></view>
         </view>
         
         <view class="voice-icon">
@@ -156,7 +156,7 @@
         
         <view class="recording-indicator"
 >
-          <view class="recording-dot"></text>
+          <view class="recording-dot"></view>
           <text>录音中...</text>
         </view>
       </view>

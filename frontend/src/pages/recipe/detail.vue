@@ -74,7 +74,7 @@
       
       <!-- 步骤 -->
       <view class="section">
-        <view class="section-title"><text>烹饪步骤</text></text>
+        <view class="section-title"><text>烹饪步骤</text></view>
         
         <view class="step-list">
           <view 
@@ -93,7 +93,7 @@
       
       <!-- 营养信息 -->
       <view class="section">
-        <view class="section-title"><text>营养成分</text></text>
+        <view class="section-title"><text>营养成分</text></view>
         
         <view class="nutrition-list">
           <view class="nutrition-item">

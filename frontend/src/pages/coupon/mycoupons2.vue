@@ -24,7 +24,7 @@
             <text class="stat-label">全部券</text>
           </view>
           
-          <view class="stat-divider"></text>
+          <view class="stat-divider"></view>
           
           <view class="stat-item highlight"
 >
@@ -32,7 +32,7 @@
             <text class="stat-label">未使用</text>
           </view>
           
-          <view class="stat-divider"></text>
+          <view class="stat-divider"></view>
           
           <view class="stat-item"
 >
@@ -131,7 +131,7 @@
                       :key="n"
                       class="bar"
                       :style="{ width: Math.random() * 4 + 2 + 'px' }"
-                    ></text>
+                    ></view>
                   </view>
                   <text class="barcode-num">{{ coupon.code }}</text>
                 </view>
@@ -144,7 +144,7 @@
                       :key="n"
                       class="qr-cell"
                       :class="{ filled: Math.random() > 0.5 }"
-                    ></text>
+                    ></view>
                   </view>
                 </view>
 

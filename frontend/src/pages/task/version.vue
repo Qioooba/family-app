@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">版本对比</view>
     </view>
     
@@ -22,10 +22,8 @@
         
         <view class="version-actions"
 >
-          <view class="compare-btn" @click="compare(v)"
-对比</view>
-          <view class="restore-btn" @click="restore(v)"
-恢复</view>
+          <view class="compare-btn" @click="compare(v)">对比</view>
+          <view class="restore-btn" @click="restore(v)">恢复</view>
         </view>
       </view>
     </view>

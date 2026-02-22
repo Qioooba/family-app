@@ -42,7 +42,7 @@
           >
             <view class="type-checkbox"
 >
-              <view v-if="selectedTypes.includes(type.value)" class="check-inner"></text>
+              <view v-if="selectedTypes.includes(type.value)" class="check-inner"></view>
             </view>            
             
             <view class="type-info">
@@ -127,7 +127,7 @@
             
             <view class="format-radio"
 >
-              <view v-if="selectedFormat === format.value" class="radio-inner"></text>
+              <view v-if="selectedFormat === format.value" class="radio-inner"></view>
             </view>          
           </view>        
         </view>

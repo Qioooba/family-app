@@ -20,7 +20,7 @@
       <view class="score-content">
         <view class="ring-chart">
           <view class="ring-bg"></view>
-          <view class="ring-progress" :style="ringStyle"></text>
+          <view class="ring-progress" :style="ringStyle"></view>
           <view class="ring-inner">
             <text class="score-num">{{ healthScore }}</text>
             <text class="score-label">分</text>
@@ -46,7 +46,7 @@
             :key="index"
             class="donut-segment"
             :style="getSegmentStyle(item, index)"
-          ></text>
+          ></view>
           <view class="donut-center">
             <text class="center-value">{{ totalCalories }}</text>
             <text class="center-label">千卡</text>
@@ -54,7 +54,7 @@
         </view>
         <view class="chart-legend">
           <view v-for="(item, index) in nutritionData" :key="index" class="legend-item">
-            <view class="legend-dot" :style="{ background: item.color }"></text>
+            <view class="legend-dot" :style="{ background: item.color }"></view>
             <text class="legend-name">{{ item.name }}</text>
             <text class="legend-value">{{ item.value }}g</text>
             <text class="legend-percent">{{ item.percent }}%</text>

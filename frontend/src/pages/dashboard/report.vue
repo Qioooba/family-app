@@ -62,7 +62,7 @@
           >
               <view class="rank-fill" :style="{ width: reportData.rankPercent + '%' }"
     
-            ></text>
+            ></view>
             </view>
           </view>
         </view>
@@ -92,10 +92,10 @@
         >
           <view class="ring-bg"
     
-      ></text>
+      ></view>
           <view class="ring-fill" :style="{ '--progress': reportData.taskCompletion }"
     
-      ></text>
+      ></view>
           <view class="ring-center"
     
       >
@@ -111,7 +111,7 @@
       >
             <view class="legend-dot" style="background: #10B981;"
     
-        ></text>
+        ></view>
             <text>已完成 {{ reportData.completedTasks }}</text>
           </view>
           <view class="legend-item"
@@ -119,7 +119,7 @@
       >
             <view class="legend-dot" style="background: #EF4444;"
     
-        ></text>
+        ></view>
             <text>未完成 {{ reportData.totalTasks - reportData.completedTasks }}</text>
           </view>
         </view>
@@ -160,7 +160,7 @@
       >
                 <view class="progress-fill" :style="{ width: member.contribution + '%', background: member.color }"
     
-        ></text>
+        ></view>
               </view>
             </view>
             <text class="member-score"
@@ -209,7 +209,7 @@
                   :style="{ height: getBarHeight(data.value) + '%', background: data.color }"
     
           
-                ></text>
+                ></view>
               </view>
               <text class="bar-label"
     
@@ -258,7 +258,7 @@
       >
                 <view class="expense-fill" :style="{ width: cat.percent + '%', background: cat.color }"
     
-        ></text>
+        ></view>
               </view>
             </view>
             <view class="expense-amount"
@@ -295,7 +295,7 @@
     >
       <view class="modal-mask" @click="showFilter = false"
     
-    ></text>
+    ></view>
       <view class="modal-content"
     
     >

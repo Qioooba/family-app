@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">电子签名</view>
     </view>
     
@@ -23,10 +23,8 @@
     
     <view class="signature-actions"
 >
-      <view class="action-btn" @click="clear"
-清空</view>
-      <view class="action-btn primary" @click="save"
-保存签名</view>
+      <view class="action-btn" @click="clear">清空</view>
+      <view class="action-btn primary" @click="save">保存签名</view>
     </view>
   </view>
 </template>

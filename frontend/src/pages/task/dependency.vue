@@ -23,18 +23,18 @@
         <text class="stat-value">{{ stats.total }}</text>
         <text class="stat-label">总任务</text>
       </view>
-      <view class="stat-divider"></text>
+      <view class="stat-divider"></view>
       <view class="stat-item">
         <text class="stat-value">{{ stats.independent }}</text>
         <text class="stat-label">独立任务</text>
       </view>
-      <view class="stat-divider"></text>
+      <view class="stat-divider"></view>
       <view class="stat-item"
 >
         <text class="stat-value">{{ stats.withDependencies }}</text>
         <text class="stat-label">有依赖</text>
       </view>
-      <view class="stat-divider"></text>
+      <view class="stat-divider"></view>
       <view class="stat-item">
         <text class="stat-value" :class="{ warning: stats.circular > 0 }">{{ stats.circular }}</text>
         <text class="stat-label">循环依赖</text>
@@ -54,19 +54,19 @@
       <!-- 图例 -->
       <view class="legend">
         <view class="legend-item">
-          <view class="legend-dot" style="background: #10B981;"></text>
+          <view class="legend-dot" style="background: #10B981;"></view>
           <text>已完成</text>
         </view>
         <view class="legend-item">
-          <view class="legend-dot" style="background: #3B82F6;"></text>
+          <view class="legend-dot" style="background: #3B82F6;"></view>
           <text>进行中</text>
         </view>
         <view class="legend-item">
-          <view class="legend-dot" style="background: #6B7280;"></text>
+          <view class="legend-dot" style="background: #6B7280;"></view>
           <text>待办</text>
         </view>
         <view class="legend-item">
-          <view class="legend-line"></text>
+          <view class="legend-line"></view>
           <text>依赖关系</text>
         </view>
       </view>
@@ -165,7 +165,7 @@
 >
       <view class="panel-header">
         <view class="panel-title">
-          <view class="status-dot" :class="'status-' + selectedNode.status"></text>
+          <view class="status-dot" :class="'status-' + selectedNode.status"></view>
           <text>{{ selectedNode.title }}</text>
         </view>
         <text class="close-btn" @click="selectedNode = null">✕</text>

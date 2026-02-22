@@ -3,7 +3,7 @@
 >
     <view class="header"
 >
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">拍照创建</view>
     </view>
     

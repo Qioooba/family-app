@@ -10,7 +10,7 @@
       >
         <text class="icon">✏️</text>
       </view>
-      <view v-else class="navbar-placeholder"></text>
+      <view v-else class="navbar-placeholder"></view>
     </view>
 
     <!-- 置顶公告区 -->
@@ -299,7 +299,7 @@
             <picker mode="selector" :range="expireOptions" @change="onExpireChange"
             >
               <view class="picker-value"
-              >{{ expireOptions[newAnnouncement.expireIndex] }}</text>
+              >{{ expireOptions[newAnnouncement.expireIndex] }}</view>
             </picker>
           </view>
           

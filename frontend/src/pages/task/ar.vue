@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">AR增强现实</view>
     </view>
     
@@ -35,8 +35,7 @@
           <text class="task-title">{{ task.title }}</text>
           <text class="task-distance">{{ task.distance }}</text>
         </view>
-        <view class="place-btn" @click="placeMarker(task)"
-放置</view>
+        <view class="place-btn" @click="placeMarker(task)">放置</view>
       </view>
     </view>
   </view>

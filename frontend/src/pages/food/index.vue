@@ -15,7 +15,7 @@
         <view class="card-value">{{ todayCalories }}</view>
         <view class="card-unit">千卡 / 目标 2000</view>
         <view class="mini-progress">
-          <view class="mini-fill" :style="{ width: Math.min(todayCalories/2000*100, 100) + '%' }"></text>
+          <view class="mini-fill" :style="{ width: Math.min(todayCalories/2000*100, 100) + '%' }"></view>
         </view>
       </view>
       
@@ -44,7 +44,7 @@
           </view>
           
           <view class="nutrition-bar">
-            <view class="nutrition-fill" :style="{ width: Math.min(item.current/item.target*100, 100) + '%', background: item.color }"></text>
+            <view class="nutrition-fill" :style="{ width: Math.min(item.current/item.target*100, 100) + '%', background: item.color }"></view>
           </view>
         </view>
       </view>
@@ -151,7 +151,7 @@
               :key="idx"
               class="trend-point"
               :style="{ height: calculateTrendHeight(w.weight) }"
-            ></text>
+            ></view>
           </view>
         </view>
       </view>
@@ -459,7 +459,8 @@ const aiRecognize = () => {
   .summary-card {
     flex: 1;
     padding: 20px;
-    border-radius: 16pxn    text-align: center;
+    border-radius: 16px;
+    text-align: center;
     
     &.calories {
       background: linear-gradient(135deg, #FF9800, #FFB74D);

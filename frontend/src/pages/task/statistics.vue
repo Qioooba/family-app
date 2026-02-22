@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">数据统计</view>
     </view>
     
@@ -43,7 +43,7 @@
 >
           <text class="dist-name">{{ item.name }}</text>
           <view class="dist-bar">
-            <view class="dist-fill" :style="{ width: item.percent + '%', background: item.color }"></text>
+            <view class="dist-fill" :style="{ width: item.percent + '%', background: item.color }"></view>
           </view>
           <text class="dist-value">{{ item.value }}</text>
         </view>

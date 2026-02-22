@@ -34,7 +34,7 @@
         
         <view class="vote-options-preview">
           <view v-for="(opt, i) in vote.options.slice(0, 2)" :key="i" class="option-preview">
-            <view class="option-bar" :style="{ width: opt.percent + '%' }"></text>
+            <view class="option-bar" :style="{ width: opt.percent + '%' }"></view>
             <view class="option-info">
               <text>{{ opt.name }}</text>
               <text>{{ opt.percent }}%</text>
@@ -81,9 +81,6 @@ const loadVotes = async () => {
 onMounted(() => {
   loadVotes()
 })
-
-// 切换标签时重新加载
-const currentTab = ref(0)
 
 const viewVote = async (vote) => {
   if (vote.status === 1 || vote.ended) {

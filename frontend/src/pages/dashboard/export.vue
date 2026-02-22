@@ -16,7 +16,7 @@
     >数据导出</text>
       <view class="placeholder"
     
-    ></text>
+    ></view>
     </view>
 
     <!-- 导出类型选择 -->
@@ -145,7 +145,7 @@
       >
             <view v-if="selectedFormat === format.value" class="radio-inner"
     
-    ></text>
+    ></view>
           </view>
         </view>
       </view>
@@ -220,7 +220,7 @@
     >
           <view class="progress-fill" :style="{ width: progress + '%' }"
     
-    ></text>
+    ></view>
         </view>
         
         <text class="progress-text"

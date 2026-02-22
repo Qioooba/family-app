@@ -45,7 +45,7 @@
             <view 
               class="ring-progress"
               :style="{ transform: `rotate(${reportData.score * 3.6}deg)` }"
-            ></text>
+            ></view>
             <view class="ring-center"
 >
               <text class="score-value">{{ reportData.score }}</text>
@@ -86,7 +86,7 @@
               <view 
                 class="dim-fill"
                 :style="{ width: dim.score + '%', background: dim.color }"
-              ></text>
+              ></view>
             </view>
           </view>
         </view>
@@ -181,7 +181,7 @@
                 <view 
                   class="bar-fill"
                   :style="{ width: type.percent + '%', background: type.color }"
-                ></text>
+                ></view>
                 <text class="bar-value">{{ type.count }}</text>
               </view>            
             </view>
@@ -213,7 +213,7 @@
               :key="item.name"
               class="legend-item"
             >
-              <view class="legend-dot" :style="{ background: item.color }"></text>
+              <view class="legend-dot" :style="{ background: item.color }"></view>
               <view class="legend-info"
 >
                 <text class="legend-name">{{ item.name }}</text>

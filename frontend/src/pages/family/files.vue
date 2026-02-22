@@ -21,7 +21,7 @@
             class="progress-fill" 
             :style="{ width: usagePercent + '%' }"
             :class="{ warning: usagePercent > 80 }"
-          ></text>
+          ></view>
         </view>
       </view>
     </view>

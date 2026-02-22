@@ -20,7 +20,7 @@
           class="wave-ring"
           :class="{ active: isRecording }"
           :style="getWaveStyle(n)"
-        ></text>
+        ></view>
         
         <!-- 麦克风按钮 -->
         <view 
@@ -44,7 +44,7 @@
       <view v-if="isRecording || recordTime > 0" class="record-timer">
         <text class="timer-display">{{ formatTime(recordTime) }}</text>
         <view class="timer-progress">
-          <view class="timer-bar" :style="{ width: (recordTime / maxRecordTime * 100) + '%' }"></text>
+          <view class="timer-bar" :style="{ width: (recordTime / maxRecordTime * 100) + '%' }"></view>
         </view>
         <text class="timer-limit">{{ maxRecordTime }}s</text>
       </view>
@@ -63,7 +63,7 @@
       <view class="transcript-content">
         <!-- 转录中状态 -->
         <view v-if="isTranscribing" class="transcribing-state">
-          <view class="loading-spinner"></text>
+          <view class="loading-spinner"></view>
           <text>正在识别语音...</text>
         </view>
         

@@ -5,7 +5,7 @@
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">切换家庭</text>
-      <view class="right-placeholder"></text>
+      <view class="right-placeholder"></view>
     </view>
     
     <view class="family-list">

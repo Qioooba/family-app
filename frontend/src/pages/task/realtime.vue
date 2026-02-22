@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">实时同步</view>
       <view class="sync-status" :class="{ online: isOnline }">
         <text>{{ isOnline ? '在线' : '离线' }}</text>
@@ -43,8 +43,7 @@
     
     <view class="sync-actions"
 >
-      <view class="action-btn" @click="forceSync"
-强制同步</view>
+      <view class="action-btn" @click="forceSync">强制同步</view>
       <view class="action-btn secondary" @click="clearCache">清除缓存</view>
     </view>
   </view>

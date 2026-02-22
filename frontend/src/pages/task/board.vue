@@ -44,7 +44,7 @@
         >
           <view class="column-header">
             <view class="column-title">
-              <view class="status-dot" style="background: #6B7280;"></text>
+              <view class="status-dot" style="background: #6B7280;"></view>
               <text>待办</text>
               <text class="count-badge">{{ todoTasks.length }}</text>
             </view>
@@ -88,7 +88,7 @@
               
               <view v-if="task.subtasks?.length > 0" class="card-progress">
                 <view class="mini-progress">
-                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></text>
+                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></view>
                 </view>
                 <text class="progress-text">{{ getProgress(task) }}%</text>
               </view>
@@ -116,7 +116,7 @@
         >
           <view class="column-header blue">
             <view class="column-title">
-              <view class="status-dot" style="background: #3B82F6;"></text>
+              <view class="status-dot" style="background: #3B82F6;"></view>
               <text>进行中</text>
               <text class="count-badge">{{ doingTasks.length }}</text>
             </view>
@@ -157,7 +157,7 @@
               
               <view v-if="task.subtasks?.length > 0" class="card-progress">
                 <view class="mini-progress">
-                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></text>
+                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></view>
                 </view>
                 <text class="progress-text">{{ getProgress(task) }}%</text>
               </view>
@@ -184,7 +184,7 @@
         >
           <view class="column-header green">
             <view class="column-title">
-              <view class="status-dot" style="background: #10B981;"></text>
+              <view class="status-dot" style="background: #10B981;"></view>
               <text>已完成</text>
               <text class="count-badge">{{ doneTasks.length }}</text>
             </view>
@@ -276,7 +276,7 @@
               :class="{ active: newTask.status === status.value }"
               @click="newTask.status = status.value"
             >
-              <view class="status-dot" :style="{ background: status.color }"></text>
+              <view class="status-dot" :style="{ background: status.color }"></view>
               <text>{{ status.label }}</text>
             </view>
           </view>

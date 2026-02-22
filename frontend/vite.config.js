@@ -155,8 +155,9 @@ export default defineConfig({
     devSourcemap: true,
     preprocessorOptions: {
       scss: {
+        silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin', 'slash-div'],
         additionalData: `
-          @import "@/styles/vars.scss";
+          @import "uview-plus/theme.scss";
         `
       }
     }

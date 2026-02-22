@@ -61,7 +61,7 @@
                   class="bar"
                   :style="{ height: getBarHeight(price, item) + '%' }"
                   :class="{ lowest: isLowest(price, item.recentPrices) }"
-                ></text>
+                ></view>
               </view>
               <view class="chart-labels">
                 <text>{{ getDaysAgo(item.recentPrices.length - 1) }}天</text>
@@ -106,7 +106,7 @@
 
     <!-- 添加追踪弹窗 -->
     <view v-if="showAddModal" class="modal-overlay">
-      <view class="modal-mask" @click="showAddModal = false"></text>
+      <view class="modal-mask" @click="showAddModal = false"></view>
       <view class="modal-content">
         <view class="modal-header">
           <text class="modal-title">添加价格追踪</text>
@@ -162,7 +162,7 @@
 
     <!-- 价格历史详情弹窗 -->
     <view v-if="showHistoryModal" class="modal-overlay">
-      <view class="modal-mask" @click="showHistoryModal = false"></text>
+      <view class="modal-mask" @click="showHistoryModal = false"></view>
       <view class="modal-content large">
         <view class="modal-header">
           <text class="modal-title">价格走势</text>
@@ -186,7 +186,7 @@
               </view>
               <view class="chart-main">
                 <view class="grid-lines">
-                  <view v-for="i in 5" :key="i" class="grid-line"></text>
+                  <view v-for="i in 5" :key="i" class="grid-line"></view>
                 </view>
                 <view class="price-line">
                   <view 
@@ -198,10 +198,10 @@
                       bottom: getPointY(point.price) + '%' 
                     }"
                   >
-                    <view class="point-dot" :class="{ lowest: point.isLowest }"></text>
+                    <view class="point-dot" :class="{ lowest: point.isLowest }"></view>
                     <view class="point-tooltip">¥{{ point.price }}</view>
                   </view>
-                  <view class="line-path" :style="linePathStyle"></text>
+                  <view class="line-path" :style="linePathStyle"></view>
                 </view>
                 <view class="chart-x-axis">
                   <text v-for="(point, i) in xAxisLabels" :key="i">{{ point }}</text>
@@ -247,7 +247,7 @@
 
     <!-- 比价弹窗 -->
     <view v-if="showCompareModal" class="modal-overlay">
-      <view class="modal-mask" @click="showCompareModal = false"></text>
+      <view class="modal-mask" @click="showCompareModal = false"></view>
       <view class="modal-content">
         <view class="modal-header">
           <text class="modal-title">全网比价</text>

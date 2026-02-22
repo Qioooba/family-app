@@ -124,7 +124,7 @@
                 :key="sub.id || idx"
                 class="subtask-item-detail"
               >
-                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></text>
+                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></view>
                 <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
                 <text class="delete-btn" @click="deleteSubtask(selectedTask, sub, idx)">🗑️</text>
               </view>

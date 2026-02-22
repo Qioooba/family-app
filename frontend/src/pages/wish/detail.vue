@@ -28,7 +28,7 @@
         
         <view class="progress-section">
           <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: wish.progress + '%' }"></text>
+            <view class="progress-fill" :style="{ width: wish.progress + '%' }"></view>
           </view>
           <text class="progress-text">{{ wish.progress }}%</text>
         </view>
@@ -68,7 +68,7 @@
               <text class="target">/ ¥{{ wish.targetAmount }}</text>
             </view>
             <view class="progress-bar">
-              <view class="progress-fill" :style="{ width: budgetProgress + '%' }"></text>
+              <view class="progress-fill" :style="{ width: budgetProgress + '%' }"></view>
             </view>
             <text class="progress-percent">{{ budgetProgress }}%</text>
           </view>
@@ -96,8 +96,8 @@
             :class="{ completed: milestone.status === 1 }"
           >
             <view class="milestone-left">
-              <view class="milestone-dot" :class="{ active: milestone.status === 1 }"></text>
-              <view class="milestone-line" v-if="index < milestones.length - 1"></text>
+              <view class="milestone-dot" :class="{ active: milestone.status === 1 }"></view>
+              <view class="milestone-line" v-if="index < milestones.length - 1"></view>
             </view>
             <view class="milestone-content">
               <text class="milestone-title">{{ milestone.title }}</text>

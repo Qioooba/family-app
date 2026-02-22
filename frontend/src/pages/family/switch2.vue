@@ -121,7 +121,7 @@
       <!-- 家庭管理 -->
       <view class="management-section"
 >
-        <view class="section-title">家庭管理</text>
+        <view class="section-title">家庭管理</view>
         
         <view class="manage-list">
           <view class="manage-item" @click="manageMembers"
@@ -178,8 +178,7 @@
         <view class="modal-actions"
 >
           <view class="btn-cancel" @click="switchModalVisible = false">取消</view>          
-          <view class="btn-confirm" @click="confirmSwitch"
->切换</view>
+          <view class="btn-confirm" @click="confirmSwitch">>切换</view>
         </view>
       </view>
     </u-popup>

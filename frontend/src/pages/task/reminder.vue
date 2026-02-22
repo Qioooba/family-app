@@ -89,7 +89,7 @@
             @click="repeatType = option.value"
           >
             <view class="repeat-radio">
-              <view class="radio-inner" v-if="repeatType === option.value"></text>
+              <view class="radio-inner" v-if="repeatType === option.value"></view>
             </view>
             <text class="repeat-label">{{ option.label }}</text>
           </view>

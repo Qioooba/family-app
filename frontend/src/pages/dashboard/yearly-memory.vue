@@ -124,7 +124,7 @@
           </view>
           
           <view class="timeline-dot">
-            <view class="dot-inner" :style="{ background: milestone.color }"></text>
+            <view class="dot-inner" :style="{ background: milestone.color }"></view>
           </view>
           
           <view class="timeline-content">
@@ -194,7 +194,7 @@
 
     <!-- 年份选择弹窗 -->
     <view v-if="showYearPicker" class="modal-overlay">
-      <view class="modal-mask" @click="showYearPicker = false"></text>
+      <view class="modal-mask" @click="showYearPicker = false"></view>
       <view class="modal-content">
         <view class="modal-header">
           <text>选择年份</text>

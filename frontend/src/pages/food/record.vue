@@ -22,7 +22,7 @@
         </view>
         
         <view class="progress-bar">
-          <view class="progress-fill" :style="{ width: progressPercent + '%' }"></text>
+          <view class="progress-fill" :style="{ width: progressPercent + '%' }"></view>
         </view>
         
         <view class="stats-footer">

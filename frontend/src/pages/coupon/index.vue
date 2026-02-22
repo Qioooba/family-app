@@ -17,12 +17,12 @@
         <text class="stats-num">{{ stats.unused }}</text>
         <text class="stats-label">未使用</text>
       </view>
-      <view class="stats-divider"></text>
+      <view class="stats-divider"></view>
       <view class="stats-item">
         <text class="stats-num used">{{ stats.used }}</text>
         <text class="stats-label">已使用</text>
       </view>
-      <view class="stats-divider"></text>
+      <view class="stats-divider"></view>
       <view class="stats-item">
         <text class="stats-num expired">{{ stats.expired }}</text>
         <text class="stats-label">已过期</text>
@@ -39,7 +39,7 @@
         @click="currentTab = tab.value"
       >
         <text>{{ tab.label }}</text>
-        <view v-if="currentTab === tab.value" class="tab-line"></text>
+        <view v-if="currentTab === tab.value" class="tab-line"></view>
       </view>
     </view>
 

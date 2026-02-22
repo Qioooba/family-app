@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <!-- 状态栏背景 -->
-    <view class="status-bar-bg"></text>
+    <view class="status-bar-bg"></view>
     
     <!-- 顶部快捷入口 -->
     <view class="quick-access">
@@ -112,7 +112,7 @@
           class="recent-item"
           @click="goToTask(task)"
         >
-          <view class="item-status" :class="'status-' + task.status"></text>
+          <view class="item-status" :class="'status-' + task.status"></view>
           
           <view class="item-content"
 >
@@ -175,7 +175,7 @@
     </view>
     
     <!-- 底部空间 -->
-    <view class="bottom-space"></text>
+    <view class="bottom-space"></view>
     
     <!-- 悬浮添加按钮 -->
     <view class="fab-add" @click="quickAddTask"

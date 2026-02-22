@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">个性化首页</view>
     </view>
     
@@ -16,7 +16,7 @@
           <text class="widget-name">{{ w.name }}</text>
           <view class="widget-toggle" @click="toggleWidget(w)"
 >
-            <view class="toggle-circle" :class="{ on: w.enabled }"></text>
+            <view class="toggle-circle" :class="{ on: w.enabled }"></view>
           </view>
         </view>
       </view>

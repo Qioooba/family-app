@@ -1,7 +1,7 @@
 <template>
   <view class="page-container">
     <view class="header">
-      <view class="header-left" @click="goBack"><text>‹</text></text>
+      <view class="header-left" @click="goBack"><text>‹</text></view>
       <view class="header-title">积分成就</view>
     </view>
     
@@ -20,7 +20,7 @@
         <view class="level-progress"
 >
           <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: levelProgress + '%' }"></text>
+            <view class="progress-fill" :style="{ width: levelProgress + '%' }"></view>
           </view>
           <text class="progress-text">{{ currentLevel.progress }}/{{ currentLevel.max }}</text>
         </view>

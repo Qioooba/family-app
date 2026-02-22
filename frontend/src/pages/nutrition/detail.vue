@@ -35,7 +35,7 @@
             <!-- 简化的环形图实现 -->
             <view class="donut-chart"
 >
-              <view class="donut-ring"></text>
+              <view class="donut-ring"></view>
               <view class="donut-segments"
 >
                 <view 
@@ -43,7 +43,7 @@
                   :key="index"
                   class="segment"
                   :style="segment.style"
-                ></text>
+                ></view>
               </view>
               <view class="donut-center"
 >
@@ -60,7 +60,7 @@
               
               class="legend-item"
             >
-              <view class="legend-dot" :style="{ background: item.color }"></text>
+              <view class="legend-dot" :style="{ background: item.color }"></view>
               <view class="legend-info"
 >
                 <text class="legend-name">{{ item.name }}</text>
@@ -96,12 +96,12 @@
             </view>
 
             <view class="macro-progress">
-              <view class="progress-track"></text>
+              <view class="progress-track"></view>
               <view 
                 class="progress-fill"
                 :class="macro.status"
                 :style="{ width: Math.min(macro.percent, 100) + '%' }"
-              ></text>
+              ></view>
             </view>
 
             <text class="macro-hint">{{ macro.hint }}</text>
@@ -134,7 +134,7 @@
               <view 
                 class="micro-fill"
                 :style="{ width: Math.min(micro.percent, 100) + '%', background: micro.color }"
-              ></text>
+              ></view>
             </view>
             
             <view class="micro-values">

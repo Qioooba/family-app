@@ -25,12 +25,12 @@
           <text class="summary-value">{{ summaryData.totalScore }}</text>
           <text class="summary-label">综合评分</text>
         </view>
-        <view class="summary-divider"></text>
+        <view class="summary-divider"></view>
         <view class="summary-item">
           <text class="summary-value">{{ summaryData.rank }}%</text>
           <text class="summary-label">超越家庭</text>
         </view>
-        <view class="summary-divider"></text>
+        <view class="summary-divider"></view>
         <view class="summary-item">
           <text class="summary-value">{{ summaryData.growth }}%</text>
           <text class="summary-label">环比增长</text>
@@ -63,11 +63,11 @@
               <view 
                 class="bar-completed" 
                 :style="{ height: getTaskBarHeight(item.completed, item.total) + '%' }"
-              ></text>
+              ></view>
               <view 
                 class="bar-remaining" 
                 :style="{ height: getTaskBarHeight(item.total - item.completed, item.total) + '%' }"
-              ></text>
+              ></view>
             </view>
             <text class="bar-label">{{ item.week }}</text>
             <text class="bar-value">{{ item.completed }}/{{ item.total }}</text>
@@ -76,11 +76,11 @@
       </view>
       <view class="task-legend">
         <view class="legend-item">
-          <view class="legend-dot completed"></text>
+          <view class="legend-dot completed"></view>
           <text>已完成</text>
         </view>
         <view class="legend-item">
-          <view class="legend-dot remaining"></text>
+          <view class="legend-dot remaining"></view>
           <text>未完成</text>
         </view>
       </view>
@@ -104,7 +104,7 @@
           </view>
           <view class="diet-line-area">
             <view class="grid-lines">
-              <view v-for="i in 5" :key="i" class="grid-line"></text>
+              <view v-for="i in 5" :key="i" class="grid-line"></view>
             </view>
             <svg class="line-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
               <defs>
@@ -174,7 +174,7 @@
       <view class="wish-stats">
         <view class="wish-circle-chart">
           <view class="circle-bg">
-            <view class="circle-progress" :style="{ '--progress': wishStats.completionRate }"></text>
+            <view class="circle-progress" :style="{ '--progress': wishStats.completionRate }"></view>
             <view class="circle-center">
               <text class="circle-value">{{ wishStats.completionRate }}%</text>
               <text class="circle-label">实现率</text>
@@ -224,7 +224,7 @@
 
     <!-- 月份选择弹窗 -->
     <view v-if="showMonthPicker" class="modal-overlay">
-      <view class="modal-mask" @click="showMonthPicker = false"></text>
+      <view class="modal-mask" @click="showMonthPicker = false"></view>
       <view class="modal-content">
         <view class="modal-header">
           <text>选择月份</text>

@@ -150,7 +150,7 @@
             <text class="item-label">蛋白质</text>
             <view class="item-bar"
 >
-              <view class="bar-fill protein" :style="{ width: getPercent('protein') }"></text>
+              <view class="bar-fill protein" :style="{ width: getPercent('protein') }"></view>
             </view>
             <text class="item-value">{{ currentFood.protein || 0 }}g</text>
           </view>
@@ -158,7 +158,7 @@
           <view class="detail-item">
             <text class="item-label">脂肪</text>
             <view class="item-bar">
-              <view class="bar-fill fat" :style="{ width: getPercent('fat') }"></text>
+              <view class="bar-fill fat" :style="{ width: getPercent('fat') }"></view>
             </view>
             <text class="item-value">{{ currentFood.fat || 0 }}g</text>
           </view>
@@ -166,7 +166,7 @@
           <view class="detail-item">
             <text class="item-label">碳水化合物</text>
             <view class="item-bar">
-              <view class="bar-fill carbs" :style="{ width: getPercent('carbohydrates') }"></text>
+              <view class="bar-fill carbs" :style="{ width: getPercent('carbohydrates') }"></view>
             </view>
             <text class="item-value">{{ currentFood.carbohydrates || 0 }}g</text>
           </view>

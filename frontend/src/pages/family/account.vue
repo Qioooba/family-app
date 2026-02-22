@@ -20,12 +20,12 @@
           <text class="amount-label">本月支出</text>
           <text class="amount-value out">¥{{ totalExpense }}</text>
         </view>
-        <view class="divider"></text>
+        <view class="divider"></view>
         <view class="amount-item">
           <text class="amount-label">本月收入</text>
           <text class="amount-value in">¥{{ totalIncome }}</text>
         </view>
-        <view class="divider"></text>
+        <view class="divider"></view>
         <view class="amount-item">
           <text class="amount-label">结余</text>
           <text class="amount-value" :class="balance >= 0 ? 'in' : 'out'">¥{{ Math.abs(balance) }}</text>
@@ -43,7 +43,7 @@
             class="progress-fill" 
             :style="{ width: budgetProgress + '%' }"
             :class="{ warning: budgetProgress > 80 }"
-          ></text>
+          ></view>
         </view>
       </view>
     </view>
@@ -177,13 +177,11 @@
           <view 
             class="type-tab" 
             :class="{ active: recordForm.type === 'expense' }"
-            @click="recordForm.type = 'expense'"
-          >支出</view>
+            @click="recordForm.type = 'expense'">          >支出</view>
           <view 
             class="type-tab" 
             :class="{ active: recordForm.type === 'income' }"
-            @click="recordForm.type = 'income'"
-          >收入</view>
+            @click="recordForm.type = 'income'">          >收入</view>
         </view>
         
         <view class="category-grid">

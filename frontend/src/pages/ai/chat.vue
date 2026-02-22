@@ -9,12 +9,12 @@
       <view class="ai-info">
         <text class="ai-name">AI助手</text>
         <view class="ai-status">
-          <view class="status-dot"></text>
+          <view class="status-dot"></view>
           <text>在线</text>
         </view>
       </view>
       
-      <view class="right-placeholder"></text>
+      <view class="right-placeholder"></view>
     </view>
     
     <!-- 消息列表 -->

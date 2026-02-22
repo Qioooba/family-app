@@ -5,7 +5,7 @@
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">语音输入</text>
-      <view class="right-placeholder"></text>
+      <view class="right-placeholder"></view>
     </view>
     
     <view class="voice-container">
@@ -19,7 +19,7 @@
             height: isRecording ? (Math.random() * 60 + 20) + '%' : '20%',
             animationDelay: (n * 0.1) + 's'
           }"
-        ></text>
+        ></view>
       </view>
       
       <!-- 录音时间 -->

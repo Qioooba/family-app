@@ -132,13 +132,13 @@
         >
           <view class="badge-icon">{{ badge.icon }}</view>
           <text class="badge-name">{{ badge.name }}</text>
-          <view v-if="badge.unlocked" class="badge-glow"></text>
+          <view v-if="badge.unlocked" class="badge-glow"></view>
         </view>
       </view>
     </view>
 
     <!-- 底部装饰 -->
-    <view style="height: 40px;"></text>
+    <view style="height: 40px;"></view>
   </view>
 </template>
 
