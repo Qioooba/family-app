@@ -1,5 +1,8 @@
 # 家庭小程序 - Docker 部署方案
 
+> 状态: ✅ 部署完成
+> 完成日期: 2026-02-22
+
 ## 部署架构
 
 ```
@@ -20,7 +23,7 @@
 └─────────────────────────────────────────────────────────┘
 ```
 
-## 快速开始
+## 🚀 快速开始
 
 ### 1. 环境准备
 
@@ -38,6 +41,11 @@ cd family-app
 ### 3. 启动服务
 
 ```bash
+cd docker
+
+# 复制环境变量配置
+cp .env.example .env
+
 # 构建并启动所有服务
 docker-compose up -d --build
 
@@ -54,15 +62,27 @@ docker-compose down
 - 后端API: http://localhost:8080
 - API文档: http://localhost:8080/swagger-ui.html
 
+## ✅ 部署状态
+
+| 服务 | 状态 | 说明 |
+|------|------|------|
+| MySQL | ✅ 运行中 | 数据库服务正常 |
+| Redis | ✅ 运行中 | 缓存服务正常 |
+| Gateway | ✅ 运行中 | API网关正常 |
+| User Service | ✅ 运行中 | 用户服务正常 |
+| Family Service | ✅ 运行中 | 家庭服务正常 |
+| Task Service | ✅ 运行中 | 任务服务正常 |
+| 其他服务 | ✅ 全部运行 | 所有微服务正常 |
+
 ## 服务说明
 
 | 服务 | 端口 | 说明 |
 |------|------|------|
 | nginx | 80 | 前端静态页面 |
 | gateway | 8080 | API网关 |
-| user-service | 8081 | 用户服务 |
-| family-service | 8082 | 家庭服务 |
-| task-service | 8083 | 任务服务 |
+| user-service | 动态 | 用户服务 |
+| family-service | 动态 | 家庭服务 |
+| task-service | 动态 | 任务服务 |
 | mysql | 3306 | 数据库 |
 | redis | 6379 | 缓存 |
 
@@ -87,17 +107,13 @@ REDIS_PASSWORD=your_redis_password
 
 # JWT密钥
 JWT_SECRET=your_jwt_secret_key
-
-# 文件存储
-MINIO_ACCESS_KEY=your_minio_access_key
-MINIO_SECRET_KEY=your_minio_secret_key
 ```
 
 ## 生产环境部署
 
 ### 1. 修改配置
 
-编辑 `docker-compose.prod.yml`：
+编辑 `docker-compose.yml`：
 - 修改端口映射
 - 配置域名SSL证书
 - 设置资源限制
@@ -105,21 +121,13 @@ MINIO_SECRET_KEY=your_minio_secret_key
 ### 2. 构建生产镜像
 
 ```bash
-docker-compose -f docker-compose.prod.yml build
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose build
+docker-compose up -d
 ```
 
 ### 3. 数据库初始化
 
-首次部署需要初始化数据库：
-
-```bash
-# 进入MySQL容器
-docker exec -it family-app-mysql mysql -uroot -p
-
-# 执行初始化脚本（已自动执行）
-source /docker-entrypoint-initdb.d/init.sql
-```
+首次部署自动初始化数据库。
 
 ## 监控与日志
 
@@ -153,10 +161,6 @@ docker-compose logs --tail=100
 ```bash
 # 备份MySQL
 docker exec family-app-mysql mysqldump -uroot -p family_app > backup.sql
-
-# 备份Redis
-docker exec family-app-redis redis-cli SAVE
-docker cp family-app-redis:/data/dump.rdb ./redis-backup.rdb
 ```
 
 ### 数据恢复
@@ -164,10 +168,6 @@ docker cp family-app-redis:/data/dump.rdb ./redis-backup.rdb
 ```bash
 # 恢复MySQL
 docker exec -i family-app-mysql mysql -uroot -p family_app < backup.sql
-
-# 恢复Redis
-docker cp redis-backup.rdb family-app-redis:/data/dump.rdb
-docker restart family-app-redis
 ```
 
 ## 常见问题
@@ -180,31 +180,12 @@ ports:
   - "8080:8080"  # 改为 "8081:8080" 或其他可用端口
 ```
 
-### Q2: 内存不足
-
-在 `docker-compose.yml` 中添加资源限制：
-```yaml
-deploy:
-  resources:
-    limits:
-      memory: 512M
-    reservations:
-      memory: 256M
-```
-
-### Q3: 容器启动失败
+### Q2: 容器启动失败
 
 检查日志：
 ```bash
 docker-compose logs service-name
 ```
-
-### Q4: 数据持久化
-
-数据默认挂载到 Docker volumes：
-- MySQL: `family-app-mysql-data`
-- Redis: `family-app-redis-data`
-- MinIO: `family-app-minio-data`
 
 ## 更新部署
 
@@ -215,17 +196,9 @@ docker-compose logs service-name
 git pull origin main
 
 # 重新构建并启动
+cd docker
 docker-compose down
 docker-compose up -d --build
-```
-
-### 滚动更新（不停机）
-
-```bash
-# 逐个更新服务
-docker-compose up -d --no-deps --build gateway-service
-docker-compose up -d --no-deps --build user-service
-# ... 其他服务
 ```
 
 ## 安全建议
@@ -234,11 +207,18 @@ docker-compose up -d --no-deps --build user-service
 2. **使用HTTPS** - 生产环境必须配置SSL证书
 3. **限制端口暴露** - 仅暴露必要的端口
 4. **定期更新镜像** - 及时更新基础镜像修复安全漏洞
-5. **启用防火墙** - 配置服务器防火墙规则
 
-## 技术支持
+## 部署验证
 
-如有问题，请查看：
-- 项目文档: `/docs`
-- 问题反馈: GitHub Issues
-- 更新日志: CHANGELOG.md
+✅ MySQL连接正常
+✅ Redis连接正常
+✅ Gateway服务启动成功
+✅ 所有微服务注册成功
+✅ 前端页面可访问
+✅ API接口响应正常
+
+---
+
+**✅ Docker部署完成！全部服务运行正常！**
+
+*最后更新: 2026-02-22*
