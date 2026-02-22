@@ -4,6 +4,7 @@ import com.family.family.entity.FamilyLedger;
 import com.family.family.entity.LedgerBudget;
 import com.family.family.entity.LedgerCategory;
 import com.family.family.entity.LedgerRecord;
+import com.family.family.entity.LedgerShare;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,11 +32,13 @@ public interface LedgerService {
     
     // 分类管理
     LedgerCategory addCategory(LedgerCategory category);
+    LedgerCategory updateCategory(LedgerCategory category);
     void deleteCategory(Long categoryId);
     List<LedgerCategory> getCategories(Long familyId, Integer type);
     
     // 预算管理
     LedgerBudget setBudget(LedgerBudget budget);
+    LedgerBudget updateBudget(LedgerBudget budget);
     void deleteBudget(Long budgetId);
     List<LedgerBudget> getBudgets(Long ledgerId, String budgetMonth);
     LedgerBudget getBudgetByCategory(Long ledgerId, Long categoryId, String budgetMonth);
@@ -45,4 +48,11 @@ public interface LedgerService {
     Map<String, Object> getMonthlyReport(Long ledgerId, String yearMonth);
     Map<String, Object> getCategoryReport(Long ledgerId, String startDate, String endDate);
     Map<String, BigDecimal> getTrendReport(Long ledgerId, Integer months);
+    
+    // 成员分摊
+    List<LedgerShare> createShare(Long recordId, List<LedgerShare> shares);
+    void deleteShare(Long shareId);
+    List<LedgerShare> getRecordShares(Long recordId);
+    List<LedgerShare> getMemberShares(Long ledgerId, Long memberId, String startDate, String endDate);
+    Map<String, Object> calculateSplit(Long ledgerId, String startDate, String endDate);
 }
