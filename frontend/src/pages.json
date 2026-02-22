@@ -186,6 +186,20 @@
             "navigationBarTitleText": "心情记录",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "habit",
+          "style": {
+            "navigationBarTitleText": "习惯打卡",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "gamification",
+          "style": {
+            "navigationBarTitleText": "积分成就",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
