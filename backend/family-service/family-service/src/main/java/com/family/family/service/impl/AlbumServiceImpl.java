@@ -4,13 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.family.family.entity.AlbumPhoto;
 import com.family.family.entity.AlbumShare;
 import com.family.family.entity.FamilyAlbum;
+import com.family.family.entity.PhotoTag;
 import com.family.family.mapper.AlbumPhotoMapper;
 import com.family.family.mapper.AlbumShareMapper;
 import com.family.family.mapper.FamilyAlbumMapper;
+import com.family.family.mapper.PhotoTagMapper;
 import com.family.family.service.AlbumService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,13 +26,16 @@ public class AlbumServiceImpl implements AlbumService {
     private final FamilyAlbumMapper familyAlbumMapper;
     private final AlbumPhotoMapper albumPhotoMapper;
     private final AlbumShareMapper albumShareMapper;
+    private final PhotoTagMapper photoTagMapper;
     
     public AlbumServiceImpl(FamilyAlbumMapper familyAlbumMapper, 
                            AlbumPhotoMapper albumPhotoMapper,
-                           AlbumShareMapper albumShareMapper) {
+                           AlbumShareMapper albumShareMapper,
+                           PhotoTagMapper photoTagMapper) {
         this.familyAlbumMapper = familyAlbumMapper;
         this.albumPhotoMapper = albumPhotoMapper;
         this.albumShareMapper = albumShareMapper;
+        this.photoTagMapper = photoTagMapper;
     }
     
     @Override
@@ -163,6 +169,69 @@ public class AlbumServiceImpl implements AlbumService {
             albumPhotoMapper.updateById(photo);
         }
     }
+    
+    // ========== 智能分类 - 照片标签 ==========
+    
+    @Override
+    public PhotoTag addPhotoTag(PhotoTag tag) {
+        tag.setStatus(1);
+        tag.setCreateTime(LocalDateTime.now());
+        tag.setUpdateTime(LocalDateTime.now());
+        photoTagMapper.insert(tag);
+        return tag;
+    }
+    
+    @Override
+    public void deletePhotoTag(Long tagId) {
+        PhotoTag tag = photoTagMapper.selectById(tagId);
+        if (tag != null) {
+            tag.setStatus(0);
+            tag.setUpdateTime(LocalDateTime.now());
+            photoTagMapper.updateById(tag);
+        }
+    }
+    
+    @Override
+    public List<PhotoTag> getPhotoTags(Long photoId) {
+        return photoTagMapper.selectByPhotoId(photoId);
+    }
+    
+    @Override
+    public List<String> getFamilyTagNames(Long familyId) {
+        return photoTagMapper.selectTagNamesByFamilyId(familyId);
+    }
+    
+    @Override
+    public List<PhotoTag> getPhotosByTag(Long familyId, String tagName) {
+        QueryWrapper<PhotoTag> wrapper = new QueryWrapper<>();
+        wrapper.eq("family_id", familyId)
+               .eq("tag_name", tagName)
+               .eq("status", 1);
+        return photoTagMapper.selectList(wrapper);
+    }
+    
+    @Override
+    public List<PhotoTag> getPhotosByTagType(Long familyId, Integer tagType) {
+        return photoTagMapper.selectByTagType(familyId, tagType);
+    }
+    
+    @Override
+    public void batchAddTags(Long photoId, List<String> tagNames, Integer tagType, Long userId, Long familyId) {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return;
+        }
+        for (String tagName : tagNames) {
+            PhotoTag tag = new PhotoTag();
+            tag.setPhotoId(photoId);
+            tag.setFamilyId(familyId);
+            tag.setTagName(tagName);
+            tag.setTagType(tagType);
+            tag.setUserId(userId);
+            addPhotoTag(tag);
+        }
+    }
+    
+    // ========== 共享相册 ==========
     
     @Override
     public AlbumShare createShare(AlbumShare share) {

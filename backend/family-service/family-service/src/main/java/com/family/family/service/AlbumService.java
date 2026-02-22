@@ -3,6 +3,7 @@ package com.family.family.service;
 import com.family.family.entity.AlbumPhoto;
 import com.family.family.entity.AlbumShare;
 import com.family.family.entity.FamilyAlbum;
+import com.family.family.entity.PhotoTag;
 
 import java.util.List;
 
@@ -27,6 +28,15 @@ public interface AlbumService {
     List<AlbumPhoto> getTimelinePhotos(Long familyId, String yearMonth);
     void favoritePhoto(Long photoId, Integer isFavorite);
     void updatePhotoTags(Long photoId, String tags);
+    
+    // 智能分类 - 照片标签
+    PhotoTag addPhotoTag(PhotoTag tag);
+    void deletePhotoTag(Long tagId);
+    List<PhotoTag> getPhotoTags(Long photoId);
+    List<String> getFamilyTagNames(Long familyId);
+    List<PhotoTag> getPhotosByTag(Long familyId, String tagName);
+    List<PhotoTag> getPhotosByTagType(Long familyId, Integer tagType);
+    void batchAddTags(Long photoId, List<String> tagNames, Integer tagType, Long userId, Long familyId);
     
     // 共享相册
     AlbumShare createShare(AlbumShare share);
