@@ -277,6 +277,41 @@
             "navigationBarTitleText": "A/B测试",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "vr",
+          "style": {
+            "navigationBarTitleText": "VR虚拟现实",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "webrtc",
+          "style": {
+            "navigationBarTitleText": "视频通话",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "files",
+          "style": {
+            "navigationBarTitleText": "文件协作",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "screenshare",
+          "style": {
+            "navigationBarTitleText": "屏幕共享",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "realtime",
+          "style": {
+            "navigationBarTitleText": "实时同步",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
