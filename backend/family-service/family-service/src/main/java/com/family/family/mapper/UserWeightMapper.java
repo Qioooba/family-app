@@ -11,6 +11,6 @@ import java.util.List;
 @Mapper
 public interface UserWeightMapper extends BaseMapper<UserWeight> {
     
-    @Select("SELECT * FROM user_weight WHERE user_id = #{userId} ORDER BY record_date DESC")
+    @Select("SELECT id, user_id, weight, record_date, note, create_time FROM user_weight WHERE user_id = #{userId} ORDER BY record_date DESC")
     List<UserWeight> selectByUserId(@Param("userId") Long userId);
 }

@@ -17,6 +17,6 @@ public interface UserActivityMapper extends BaseMapper<UserActivity> {
     /**
      * 获取用户某日的活跃度
      */
-    @Select("SELECT * FROM user_activity WHERE user_id = #{userId} AND date = #{date}")
+    @Select("SELECT id, user_id, date, login_count, task_completed, diet_recorded, active_minutes FROM user_activity WHERE user_id = #{userId} AND date = #{date}")
     UserActivity selectByUserAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 }
