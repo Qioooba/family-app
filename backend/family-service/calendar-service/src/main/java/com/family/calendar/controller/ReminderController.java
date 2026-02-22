@@ -1,5 +1,5 @@
 package com.family.calendar.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.calendar.dto.request.ReminderRequest;
 import com.family.calendar.dto.response.ReminderResponse;
@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/reminder")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class ReminderController {
     
     /**

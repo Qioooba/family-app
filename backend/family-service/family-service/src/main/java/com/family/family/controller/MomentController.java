@@ -1,7 +1,7 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
-import com.family.common.core.Result;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.family.entity.MomentComment;
 import com.family.family.service.MomentService;
 import org.springframework.util.StringUtils;
@@ -14,6 +14,7 @@ import java.util.Map;
  * 家庭圈动态控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/moments")
 public class MomentController {
     

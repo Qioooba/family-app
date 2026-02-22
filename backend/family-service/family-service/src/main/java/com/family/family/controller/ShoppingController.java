@@ -1,7 +1,7 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
-import com.family.common.core.Result;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.family.entity.Inventory;
 import com.family.family.entity.ShoppingList;
 import com.family.family.service.ShoppingService;
@@ -15,6 +15,7 @@ import java.util.Map;
  * 智能购物控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/shopping")
 public class ShoppingController {
     

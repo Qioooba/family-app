@@ -1,5 +1,5 @@
 package com.family.recipe.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.recipe.entity.Recipe;
 import com.family.recipe.service.RecipeService;
@@ -11,6 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/recipe")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class RecipeController {
     
     private final RecipeService recipeService;

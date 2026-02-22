@@ -1,52 +1,25 @@
 <template>
   <view class="page-container">
     <!-- 头部 -->
-    <view class="header">
-      <view class="header-left" @click="goBack">
-        <text class="back-icon">‹</text>
-      </view>
-      <view class="header-title">任务日历</view>
-      <view class="header-action" @click="showAddModal">
-        <text class="icon">+</text>
-      </view>
-    </view>
+    <PageHeader 
+      title="任务日历" 
+      @back="goBack" 
+      @action="showAddModal"
+    />
     
     <!-- 统计卡片 -->
-    <view class="stats-cards">
-      <view class="stat-card">
-        <text class="stat-value">{{ monthStats.total }}</text>
-        <text class="stat-label">本月任务</text>
-      </view>
-      <view class="stat-card completed">
-        <text class="stat-value">{{ monthStats.completed }}</text>
-        <text class="stat-label">已完成</text>
-      </view>
-      <view class="stat-card pending">
-        <text class="stat-value">{{ monthStats.pending }}</text>
-        <text class="stat-label">待办</text>
-      </view>
-      <view class="stat-card overdue">
-        <text class="stat-value">{{ monthStats.overdue }}</text>
-        <text class="stat-label">已逾期</text>
-      </view>
-    </view>
+    <TaskStatsCards :stats="monthStats" />
     
     <!-- 日历区域 -->
     <view class="calendar-section">
       <!-- 月份导航 -->
-      <view class="month-navigator">
-        <view class="nav-btn" @click="prevMonth">
-          <text class="nav-icon">‹</text>
-        </view>
-        <view class="month-display">
-          <text class="month-year">{{ currentYear }}年</text>
-          <text class="month-text">{{ currentMonth }}月</text>
-          <text class="month-lunar" v-if="lunarInfo">{{ lunarInfo.month }}</text>
-        </view>
-        <view class="nav-btn" @click="nextMonth">
-          <text class="nav-icon">›</text>
-        </view>
-      </view>
+      <MonthNavigator 
+        :year="currentYear"
+        :month="currentMonth"
+        :lunar="lunarInfo?.month"
+        @prev="prevMonth"
+        @next="nextMonth"
+      />
       
       <!-- 回到今天 -->
       <view class="today-btn" @click="goToToday">
@@ -360,6 +333,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { taskApi } from '../../api/index.js'
 import { solarToLunar } from '../../utils/lunar.js'
 import dayjs from 'dayjs'
+import PageHeader from '../../components/common/PageHeader.vue'
+import TaskStatsCards from '../../components/task/TaskStatsCards.vue'
+import MonthNavigator from '../../components/calendar/MonthNavigator.vue'
 
 // 常量定义
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']

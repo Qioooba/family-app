@@ -1,7 +1,7 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
-import com.family.common.core.Result;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.family.entity.FamilyLedger;
 import com.family.family.entity.LedgerBudget;
 import com.family.family.entity.LedgerCategory;
@@ -18,6 +18,7 @@ import java.util.Map;
  * 账本控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/family/ledger")
 public class LedgerController {
 

@@ -232,7 +232,7 @@ const startRecord = () => {
   // 开始录音
   uni.startRecord({
     success: () => {
-      console.log('录音开始')
+      // 录音已开始
     },
     fail: (err) => {
       console.error('录音失败:', err)

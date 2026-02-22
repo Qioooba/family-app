@@ -1,7 +1,7 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
-import com.family.common.core.Result;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.family.entity.UserWeight;
 import com.family.family.mapper.UserWeightMapper;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/diet/weight")
 public class WeightController {
     

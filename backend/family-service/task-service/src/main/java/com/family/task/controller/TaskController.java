@@ -1,5 +1,5 @@
 package com.family.task.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.task.entity.Task;
 import com.family.task.service.TaskService;
@@ -11,6 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/task")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class TaskController {
     
     private final TaskService taskService;

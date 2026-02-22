@@ -1,5 +1,6 @@
-package com.family.food.controller;
 
+package com.family.food.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.food.dto.request.ScanRequest;
 import com.family.food.dto.response.ScanResponse;
@@ -16,6 +17,7 @@ import java.util.List;
  * 用于扫描商品条形码、二维码和食材图片识别
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/scan")
 public class ScanController {
     

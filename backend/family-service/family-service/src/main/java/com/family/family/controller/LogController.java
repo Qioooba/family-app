@@ -1,5 +1,6 @@
-package com.family.family.controller;
 
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.family.entity.OperationLog;
 import com.family.family.mapper.OperationLogMapper;
@@ -15,6 +16,7 @@ import java.util.List;
  * 日志管理控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/log")
 @RequiredArgsConstructor
 @Tag(name = "日志管理", description = "操作日志查询接口")

@@ -1,5 +1,7 @@
 package com.family.user.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaIgnore;
 import com.family.common.core.Result;
 import com.family.user.dto.UserLoginDTO;
 import com.family.user.dto.UserRegisterDTO;
@@ -14,16 +16,19 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class UserController {
     
     private final UserService userService;
     
     @PostMapping("/register")
+    @SaIgnore
     public Result<UserVO> register(@RequestBody UserRegisterDTO dto) {
         return Result.success(userService.register(dto));
     }
     
     @PostMapping("/login")
+    @SaIgnore
     public Result<String> login(@RequestBody UserLoginDTO dto) {
         return Result.success(userService.login(dto));
     }

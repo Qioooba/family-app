@@ -1,6 +1,6 @@
 package com.family.family.service;
 
-import com.family.family.controller.TaskController;
+import com.family.family.dto.RepeatRuleResponse;
 
 /**
  * 任务重复服务
@@ -20,7 +20,7 @@ public interface TaskRepeatService {
      * @param taskId 任务ID
      * @return 重复规则响应
      */
-    TaskController.RepeatRuleResponse getRepeatRule(Long taskId);
+    RepeatRuleResponse getRepeatRule(Long taskId);
     
     /**
      * 生成今日重复任务

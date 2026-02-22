@@ -1,5 +1,6 @@
-package com.family.calendar.controller;
 
+package com.family.calendar.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.calendar.dto.request.CardRequest;
 import com.family.calendar.dto.response.CardResponse;
@@ -13,6 +14,7 @@ import java.util.List;
  * 用于管理纪念日卡片、生日卡片等各类卡片
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/card")
 @RequiredArgsConstructor
 public class CardController {

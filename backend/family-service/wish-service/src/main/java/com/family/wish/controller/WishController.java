@@ -1,5 +1,5 @@
 package com.family.wish.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.wish.dto.WishBudgetDTO;
 import com.family.wish.entity.Wish;
@@ -13,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/wish")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class WishController {
     
     private final WishService wishService;

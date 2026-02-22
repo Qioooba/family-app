@@ -1,5 +1,6 @@
-package com.family.family.controller;
 
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.family.dto.request.MyCouponUseRequest;
 import com.family.family.dto.response.MyCouponResponse;
@@ -13,6 +14,7 @@ import java.util.List;
  * 用于管理用户已兑换的优惠券
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/my-coupon")
 @RequiredArgsConstructor
 public class MyCouponController {

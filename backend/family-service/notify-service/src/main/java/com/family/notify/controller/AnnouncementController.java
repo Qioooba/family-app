@@ -1,6 +1,6 @@
+
 package com.family.notify.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.PageResult;
 import com.family.common.core.Result;
 import com.family.notify.dto.SendNotificationDTO;
@@ -16,6 +16,7 @@ import java.util.Arrays;
  * 家庭公告控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/notify/announcement")
 @RequiredArgsConstructor
 public class AnnouncementController {

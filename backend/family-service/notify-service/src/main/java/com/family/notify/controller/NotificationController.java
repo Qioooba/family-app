@@ -1,6 +1,5 @@
 package com.family.notify.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.PageResult;
 import com.family.common.core.Result;
 import com.family.notify.dto.NotificationQueryDTO;
@@ -19,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/notify")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class NotificationController {
     
     private final NotificationService notificationService;

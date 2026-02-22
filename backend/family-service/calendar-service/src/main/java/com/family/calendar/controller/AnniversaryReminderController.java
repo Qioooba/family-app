@@ -1,5 +1,6 @@
-package com.family.calendar.controller;
 
+package com.family.calendar.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.family.calendar.dto.AnniversaryReminderDTO;
 import com.family.calendar.entity.AnniversaryReminder;
@@ -13,6 +14,7 @@ import java.util.List;
  * 纪念日提醒控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/anniversary/reminder")
 public class AnniversaryReminderController {
     

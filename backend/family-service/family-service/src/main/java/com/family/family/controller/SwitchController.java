@@ -1,5 +1,6 @@
-package com.family.family.controller;
 
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.family.dto.request.SwitchRequest;
 import com.family.family.dto.response.SwitchResponse;
@@ -13,6 +14,7 @@ import java.util.List;
  * 用于管理用户和家庭的各类开关设置
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/switch")
 @RequiredArgsConstructor
 public class SwitchController {

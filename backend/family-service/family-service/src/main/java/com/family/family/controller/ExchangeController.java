@@ -1,5 +1,6 @@
-package com.family.family.controller;
 
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.family.dto.request.ExchangeRequest;
 import com.family.family.dto.response.ExchangeCouponResponse;
@@ -14,6 +15,7 @@ import java.util.List;
  * 用于积分兑换券的管理
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/exchange")
 @RequiredArgsConstructor
 public class ExchangeController {

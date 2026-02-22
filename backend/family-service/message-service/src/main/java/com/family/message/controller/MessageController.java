@@ -1,5 +1,5 @@
 package com.family.message.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.PageResult;
 import com.family.common.core.Result;
 import com.family.message.dto.MessageListDTO;
@@ -17,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/message")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class MessageController {
     
     private final MessageService messageService;

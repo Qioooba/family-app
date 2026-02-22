@@ -1,5 +1,6 @@
-package com.family.food.controller;
 
+package com.family.food.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.food.dto.request.PriceRequest;
 import com.family.food.dto.response.PriceResponse;
@@ -17,6 +18,7 @@ import java.util.List;
  * 用于查询商品在不同商店的价格对比
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/price")
 public class PriceController {
     

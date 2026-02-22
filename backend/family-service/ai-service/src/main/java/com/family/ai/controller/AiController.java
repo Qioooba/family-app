@@ -1,6 +1,5 @@
 package com.family.ai.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.family.ai.entity.AiInventory;
 import com.family.ai.entity.AiShoppingList;
 import com.family.ai.entity.AiSubstitute;
@@ -20,6 +19,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/ai")
+@SaCheckLogin
 public class AiController {
     
     private final AiChatService aiChatService;

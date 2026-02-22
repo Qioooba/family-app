@@ -1,5 +1,5 @@
 package com.family.food.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.food.entity.Ingredient;
 import com.family.food.service.IngredientService;
@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/ingredient")
+@SaCheckLogin
 public class IngredientController {
     
     private final IngredientService ingredientService;

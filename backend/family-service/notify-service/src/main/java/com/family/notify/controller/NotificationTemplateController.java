@@ -1,5 +1,6 @@
-package com.family.notify.controller;
 
+package com.family.notify.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.PageResult;
 import com.family.common.core.Result;
 import com.family.notify.entity.NotificationTemplate;
@@ -14,6 +15,7 @@ import java.util.Map;
  * 通知模板控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/notify/template")
 @RequiredArgsConstructor
 public class NotificationTemplateController {

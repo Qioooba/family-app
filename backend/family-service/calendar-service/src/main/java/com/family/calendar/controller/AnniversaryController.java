@@ -1,5 +1,6 @@
-package com.family.calendar.controller;
 
+package com.family.calendar.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.calendar.entity.Anniversary;
 import com.family.calendar.service.AnniversaryService;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/anniversary")
 public class AnniversaryController {
     

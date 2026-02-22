@@ -1,5 +1,6 @@
-package com.family.family.controller;
 
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.hutool.json.JSONUtil;
 import com.family.common.core.Result;
 import com.family.family.entity.FamilyReport;
@@ -15,6 +16,7 @@ import java.util.Map;
  * 家庭报告控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/report")
 public class ReportController {
     

@@ -647,6 +647,27 @@
             "navigationBarTitleText": "扫码录入",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "records",
+          "style": {
+            "navigationBarTitleText": "采购记录",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "budget",
+          "style": {
+            "navigationBarTitleText": "预算管理",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "coupons",
+          "style": {
+            "navigationBarTitleText": "优惠券",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },
@@ -664,6 +685,20 @@
           "path": "points",
           "style": {
             "navigationBarTitleText": "我的积分",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "challenges",
+          "style": {
+            "navigationBarTitleText": "家庭挑战",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "games",
+          "style": {
+            "navigationBarTitleText": "更多游戏",
             "navigationStyle": "custom"
           }
         }

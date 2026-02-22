@@ -1,7 +1,7 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
-import com.family.common.core.Result;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.family.entity.ChallengeCheckin;
 import com.family.family.entity.ChallengeParticipant;
 import com.family.family.entity.FamilyChallenge;
@@ -17,6 +17,7 @@ import java.util.Map;
  * 游戏控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/game")
 public class GameController {
     

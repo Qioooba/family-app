@@ -1,5 +1,5 @@
 package com.family.file.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.file.dto.*;
 import com.family.file.service.FileRecordService;
@@ -19,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/file")
 @RequiredArgsConstructor
+@SaCheckLogin
 public class FileRecordController {
     
     private final FileRecordService fileService;

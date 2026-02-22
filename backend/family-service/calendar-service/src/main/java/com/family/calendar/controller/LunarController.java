@@ -1,5 +1,6 @@
-package com.family.calendar.controller;
 
+package com.family.calendar.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.calendar.dto.request.LunarRequest;
 import com.family.calendar.dto.response.FestivalResponse;
@@ -14,6 +15,7 @@ import java.util.List;
  * 用于查询农历日期、节气、黄历等信息
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/lunar")
 @RequiredArgsConstructor
 public class LunarController {

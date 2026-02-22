@@ -1,7 +1,7 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
-import com.family.common.core.Result;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.family.entity.PointsCoupon;
 import com.family.family.entity.PointsCouponRecord;
 import com.family.family.mapper.PointsCouponMapper;
@@ -16,6 +16,7 @@ import java.util.List;
  * 积分兑换券控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/game")
 public class PointsCouponController {
     

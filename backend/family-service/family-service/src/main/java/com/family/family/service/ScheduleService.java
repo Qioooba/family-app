@@ -1,41 +1,40 @@
 package com.family.family.service;
 
 import com.family.family.entity.Schedule;
-
 import java.util.List;
 
 /**
- * 排班服务接口
+ * 日程服务接口
  */
 public interface ScheduleService {
-    
+
     /**
-     * 获取排班列表
+     * 创建日程
      */
-    List<Schedule> list(Long familyId, String startDate, String endDate, Long userId);
-    
+    Schedule createSchedule(Schedule schedule);
+
     /**
-     * 创建排班
+     * 更新日程
      */
-    Schedule create(Schedule schedule, Long userId);
-    
+    Schedule updateSchedule(Schedule schedule);
+
     /**
-     * 更新排班
+     * 删除日程
      */
-    Schedule update(Schedule schedule, Long userId);
-    
+    void deleteSchedule(Long id);
+
     /**
-     * 删除排班
+     * 根据ID查询日程
      */
-    void delete(Long scheduleId, Long userId);
-    
+    Schedule getScheduleById(Long id);
+
     /**
-     * 获取我的排班
+     * 查询家庭所有日程
      */
-    List<Schedule> mySchedule(Long userId, String startDate, String endDate);
-    
+    List<Schedule> getSchedulesByFamilyId(Long familyId);
+
     /**
-     * 交换排班
+     * 查询用户的日程
      */
-    void swap(Long scheduleId1, Long scheduleId2, Long userId);
+    List<Schedule> getSchedulesByUserId(Long userId);
 }

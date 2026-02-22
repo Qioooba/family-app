@@ -1,5 +1,6 @@
-package com.family.file.controller;
 
+package com.family.file.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.file.dto.FileShareAccessDTO;
 import com.family.file.dto.FileShareCreateDTO;
@@ -17,6 +18,7 @@ import java.util.List;
  * 文件分享控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/file-share")
 @RequiredArgsConstructor
 public class FileShareController {

@@ -1,5 +1,6 @@
-package com.family.calendar.controller;
 
+package com.family.calendar.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.Map;
  * 贺卡生成控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/anniversary/card")
 @RequiredArgsConstructor
 public class AnniversaryCardController {

@@ -1,7 +1,7 @@
 package com.family.family.service.impl;
 
 import cn.hutool.json.JSONUtil;
-import com.family.family.controller.TaskController;
+import com.family.family.dto.RepeatRuleResponse;
 import com.family.family.entity.Task;
 import com.family.family.mapper.TaskMapper;
 import com.family.family.service.TaskRepeatService;
@@ -72,12 +72,12 @@ public class TaskRepeatServiceImpl implements TaskRepeatService {
     }
     
     @Override
-    public TaskController.RepeatRuleResponse getRepeatRule(Long taskId) {
+    public RepeatRuleResponse getRepeatRule(Long taskId) {
         Task task = taskMapper.selectById(taskId);
         if (task == null) {
             throw new RuntimeException("任务不存在");
         }
-        return new TaskController.RepeatRuleResponse(
+        return new RepeatRuleResponse(
             task.getRepeatType(), 
             task.getRepeatRule()
         );

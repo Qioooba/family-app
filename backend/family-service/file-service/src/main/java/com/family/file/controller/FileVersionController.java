@@ -1,5 +1,6 @@
-package com.family.file.controller;
 
+package com.family.file.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.file.service.FileVersionService;
 import com.family.file.vo.FileVersionVO;
@@ -12,6 +13,7 @@ import java.util.List;
  * 文件版本控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/file-version")
 @RequiredArgsConstructor
 public class FileVersionController {

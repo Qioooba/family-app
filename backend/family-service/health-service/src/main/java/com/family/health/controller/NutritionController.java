@@ -1,5 +1,6 @@
-package com.family.health.controller;
 
+package com.family.health.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.health.dto.request.NutritionRequest;
 import com.family.health.dto.response.NutritionResponse;
@@ -15,6 +16,7 @@ import java.util.Map;
  * 用于分析用户饮食营养摄入情况
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/nutrition")
 @RequiredArgsConstructor
 public class NutritionController {

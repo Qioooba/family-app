@@ -1,7 +1,7 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
-import com.family.common.core.Result;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;import com.family.common.core.Result;
 import com.family.family.entity.AlbumPhoto;
 import com.family.family.entity.AlbumShare;
 import com.family.family.entity.FamilyAlbum;
@@ -15,6 +15,7 @@ import java.util.List;
  * 相册控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/family/album")
 public class AlbumController {
     

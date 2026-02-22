@@ -1,5 +1,5 @@
 package com.family.vote.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.vote.entity.Vote;
 import com.family.vote.service.VoteService;
@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vote")
+@SaCheckLogin
 public class VoteController {
     
     private final VoteService voteService;

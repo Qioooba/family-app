@@ -1,6 +1,6 @@
+
 package com.family.notify.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
 import com.family.notify.entity.NotificationSetting;
 import com.family.notify.service.NotificationSettingService;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
  * 通知设置控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/notify/settings")
 @RequiredArgsConstructor
 public class NotificationSettingController {

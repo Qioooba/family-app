@@ -1,5 +1,6 @@
-package com.family.health.controller;
 
+package com.family.health.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.health.service.DietService;
 import com.family.health.vo.DailyNutritionVO;
@@ -14,6 +15,7 @@ import java.time.LocalDate;
  * 提供饮食记录和营养分析API
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/diet")
 public class DietController {
     

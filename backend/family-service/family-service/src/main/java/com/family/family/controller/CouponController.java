@@ -1,5 +1,6 @@
-package com.family.family.controller;
 
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.family.entity.Coupon;
 import com.family.family.service.CouponService;
@@ -15,6 +16,7 @@ import java.util.Map;
  * 优惠券控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api")
 public class CouponController {
     

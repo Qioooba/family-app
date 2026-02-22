@@ -1,5 +1,6 @@
-package com.family.wish.controller;
 
+package com.family.wish.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.wish.dto.WishMilestoneDTO;
 import com.family.wish.service.WishMilestoneService;
@@ -13,6 +14,7 @@ import java.util.List;
  * 心愿里程碑控制器
  */
 @RestController
+@SaCheckLogin
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class WishMilestoneController {

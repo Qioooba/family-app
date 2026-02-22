@@ -1,5 +1,5 @@
 package com.family.health.controller;
-
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.health.entity.WaterRecord;
 import com.family.health.mapper.WaterRecordMapper;
@@ -15,6 +15,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/diet/water")
+@SaCheckLogin
 public class WaterController {
     
     private final WaterRecordMapper waterRecordMapper;

@@ -1,6 +1,6 @@
-package com.family.family.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
+package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.family.entity.TaskSubtask;
 import com.family.family.mapper.TaskSubtaskMapper;
@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/task/subtask")
 public class SubtaskController {
     
