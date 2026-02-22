@@ -17,12 +17,12 @@ public interface ChatHistoryMapper extends BaseMapper<ChatHistory> {
     /**
      * 获取会话历史
      */
-    @Select("SELECT * FROM ai_chat_history WHERE session_id = #{sessionId} ORDER BY create_time ASC")
+    @Select("SELECT id, user_id, family_id, session_id, role, content, intent, entities, create_time FROM ai_chat_history WHERE session_id = #{sessionId} ORDER BY create_time ASC")
     List<ChatHistory> selectBySessionId(@Param("sessionId") String sessionId);
     
     /**
      * 获取用户最近的历史
      */
-    @Select("SELECT * FROM ai_chat_history WHERE user_id = #{userId} ORDER BY create_time DESC LIMIT #{limit}")
+    @Select("SELECT id, user_id, family_id, session_id, role, content, intent, entities, create_time FROM ai_chat_history WHERE user_id = #{userId} ORDER BY create_time DESC LIMIT #{limit}")
     List<ChatHistory> selectRecentByUserId(@Param("userId") Long userId, @Param("limit") Integer limit);
 }
