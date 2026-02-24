@@ -45,7 +45,7 @@ public class TaskServiceImpl extends ServiceImpl<TaskMapper, Task> implements Ta
     }
     
     @Override
-    @CacheEvict(value = {"task", "task:today"}, allEntries = true)
+    @CacheEvict(value = "task", allEntries = true)
     public void completeTask(Long taskId) {
         Task task = getById(taskId);
         task.setStatus(2);

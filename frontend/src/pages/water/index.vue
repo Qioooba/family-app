@@ -399,10 +399,18 @@ const closeSettings = () => {
   settingsVisible.value = false
 }
 
-const saveTarget = () => {
+const saveTarget = async () => {
   targetAmount.value = tempTarget.value
-  uni.setStorageSync('waterTarget', tempTarget.value)
-  uni.showToast({ title: '设置已保存', icon: 'success' })
+  try {
+    // 调用API保存目标到后端
+    await waterApi.setTarget(tempTarget.value)
+    uni.showToast({ title: '设置已保存', icon: 'success' })
+  } catch (e) {
+    console.error('保存目标失败', e)
+    // 即使API失败，也保存到本地存储作为备用
+    uni.setStorageSync('waterTarget', tempTarget.value)
+    uni.showToast({ title: '已本地保存', icon: 'success' })
+  }
   closeSettings()
 }
 

@@ -1089,6 +1089,56 @@ $border-radius-xl: 60rpx;
   }
 }
 
+// 预算进度条
+.budget-section {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  margin-top: 16rpx;
+  backdrop-filter: blur(8px);
+}
+
+.budget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.budget-label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.budget-value {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.budget-bar {
+  height: 14rpx;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 7rpx;
+  overflow: hidden;
+}
+
+.budget-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+  border-radius: 7rpx;
+  transition: width 0.3s ease;
+}
+
+.budget-percent {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 8rpx;
+  display: block;
+  text-align: right;
+}
+
 // 统计卡片
 .stats-container {
   display: flex;

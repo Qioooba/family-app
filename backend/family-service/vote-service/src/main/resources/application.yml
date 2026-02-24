@@ -34,7 +34,13 @@ mybatis-plus:
 
 sa-token:
   token-name: Authorization
-  timeout: 86400
+  timeout: 2592000
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: false
+  is-read-cookie: false
+  is-read-header: true
 
 logging:
   level:

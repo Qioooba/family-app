@@ -57,7 +57,7 @@
     <!-- 今日概览卡片 -->
     <view class="overview-cards animate-in">
       <!-- 今日喝水 -->
-      <view class="overview-card water-card" @click="navigateTo('/pages/food/water')">
+      <view class="overview-card water-card" @click="navigateTo('/pages/water/index')">
         <view class="card-header">
           <view class="card-icon-wrapper water-icon">
             <text class="card-icon">💧</text>
@@ -271,7 +271,7 @@
             <text class="stat-icon">🍽️</text>
           </view>
           <text class="stat-value">{{ healthData.calories }}</text>
-          <text class="stat-label">已摄入(卡)</text>
+          <text class="stat-label">已摄入卡路里</text>
         </view>
         
         <view class="stat-item">
@@ -279,15 +279,15 @@
             <text class="stat-icon">✨</text>
           </view>
           <text class="stat-value">{{ healthData.target - healthData.calories }}</text>
-          <text class="stat-label">剩余(卡)</text>
+          <text class="stat-label">剩余卡路里</text>
         </view>
         
-        <view class="stat-item">
+        <view class="stat-item" @click="openWaterGoalModal">
           <view class="stat-icon-wrapper" style="background: linear-gradient(135deg, #667eea, #764ba2);">
             <text class="stat-icon">💧</text>
           </view>
-          <text class="stat-value">{{ healthData.water }}</text>
-          <text class="stat-label">饮水(杯)</text>
+          <text class="stat-value">{{ overviewData.water }}ml</text>
+          <text class="stat-label">已饮水</text>
         </view>
       </view>
       
@@ -311,6 +311,14 @@
     </view>
   </template>
     </PullRefresh2>
+    
+    <!-- 设置饮水目标弹窗 -->
+    <WaterGoalModal
+      :visible="waterGoalModalVisible"
+      :current-target="overviewData.waterTarget"
+      @close="waterGoalModalVisible = false"
+      @confirm="handleSetWaterGoal"
+    />
   </view>
 </template>
 

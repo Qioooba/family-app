@@ -21,20 +21,6 @@
       </view>
     </scroll-view>
     
-    <!-- 视图切换入口 -->
-    <view class="view-switcher">
-      <view class="view-item" @click="goToCalendar">
-        <text class="view-icon">📅</text>
-        <text class="view-text">日历视图</text>
-        <text class="view-arrow">›</text>
-      </view>
-      <view class="view-item" @click="goToSchedule">
-        <text class="view-icon">📋</text>
-        <text class="view-text">排班表</text>
-        <text class="view-arrow">›</text>
-      </view>
-    </view>
-    
     <!-- 任务列表 -->
     <scroll-view class="task-list" scroll-y>
       <view 
@@ -137,44 +123,110 @@
       </view>
     </view>
     
-    <!-- 添加任务弹窗 -->
+    <!-- 添加任务弹窗 - 新样式 -->
     <view v-if="showModal" class="modal-overlay" @click="closeModal">
-      <view class="modal-content" @click.stop>
-        <view class="modal-header">
-          <text>添加新任务</text>
-          <text class="close-btn" @click="closeModal">✕</text>
-        </view>
-        
-        <view class="form-item">
-          <text class="label">任务标题</text>
-          <input class="input" v-model="newTask.title" placeholder="输入任务标题" />
-        </view>
-        
-        <view class="form-item">
-          <text class="label">截止时间</text>
-          <picker mode="date" @change="onDateChange">
-            <view class="picker">{{ newTask.dueDate || '请选择日期' }}</view>
-          </picker>
-        </view>
-        
-        <view class="form-item">
-          <text class="label">优先级</text>
-          <view class="priority-options">
-            <view 
-              v-for="(p, i) in priorities" 
-              :key="p || i"
-              class="priority-option"
-              :class="{ active: newTask.priority === i }"
-              @click="newTask.priority = i"
-            >
-              <text>{{ p }}</text>
-            </view>
+      <view class="modal-content task-modal" @click.stop>
+        <!-- 顶部：添加待办 -->
+        <view class="modal-top">
+          <view class="close-btn" @click="closeModal">
+            <text class="close-icon">✕</text>
+          </view>
+          <text class="modal-title">添加待办</text>
+          <view class="save-btn" @click="addTask">
+            <text class="save-text">保存</text>
           </view>
         </view>
         
-        <view class="form-actions">
-          <button class="btn-cancel" @click="closeModal">取消</button>
-          <button class="btn-confirm" @click="addTask">确认添加</button>
+        <!-- 中间：输入框 -->
+        <view class="modal-body">
+          <input 
+            class="task-input" 
+            v-model="newTask.title" 
+            placeholder="请输入待办事项"
+            focus
+          />
+        </view>
+        
+        <!-- 底部：提醒时间和分配人员 -->
+        <view class="modal-bottom">
+          <!-- 提醒时间 -->
+          <view class="form-row" @click="showDateTimePicker">
+            <text class="row-icon">⏰</text>
+            <text class="row-label">提醒时间</text>
+            <text class="row-value">{{ newTask.dueDate || '今天' }} {{ newTask.dueTime || '15:00' }}</text>
+          </view>
+          
+          <!-- 分配人员 -->
+          <view class="form-row" @click="showMemberPicker">
+            <text class="row-icon">👤</text>
+            <text class="row-label">分配人员</text>
+            <view class="member-select">
+              <text v-if="!newTask.assigneeId" class="select-placeholder">点击选择</text>
+              <text v-else class="select-value">{{ getMemberName(newTask.assigneeId) }}</text>
+              <text class="row-arrow">›</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 日期时间选择器 -->
+      <view v-if="showPicker" class="picker-overlay" @click="closePicker">
+        <view class="picker-container" @click.stop>
+          <view class="picker-header">
+            <text class="picker-cancel" @click="closePicker">取消</text>
+            <text class="picker-title">选择时间</text>
+            <text class="picker-confirm" @click="confirmPicker">确定</text>
+          </view>
+          <picker-view class="picker-view" :value="pickerValue" @change="onPickerChange">
+            <picker-view-column>
+              <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="month in 12" :key="month" class="picker-item">{{ month }}月</view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="day in daysInMonth" :key="day" class="picker-item">{{ day }}日</view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="hour in 24" :key="hour-1" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
+            </picker-view-column>
+            <picker-view-column>
+              <view v-for="minute in 60" :key="minute-1" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
+            </picker-view-column>
+          </picker-view>
+        </view>
+      </view>
+      
+      <!-- 成员选择弹窗 -->
+      <view v-if="showMemberPicker" class="picker-overlay" @click="closeMemberPicker">
+        <view class="member-picker-container" @click.stop>
+          <view class="picker-header">
+            <text class="picker-title">选择家庭成员</text>
+          </view>
+          <view class="member-list">
+            <view 
+              class="member-item" 
+              :class="{ active: !newTask.assigneeId }"
+              @click="selectMember(null)"
+            >
+              <view class="member-avatar default">自己</view>
+              <text class="member-name">自己</text>
+            </view>
+            <view 
+              v-for="member in familyMembers" 
+              :key="member.userId"
+              class="member-item"
+              :class="{ active: newTask.assigneeId === member.userId }"
+              @click="selectMember(member.userId)"
+            >
+              <image 
+                class="member-avatar" 
+                :src="member.avatar || '/static/avatar-default.png'" 
+                mode="aspectFill" 
+              />
+              <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
@@ -200,14 +252,21 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { taskApi } from '../../api/index.js'
+import { taskApi, familyApi } from '../../api/index.js'
+
+// 获取今天的日期字符串
+const getTodayString = () => {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 const categories = [
-  { name: '全部', id: 0 },
-  { name: '待办', id: 1 },
-  { name: '购物', id: 2 },
-  { name: '家务', id: 3 },
-  { name: '排班', id: 4 }
+  { name: '待办', id: 1, status: 0 },
+  { name: '已办', id: 2, status: 1 },
+  { name: '完成', id: 3, status: 2 }
 ]
 
 const priorities = ['普通', '重要', '紧急']
@@ -221,6 +280,25 @@ const currentSubtaskTask = ref(null)
 const newSubtaskTitle = ref('')
 const tasks = ref([])
 const loading = ref(false)
+
+// 家庭成员列表
+const familyMembers = ref([])
+const showPicker = ref(false)
+const showMemberPicker = ref(false)
+const pickerValue = ref([0, 0, 0, 15, 0])
+const currentYear = new Date().getFullYear()
+const yearRange = computed(() => {
+  const years = []
+  for (let i = currentYear - 1; i <= currentYear + 1; i++) {
+    years.push(i)
+  }
+  return years
+})
+const daysInMonth = computed(() => {
+  const year = yearRange.value[pickerValue.value[0]] || currentYear
+  const month = (pickerValue.value[1] || 0) + 1
+  return new Date(year, month, 0).getDate()
+})
 
 // 加载任务列表
 const loadTasks = async () => {
@@ -238,25 +316,98 @@ const loadTasks = async () => {
   }
 }
 
+// 加载家庭成员
+const loadFamilyMembers = async () => {
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const members = await familyApi.getMembers(familyId)
+    familyMembers.value = members || []
+  } catch (e) {
+    console.error('加载家庭成员失败', e)
+  }
+}
+
 // 页面加载时获取任务
 onMounted(() => {
   loadTasks()
+  loadFamilyMembers()
 })
+
+// 获取成员名称
+const getMemberName = (userId) => {
+  const member = familyMembers.value.find(m => m.userId === userId)
+  return member?.nickname || member?.name || '家人'
+}
 
 const newTask = ref({
   title: '',
-  dueDate: '',
+  dueDate: getTodayString(),
+  dueTime: '15:00',
   priority: 0,
-  categoryId: 1
+  assigneeId: null
 })
 
+// 日期时间选择器
+const showDateTimePicker = () => {
+  // 初始化选择器值
+  const today = new Date()
+  const yearIndex = yearRange.value.indexOf(today.getFullYear())
+  pickerValue.value = [
+    yearIndex >= 0 ? yearIndex : 0,
+    today.getMonth(),
+    today.getDate() - 1,
+    15,
+    0
+  ]
+  showPicker.value = true
+}
+
+const closePicker = () => {
+  showPicker.value = false
+}
+
+const onPickerChange = (e) => {
+  pickerValue.value = e.detail.value
+}
+
+const confirmPicker = () => {
+  const year = yearRange.value[pickerValue.value[0]]
+  const month = String(pickerValue.value[1] + 1).padStart(2, '0')
+  const day = String(pickerValue.value[2] + 1).padStart(2, '0')
+  const hour = String(pickerValue.value[3]).padStart(2, '0')
+  const minute = String(pickerValue.value[4]).padStart(2, '0')
+  newTask.value.dueDate = `${year}-${month}-${day}`
+  newTask.value.dueTime = `${hour}:${minute}`
+  closePicker()
+}
+
+// 成员选择
+const showMemberPicker = () => {
+  showMemberPicker.value = true
+}
+
+const closeMemberPicker = () => {
+  showMemberPicker.value = false
+}
+
+const selectMember = (userId) => {
+  newTask.value.assigneeId = userId
+  closeMemberPicker()
+}
+
 const filteredTasks = computed(() => {
-  if (currentCategory.value === 0) return tasks.value
-  if (currentCategory.value === 4) {
-    // 排班视图
-    return tasks.value.filter(t => t.categoryName === '家务')
+  // 根据状态筛选任务
+  const status = categories[currentCategory.value]?.status
+  let result = tasks.value
+  if (status !== undefined) {
+    result = result.filter(t => t.status === status)
   }
-  return tasks.value.filter(t => t.status === (currentCategory.value === 1 ? 0 : t.status))
+  // 按日期时间从近到远排序
+  return result.sort((a, b) => {
+    const dateA = new Date(a.dueTime || '1970-01-01')
+    const dateB = new Date(b.dueTime || '1970-01-01')
+    return dateA - dateB
+  })
 })
 
 const switchCategory = (index) => {
@@ -359,12 +510,26 @@ const goToCalendar = () => {
 }
 
 const showAddModal = () => {
+  // 重置表单
+  newTask.value = {
+    title: '',
+    dueDate: getTodayString(),
+    dueTime: '15:00',
+    priority: 0,
+    assigneeId: null
+  }
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
-  newTask.value = { title: '', dueDate: '', priority: 0, categoryId: 1 }
+  newTask.value = { 
+    title: '', 
+    dueDate: getTodayString(), 
+    dueTime: '15:00',
+    priority: 0, 
+    assigneeId: null 
+  }
 }
 
 const onDateChange = (e) => {

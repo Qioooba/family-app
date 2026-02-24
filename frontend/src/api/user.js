@@ -17,7 +17,7 @@ export const userApi = {
    * 获取当前用户信息
    * @returns {Promise<object>}
    */
-  getCurrentUser: () => request.get('/api/user/current'),
+  getCurrentUser: () => request.get('/api/user/info'),
   
   /**
    * 导出家庭数据
