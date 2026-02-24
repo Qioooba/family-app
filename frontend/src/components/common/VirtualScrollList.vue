@@ -32,7 +32,7 @@
     
     <!-- 加载更多 -->
     <view v-if="loading" class="loading-more">
-      <u-loading-icon mode="circle" size="20"></u-loading-icon>
+      <up-loading-icon mode="circle" size="20"></up-loading-icon>
       <text class="loading-text">加载中...</text>
     </view>
     

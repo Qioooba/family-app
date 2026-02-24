@@ -3,256 +3,258 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">任务详情</text>
       <view class="more-btn" @click="showActions">
-        <u-icon name="more-dot-fill" size="40" color="#333"></u-icon>
+        <up-icon name="more-dot-fill" size="40" color="#333"></up-icon>
       </view>
     </view>
-    
-    <view class="detail-container">
-      <!-- 任务头部 -->
-      <view class="task-header" :class="{ completed: task.status === 2 }">
-        <view class="status-badge" :class="getStatusClass">{{ getStatusText }}</view>
-        <view class="task-title">
-          <text :class="{ 'line-through': task.status === 2 }">{{ task.title }}</text>
-        </view>
-        
-        <view class="task-meta">
-          <view class="meta-item">
-            <u-icon name="clock" size="28" color="#999"></u-icon>
-            <text>截止: {{ task.deadline }}</text>
+
+    <!-- 页面内容 -->
+    <scroll-view class="content-scroll" scroll-y enhanced :show-scrollbar="false">
+      <!-- 任务标题卡片 -->
+      <view class="task-title-card" :class="{ completed: task.status === 2 }">
+        <view class="title-section">
+          <view class="checkbox" :class="{ checked: task.status === 2 }" @click="toggleTaskStatus">
+            <up-icon v-if="task.status === 2" name="checkmark" size="36" color="#fff"></up-icon>
           </view>
-          <view class="meta-item">
-            <u-icon name="tag" size="28" color="#999"></u-icon>
-            <text>{{ getCategoryText }}</text>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 执行人 -->
-      <view class="section-card">
-        <view class="section-title">执行人</view>
-        <view class="assignee-info">
-          <image :src="task.assigneeAvatar" class="avatar" />
-          <view class="info">
-            <text class="name">{{ task.assigneeName }}</text>
-            <text class="time">创建于 {{ task.createTime }}</text>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 优先级 -->
-      <view class="section-card">
-        <view class="section-title">优先级</view>
-        <view class="priority-display" :class="getPriorityClass">
-          <view class="priority-dot"></view>
-          <text>{{ getPriorityText }}</text>
-        </view>
-      </view>
-      
-      <!-- 备注 -->
-      <view class="section-card" v-if="task.remark">
-        <view class="section-title">备注</view>
-        <view class="remark-content">{{ task.remark }}</view>
-      </view>
-      
-      <!-- 子任务 -->
-      <view class="section-card subtask-section">
-        <view class="section-title">
-          <text>子任务</text>
-          <text class="subtask-count" v-if="subtasks.length > 0">
-            {{ completedSubtasks }}/{{ subtasks.length }}
-          </text>
-        </view>
-        
-        <!-- 进度条 -->
-        <view v-if="subtasks.length > 0" class="progress-bar">
-          <view class="progress-fill" :style="{ width: subtaskProgress + '%' }"></view>
-        </view>
-        <text v-if="subtasks.length > 0" class="progress-text">{{ subtaskProgress }}%</text>
-        
-        <!-- 子任务列表 -->
-        <view class="subtask-list">
-          <view 
-            v-for="(sub, index) in subtasks" 
-            :key="sub.id"
-            class="subtask-item"
-          >
-            <view 
-              class="subtask-checkbox" 
-              :class="{ checked: sub.status === 1 }"
-              @click="toggleSubtask(sub)"
-            >
-              <u-icon v-if="sub.status === 1" name="checkmark" size="24" color="#fff"></u-icon>
-            </view>
-            <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
-            <view class="subtask-delete" @click="deleteSubtask(sub.id, index)">
-              <u-icon name="close" size="28" color="#999"></u-icon>
+          <view class="title-content">
+            <text class="task-title-text" :class="{ 'line-through': task.status === 2 }">
+              {{ task.title }}
+            </text>
+            <view class="status-tag" :class="getStatusClass">
+              <text>{{ getStatusText }}</text>
             </view>
           </view>
         </view>
-        
-        <!-- 添加子任务 -->
-        <view class="add-subtask">
-          <input 
-            v-model="newSubtaskTitle"
-            class="subtask-input"
-            placeholder="添加子任务..."
-            confirm-type="done"
-            @confirm="addSubtask"
-          />
-          <view class="add-btn" :class="{ active: newSubtaskTitle.trim() }" @click="addSubtask">
-            <u-icon name="plus" size="32" color="#fff"></u-icon>
+      </view>
+
+      <!-- 任务属性卡片 -->
+      <view class="info-card">
+        <!-- 截止时间 -->
+        <view class="info-item" @click="editDeadline">
+          <view class="info-icon deadline">
+            <up-icon name="clock" size="32" color="#fff"></up-icon>
           </view>
+          <view class="info-content">
+            <text class="info-label">截止时间</text>
+            <text class="info-value">{{ formatDeadline }}</text>
+          </view>
+          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+        </view>
+
+        <!-- 分割线 -->
+        <view class="divider"></view>
+
+        <!-- 优先级 -->
+        <view class="info-item" @click="editPriority">
+          <view class="info-icon priority" :class="getPriorityBgClass">
+            <up-icon name="flag" size="32" color="#fff"></up-icon>
+          </view>
+          <view class="info-content">
+            <text class="info-label">优先级</text>
+            <view class="priority-tag" :class="getPriorityClass">
+              <view class="priority-dot"></view>
+              <text>{{ getPriorityText }}</text>
+            </view>
+          </view>
+          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+        </view>
+
+        <!-- 分割线 -->
+        <view class="divider"></view>
+
+        <!-- 分类 -->
+        <view class="info-item" @click="editCategory">
+          <view class="info-icon category">
+            <up-icon name="grid" size="32" color="#fff"></up-icon>
+          </view>
+          <view class="info-content">
+            <text class="info-label">任务分类</text>
+            <text class="info-value">{{ getCategoryText }}</text>
+          </view>
+          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
         </view>
       </view>
-      
-      <!-- 提醒设置 -->
-      <view class="section-card reminder-section" @click="showReminderModal">
-        <view class="section-title">
-          <text>提醒设置</text>
-          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+
+      <!-- 备注卡片 -->
+      <view class="remark-card" v-if="task.remark">
+        <view class="card-header">
+          <up-icon name="file-text" size="32" color="#999"></up-icon>
+          <text>备注</text>
         </view>
-        <view class="reminder-list">
-          <view v-if="reminders.length === 0" class="no-reminder">
-            <text>点击设置提醒 ⏰</text>
+        <view class="remark-content">
+          {{ task.remark }}
+        </view>
+      </view>
+
+      <!-- 备注卡片（空状态） -->
+      <view class="remark-card empty" v-else @click="addRemark">
+        <view class="card-header">
+          <up-icon name="file-text" size="32" color="#999"></up-icon>
+          <text>备注</text>
+        </view>
+        <view class="add-remark">
+          <up-icon name="plus" size="32" color="#5AD8A6"></up-icon>
+          <text>添加备注</text>
+        </view>
+      </view>
+
+      <!-- 提醒设置卡片 -->
+      <view class="reminder-card" @click="showReminderModal">
+        <view class="card-header">
+          <view class="header-left">
+            <up-icon name="bell" size="32" color="#5B8FF9"></up-icon>
+            <text>提醒设置</text>
           </view>
+          <view class="header-right">
+            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+          </view>
+        </view>
+
+        <view class="reminder-list" v-if="reminders.length > 0">
           <view v-for="(reminder, index) in reminders" :key="reminder.id" class="reminder-item">
-            <view class="reminder-icon">
-              <u-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="32" color="#5B8FF9"></u-icon>
+            <view class="reminder-icon-wrapper" :class="reminder.reminderType">
+              <up-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#fff"></up-icon>
             </view>
             <view class="reminder-info">
-              <text class="reminder-time">{{ formatReminder(reminder) }}</text>
-              <text v-if="reminder.reminderType === 'location' && reminder.locationName" class="reminder-location">{{ reminder.locationName }}</text>
+              <text class="reminder-text">{{ formatReminder(reminder) }}</text>
+              <text v-if="reminder.reminderType === 'location' && reminder.locationName" class="reminder-subtext">{{ reminder.locationName }}</text>
             </view>
           </view>
+        </view>
+        <view class="no-reminder" v-else>
+          <up-icon name="plus-circle" size="48" color="#ddd"></up-icon>
+          <text>点击添加提醒</text>
         </view>
       </view>
 
-      <!-- 操作按钮 -->
-      <view class="action-buttons">
-        <view 
-          v-if="task.status !== 2" 
-          class="btn btn-primary"
-          @click="completeTask"
-        >
-          <u-icon name="checkmark" size="32" color="#fff"></u-icon>
-          标记完成
-        </view>
-        <view 
-          v-else 
-          class="btn btn-secondary"
-          @click="reopenTask"
-        >
-          重新打开
-        </view>
-        
-        <view class="btn btn-danger" @click="deleteTask">
-          删除任务
-        </view>
+      <!-- 创建时间 -->
+      <view class="create-time">
+        <text>创建于 {{ formatCreateTime }}</text>
       </view>
-      <!-- 提醒设置弹窗 -->
-      <view v-if="reminderModalVisible" class="modal-overlay" @click="closeReminderModal">
-        <view class="modal-content reminder-modal" @click.stop>
-          <view class="modal-header">
-            <text>设置提醒</text>
-            <text class="close-btn" @click="closeReminderModal">✕</text>
+    </scroll-view>
+
+    <!-- 底部操作栏 -->
+    <view class="bottom-actions">
+      <view v-if="task.status !== 2" class="action-btn btn-complete" @click="completeTask">
+        <up-icon name="checkmark-circle-2" size="36" color="#fff"></up-icon>
+        <text>标记完成</text>
+      </view>
+      <view v-else class="action-btn btn-reopen" @click="reopenTask">
+        <up-icon name="refresh-circle" size="36" color="#5B8FF9"></up-icon>
+        <text>重新打开</text>
+      </view>
+
+      <view class="action-btn btn-delete" @click="deleteTask">
+        <up-icon name="trash-2" size="36" color="#FF4D4F"></up-icon>
+        <text>删除任务</text>
+      </view>
+    </view>
+
+    <!-- 提醒设置弹窗 -->
+    <view v-if="reminderModalVisible" class="modal-overlay" @click="closeReminderModal">
+      <view class="modal-content" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">设置提醒</text>
+          <text class="close-btn" @click="closeReminderModal">✕</text>
+        </view>
+
+        <!-- 提醒类型选择 -->
+        <view class="reminder-type-tabs">
+          <view
+            v-for="(type, index) in reminderTypes"
+            :key="type.id || index"
+            class="type-tab"
+            :class="{ active: newReminder.reminderType === type.value }"
+            @click="newReminder.reminderType = type.value"
+          >
+            <up-icon :name="type.icon" size="36" :color="newReminder.reminderType === type.value ? '#fff' : '#666'"></up-icon>
+            <text>{{ type.label }}</text>
+          </view>
+        </view>
+
+        <!-- 时间提醒设置 -->
+        <view v-if="newReminder.reminderType === 'time'" class="form-section">
+          <view class="form-item">
+            <text class="form-label">提醒时间</text>
+            <picker mode="multiSelector" :range="timeRange" :value="timeIndex" @change="onTimeChange">
+              <view class="picker-value">
+                {{ newReminder.reminderTime || '选择时间' }}
+                <up-icon name="arrow-right" size="24" color="#ccc"></up-icon>
+              </view>
+            </picker>
           </view>
 
-          <!-- 提醒类型 -->
-          <view class="reminder-type-tabs">
-            <view
-              v-for="(type, index) in reminderTypes" :key="type.id || index"
-              class="type-tab"
-              :class="{ active: newReminder.reminderType === type.value }"
-              @click="newReminder.reminderType = type.value"
-            >
-              <u-icon :name="type.icon" size="32" :color="newReminder.reminderType === type.value ? '#fff' : '#666'"></u-icon>
-              <text>{{ type.label }}</text>
+          <view class="form-item">
+            <text class="form-label">提前提醒</text>
+            <view class="chip-options">
+              <view
+                v-for="(adv, index) in advanceOptions"
+                :key="adv.id || index"
+                class="chip"
+                :class="{ active: newReminder.advanceMinutes === adv.value }"
+                @click="newReminder.advanceMinutes = adv.value"
+              >
+                {{ adv.label }}
+              </view>
             </view>
           </view>
+        </view>
 
-          <!-- 时间提醒设置 -->
-          <view v-if="newReminder.reminderType === 'time'" class="time-reminder-form">
-            <view class="form-item">
-              <text class="label">提醒时间</text>
-              <picker mode="multiSelector" :range="timeRange" :value="timeIndex" @change="onTimeChange">
-                <view class="picker-value">
-                  {{ newReminder.reminderTime || '选择时间' }}
-                  <u-icon name="arrow-right" size="24" color="#ccc"></u-icon>
-                </view>
-              </picker>
-            </view>
-
-            <view class="form-item">
-              <text class="label">提前提醒</text>
-              <view class="advance-options">
-                <view
-                  v-for="(adv, index) in advanceOptions" :key="adv.id || index"
-                  class="advance-item"
-                  :class="{ active: newReminder.advanceMinutes === adv.value }"
-                  @click="newReminder.advanceMinutes = adv.value"
-                >
-                  {{ adv.label }}
+        <!-- 位置提醒设置 -->
+        <view v-if="newReminder.reminderType === 'location'" class="form-section">
+          <view class="form-item">
+            <text class="form-label">选择位置</text>
+            <view class="location-picker" @click="chooseLocation">
+              <view v-if="!newReminder.locationName" class="location-placeholder">
+                <up-icon name="map" size="48" color="#ccc"></up-icon>
+                <text>点击选择地图位置</text>
+              </view>
+              <view v-else class="location-selected">
+                <up-icon name="map-fill" size="40" color="#5B8FF9"></up-icon>
+                <view class="location-info">
+                  <text class="location-name">{{ newReminder.locationName }}</text>
+                  <text class="location-address" v-if="newReminder.locationAddress">{{ newReminder.locationAddress }}</text>
                 </view>
               </view>
             </view>
           </view>
 
-          <!-- 位置提醒设置 -->
-          <view v-if="newReminder.reminderType === 'location'" class="location-reminder-form">
-            <view class="form-item">
-              <text class="label">选择位置</text>
-              <view class="location-picker" @click="chooseLocation">
-                <view v-if="!newReminder.locationName" class="location-placeholder">
-                  <u-icon name="map" size="48" color="#ccc"></u-icon>
-                  <text>点击选择地图位置</text>
-                </view>
-                <view v-else class="location-selected">
-                  <u-icon name="map-fill" size="40" color="#5B8FF9"></u-icon>
-                  <view class="location-info">
-                    <text class="location-name">{{ newReminder.locationName }}</text>
-                    <text class="location-address" v-if="newReminder.locationAddress">{{ newReminder.locationAddress }}</text>
-                  </view>
-                </view>
-              </view>
-            </view>
-
-            <view class="form-item">
-              <text class="label">提醒范围</text>
-              <view class="radius-options">
-                <view
-                  v-for="(r, index) in radiusOptions" :key="r.id || index"
-                  class="radius-item"
-                  :class="{ active: newReminder.radius === r.value }"
-                  @click="newReminder.radius = r.value"
-                >
-                  {{ r.label }}
-                </view>
+          <view class="form-item">
+            <text class="form-label">提醒范围</text>
+            <view class="chip-options">
+              <view
+                v-for="(r, index) in radiusOptions"
+                :key="r.id || index"
+                class="chip"
+                :class="{ active: newReminder.radius === r.value }"
+                @click="newReminder.radius = r.value"
+              >
+                {{ r.label }}
               </view>
             </view>
           </view>
+        </view>
 
-          <!-- 提醒列表 -->
-          <view v-if="reminders.length > 0" class="existing-reminders">
-            <text class="section-subtitle">已设置的提醒</text>
-            <view v-for="(reminder, index) in reminders" :key="reminder.id" class="existing-item">
-              <view class="existing-info">
-                <u-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#5B8FF9"></u-icon>
-                <text>{{ formatReminder(reminder) }}</text>
-              </view>
-              <view class="delete-btn" @click="deleteReminder(reminder.id)">
-                <u-icon name="trash" size="28" color="#FF4D4F"></u-icon>
-              </view>
+        <!-- 已设置的提醒列表 -->
+        <view v-if="reminders.length > 0" class="existing-reminders">
+          <text class="section-title">已设置的提醒</text>
+          <view v-for="(reminder, index) in reminders" :key="reminder.id" class="existing-item">
+            <view class="existing-info">
+              <up-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#5B8FF9"></up-icon>
+              <text>{{ formatReminder(reminder) }}</text>
+            </view>
+            <view class="delete-btn" @click="deleteReminder(reminder.id)">
+              <up-icon name="trash" size="28" color="#FF4D4F"></up-icon>
             </view>
           </view>
+        </view>
 
-          <view class="modal-actions">
-            <button class="btn-cancel" @click="closeReminderModal">取消</button>
-            <button class="btn-confirm" @click="saveReminder">添加提醒</button>
-          </view>
+        <view class="modal-actions">
+          <button class="btn-cancel" @click="closeReminderModal">取消</button>
+          <button class="btn-confirm" @click="saveReminder">添加提醒</button>
         </view>
       </view>
     </view>
@@ -271,13 +273,9 @@ const task = ref({
   deadline: '2026-02-21 18:00',
   category: 'shopping',
   priority: 1,
-  assigneeName: '妈妈',
-  assigneeAvatar: '/static/avatar/mom.png',
   createTime: '2026-02-21 09:00',
   remark: '记得买有机牛奶，鸡蛋要土鸡蛋'
 })
-const subtasks = ref([])
-const newSubtaskTitle = ref('')
 const loading = ref(false)
 
 // 提醒相关数据
@@ -340,8 +338,6 @@ const loadTaskDetail = async (id) => {
     if (res) {
       task.value = res
     }
-    // 加载子任务列表
-    await loadSubtasks(id)
   } catch (e) {
     console.error('加载任务详情失败', e)
     uni.showToast({ title: '加载失败', icon: 'none' })
@@ -350,90 +346,34 @@ const loadTaskDetail = async (id) => {
   }
 }
 
-// 加载子任务列表
-const loadSubtasks = async (id) => {
-  try {
-    const res = await taskApi.getSubtasks(id)
-    subtasks.value = res || []
-  } catch (e) {
-    console.error('加载子任务失败', e)
-    subtasks.value = []
-  }
-}
+// 格式化截止时间
+const formatDeadline = computed(() => {
+  if (!task.value.deadline) return '未设置'
+  const date = new Date(task.value.deadline)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
 
-// 添加子任务
-const addSubtask = async () => {
-  const title = newSubtaskTitle.value.trim()
-  if (!title) return
-  
-  try {
-    const res = await taskApi.addSubtask({
-      taskId: taskId.value,
-      title: title,
-      sortOrder: subtasks.value.length
-    })
-    
-    // 添加成功，更新列表
-    subtasks.value.push({
-      id: res,
-      taskId: taskId.value,
-      title: title,
-      status: 0,
-      sortOrder: subtasks.value.length
-    })
-    
-    newSubtaskTitle.value = ''
-    uni.showToast({ title: '添加成功', icon: 'success' })
-  } catch (e) {
-    console.error('添加子任务失败', e)
-    uni.showToast({ title: '添加失败', icon: 'none' })
-  }
-}
+  const dateStr = `${date.getMonth() + 1}月${date.getDate()}日`
+  const timeStr = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 
-// 切换子任务状态
-const toggleSubtask = async (sub) => {
-  try {
-    await taskApi.toggleSubtask(sub.id)
-    sub.status = sub.status === 0 ? 1 : 0
-    
-    // 如果所有子任务完成，提示完成任务
-    if (subtaskProgress.value === 100 && task.value.status !== 2) {
-      uni.showModal({
-        title: '子任务全部完成',
-        content: '是否将主任务标记为完成？',
-        success: (res) => {
-          if (res.confirm) {
-            completeTask()
-          }
-        }
-      })
-    }
-  } catch (e) {
-    console.error('切换子任务状态失败', e)
-    uni.showToast({ title: '操作失败', icon: 'none' })
+  if (date >= today && date < tomorrow) {
+    return `今天 ${timeStr}`
   }
-}
+  const nextDay = new Date(tomorrow)
+  if (date >= tomorrow && date < new Date(nextDay.setDate(nextDay.getDate() + 1))) {
+    return `明天 ${timeStr}`
+  }
+  return `${dateStr} ${timeStr}`
+})
 
-// 删除子任务
-const deleteSubtask = async (id, index) => {
-  uni.showModal({
-    title: '确认删除',
-    content: '确定删除这个子任务吗？',
-    confirmColor: '#FF4D4F',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await taskApi.deleteSubtask(id)
-          subtasks.value.splice(index, 1)
-          uni.showToast({ title: '已删除', icon: 'success' })
-        } catch (e) {
-          console.error('删除子任务失败', e)
-          uni.showToast({ title: '删除失败', icon: 'none' })
-        }
-      }
-    }
-  })
-}
+// 格式化创建时间
+const formatCreateTime = computed(() => {
+  if (!task.value.createTime) return ''
+  const date = new Date(task.value.createTime)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+})
 
 // 加载提醒列表
 const loadReminders = async (id) => {
@@ -500,11 +440,11 @@ const chooseLocation = () => {
 const formatReminder = (reminder) => {
   if (reminder.reminderType === 'time') {
     const advance = advanceOptions.find(a => a.value === reminder.advanceMinutes)
-    const advanceText = advance && advance.value > 0 ? `(${advance.label})` : ''
-    return `⏰ ${reminder.reminderTime} ${advanceText}`
+    const advanceText = advance && advance.value > 0 ? `${advance.label} · ` : ''
+    return `${advanceText}${reminder.reminderTime}`
   } else {
     const radius = radiusOptions.find(r => r.value === reminder.radius)
-    return `📍 ${reminder.locationName || '位置提醒'} ${radius ? radius.label : ''}`
+    return `进入${radius ? radius.label : '附近'}时提醒`
   }
 }
 
@@ -584,6 +524,11 @@ const getCategoryText = computed(() => {
   return map[task.value.category] || '其他'
 })
 
+const getPriorityBgClass = computed(() => {
+  const map = { 0: 'bg-normal', 1: 'bg-medium', 2: 'bg-high' }
+  return map[task.value.priority] || 'bg-normal'
+})
+
 const getPriorityClass = computed(() => {
   const map = { 0: 'normal', 1: 'medium', 2: 'high' }
   return map[task.value.priority] || 'normal'
@@ -594,15 +539,14 @@ const getPriorityText = computed(() => {
   return map[task.value.priority] || '普通'
 })
 
-// 子任务计算属性
-const completedSubtasks = computed(() => {
-  return subtasks.value.filter(s => s.status === 1).length
-})
-
-const subtaskProgress = computed(() => {
-  if (subtasks.value.length === 0) return 0
-  return Math.round((completedSubtasks.value / subtasks.value.length) * 100)
-})
+// 切换任务状态（点击复选框）
+const toggleTaskStatus = () => {
+  if (task.value.status === 2) {
+    reopenTask()
+  } else {
+    completeTask()
+  }
+}
 
 const goBack = () => {
   uni.navigateBack()
@@ -610,15 +554,36 @@ const goBack = () => {
 
 const showActions = () => {
   uni.showActionSheet({
-    itemList: ['编辑', '转发', '删除'],
+    itemList: ['编辑任务', '删除任务'],
+    itemColor: '#333',
     success: (res) => {
       if (res.tapIndex === 0) {
         uni.navigateTo({ url: `/pages/task/edit?id=${taskId.value}` })
-      } else if (res.tapIndex === 2) {
+      } else if (res.tapIndex === 1) {
         deleteTask()
       }
     }
   })
+}
+
+// 编辑截止时间
+const editDeadline = () => {
+  uni.showToast({ title: '编辑功能开发中', icon: 'none' })
+}
+
+// 编辑优先级
+const editPriority = () => {
+  uni.showToast({ title: '编辑功能开发中', icon: 'none' })
+}
+
+// 编辑分类
+const editCategory = () => {
+  uni.showToast({ title: '编辑功能开发中', icon: 'none' })
+}
+
+// 添加备注
+const addRemark = () => {
+  uni.showToast({ title: '编辑功能开发中', icon: 'none' })
 }
 
 const completeTask = async () => {
@@ -634,7 +599,6 @@ const completeTask = async () => {
 
 const reopenTask = async () => {
   try {
-    // 重新打开任务 - 使用update API修改状态
     await taskApi.update({ id: taskId.value, status: 0 })
     task.value.status = 0
     uni.showToast({ title: '已重新打开', icon: 'success' })
@@ -668,25 +632,31 @@ const deleteTask = async () => {
 <style lang="scss" scoped>
 .task-detail-page {
   min-height: 100vh;
-  background: #f5f6fa;
+  background: linear-gradient(180deg, #f0f4ff 0%, #f8f9fc 100%);
+  display: flex;
+  flex-direction: column;
 }
 
+// 顶部导航
 .nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20rpx 30rpx;
   padding-top: 60rpx;
-  background: #fff;
-  
+  background: transparent;
+
   .back-btn, .more-btn {
-    width: 60rpx;
-    height: 60rpx;
+    width: 72rpx;
+    height: 72rpx;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    backdrop-filter: blur(10px);
   }
-  
+
   .title {
     font-size: 34rpx;
     font-weight: 600;
@@ -694,303 +664,402 @@ const deleteTask = async () => {
   }
 }
 
-.detail-container {
-  padding: 30rpx;
+// 内容滚动区域
+.content-scroll {
+  flex: 1;
+  padding: 0 30rpx;
+  padding-bottom: 180rpx;
 }
 
-.task-header {
-  background: #fff;
-  border-radius: 20rpx;
+// 任务标题卡片
+.task-title-card {
+  background: linear-gradient(135deg, #5B8FF9 0%, #5AD8A6 100%);
+  border-radius: 28rpx;
   padding: 40rpx;
-  margin-bottom: 30rpx;
-  
-  .status-badge {
-    display: inline-block;
-    padding: 8rpx 20rpx;
-    border-radius: 20rpx;
-    font-size: 24rpx;
-    margin-bottom: 20rpx;
-    
-    &.pending {
-      background: #E6F7FF;
-      color: #1890FF;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(91, 143, 249, 0.2);
+
+  &.completed {
+    background: linear-gradient(135deg, #95a5a6 0%, #bdc3c7 100%);
+    box-shadow: 0 8rpx 32rpx rgba(149, 165, 166, 0.2);
+  }
+
+  .title-section {
+    display: flex;
+    align-items: flex-start;
+    gap: 24rpx;
+  }
+
+  .checkbox {
+    width: 56rpx;
+    height: 56rpx;
+    border-radius: 50%;
+    border: 4rpx solid rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    &.checked {
+      background: #52C41A;
+      border-color: #52C41A;
     }
-    
-    &.progress {
-      background: #FFF7E6;
-      color: #FAAD14;
-    }
-    
-    &.completed {
-      background: #F6FFED;
-      color: #52C41A;
+
+    &:active {
+      transform: scale(0.9);
     }
   }
-  
-  .task-title {
+
+  .title-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+  }
+
+  .task-title-text {
     font-size: 40rpx;
     font-weight: 600;
-    color: #333;
-    margin-bottom: 30rpx;
-    line-height: 1.5;
-    
-    .line-through {
+    color: #fff;
+    line-height: 1.4;
+
+    &.line-through {
       text-decoration: line-through;
-      color: #999;
+      opacity: 0.7;
     }
   }
-  
-  .task-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20rpx;
-    
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 8rpx;
-      font-size: 26rpx;
-      color: #666;
+
+  .status-tag {
+    align-self: flex-start;
+    padding: 8rpx 20rpx;
+    border-radius: 24rpx;
+    background: rgba(255, 255, 255, 0.2);
+
+    text {
+      font-size: 24rpx;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    &.pending {
+      background: rgba(24, 144, 255, 0.3);
+    }
+
+    &.progress {
+      background: rgba(250, 173, 20, 0.3);
+    }
+
+    &.completed {
+      background: rgba(82, 196, 26, 0.3);
     }
   }
 }
 
-.section-card {
+// 信息卡片
+.info-card {
   background: #fff;
-  border-radius: 20rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-  
-  .section-title {
-    font-size: 28rpx;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20rpx;
-  }
+  border-radius: 24rpx;
+  padding: 16rpx 0;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
 }
 
-.assignee-info {
+.info-item {
   display: flex;
   align-items: center;
-  gap: 20rpx;
-  
-  .avatar {
-    width: 80rpx;
-    height: 80rpx;
-    border-radius: 50%;
+  padding: 24rpx 30rpx;
+
+  &:active {
+    background: rgba(0, 0, 0, 0.02);
   }
-  
-  .info {
-    .name {
-      font-size: 30rpx;
-      color: #333;
-      display: block;
-      margin-bottom: 8rpx;
+
+  .info-icon {
+    width: 64rpx;
+    height: 64rpx;
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &.deadline {
+      background: linear-gradient(135deg, #1890FF, #36CFC9);
     }
-    
-    .time {
+
+    &.bg-normal {
+      background: linear-gradient(135deg, #52C41A, #95DE64);
+    }
+
+    &.bg-medium {
+      background: linear-gradient(135deg, #FAAD14, #FFD666);
+    }
+
+    &.bg-high {
+      background: linear-gradient(135deg, #FF4D4F, #FF7875);
+    }
+
+    &.category {
+      background: linear-gradient(135deg, #722ED1, #B37FEB);
+    }
+  }
+
+  .info-content {
+    flex: 1;
+    margin-left: 24rpx;
+    display: flex;
+    flex-direction: column;
+    gap: 8rpx;
+  }
+
+  .info-label {
+    font-size: 24rpx;
+    color: #999;
+  }
+
+  .info-value {
+    font-size: 30rpx;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .priority-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8rpx;
+    align-self: flex-start;
+    padding: 8rpx 16rpx;
+    border-radius: 8rpx;
+    font-size: 26rpx;
+    font-weight: 500;
+
+    &.normal {
+      background: #E6F7FF;
+      color: #1890FF;
+      .priority-dot { background: #1890FF; }
+    }
+
+    &.medium {
+      background: #FFF7E6;
+      color: #FAAD14;
+      .priority-dot { background: #FAAD14; }
+    }
+
+    &.high {
+      background: #FFF1F0;
+      color: #FF4D4F;
+      .priority-dot { background: #FF4D4F; }
+    }
+
+    .priority-dot {
+      width: 12rpx;
+      height: 12rpx;
+      border-radius: 50%;
+    }
+  }
+}
+
+.divider {
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, #eee, transparent);
+  margin: 0 30rpx;
+}
+
+// 备注卡片
+.remark-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    margin-bottom: 20rpx;
+
+    text {
+      font-size: 28rpx;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  .remark-content {
+    font-size: 28rpx;
+    color: #666;
+    line-height: 1.6;
+    padding-left: 44rpx;
+  }
+
+  &.empty {
+    .add-remark {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12rpx;
+      padding: 40rpx;
+      margin-left: 44rpx;
+      border: 2rpx dashed #ddd;
+      border-radius: 16rpx;
+
+      text {
+        font-size: 28rpx;
+        color: #999;
+      }
+
+      &:active {
+        background: #f9f9f9;
+      }
+    }
+  }
+}
+
+// 提醒卡片
+.reminder-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20rpx;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
+
+      text {
+        font-size: 28rpx;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+  }
+
+  .reminder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+  }
+
+  .reminder-item {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+    padding: 20rpx;
+    background: #f8f9fa;
+    border-radius: 16rpx;
+
+    .reminder-icon-wrapper {
+      width: 56rpx;
+      height: 56rpx;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.time {
+        background: linear-gradient(135deg, #5B8FF9, #85A5FF);
+      }
+
+      &.location {
+        background: linear-gradient(135deg, #5AD8A6, #87E8DE);
+      }
+    }
+
+    .reminder-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4rpx;
+    }
+
+    .reminder-text {
+      font-size: 28rpx;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .reminder-subtext {
       font-size: 24rpx;
       color: #999;
     }
   }
-}
 
-.priority-display {
-  display: inline-flex;
-  align-items: center;
-  gap: 12rpx;
-  padding: 16rpx 30rpx;
-  border-radius: 30rpx;
-  font-size: 28rpx;
-  
-  &.normal {
-    background: #E6F7FF;
-    color: #1890FF;
-    .priority-dot { background: #1890FF; }
-  }
-  
-  &.medium {
-    background: #FFF7E6;
-    color: #FAAD14;
-    .priority-dot { background: #FAAD14; }
-  }
-  
-  &.high {
-    background: #FFF1F0;
-    color: #FF4D4F;
-    .priority-dot { background: #FF4D4F; }
-  }
-  
-  .priority-dot {
-    width: 16rpx;
-    height: 16rpx;
-    border-radius: 50%;
-  }
-}
-
-.remark-content {
-  font-size: 28rpx;
-  color: #666;
-  line-height: 1.6;
-}
-
-// 子任务样式
-.subtask-section {
-  .section-title {
+  .no-reminder {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    .subtask-count {
-      font-size: 26rpx;
-      color: #999;
-      font-weight: normal;
-    }
-  }
-  
-  .progress-bar {
-    height: 8rpx;
-    background: #f0f0f0;
-    border-radius: 4rpx;
-    margin-bottom: 10rpx;
-    overflow: hidden;
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #5AD8A6, #5B8FF9);
-      border-radius: 4rpx;
-      transition: width 0.3s ease;
-    }
-  }
-  
-  .progress-text {
-    font-size: 24rpx;
-    color: #5AD8A6;
-    margin-bottom: 20rpx;
-    display: block;
-  }
-  
-  .subtask-list {
-    margin-bottom: 20rpx;
-    
-    .subtask-item {
-      display: flex;
-      align-items: center;
-      gap: 20rpx;
-      padding: 20rpx 0;
-      border-bottom: 1rpx solid #f5f5f5;
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .subtask-checkbox {
-        width: 40rpx;
-        height: 40rpx;
-        border-radius: 50%;
-        border: 2rpx solid #ddd;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        transition: all 0.2s;
-        
-        &.checked {
-          background: #5AD8A6;
-          border-color: #5AD8A6;
-        }
-      }
-      
-      .subtask-title {
-        flex: 1;
-        font-size: 28rpx;
-        color: #333;
-        transition: all 0.2s;
-        
-        &.completed {
-          text-decoration: line-through;
-          color: #999;
-        }
-      }
-      
-      .subtask-delete {
-        width: 50rpx;
-        height: 50rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0.6;
-        
-        &:active {
-          opacity: 1;
-        }
-      }
-    }
-  }
-  
-  .add-subtask {
-    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 16rpx;
-    margin-top: 10rpx;
-    
-    .subtask-input {
-      flex: 1;
-      height: 70rpx;
-      background: #f5f6fa;
-      border-radius: 35rpx;
-      padding: 0 30rpx;
+    padding: 60rpx 0;
+
+    text {
       font-size: 28rpx;
-      color: #333;
-    }
-    
-    .add-btn {
-      width: 70rpx;
-      height: 70rpx;
-      border-radius: 50%;
-      background: #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      
-      &.active {
-        background: #5AD8A6;
-      }
-      
-      &:active {
-        transform: scale(0.95);
-      }
+      color: #999;
     }
   }
 }
 
-.action-buttons {
+// 创建时间
+.create-time {
+  text-align: center;
+  padding: 30rpx 0 40rpx;
+
+  text {
+    font-size: 24rpx;
+    color: #bbb;
+  }
+}
+
+// 底部操作栏
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 20rpx 40rpx 50rpx;
   display: flex;
-  gap: 20rpx;
-  margin-top: 40rpx;
-  
-  .btn {
+  gap: 24rpx;
+  box-shadow: 0 -4rpx 30rpx rgba(0, 0, 0, 0.08);
+  border-radius: 32rpx 32rpx 0 0;
+
+  .action-btn {
     flex: 1;
-    height: 90rpx;
-    border-radius: 45rpx;
+    height: 96rpx;
+    border-radius: 48rpx;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 12rpx;
     font-size: 30rpx;
-    
-    &-primary {
-      background: #5AD8A6;
-      color: #fff;
-      gap: 12rpx;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    &:active {
+      transform: scale(0.98);
     }
-    
-    &-secondary {
-      background: #5B8FF9;
+
+    &.btn-complete {
+      background: linear-gradient(135deg, #5AD8A6, #52C41A);
       color: #fff;
+      box-shadow: 0 8rpx 20rpx rgba(90, 216, 166, 0.3);
     }
-    
-    &-danger {
+
+    &.btn-reopen {
+      background: #E6F7FF;
+      color: #1890FF;
+      border: 2rpx solid #91D5FF;
+    }
+
+    &.btn-delete {
       background: #FFF1F0;
       color: #FF4D4F;
       border: 2rpx solid #FFCCC7;
@@ -998,102 +1067,107 @@ const deleteTask = async () => {
   }
 }
 
-// 提醒设置样式
-.reminder-section {
-  .section-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+// 弹窗样式
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  width: 100%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 40rpx 40rpx 0 0;
+  padding: 40rpx;
+  animation: slideUp 0.3s ease;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40rpx;
+
+  .modal-title {
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #333;
   }
 
-  .reminder-list {
-    .no-reminder {
-      padding: 30rpx 0;
-      text-align: center;
-      color: #999;
-      font-size: 28rpx;
+  .close-btn {
+    width: 56rpx;
+    height: 56rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32rpx;
+    color: #999;
+    background: #f5f5f5;
+    border-radius: 50%;
+  }
+}
+
+// 提醒类型标签
+.reminder-type-tabs {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 40rpx;
+
+  .type-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12rpx;
+    padding: 30rpx;
+    background: #f5f5f5;
+    border-radius: 20rpx;
+    transition: all 0.2s ease;
+
+    text {
+      font-size: 26rpx;
+      color: #666;
     }
 
-    .reminder-item {
-      display: flex;
-      align-items: center;
-      gap: 20rpx;
-      padding: 20rpx 0;
-      border-bottom: 1rpx solid #f5f5f5;
+    &.active {
+      background: #5B8FF9;
 
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .reminder-icon {
-        width: 48rpx;
-        height: 48rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .reminder-info {
-        display: flex;
-        flex-direction: column;
-
-        .reminder-time {
-          font-size: 28rpx;
-          color: #333;
-        }
-
-        .reminder-location {
-          font-size: 24rpx;
-          color: #999;
-          margin-top: 4rpx;
-        }
+      text {
+        color: #fff;
       }
     }
   }
 }
 
-// 提醒弹窗样式
-.reminder-modal {
-  max-height: 80vh;
-  overflow-y: auto;
-
-  .reminder-type-tabs {
-    display: flex;
-    gap: 20rpx;
-    margin-bottom: 30rpx;
-
-    .type-tab {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10rpx;
-      padding: 30rpx;
-      background: #f5f5f5;
-      border-radius: 16rpx;
-
-      text {
-        font-size: 26rpx;
-        color: #666;
-      }
-
-      &.active {
-        background: #5B8FF9;
-
-        text {
-          color: #fff;
-        }
-      }
-    }
-  }
-
+// 表单区域
+.form-section {
   .form-item {
-    margin-bottom: 30rpx;
+    margin-bottom: 32rpx;
 
-    .label {
+    .form-label {
       display: block;
-      font-size: 26rpx;
+      font-size: 28rpx;
       color: #333;
+      font-weight: 500;
       margin-bottom: 16rpx;
     }
 
@@ -1101,137 +1175,143 @@ const deleteTask = async () => {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 20rpx;
-      background: #f5f5f5;
-      border-radius: 12rpx;
-      font-size: 28rpx;
+      padding: 24rpx 30rpx;
+      background: #f8f9fa;
+      border-radius: 16rpx;
+      font-size: 30rpx;
       color: #333;
     }
   }
+}
 
-  .advance-options,
-  .radius-options {
+// Chip 选项
+.chip-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+
+  .chip {
+    padding: 16rpx 32rpx;
+    background: #f5f5f5;
+    border-radius: 32rpx;
+    font-size: 26rpx;
+    color: #666;
+    transition: all 0.2s ease;
+
+    &.active {
+      background: #5B8FF9;
+      color: #fff;
+    }
+  }
+}
+
+// 位置选择器
+.location-picker {
+  padding: 40rpx;
+  background: #f8f9fa;
+  border-radius: 16rpx;
+  border: 2rpx dashed #ddd;
+
+  .location-placeholder {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
     gap: 16rpx;
 
-    .advance-item,
-    .radius-item {
-      padding: 16rpx 24rpx;
-      background: #f5f5f5;
-      border-radius: 30rpx;
-      font-size: 24rpx;
-      color: #666;
-
-      &.active {
-        background: #5B8FF9;
-        color: #fff;
-      }
+    text {
+      font-size: 28rpx;
+      color: #999;
     }
   }
 
-  .location-picker {
-    padding: 40rpx;
-    background: #f5f5f5;
-    border-radius: 12rpx;
-    border: 2rpx dashed #ddd;
+  .location-selected {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
 
-    .location-placeholder {
+    .location-info {
       display: flex;
       flex-direction: column;
+
+      .location-name {
+        font-size: 30rpx;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .location-address {
+        font-size: 24rpx;
+        color: #999;
+        margin-top: 4rpx;
+      }
+    }
+  }
+}
+
+// 已存在的提醒
+.existing-reminders {
+  margin-top: 40rpx;
+  padding-top: 40rpx;
+  border-top: 2rpx solid #f0f0f0;
+
+  .section-title {
+    display: block;
+    font-size: 28rpx;
+    color: #666;
+    margin-bottom: 24rpx;
+    font-weight: 500;
+  }
+
+  .existing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24rpx;
+    background: #f8f9fa;
+    border-radius: 16rpx;
+    margin-bottom: 16rpx;
+
+    .existing-info {
+      display: flex;
       align-items: center;
       gap: 16rpx;
 
       text {
         font-size: 28rpx;
-        color: #999;
+        color: #333;
       }
     }
 
-    .location-selected {
-      display: flex;
-      align-items: center;
-      gap: 20rpx;
-
-      .location-info {
-        display: flex;
-        flex-direction: column;
-
-        .location-name {
-          font-size: 28rpx;
-          color: #333;
-          font-weight: 500;
-        }
-
-        .location-address {
-          font-size: 24rpx;
-          color: #999;
-          margin-top: 4rpx;
-        }
-      }
+    .delete-btn {
+      padding: 16rpx;
     }
   }
+}
 
-  .existing-reminders {
-    margin-top: 30rpx;
-    padding-top: 30rpx;
-    border-top: 1rpx solid #eee;
+// 弹窗操作按钮
+.modal-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 40rpx;
 
-    .section-subtitle {
-      display: block;
-      font-size: 26rpx;
-      color: #666;
-      margin-bottom: 20rpx;
-    }
-
-    .existing-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20rpx;
-      background: #f9f9f9;
-      border-radius: 12rpx;
-      margin-bottom: 16rpx;
-
-      .existing-info {
-        display: flex;
-        align-items: center;
-        gap: 16rpx;
-
-        text {
-          font-size: 28rpx;
-          color: #333;
-        }
-      }
-
-      .delete-btn {
-        padding: 10rpx;
-      }
-    }
+  button {
+    flex: 1;
+    height: 90rpx;
+    border-radius: 45rpx;
+    font-size: 30rpx;
+    font-weight: 500;
+    border: none;
   }
 
-  .modal-actions {
-    display: flex;
-    gap: 20rpx;
-    margin-top: 40rpx;
+  .btn-cancel {
+    background: #f5f5f5;
+    color: #666;
+  }
 
-    button {
-      flex: 1;
-      height: 80rpx;
-      border-radius: 40rpx;
-      font-size: 28rpx;
-      border: none;
-    }
-
-    .btn-cancel {
-      background: #f5f5f5;
-      color: #666;
-    }
-
-    .btn-confirm {
-      background: #5B8FF9;
-      color: #fff;
-    }
+  .btn-confirm {
+    background: #5B8FF9;
+    color: #fff;
+    box-shadow: 0 8rpx 20rpx rgba(91, 143, 249, 0.3);
   }
 }
 </style>

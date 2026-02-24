@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/anniversary")
+@RequestMapping("/api/calendar/anniversary")
 public class AnniversaryController {
     
     private final AnniversaryService anniversaryService;

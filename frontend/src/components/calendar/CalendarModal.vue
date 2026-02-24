@@ -95,22 +95,6 @@
           </view>
         </view>
         
-        <!-- 子任务 -->
-        <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-section">
-          <view class="section-title">
-            子任务 ({{ subtaskCompleted }}/{{ task.subtasks.length }})
-          </view>
-          <view 
-            v-for="(sub, idx) in task.subtasks" 
-            :key="idx"
-            class="subtask-item"
-            @click="$emit('toggleSubtask', sub)"
-          >
-            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
-            <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
-          </view>
-        </view>
-        
         <view class="detail-actions">
           <view class="detail-btn edit" @click="$emit('editTask', task)">
             <text>✏️ 编辑</text>
@@ -152,10 +136,6 @@ const props = defineProps({
   task: {
     type: Object,
     default: null
-  },
-  subtaskCompleted: {
-    type: Number,
-    default: 0
   }
 })
 
@@ -169,7 +149,7 @@ const categories = [
 
 const priorityText = (p) => priorities[p] || '普通'
 
-const emit = defineEmits(['update:visible', 'update:formData', 'confirm', 'toggleTask', 'toggleSubtask', 'editTask', 'deleteTask'])
+const emit = defineEmits(['update:visible', 'update:formData', 'confirm', 'toggleTask', 'editTask', 'deleteTask'])
 
 const close = () => {
   emit('update:visible', false)
@@ -381,48 +361,6 @@ const confirm = () => {
         &.priority-text-0 { color: #6B7280; }
         &.priority-text-1 { color: #D97706; }
         &.priority-text-2 { color: #DC2626; }
-      }
-    }
-  }
-}
-
-.subtask-section {
-  margin-bottom: 20px;
-  
-  .section-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 12px;
-  }
-  
-  .subtask-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #F3F4F6;
-    
-    .subtask-checkbox {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #D1D5DB;
-      border-radius: 50%;
-      margin-right: 12px;
-      
-      &.checked {
-        background: #10B981;
-        border-color: #10B981;
-      }
-    }
-    
-    .subtask-title {
-      font-size: 14px;
-      color: #374151;
-      flex: 1;
-      
-      &.completed {
-        text-decoration: line-through;
-        color: #9CA3AF;
       }
     }
   }

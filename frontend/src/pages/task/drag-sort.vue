@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">调整优先级</text>
       <view class="right-btn" @click="saveOrder">
@@ -13,7 +13,7 @@
 
     <!-- 提示信息 -->
     <view class="tips-bar">
-      <u-icon name="info-circle" size="32" color="#5B8FF9"></u-icon>
+      <up-icon name="info-circle" size="32" color="#5B8FF9"></up-icon>
       <text class="tips-text">长按拖动调整任务顺序，优先级自动更新</text>
     </view>
 
@@ -60,15 +60,15 @@
             </view>
             <view class="task-meta">
               <text class="meta-item" v-if="task.category">
-                <u-icon name="tags" size="20" color="#999"></u-icon>
+                <up-icon name="tags" size="20" color="#999"></up-icon>
                 {{ getCategoryLabel(task.category) }}
               </text>
               <text class="meta-item" v-if="task.deadline">
-                <u-icon name="clock" size="20" color="#999"></u-icon>
+                <up-icon name="clock" size="20" color="#999"></up-icon>
                 {{ formatDate(task.deadline) }}
               </text>
               <text class="meta-item" v-if="task.assigneeName">
-                <u-icon name="account" size="20" color="#999"></u-icon>
+                <up-icon name="account" size="20" color="#999"></up-icon>
                 {{ task.assigneeName }}
               </text>
             </view>
@@ -85,15 +85,15 @@
     <!-- 底部操作栏 -->
     <view class="bottom-bar">
       <view class="action-btn" @click="resetOrder">
-        <u-icon name="reload" size="32" color="#666"></u-icon>
+        <up-icon name="reload" size="32" color="#666"></up-icon>
         <text>重置顺序</text>
       </view>
       <view class="action-btn" @click="sortByPriority">
-        <u-icon name="sort" size="32" color="#666"></u-icon>
+        <up-icon name="sort" size="32" color="#666"></up-icon>
         <text>按优先级排序</text>
       </view>
       <view class="action-btn" @click="sortByDeadline">
-        <u-icon name="calendar" size="32" color="#666"></u-icon>
+        <up-icon name="calendar" size="32" color="#666"></up-icon>
         <text>按截止日期</text>
       </view>
     </view>

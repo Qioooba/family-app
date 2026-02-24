@@ -203,11 +203,11 @@
                 :key="opt.value"
                 class="remind-option"
                 :class="{ active: newEvent.remindDays === opt.value }"
-                @click="newEvent.remindDays = opt.value">              >{{ opt.label }}</view>
+                @click="newEvent.remindDays = opt.value">              {{ opt.label }}</view>
             </view>
           </view>
           
-          <view class="submit-btn" @click="submitEvent">          >确认添加</view>
+          <view class="submit-btn" @click="submitEvent">          确认添加</view>
         </view>
       </view>
     </view>

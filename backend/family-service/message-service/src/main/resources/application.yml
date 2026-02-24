@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8094
 
 spring:
   main:
@@ -24,7 +24,7 @@ spring:
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: your_secure_redis_password
+    password:
     database: ${REDIS_DB:0}
     lettuce:
       pool:
@@ -32,7 +32,7 @@ spring:
         max-idle: 8
         min-idle: 0
   redisson:
-    password: your_secure_redis_password
+    password:
 
 mybatis-plus:
   configuration:

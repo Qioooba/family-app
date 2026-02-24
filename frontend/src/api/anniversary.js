@@ -22,6 +22,13 @@ export const anniversaryApi = {
   getUpcoming: (familyId, days = 30) => request.get(`/api/anniversary/upcoming/${familyId}`, { days }),
   
   /**
+   * 获取今日相关的纪念日
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<Array>} 今日相关的纪念日
+   */
+  getToday: (familyId) => request.get(`/api/anniversary/today/${familyId}`),
+  
+  /**
    * 创建纪念日
    * @param {object} data - 纪念日数据
    * @returns {Promise<object>} 创建的纪念日
@@ -29,18 +36,18 @@ export const anniversaryApi = {
   create: (data) => request.post('/api/anniversary/create', data),
   
   /**
-   * 获取今日倒计时
-   * @param {number} familyId - 家庭ID
-   * @returns {Promise<Array>} 今日相关的纪念日
+   * 更新纪念日
+   * @param {object} data - 纪念日数据
+   * @returns {Promise<object>} 更新的纪念日
    */
-  getToday: (familyId) => request.get(`/api/anniversary/today/${familyId}`),
+  update: (data) => request.put('/api/anniversary/update', data),
   
   /**
    * 删除纪念日
    * @param {number} id - 纪念日ID
    * @returns {Promise<void>}
    */
-  delete: (id) => request.delete(`/api/anniversary/${id}`)
+  delete: (id) => request.delete(`/api/anniversary/delete/${id}`)
 }
 
 export default anniversaryApi

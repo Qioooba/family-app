@@ -1,13 +1,20 @@
 
 package com.family.health.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
 import com.family.health.dto.request.NutritionRequest;
 import com.family.health.dto.response.NutritionResponse;
 import com.family.health.dto.response.NutritionWeeklyResponse;
+import com.family.health.entity.WeightRecord;
+import com.family.health.service.WeightService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,9 +24,45 @@ import java.util.Map;
  */
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/nutrition")
+@RequestMapping("/api/health/nutrition")
 @RequiredArgsConstructor
 public class NutritionController {
+    
+    private final WeightService weightService;
+    
+    /**
+     * 记录体重
+     * POST /api/health/nutrition/weight
+     */
+    @PostMapping("/weight")
+    public Result<WeightRecord> recordWeight(@RequestBody WeightRecord record) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        record.setUserId(userId);
+        if (record.getRecordDate() == null) {
+            record.setRecordDate(LocalDate.now());
+        }
+        return Result.success(weightService.saveRecord(record));
+    }
+    
+    /**
+     * 获取体重历史
+     * GET /api/health/nutrition/weight/history
+     */
+    @GetMapping("/weight/history")
+    public Result<List<WeightRecord>> getWeightHistory() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(weightService.getHistory(userId));
+    }
+    
+    /**
+     * 获取最新体重
+     * GET /api/health/nutrition/weight/latest
+     */
+    @GetMapping("/weight/latest")
+    public Result<WeightRecord> getLatestWeight() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        return Result.success(weightService.getLatest(userId));
+    }
     
     /**
      * 获取每日营养分析

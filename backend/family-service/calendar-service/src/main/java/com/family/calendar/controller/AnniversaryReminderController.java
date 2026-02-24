@@ -15,7 +15,7 @@ import java.util.List;
  */
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/anniversary/reminder")
+@RequestMapping("/api/calendar/anniversary/reminder")
 public class AnniversaryReminderController {
     
     private final AnniversaryReminderMapper reminderMapper;

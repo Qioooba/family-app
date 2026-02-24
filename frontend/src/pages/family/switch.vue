@@ -2,97 +2,60 @@
   <view class="switch-family-page">
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
-      <text class="title">切换家庭</text>
+      <text class="title">家庭信息</text>
       <view class="right-placeholder"></view>
     </view>
     
-    <view class="family-list">
-      <view 
-        v-for="family in families" 
-        :key="family.id"
-        class="family-card"
-        :class="{ active: currentFamilyId === family.id }"
-        @click="switchFamily(family)"
-      >
+    <view class="content">
+      <view class="info-card">
+        <image :src="currentFamily?.avatar || '/static/family/default.png'" class="family-avatar" />
+        
         <view class="family-info">
-          <image :src="family.avatar" class="family-avatar" />
-          
-          <view class="info">
-            <text class="name">{{ family.name }}</text>
-            <text class="members">{{ family.memberCount }} 位成员</text>          
-          </view>
+          <text class="family-name">{{ currentFamily?.name || '幸福小家' }}</text>
+          <text class="family-desc">当前家庭</text>
         </view>
         
-        <view v-if="currentFamilyId === family.id" class="current-badge">
-          <u-icon name="checkmark" size="28" color="#fff"></u-icon>
+        <view class="current-badge">
+          <up-icon name="checkmark" size="28" color="#fff"></up-icon>
         </view>
       </view>
-    </view>
-    
-    <view class="add-section">
-      <view class="add-btn" @click="createFamily">
-        <u-icon name="plus" size="40" color="#5B8FF9"></u-icon>
-        <text>创建新家庭</text>
+      
+      <view class="tip-section">
+        <up-icon name="info-circle" size="32" color="#5B8FF9"></up-icon>
+        <text class="tip-text">当前为单家庭模式，每个账号只能拥有一个家庭</text>
       </view>
       
-      <view class="add-btn" @click="joinFamily">
-        <u-icon name="share" size="40" color="#5AD8A6"></u-icon>
-        <text>加入家庭</text>
+      <view class="action-section">
+        <view class="action-btn primary" @click="goToFamilyPage">
+          <up-icon name="home" size="36" color="#fff"></up-icon>
+          <text>进入家庭空间</text>
+        </view>
       </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getDefaultFamily } from '@/utils/defaultFamily.js'
 
-const currentFamilyId = ref(1)
-
-const families = ref([
-  {
-    id: 1,
-    name: '幸福小家',
-    avatar: '/static/family/default.png',
-    memberCount: 3,
-    role: 'owner'
-  },
-  {
-    id: 2,
-    name: '爷爷奶奶家',
-    avatar: '/static/family/grandparents.png',
-    memberCount: 5,
-    role: 'member'
-  }
-])
+const currentFamily = ref(null)
 
 const goBack = () => {
   uni.navigateBack()
 }
 
-const switchFamily = (family) => {
-  currentFamilyId.value = family.id
-  uni.showToast({ title: `已切换到${family.name}`, icon: 'success' })
-  setTimeout(() => uni.navigateBack(), 1500)
+const goToFamilyPage = () => {
+  uni.switchTab({ url: '/pages/family/index' })
 }
 
-const createFamily = () => {
-  uni.navigateTo({ url: '/pages/family/create' })
-}
-
-const joinFamily = () => {
-  uni.showModal({
-    title: '加入家庭',
-    editable: true,
-    placeholderText: '请输入家庭邀请码',
-    success: (res) => {
-      if (res.confirm && res.content) {
-        uni.showToast({ title: '加入成功', icon: 'success' })
-      }
-    }
-  })
-}
+onMounted(async () => {
+  // 获取当前默认家庭
+  currentFamily.value = await getDefaultFamily()
+  console.log('[FamilySwitch] 当前家庭:', currentFamily.value)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -128,56 +91,46 @@ const joinFamily = () => {
   }
 }
 
-.family-list {
-  padding: 30rpx;
+.content {
+  padding: 40rpx 30rpx;
 }
 
-.family-card {
+.info-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   background: #fff;
-  border-radius: 20rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-  border: 4rpx solid transparent;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
   
-  &.active {
-    border-color: #5B8FF9;
-    background: #F0F5FF;
+  .family-avatar {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    background: #f0f0f0;
+    margin-right: 24rpx;
   }
   
   .family-info {
-    display: flex;
-    align-items: center;
-    gap: 24rpx;
+    flex: 1;
     
-    .family-avatar {
-      width: 100rpx;
-      height: 100rpx;
-      border-radius: 50%;
-      background: #f0f0f0;
+    .family-name {
+      font-size: 36rpx;
+      font-weight: 600;
+      color: #333;
+      display: block;
+      margin-bottom: 8rpx;
     }
     
-    .info {
-      .name {
-        font-size: 32rpx;
-        font-weight: 600;
-        color: #333;
-        display: block;
-        margin-bottom: 8rpx;
-      }
-      
-      .members {
-        font-size: 26rpx;
-        color: #999;
-      }
+    .family-desc {
+      font-size: 26rpx;
+      color: #999;
     }
   }
   
   .current-badge {
-    width: 48rpx;
-    height: 48rpx;
+    width: 56rpx;
+    height: 56rpx;
     background: #5B8FF9;
     border-radius: 50%;
     display: flex;
@@ -186,25 +139,44 @@ const joinFamily = () => {
   }
 }
 
-.add-section {
+.tip-section {
   display: flex;
-  gap: 30rpx;
-  padding: 0 30rpx;
+  align-items: flex-start;
   margin-top: 40rpx;
+  padding: 24rpx;
+  background: #F0F5FF;
+  border-radius: 16rpx;
   
-  .add-btn {
+  .tip-text {
     flex: 1;
+    margin-left: 16rpx;
+    font-size: 28rpx;
+    color: #5B8FF9;
+    line-height: 1.5;
+  }
+}
+
+.action-section {
+  margin-top: 60rpx;
+  
+  .action-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 16rpx;
-    padding: 40rpx 0;
-    background: #fff;
-    border-radius: 20rpx;
+    padding: 28rpx 0;
+    border-radius: 24rpx;
+    font-size: 32rpx;
+    font-weight: 500;
     
-    text {
-      font-size: 28rpx;
-      color: #666;
+    &.primary {
+      background: linear-gradient(135deg, #5B8FF9, #6B8DD6);
+      color: #fff;
+      box-shadow: 0 8rpx 24rpx rgba(91, 143, 249, 0.3);
+    }
+    
+    &:active {
+      transform: scale(0.98);
     }
   }
 }

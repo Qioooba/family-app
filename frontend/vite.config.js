@@ -9,7 +9,7 @@ const fixExternalPlugin = () => ({
       config.build.rollupOptions.external = []
     }
     if (config.esbuild) {
-      config.esbuild.external = []
+      // 移除esbuild的external配置，避免冲突
     }
     if (!config.optimizeDeps) {
       config.optimizeDeps = {}
@@ -41,25 +41,17 @@ export default defineConfig({
     }
   },
   server: {
+    allowedHosts: ['qioba.cn', '.qioba.cn'],
     host: '0.0.0.0',
     port: 3000,
     open: false,
     proxy: {
-      '/api/family': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
-      },
-      '/api/task': {
-        target: 'http://localhost:8082',
-        changeOrigin: true
-      },
       '/api': {
-        target: 'http://localhost:8081',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        target: 'http://localhost:8099',
+        changeOrigin: true
       },
       '/user': {
-        target: 'http://localhost:8081',
+        target: 'http://localhost:8099',
         changeOrigin: true
       }
     }

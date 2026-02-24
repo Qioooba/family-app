@@ -26,11 +26,11 @@
           <view class="wheel" :style="{ transform: `rotate(${rotation}deg)` }"
           >
             <view 
-              v-for="(item, index) in wheelItems" 
+              v-for="(item, index) in currentWheelItems" 
               :key="index"
               class="wheel-item"
               :style="{ 
-                transform: `rotate(${index * (360 / wheelItems.length)}deg)`,
+                transform: `rotate(${index * (360 / currentWheelItems.length)}deg)`,
                 background: item.color 
               }"
             >
@@ -51,7 +51,7 @@
       <scroll-view class="wheel-selector" scroll-x
       >
         <view 
-          v-for="(wheel, index) in wheels" 
+          v-for="(wheel, index) in wheelOptions" 
           :key="index"
           class="wheel-option"
           :class="{ active: currentWheel === index }"
@@ -151,28 +151,67 @@ const isSpinning = ref(false)
 const currentWheel = ref(0)
 const currentRankTab = ref(0)
 
-const wheels = ref([
-  { name: '家务分配', icon: '🧹', items: ['洗碗', '拖地', '倒垃圾', '整理房间', '做饭', '免做一次'] },
-  { name: '吃什么', icon: '🍽️', items: ['中餐', '西餐', '日料', '火锅', '烧烤', '随便'] },
-  { name: '谁买单', icon: '💰', items: ['爸爸', '妈妈', '孩子', 'AA制', '石头剪刀布', '免单'] }
+// 当前转盘的项目
+const wheelOptions = ref([
+  { 
+    name: '家务分配', 
+    icon: '🧹', 
+    items: [
+      { name: '洗碗', color: '#3b82f6', icon: '🍽️' },
+      { name: '拖地', color: '#10b981', icon: '🧹' },
+      { name: '倒垃圾', color: '#f59e0b', icon: '🗑️' },
+      { name: '做饭', color: '#ec4899', icon: '🍳' },
+      { name: '整理', color: '#8b5cf6', icon: '📦' },
+      { name: '免做', color: '#ef4444', icon: '🎉' }
+    ] 
+  },
+  { 
+    name: '吃什么', 
+    icon: '🍽️', 
+    items: [
+      { name: '中餐', color: '#f97316', icon: '🥢' },
+      { name: '西餐', color: '#8b5cf6', icon: '🍕' },
+      { name: '日料', color: '#ec4899', icon: '🍣' },
+      { name: '火锅', color: '#ef4444', icon: '🍲' },
+      { name: '烧烤', color: '#f59e0b', icon: '🍖' },
+      { name: '随便', color: '#64748b', icon: '🤷' }
+    ] 
+  },
+  { 
+    name: '谁买单', 
+    icon: '💰', 
+    items: [
+      { name: '爸爸', color: '#3b82f6', icon: '👨' },
+      { name: '妈妈', color: '#ec4899', icon: '👩' },
+      { name: '孩子', color: '#10b981', icon: '👶' },
+      { name: 'AA制', color: '#8b5cf6', icon: '💕' },
+      { name: '猜拳', color: '#f59e0b', icon: '✊' },
+      { name: '免单', color: '#ef4444', icon: '🎉' }
+    ] 
+  }
 ])
 
-const wheelItems = ref([
-  { name: '洗碗', color: '#3b82f6', icon: '🍽️' },
-  { name: '拖地', color: '#10b981', icon: '🧹' },
-  { name: '倒垃圾', color: '#f59e0b', icon: '🗑️' },
-  { name: '做饭', color: '#ec4899', icon: '🍳' },
-  { name: '整理', color: '#8b5cf6', icon: '📦' },
-  { name: '免做', color: '#ef4444', icon: '🎉' }
-])
+// 当前转盘的项目
+const currentWheelItems = ref([...wheelOptions.value[0].items])
+
+// 解析转盘角度计算结果
+const calculateResult = (totalDegrees) => {
+  // 规范化角度到 0-360
+  const normalizedDegrees = totalDegrees % 360
+  // 每个扇形的角度
+  const sectorAngle = 360 / currentWheelItems.value.length
+  // 计算结果索引 (逆时针,指针在上方,所以要反算)
+  const resultIndex = Math.floor(((360 - normalizedDegrees + 180) % 360) / sectorAngle)
+  return resultIndex % currentWheelItems.value.length
+}
 
 const rankTabs = ref(['积分', '任务', '活跃'])
 
 const rankings = ref([
-  { name: '妈妈', avatar: '/static/avatar/mom.png', score: 2580, trend: 'up', isMe: false },
-  { name: '爸爸', avatar: '/static/avatar/dad.png', score: 1920, trend: 'same', isMe: false },
-  { name: '我', avatar: '/static/avatar/me.png', score: 1250, trend: 'up', isMe: true },
-  { name: '宝贝', avatar: '/static/avatar/baby.png', score: 980, trend: 'down', isMe: false }
+  { name: '妈妈', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mom&backgroundColor=b6e3f4', score: 2580, trend: 'up', isMe: false },
+  { name: '爸爸', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dad&backgroundColor=c0aede', score: 1920, trend: 'same', isMe: false },
+  { name: '我', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=me&backgroundColor=ffdfbf', score: 1250, trend: 'up', isMe: true },
+  { name: '宝贝', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=baby&backgroundColor=d1d4f9', score: 980, trend: 'down', isMe: false }
 ])
 
 const achievements = ref([
@@ -184,29 +223,43 @@ const achievements = ref([
   { name: '???', icon: '🔒', unlocked: false, rarity: 'secret' }
 ])
 
+const totalRotation = ref(0)
+
 const selectWheel = (index) => {
   currentWheel.value = index
-  // 更新转盘项目
+  currentWheelItems.value = [...wheelOptions.value[index].items]
 }
 
 const spin = () => {
   if (isSpinning.value) return
   
   isSpinning.value = true
-  const spins = 5 + Math.random() * 5
-  const degrees = spins * 360 + Math.random() * 360
   
-  rotation.value += degrees
+  // 计算随机转动圈数和角度
+  const spins = 5 + Math.random() * 3 // 5-8圈
+  const extraDegrees = Math.random() * 360 // 随机角度
+  
+  const newRotation = spins * 360 + extraDegrees
+  totalRotation.value += newRotation
+  
+  rotation.value = totalRotation.value
+  
+  // 动画时间根据圈数计算
+  const duration = spins * 600 + 1000
   
   setTimeout(() => {
     isSpinning.value = false
-    const resultIndex = Math.floor(Math.random() * wheelItems.value.length)
+    
+    // 根据转动角度计算结果
+    const resultIndex = calculateResult(totalRotation.value)
+    const result = currentWheelItems.value[resultIndex]
+    
     uni.showModal({
       title: '🎉 恭喜',
-      content: `结果是：${wheelItems.value[resultIndex].name}`,
+      content: `结果是：${result.icon} ${result.name}`,
       showCancel: false
     })
-  }, 5000)
+  }, duration)
 }
 
 const goPoints = () => {

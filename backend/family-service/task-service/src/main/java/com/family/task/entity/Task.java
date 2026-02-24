@@ -1,6 +1,7 @@
 package com.family.task.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.family.common.core.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("task")
 public class Task extends BaseEntity {
     private static final long serialVersionUID = 1L;
     

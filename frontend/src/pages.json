@@ -25,6 +25,17 @@
       "path": "pages/task/index",
       "style": {
         "navigationBarTitleText": "任务清单",
+        "navigationStyle": "custom",
+        "scrollIndicator": "none",
+        "pageScroll": false,
+        "swipeBack": false,
+        "enablePopGesture": false
+      }
+    },
+    {
+      "path": "pages/task/create",
+      "style": {
+        "navigationBarTitleText": "创建任务",
         "navigationStyle": "custom"
       }
     },
@@ -32,7 +43,11 @@
       "path": "pages/wish/index",
       "style": {
         "navigationBarTitleText": "心愿墙",
-        "navigationStyle": "custom"
+        "navigationStyle": "custom",
+        "scrollIndicator": "none",
+        "pageScroll": false,
+        "swipeBack": false,
+        "enablePopGesture": false
       }
     },
     {
@@ -58,13 +73,6 @@
           "path": "schedule",
           "style": {
             "navigationBarTitleText": "家务排班",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "create",
-          "style": {
-            "navigationBarTitleText": "创建任务",
             "navigationStyle": "custom"
           }
         },
@@ -393,6 +401,18 @@
           "path": "index",
           "style": {
             "navigationBarTitleText": "纪念日",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
+      "root": "pages/anniversary",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "纪念日管理",
             "navigationStyle": "custom"
           }
         }
@@ -760,55 +780,71 @@
           }
         }
       ]
+    },
+    {
+      "root": "pages/ai-shopping",
+      "pages": [
+        {
+          "path": "index",
+          "style": {
+            "navigationBarTitleText": "AI购物助手",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "detail",
+          "style": {
+            "navigationBarTitleText": "清单详情",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
     }
   ],
-  "preloadRule": {
-    "pages/home/index": {
-      "network": "all",
-      "packages": ["pages/task", "pages/wish"]
-    }
-  },
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "家庭小程序",
     "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "backgroundColor": "#F8F8F8",
+    "maxWidth": "750rpx"
   },
   "tabBar": {
+    "custom": false,
+    "midButton": false,
     "color": "#999999",
-    "selectedColor": "#5B8FF9",
-    "borderStyle": "black",
+    "selectedColor": "#ff6b6b",
     "backgroundColor": "#ffffff",
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/home/index",
-        "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home-active.png",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "static/tabbar/home.svg",
+        "selectedIconPath": "static/tabbar/home-active.svg"
       },
       {
         "pagePath": "pages/task/index",
-        "iconPath": "static/tabbar/task.png",
-        "selectedIconPath": "static/tabbar/task-active.png",
-        "text": "任务"
+        "text": "待办",
+        "iconPath": "static/tabbar/task.svg",
+        "selectedIconPath": "static/tabbar/task-active.svg"
       },
       {
         "pagePath": "pages/wish/index",
-        "iconPath": "static/tabbar/wish.png",
-        "selectedIconPath": "static/tabbar/wish-active.png",
-        "text": "心愿"
+        "text": "心愿",
+        "iconPath": "static/tabbar/wish.svg",
+        "selectedIconPath": "static/tabbar/wish-active.svg"
       },
       {
         "pagePath": "pages/family/index",
-        "iconPath": "static/tabbar/family.png",
-        "selectedIconPath": "static/tabbar/family-active.png",
-        "text": "家庭"
+        "text": "家庭",
+        "iconPath": "static/tabbar/family.svg",
+        "selectedIconPath": "static/tabbar/family-active.svg"
       },
       {
         "pagePath": "pages/profile/index",
-        "iconPath": "static/tabbar/profile.png",
-        "selectedIconPath": "static/tabbar/profile-active.png",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "static/tabbar/profile.svg",
+        "selectedIconPath": "static/tabbar/profile-active.svg"
       }
     ]
   },

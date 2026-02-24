@@ -18,7 +18,7 @@ import java.util.List;
  */
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/scan")
+@RequestMapping("/api/food/scan")
 public class ScanController {
     
     private static final Logger log = LoggerFactory.getLogger(ScanController.class);

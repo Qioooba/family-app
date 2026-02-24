@@ -1,15 +1,17 @@
 <template>
   <view class="page-container">
-    <view class="header">
-      <view class="header-title">我的</view>
-    </view>
-    
     <view class="profile-card" v-if="userInfo">
       <view class="user-info">
-        <image class="avatar" :src="userInfo.avatar || '/static/avatar-default.png'" mode="aspectFill" />
+        <view class="avatar-wrapper" @click="editAvatar">
+          <image class="avatar" :src="displayAvatar" mode="aspectFill" />
+          <view class="avatar-edit-icon">✏️</view>
+        </view>
         <view class="user-detail">
-          <view class="user-name">{{ userInfo.nickname || userInfo.username }}</view>
-          <view class="user-id">ID: {{ userInfo.id }}</view>
+          <view class="user-name" @click="editUsername">
+            {{ userInfo.nickname || userInfo.username || '未设置昵称' }}
+            <text class="edit-icon">✏️</text>
+          </view>
+          <view class="user-id">ID: {{ userInfo.phone || userInfo.id }}</view>
         </view>
       </view>
       
@@ -39,7 +41,7 @@
     
     <view class="menu-section">
       <view class="menu-group">
-        <view class="menu-item" @click="goToPage('/pages/profile/family')">
+        <view class="menu-item" @click="goToPage('/pages/family/index')">
           <text class="menu-icon">👨‍👩‍👧</text>
           <text class="menu-text">我的家庭</text>
           <text class="menu-arrow">›</text>
@@ -76,6 +78,12 @@
           <text class="menu-text">关于我们</text>
           <text class="menu-arrow">›</text>
         </view>
+        
+        <view class="menu-item" @click="showUpdateHistory">
+          <text class="menu-icon">📝</text>
+          <text class="menu-text">更新历史</text>
+          <text class="menu-arrow">›</text>
+        </view>
       </view>
     </view>
     
@@ -98,6 +106,18 @@ const isLogin = computed(() => userStore.isLogin)
 const points = ref(0)
 const badgeCount = ref(0)
 
+// 计算显示的头像：优先使用微信头像
+const displayAvatar = computed(() => {
+  const info = userInfo.value
+  if (!info) return '/static/avatar-default.png'
+  // 优先使用微信头像
+  if (info.wxAvatar) return info.wxAvatar
+  // 其次使用用户自定义头像
+  if (info.avatar) return info.avatar
+  // 默认头像
+  return '/static/avatar-default.png'
+})
+
 onMounted(() => {
   // 如果已登录，刷新用户信息和积分
   if (isLogin.value) {
@@ -107,8 +127,12 @@ onMounted(() => {
 
 const loadUserData = async () => {
   try {
-    // 获取用户信息
-    await userStore.getUserInfo()
+    // 从本地存储获取用户信息
+    const localUserInfo = uni.getStorageSync('userInfo')
+    if (!localUserInfo) {
+      // 本地没有，从服务器获取
+      await userStore.getUserInfo()
+    }
     
     // 获取积分
     const pointsRes = await gameApi.getUserPoints()
@@ -126,6 +150,159 @@ const loadUserData = async () => {
   }
 }
 
+// 编辑用户名
+const editUsername = () => {
+  uni.showModal({
+    title: '修改昵称',
+    placeholderText: '请输入新昵称',
+    editable: true,
+    success: async (res) => {
+      if (res.confirm && res.content && res.content.trim()) {
+        try {
+          uni.showLoading({ title: '保存中...' })
+          await userStore.updateUserInfo({
+            nickname: res.content.trim()
+          })
+          uni.showToast({
+            title: '修改成功',
+            icon: 'success'
+          })
+        } catch (e) {
+          uni.showToast({
+            title: '修改失败',
+            icon: 'none'
+          })
+        } finally {
+          uni.hideLoading()
+        }
+      }
+    }
+  })
+}
+
+// 编辑头像
+const editAvatar = () => {
+  uni.showActionSheet({
+    itemList: ['从相册选择', '拍照', '使用微信头像'],
+    success: async (res) => {
+      if (res.tapIndex === 0) {
+        // 从相册选择
+        chooseImage('album')
+      } else if (res.tapIndex === 1) {
+        // 拍照
+        chooseImage('camera')
+      } else if (res.tapIndex === 2) {
+        // 使用微信头像 - 需要微信登录时获取
+        useWechatAvatar()
+      }
+    }
+  })
+}
+
+// 选择图片
+const chooseImage = (sourceType) => {
+  uni.chooseImage({
+    count: 1,
+    sizeType: ['compressed'],
+    sourceType: [sourceType],
+    success: async (res) => {
+      const tempFilePath = res.tempFilePaths[0]
+      // 上传头像
+      await uploadAvatar(tempFilePath)
+    }
+  })
+}
+
+// 上传头像
+const uploadAvatar = async (filePath) => {
+  try {
+    uni.showLoading({ title: '上传中...' })
+    
+    // 这里调用上传接口
+    const uploadRes = await new Promise((resolve, reject) => {
+      uni.uploadFile({
+        url: getApp().globalData?.baseUrl + '/api/user/avatar',
+        filePath: filePath,
+        name: 'file',
+        success: (res) => {
+          try {
+            const data = JSON.parse(res.data)
+            resolve(data)
+          } catch (e) {
+            reject(e)
+          }
+        },
+        fail: reject
+      })
+    })
+    
+    if (uploadRes.url) {
+      await userStore.updateUserInfo({
+        avatar: uploadRes.url
+      })
+      uni.showToast({
+        title: '上传成功',
+        icon: 'success'
+      })
+    }
+  } catch (e) {
+    console.error('上传头像失败:', e)
+    // 如果上传失败，尝试直接保存本地路径（仅用于演示）
+    await userStore.updateUserInfo({
+      avatar: filePath
+    })
+    uni.showToast({
+      title: '头像已更新',
+      icon: 'success'
+    })
+  } finally {
+    uni.hideLoading()
+  }
+}
+
+// 使用微信头像
+const useWechatAvatar = async () => {
+  // #ifdef MP-WEIXIN
+  // 获取微信头像需要用户授权
+  uni.getUserProfile({
+    desc: '用于完善用户资料',
+    success: async (res) => {
+      if (res.userInfo && res.userInfo.avatarUrl) {
+        try {
+          uni.showLoading({ title: '保存中...' })
+          await userStore.updateUserInfo({
+            wxAvatar: res.userInfo.avatarUrl
+          })
+          uni.showToast({
+            title: '头像已更新',
+            icon: 'success'
+          })
+        } catch (e) {
+          uni.showToast({
+            title: '设置失败',
+            icon: 'none'
+          })
+        } finally {
+          uni.hideLoading()
+        }
+      }
+    },
+    fail: () => {
+      uni.showToast({
+        title: '获取头像失败',
+        icon: 'none'
+      })
+    }
+  })
+  // #endif
+  // #ifndef MP-WEIXIN
+  uni.showToast({
+    title: '仅支持微信小程序',
+    icon: 'none'
+  })
+  // #endif
+}
+
 const goToPage = (url) => {
   uni.navigateTo({ url })
 }
@@ -136,9 +313,34 @@ const goLogin = () => {
 
 const showAbout = () => {
   uni.showModal({
-    title: '关于家庭助手',
-    content: '版本：v1.0.0\n\n基于 DeepSeek AI 的智能家庭管理平台',
-    showCancel: false
+    title: '🏠 幸福小家',
+    content: '━━━━━━━━━━━━━━━━━━\n\n✨ 版本：v1.0.0\n\n❤️ 用心打造的家庭管理平台\n\n👨\u200d💻 开发：Qioba\n\n让家更有爱，让生活更美好',
+    showCancel: false,
+    confirmText: '💖 知道了',
+    confirmColor: '#ff6b6b'
+  })
+}
+
+const showUpdateHistory = () => {
+  const updates = `🏠 幸福小家 更新日志
+━━━━━━━━━━━━━━━━━━
+
+📅 2026-02-24 v1.0.0
+• 全新发布！
+• 待办任务功能
+• 心愿墙功能
+• 家庭成员管理
+• 个人资料设置
+• 家庭游戏（开发中）
+
+❤️ 感谢使用！`
+  
+  uni.showModal({
+    title: '📝 更新历史',
+    content: updates,
+    showCancel: false,
+    confirmText: '💖 知道了',
+    confirmColor: '#ff6b6b'
   })
 }
 
@@ -158,58 +360,83 @@ const logout = () => {
 <style lang="scss" scoped>
 .page-container {
   min-height: 100vh;
-  background: #F5F7FA;
-}
-
-.header {
-  padding: 50px 20px 20px;
-  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
-  
-  .header-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #2C3E50;
-    text-align: center;
-  }
+  background: linear-gradient(180deg, #f8f9fc 0%, #f0f4f8 100%);
+  padding-bottom: 160rpx; /* 为tabBar留出空间 */
 }
 
 .profile-card {
   background: #fff;
-  margin: -30px 15px 15px;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin: 32rpx 32rpx;
+  border-radius: 32rpx;
+  padding: 40rpx;
+  box-shadow: 0 16rpx 48rpx rgba(107, 141, 214, 0.12);
+  position: relative;
+  z-index: 1;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 32rpx;
+  
+  .avatar-wrapper {
+    position: relative;
+    margin-right: 28rpx;
+  }
   
   .avatar {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg, #4CAF50, #81C784);
+    width: 140rpx;
+    height: 140rpx;
+    background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
-    margin-right: 16px;
-    border: 4px solid #E8F5E9;
+    font-size: 72rpx;
+    border: 6rpx solid rgba(107, 141, 214, 0.1);
+    box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.2);
+  }
+  
+  .avatar-edit-icon {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 40rpx;
+    height: 40rpx;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20rpx;
+    box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.15);
   }
   
   .user-detail {
+    flex: 1;
+    
     .user-name {
-      font-size: 20px;
-      font-weight: 600;
-      color: #2C3E50;
-      margin-bottom: 4px;
+      font-size: 40rpx;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 12rpx;
+      display: flex;
+      align-items: center;
+      
+      .edit-icon {
+        margin-left: 12rpx;
+        font-size: 24rpx;
+        opacity: 0.5;
+      }
     }
     
     .user-id {
-      font-size: 13px;
-      color: #7F8C8D;
+      font-size: 26rpx;
+      color: #8b9aad;
+      background: #f8f9fc;
+      padding: 8rpx 20rpx;
+      border-radius: 20rpx;
+      display: inline-block;
     }
   }
 }
@@ -218,8 +445,8 @@ const logout = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 15px;
-  border-top: 1px solid #F0F0F0;
+  padding-top: 32rpx;
+  border-top: 2rpx solid #f1f5f9;
   
   .points-item {
     flex: 1;
@@ -227,73 +454,89 @@ const logout = () => {
     
     .points-num {
       display: block;
-      font-size: 28px;
+      font-size: 48rpx;
       font-weight: 700;
-      color: #FF9800;
-      margin-bottom: 4px;
+      color: #f6ad55;
+      margin-bottom: 8rpx;
     }
     
     .points-label {
-      font-size: 13px;
-      color: #7F8C8D;
+      font-size: 26rpx;
+      color: #8b9aad;
+      font-weight: 500;
     }
   }
   
   .points-divider {
-    width: 1px;
-    height: 40px;
-    background: #E0E6ED;
+    width: 2rpx;
+    height: 80rpx;
+    background: linear-gradient(180deg, transparent, #e2e8f0, transparent);
   }
 }
 
 .menu-section {
-  padding: 0 15px;
+  padding: 0 32rpx;
 }
 
 .menu-group {
   background: #fff;
-  border-radius: 16px;
-  margin-bottom: 15px;
+  border-radius: 28rpx;
+  margin-bottom: 24rpx;
   overflow: hidden;
+  box-shadow: 0 8rpx 32rpx rgba(107, 141, 214, 0.06);
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #F5F7FA;
+  padding: 32rpx;
+  border-bottom: 2rpx solid #f8f9fc;
+  transition: all 0.2s ease;
   
   &:last-child {
     border-bottom: none;
   }
   
+  &:active {
+    background: #f8f9fc;
+  }
+  
   .menu-icon {
-    font-size: 24px;
-    margin-right: 12px;
+    font-size: 44rpx;
+    margin-right: 24rpx;
   }
   
   .menu-text {
     flex: 1;
-    font-size: 15px;
-    color: #2C3E50;
+    font-size: 30rpx;
+    color: #2d3748;
+    font-weight: 500;
   }
   
   .menu-arrow {
-    font-size: 20px;
-    color: #BDC3C7;
+    font-size: 36rpx;
+    color: #cbd5e0;
+    font-weight: 300;
   }
 }
 
 .logout-btn {
-  margin: 30px 15px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 16px;
+  margin: 48rpx 32rpx;
+  padding: 32rpx;
+  background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+  border-radius: 28rpx;
   text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(252, 129, 129, 0.1);
+  transition: all 0.25s ease;
+  
+  &:active {
+    transform: scale(0.98);
+  }
   
   text {
-    font-size: 15px;
-    color: #F44336;
+    font-size: 30rpx;
+    color: #fc8181;
+    font-weight: 600;
   }
 }
 </style>

@@ -5,12 +5,12 @@
 >
       <view class="back-btn" @click="goBack"
 >
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">营养成分</text>
       <view class="right-btn" @click="showDatePicker">
         <text>{{ selectedDate }}</text>
-        <u-icon name="arrow-down" size="24" color="#333"></u-icon>
+        <up-icon name="arrow-down" size="24" color="#333"></up-icon>
       </view>
     </view>
 
@@ -216,7 +216,7 @@
     </view>
 
     <!-- 日期选择弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="datePickerVisible"
       mode="bottom"
       round
@@ -249,7 +249,7 @@
           <view class="btn-confirm" @click="confirmDate">确定</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

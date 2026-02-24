@@ -1,7 +1,7 @@
 <template>
   <view class="album-page">
     <!-- 自定义导航栏 -->
-    <u-navbar title="家庭相册" :autoBack="true" bgColor="#fff" :fixed="true" :placeholder="true"></u-navbar>
+    <up-navbar title="家庭相册" :autoBack="true" bgColor="#fff" :fixed="true" :placeholder="true"></up-navbar>
     
     <!-- 相册头部统计 -->
     <view class="album-header">
@@ -38,7 +38,7 @@
           :class="{ active: currentTag === tag }"
           @click="selectTag(tag)"
         >
-          <u-icon name="tags" size="20" color="currentColor"></u-icon>
+          <up-icon name="tags" size="20" color="currentColor"></up-icon>
           <text>{{ tag }}</text>
         </view>
       </scroll-view>
@@ -52,7 +52,7 @@
           :class="{ active: viewMode === 'timeline' }"
           @click="switchView('timeline')"
         >
-          <u-icon name="clock" size="28" color="currentColor"></u-icon>
+          <up-icon name="clock" size="28" color="currentColor"></up-icon>
           <text>时光轴</text>
         </view>
         <view 
@@ -60,12 +60,12 @@
           :class="{ active: viewMode === 'album' }"
           @click="switchView('album')"
         >
-          <u-icon name="photo" size="28" color="currentColor"></u-icon>
+          <up-icon name="photo" size="28" color="currentColor"></up-icon>
           <text>相册</text>
         </view>
       </view>
       <view class="upload-btn" @click="uploadPhotos">
-        <u-icon name="plus" size="28" color="#fff"></u-icon>
+        <up-icon name="plus" size="28" color="#fff"></up-icon>
         <text>上传</text>
       </view>
     </view>
@@ -91,12 +91,12 @@
           >
             <image :src="photo.url" mode="aspectFill" class="photo-img" />
             <view v-if="photo.tags.length" class="photo-tags-mini">
-              <u-icon name="tags" size="16" color="#fff"></u-icon>
+              <up-icon name="tags" size="16" color="#fff"></up-icon>
             </view>
           </view>
         </view>
       </view>
-      <u-loadmore :status="loadStatus" />
+      <up-loadmore :status="loadStatus" />
     </scroll-view>
     
     <!-- 相册视图 -->
@@ -116,7 +116,7 @@
           <view class="album-cover">
             <image :src="album.cover" mode="aspectFill" />
             <view class="album-count">
-              <u-icon name="photo" size="20" color="#fff"></u-icon>
+              <up-icon name="photo" size="20" color="#fff"></up-icon>
               <text>{{ album.count }}</text>
             </view>
           </view>
@@ -129,12 +129,12 @@
         <!-- 创建相册 -->
         <view class="album-card create" @click="createAlbum">
           <view class="create-content">
-            <u-icon name="plus-circle" size="60" color="#ccc"></u-icon>
+            <up-icon name="plus-circle" size="60" color="#ccc"></up-icon>
             <text>创建相册</text>
           </view>
         </view>
       </view>
-      <u-loadmore :status="albumLoadStatus" />
+      <up-loadmore :status="albumLoadStatus" />
     </scroll-view>
     
     <!-- 底部操作栏 -->
@@ -144,15 +144,15 @@
       </view>
       <view class="action-btns">
         <view class="action-btn" @click="addToAlbum">
-          <u-icon name="folder" size="32" color="#5B8FF9"></u-icon>
+          <up-icon name="folder" size="32" color="#5B8FF9"></up-icon>
           <text>加入相册</text>
         </view>
         <view class="action-btn" @click="downloadPhotos">
-          <u-icon name="download" size="32" color="#52C41A"></u-icon>
+          <up-icon name="download" size="32" color="#52C41A"></up-icon>
           <text>下载</text>
         </view>
         <view class="action-btn" @click="deletePhotos">
-          <u-icon name="trash" size="32" color="#FF4D4F"></u-icon>
+          <up-icon name="trash" size="32" color="#FF4D4F"></up-icon>
           <text>删除</text>
         </view>
       </view>

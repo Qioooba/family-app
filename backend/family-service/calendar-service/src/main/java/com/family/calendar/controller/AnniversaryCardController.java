@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/anniversary/card")
+@RequestMapping("/api/calendar/anniversary/card")
 @RequiredArgsConstructor
 public class AnniversaryCardController {
     

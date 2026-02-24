@@ -5,11 +5,11 @@
     <view class="nav-bar">
       <view class="back-btn" @click="goBack"
 >
-        <u-icon name="arrow-left" size="40" color="#fff"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#fff"></up-icon>
       </view>
       <text class="title">家庭报告</text>
       <view class="right-btn" @click="shareReport">
-        <u-icon name="share" size="36" color="#fff"></u-icon>
+        <up-icon name="share" size="36" color="#fff"></up-icon>
       </view>
     </view>
 
@@ -58,11 +58,11 @@
             <text class="rank-text">超越 {{ reportData.rank }}% 家庭</text>
             <view class="trend-badge" :class="reportData.trend"
 >
-              <u-icon 
+              <up-icon 
                 :name="reportData.trend === 'up' ? 'arrow-upward' : 'arrow-downward'" 
                 size="20" 
                 color="#fff"
-              ></u-icon>
+              ></up-icon>
               {{ reportData.trendValue }}
             </view>
           </view>
@@ -264,7 +264,7 @@
       <view class="generate-section"
 >
         <view class="generate-btn" @click="generateReport">
-          <u-icon name="file-text" size="32" color="#fff"></u-icon>
+          <up-icon name="file-text" size="32" color="#fff"></up-icon>
           <text>生成完整报告</text>
         </view>        
         

@@ -15,7 +15,7 @@ import java.util.List;
  */
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/card")
+@RequestMapping("/api/calendar/card")
 @RequiredArgsConstructor
 public class CardController {
     

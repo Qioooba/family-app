@@ -418,27 +418,55 @@ const createTask = async () => {
     uni.showToast({ title: '请先输入任务内容', icon: 'none' })
     return
   }
-  
+
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
-    
-    await taskApi.create({
+    // 获取当前用户信息
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || userInfo?.userId
+
+    // 处理截止时间格式
+    let dueTime = null
+    if (parsedTask.value.dueDate) {
+      const time = parsedTask.value.dueTime || '23:59'
+      dueTime = `${parsedTask.value.dueDate}T${time}:00`
+    } else {
+      // 默认今天 23:59
+      const today = new Date().toISOString().split('T')[0]
+      dueTime = `${today}T23:59:00`
+    }
+
+    const taskData = {
       title: parsedTask.value.title,
-      dueDate: parsedTask.value.dueDate,
-      dueTime: parsedTask.value.dueTime,
+      dueTime: dueTime,  // 后端期望 LocalDateTime 格式
       priority: parsedTask.value.priority || 0,
       categoryName: parsedTask.value.category,
-      familyId
-    })
-    
+      familyId: familyId,
+      status: 0,
+      creatorId: userId
+    }
+
+    console.log('[Voice] 创建任务请求数据:', taskData)
+    await taskApi.create(taskData)
+
     uni.showToast({ title: '创建成功', icon: 'success' })
-    
+
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
   } catch (e) {
     console.error('创建任务失败', e)
-    uni.showToast({ title: '创建失败', icon: 'none' })
+    let errorMsg = '创建失败'
+    if (e?.message) {
+      errorMsg = e.message
+    } else if (typeof e === 'string') {
+      errorMsg = e
+    }
+    uni.showModal({
+      title: '创建失败',
+      content: errorMsg,
+      showCancel: false
+    })
   }
 }
 

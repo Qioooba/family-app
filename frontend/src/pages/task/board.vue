@@ -86,12 +86,7 @@
                 </text>
               </view>
               
-              <view v-if="task.subtasks?.length > 0" class="card-progress">
-                <view class="mini-progress">
-                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></view>
-                </view>
-                <text class="progress-text">{{ getProgress(task) }}%</text>
-              </view>
+
               
               <view class="card-tags">
                 <text v-if="task.categoryName" class="tag">{{ task.categoryName }}</text>
@@ -155,12 +150,7 @@
                 </text>
               </view>
               
-              <view v-if="task.subtasks?.length > 0" class="card-progress">
-                <view class="mini-progress">
-                  <view class="mini-progress-fill" :style="{ width: getProgress(task) + '%' }"></view>
-                </view>
-                <text class="progress-text">{{ getProgress(task) }}%</text>
-              </view>
+
               
               <view class="card-tags">
                 <text v-if="task.categoryName" class="tag">{{ task.categoryName }}</text>
@@ -410,11 +400,6 @@ const formatDate = (date) => {
   return d.format('MM-DD')
 }
 
-const getProgress = (task) => {
-  if (!task.subtasks || task.subtasks.length === 0) return 0
-  const completed = task.subtasks.filter(s => s.status === 1).length
-  return Math.round((completed / task.subtasks.length) * 100)
-}
 
 // 拖拽相关
 const onTaskTouchStart = (e, task, column, index) => {
@@ -625,19 +610,49 @@ const addTask = async () => {
 
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
+    // 获取当前用户信息
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || userInfo?.userId
     const statusMap = { todo: 0, doing: 1, done: 2 }
-    
-    await taskApi.create({
-      ...newTask.value,
-      familyId,
-      status: statusMap[newTask.value.status]
-    })
-    
+
+    // 处理截止时间格式
+    let dueTime = null
+    if (newTask.value.dueDate) {
+      dueTime = `${newTask.value.dueDate}T23:59:00`
+    } else {
+      // 默认今天 23:59
+      const today = new Date().toISOString().split('T')[0]
+      dueTime = `${today}T23:59:00`
+    }
+
+    const taskData = {
+      title: newTask.value.title,
+      familyId: familyId,
+      priority: newTask.value.priority,
+      dueTime: dueTime,  // 后端期望 LocalDateTime 格式
+      status: statusMap[newTask.value.status],
+      creatorId: userId
+    }
+
+    console.log('[Board] 创建任务请求数据:', taskData)
+    await taskApi.create(taskData)
+
     uni.showToast({ title: '添加成功', icon: 'success' })
     closeModal()
     loadTasks()
   } catch (e) {
-    uni.showToast({ title: '添加失败', icon: 'none' })
+    console.error('创建任务失败', e)
+    let errorMsg = '添加失败'
+    if (e?.message) {
+      errorMsg = e.message
+    } else if (typeof e === 'string') {
+      errorMsg = e
+    }
+    uni.showModal({
+      title: '创建失败',
+      content: errorMsg,
+      showCancel: false
+    })
   }
 }
 

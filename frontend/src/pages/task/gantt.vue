@@ -155,7 +155,7 @@
                 <text class="bar-text">{{ truncateText(task.title, 6) }}</text>
                 <!-- 进度条 -->
                 <view 
-                  v-if="task.status === 2 || (task.subtasks && task.subtasks.length > 0)"
+                  v-if="task.status === 2"
                   class="progress-overlay"
                   :style="{ width: getTaskProgress(task) + '%' }"
                 />
@@ -421,10 +421,6 @@ const getMilestonePosition = (task) => {
 
 const getTaskProgress = (task) => {
   if (task.status === 2) return 100
-  if (task.subtasks && task.subtasks.length > 0) {
-    const completed = task.subtasks.filter(s => s.status === 1).length
-    return Math.round((completed / task.subtasks.length) * 100)
-  }
   return 0
 }
 

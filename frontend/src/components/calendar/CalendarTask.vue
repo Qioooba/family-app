@@ -35,14 +35,6 @@
             <text class="meta-icon">⏰</text>{{ task.dueTime }}
           </text>
         </view>
-        
-        <!-- 子任务进度 -->
-        <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
-          <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
-          </view>
-          <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
-        </view>
       </view>
       
       <view class="task-status">
@@ -83,16 +75,6 @@ const isOverdue = (task) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return dueDate < today
-}
-
-const subtaskCompleted = (task) => {
-  if (!task.subtasks) return 0
-  return task.subtasks.filter(s => s.status === 1).length
-}
-
-const subtaskProgress = (task) => {
-  if (!task.subtasks || task.subtasks.length === 0) return 0
-  return Math.round((subtaskCompleted(task) / task.subtasks.length) * 100)
 }
 
 defineEmits(['viewTask', 'showMenu', 'toggleTask', 'addTask'])
@@ -206,7 +188,6 @@ defineEmits(['viewTask', 'showMenu', 'toggleTask', 'addTask'])
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 8px;
   
   .meta-item {
     font-size: 12px;
@@ -218,32 +199,6 @@ defineEmits(['viewTask', 'showMenu', 'toggleTask', 'addTask'])
     .meta-icon {
       font-size: 12px;
     }
-  }
-}
-
-.subtask-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  
-  .progress-bar {
-    flex: 1;
-    height: 4px;
-    background: #E5E7EB;
-    border-radius: 2px;
-    overflow: hidden;
-    
-    .progress-fill {
-      height: 100%;
-      background: #10B981;
-      border-radius: 2px;
-      transition: width 0.3s;
-    }
-  }
-  
-  .progress-text {
-    font-size: 11px;
-    color: #6B7280;
   }
 }
 
@@ -265,7 +220,6 @@ defineEmits(['viewTask', 'showMenu', 'toggleTask', 'addTask'])
       background: #FEE2E2;
       color: #DC2626;
     }
-    
     &.pending {
       background: #DBEAFE;
       color: #2563EB;

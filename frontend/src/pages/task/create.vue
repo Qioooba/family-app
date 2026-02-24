@@ -3,9 +3,9 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
-      <text class="title">创建任务</text>
+      <text class="title">{{ pageTitle }}</text>
       <view class="right-btn" @click="saveTask">
         <text>保存</text>
       </view>
@@ -14,12 +14,15 @@
     <view class="form-container">
       <!-- 任务标题 -->
       <view class="form-item">
-        <text class="label">任务标题</text>
-        <input
-          v-model="form.title"
-          placeholder="请输入任务标题"
-          class="input"
-        />
+        <text class="label">任务标题 <text class="required">*</text></text>
+        <view class="input-wrapper title-input-wrapper">
+          <input
+            v-model="form.title"
+            placeholder="请输入任务标题，如：买牛奶"
+            class="input task-title-input"
+            placeholder-class="input-placeholder"
+          />
+        </view>
       </view>
 
       <!-- 任务分类 -->
@@ -59,7 +62,7 @@
         <picker mode="multiSelector" :range="dateRange" :value="dateIndex" @change="onDateChange">
           <view class="picker-value">
             {{ form.deadline || '请选择截止时间' }}
-            <u-icon name="arrow-right" size="28" color="#999"></u-icon>
+            <up-icon name="arrow-right" size="28" color="#999"></up-icon>
           </view>
         </picker>
       </view>
@@ -157,7 +160,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { taskApi } from '../../api/index.js'
 
 const form = ref({
@@ -172,6 +176,55 @@ const form = ref({
   repeatEndDate: '',
   repeatCount: null
 })
+
+// 编辑模式标识
+const isEditMode = ref(false)
+const taskId = ref(null)
+
+// 页面标题
+const pageTitle = computed(() => isEditMode.value ? '编辑任务' : '创建任务')
+
+// 加载任务数据（编辑模式）
+const loadTaskData = async (id) => {
+  try {
+    uni.showLoading({ title: '加载中...' })
+    
+    const res = await taskApi.getById(id)
+    console.log('[TaskCreate] 获取任务详情:', res)
+    
+    if (res) {
+      isEditMode.value = true
+      taskId.value = id
+      
+      // 填充表单数据
+      form.value.title = res.title || ''
+      form.value.category = res.category || 'shopping'
+      form.value.priority = res.priority || 0
+      form.value.assigneeId = res.assigneeId || null
+      form.value.remark = res.remark || ''
+      form.value.status = res.status || 0
+      
+      // 处理截止时间
+      if (res.dueTime) {
+        const date = new Date(res.dueTime)
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        form.value.deadline = `${year}-${month}-${day} ${hours}:${minutes}`
+      }
+      
+      console.log('[TaskCreate] 表单数据填充完成:', form.value)
+    }
+    
+    uni.hideLoading()
+  } catch (error) {
+    uni.hideLoading()
+    console.error('[TaskCreate] 获取任务详情失败:', error)
+    uni.showToast({ title: '加载任务失败', icon: 'none' })
+  }
+}
 
 // 自定义重复规则
 const customRepeat = ref({
@@ -215,6 +268,21 @@ const members = ref([
   { id: 2, name: '妈妈', avatar: '/static/avatar/mom.png' },
   { id: 3, name: '宝贝', avatar: '/static/avatar/kid.png' }
 ])
+
+// 检查URL参数（判断是编辑还是新增模式）
+onMounted(() => {
+  // 获取页面传递的参数
+  const pages = getCurrentPages()
+  const currentPage = pages[pages.length - 1]
+  const options = currentPage?.options || {}
+  
+  console.log('[TaskCreate] 页面参数:', options)
+  
+  if (options.id) {
+    // 编辑模式 - 加载任务数据
+    loadTaskData(options.id)
+  }
+})
 
 // 选择重复类型
 const selectRepeat = (value) => {
@@ -330,37 +398,72 @@ const saveTask = async () => {
 
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
+    // 获取当前用户信息
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || userInfo?.userId
+
+    // 处理截止时间格式
+    let dueTime = null
+    if (form.value.deadline) {
+      // 将 '2026-02-23 14:30' 转换为 ISO 8601 格式
+      dueTime = form.value.deadline.replace(' ', 'T') + ':00'
+    } else {
+      // 默认今天 23:59
+      const today = new Date().toISOString().split('T')[0]
+      dueTime = `${today}T23:59:00`
+    }
+
     const data = {
       title: form.value.title,
       familyId: familyId,
       category: form.value.category,
       priority: form.value.priority,
-      deadline: form.value.deadline,
+      dueTime: dueTime,  // 后端期望 LocalDateTime 格式
       assigneeId: form.value.assigneeId,
       remark: form.value.remark,
-      status: 0
+      status: form.value.status || 0,
+      creatorId: userId
     }
 
-    // 创建任务
-    const res = await taskApi.create(data)
-    const taskId = res.id
+    console.log('[TaskCreate] 保存任务请求数据:', data)
 
-    // 设置重复规则
-    if (form.value.repeatType !== 'none' && taskId) {
-      const repeatRule = buildRepeatRule()
-      await taskApi.setRepeatRule(taskId, {
-        repeatType: form.value.repeatType,
-        repeatRule: repeatRule
-      })
+    if (isEditMode.value && taskId.value) {
+      // 编辑模式 - 更新任务
+      data.id = taskId.value
+      await taskApi.update(data)
+      uni.showToast({ title: '更新成功', icon: 'success' })
+    } else {
+      // 新增模式 - 创建任务
+      const res = await taskApi.create(data)
+      const newTaskId = res.id
+
+      // 设置重复规则
+      if (form.value.repeatType !== 'none' && newTaskId) {
+        const repeatRule = buildRepeatRule()
+        await taskApi.setRepeatRule(newTaskId, {
+          repeatType: form.value.repeatType,
+          repeatRule: repeatRule
+        })
+      }
+      uni.showToast({ title: '创建成功', icon: 'success' })
     }
 
-    uni.showToast({ title: '创建成功', icon: 'success' })
     setTimeout(() => {
       uni.navigateBack()
     }, 1500)
   } catch (e) {
-    console.error('创建任务失败', e)
-    uni.showToast({ title: '创建失败', icon: 'none' })
+    console.error('保存任务失败', e)
+    let errorMsg = '保存失败'
+    if (e?.message) {
+      errorMsg = e.message
+    } else if (typeof e === 'string') {
+      errorMsg = e
+    }
+    uni.showModal({
+      title: '保存失败',
+      content: errorMsg,
+      showCancel: false
+    })
   }
 }
 </script>
@@ -368,7 +471,7 @@ const saveTask = async () => {
 <style lang="scss" scoped>
 .create-task-page {
   min-height: 100vh;
-  background: #f5f6fa;
+  background: linear-gradient(180deg, #f8f9fc 0%, #f0f4f8 100%);
 }
 
 .nav-bar {
@@ -377,30 +480,48 @@ const saveTask = async () => {
   justify-content: space-between;
   padding: 20rpx 30rpx;
   padding-top: 60rpx;
-  background: #fff;
+  background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
+  box-shadow: 0 8rpx 32rpx rgba(107, 141, 214, 0.25);
 
   .back-btn {
-    width: 60rpx;
-    height: 60rpx;
+    width: 64rpx;
+    height: 64rpx;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    transition: all 0.25s ease;
+    
+    &:active {
+      background: rgba(255,255,255,0.25);
+      transform: scale(0.92);
+    }
   }
 
   .title {
-    font-size: 34rpx;
+    font-size: 36rpx;
     font-weight: 600;
-    color: #333;
+    color: #fff;
+    text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1);
   }
 
   .right-btn {
-    padding: 12rpx 30rpx;
-    background: #5B8FF9;
-    border-radius: 30rpx;
+    padding: 14rpx 32rpx;
+    background: rgba(255,255,255,0.95);
+    border-radius: 32rpx;
+    box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.1);
+    transition: all 0.25s ease;
+    
+    &:active {
+      transform: scale(0.95);
+      box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.08);
+    }
 
     text {
       font-size: 28rpx;
-      color: #fff;
+      color: #6B8DD6;
+      font-weight: 600;
     }
   }
 }
@@ -411,29 +532,94 @@ const saveTask = async () => {
 
 .form-item {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
+  border-radius: 28rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(107, 141, 214, 0.08), 0 2rpx 8rpx rgba(0,0,0,0.03);
+  transition: all 0.3s ease;
+  
+  &:active {
+    transform: scale(0.995);
+  }
 
   .label {
-    font-size: 28rpx;
+    font-size: 30rpx;
     font-weight: 600;
-    color: #333;
+    color: #2d3748;
     display: block;
     margin-bottom: 20rpx;
+    
+    .required {
+      color: #ff6b6b;
+      margin-left: 4rpx;
+    }
+  }
+  
+  .input-wrapper {
+    background: #f8f9fc;
+    border-radius: 20rpx;
+    padding: 0 24rpx;
+    border: 2rpx solid transparent;
+    transition: all 0.25s ease;
+    
+    &:focus-within {
+      background: #fff;
+      border-color: #6B8DD6;
+      box-shadow: 0 0 0 6rpx rgba(107, 141, 214, 0.1);
+    }
+  }
+  
+  .title-input-wrapper {
+    padding: 0;
+    background: transparent;
+    
+    &:focus-within {
+      background: transparent;
+      box-shadow: none;
+    }
   }
 
   .input {
+    font-size: 32rpx;
+    color: #2d3748;
+    height: 90rpx;
+    background: #f8f9fc;
+    border-radius: 20rpx;
+    padding: 0 24rpx;
+    border: 2rpx solid transparent;
+    transition: all 0.25s ease;
+    width: 100%;
+    box-sizing: border-box;
+    
+    &:focus {
+      background: #fff;
+      border-color: #6B8DD6;
+      box-shadow: 0 0 0 6rpx rgba(107, 141, 214, 0.1);
+    }
+  }
+  
+  .input-placeholder {
+    color: #a0aec0;
     font-size: 30rpx;
-    color: #333;
-    height: 60rpx;
   }
 
   .textarea {
-    font-size: 28rpx;
-    color: #333;
-    height: 160rpx;
+    font-size: 30rpx;
+    color: #2d3748;
+    height: 180rpx;
     width: 100%;
+    background: #f8f9fc;
+    border-radius: 20rpx;
+    padding: 24rpx;
+    border: 2rpx solid transparent;
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+    
+    &:focus {
+      background: #fff;
+      border-color: #6B8DD6;
+      box-shadow: 0 0 0 6rpx rgba(107, 141, 214, 0.1);
+    }
   }
 
   .picker-value {
@@ -441,7 +627,11 @@ const saveTask = async () => {
     align-items: center;
     justify-content: space-between;
     font-size: 30rpx;
-    color: #333;
+    color: #2d3748;
+    height: 90rpx;
+    background: #f8f9fc;
+    border-radius: 20rpx;
+    padding: 0 24rpx;
   }
 }
 
@@ -451,15 +641,22 @@ const saveTask = async () => {
   gap: 16rpx;
 
   .category-item {
-    padding: 16rpx 32rpx;
-    background: #f5f5f5;
-    border-radius: 30rpx;
-    font-size: 26rpx;
-    color: #666;
+    padding: 18rpx 36rpx;
+    background: #f8f9fc;
+    border-radius: 28rpx;
+    font-size: 28rpx;
+    color: #5a6c7d;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2rpx solid transparent;
+    
+    &:active {
+      transform: scale(0.95);
+    }
 
     &.active {
-      background: #5B8FF9;
+      background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
       color: #fff;
+      box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.35);
     }
   }
 }
@@ -472,33 +669,46 @@ const saveTask = async () => {
     display: flex;
     align-items: center;
     gap: 12rpx;
-    padding: 16rpx 30rpx;
-    background: #f5f5f5;
-    border-radius: 30rpx;
-    font-size: 26rpx;
-    color: #666;
+    padding: 18rpx 32rpx;
+    background: #f8f9fc;
+    border-radius: 28rpx;
+    font-size: 28rpx;
+    color: #5a6c7d;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2rpx solid transparent;
+    
+    &:active {
+      transform: scale(0.95);
+    }
 
     .dot {
       width: 16rpx;
       height: 16rpx;
       border-radius: 50%;
-      background: #ddd;
+      background: #cbd5e0;
+      transition: all 0.25s ease;
     }
 
     &.active {
       &.normal {
-        background: #E6F7FF;
+        background: rgba(24, 144, 255, 0.1);
         color: #1890FF;
+        border-color: rgba(24, 144, 255, 0.3);
+        box-shadow: 0 4rpx 16rpx rgba(24, 144, 255, 0.15);
         .dot { background: #1890FF; }
       }
       &.medium {
-        background: #FFF7E6;
+        background: rgba(250, 173, 20, 0.1);
         color: #FAAD14;
+        border-color: rgba(250, 173, 20, 0.3);
+        box-shadow: 0 4rpx 16rpx rgba(250, 173, 20, 0.15);
         .dot { background: #FAAD14; }
       }
       &.high {
-        background: #FFF1F0;
+        background: rgba(255, 77, 79, 0.1);
         color: #FF4D4F;
+        border-color: rgba(255, 77, 79, 0.3);
+        box-shadow: 0 4rpx 16rpx rgba(255, 77, 79, 0.15);
         .dot { background: #FF4D4F; }
       }
     }
@@ -514,13 +724,22 @@ const saveTask = async () => {
     flex-direction: column;
     align-items: center;
     opacity: 0.5;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 16rpx;
+    border-radius: 20rpx;
 
     &.active {
       opacity: 1;
+      background: rgba(107, 141, 214, 0.08);
 
       .avatar {
-        border: 4rpx solid #5B8FF9;
+        border: 4rpx solid #6B8DD6;
+        box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.35);
       }
+    }
+    
+    &:active {
+      transform: scale(0.95);
     }
 
     .avatar {
@@ -529,11 +748,14 @@ const saveTask = async () => {
       border-radius: 50%;
       margin-bottom: 12rpx;
       border: 4rpx solid transparent;
+      transition: all 0.25s ease;
+      box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
     }
 
     .name {
-      font-size: 24rpx;
-      color: #333;
+      font-size: 26rpx;
+      color: #2d3748;
+      font-weight: 500;
     }
   }
 }

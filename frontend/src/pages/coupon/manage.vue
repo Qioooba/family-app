@@ -4,12 +4,12 @@
     <view class="nav-bar">
       <view class="back-btn" @click="goBack"
 >
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">优惠券</text>
       <view class="right-btn" @click="showAddModal"
 >
-        <u-icon name="plus" size="36" color="#fff"></u-icon>
+        <up-icon name="plus" size="36" color="#fff"></up-icon>
       </view>
     </view>
 
@@ -96,7 +96,7 @@
               </view>
 
               <view class="coupon-shop">
-                <u-icon name="shop" size="24" color="#999"></u-icon>
+                <up-icon name="shop" size="24" color="#999"></up-icon>
                 <text>{{ coupon.shop }}</text>
               </view>
 
@@ -108,7 +108,7 @@
               <view class="coupon-footer"
 >
                 <view class="coupon-time">
-                  <u-icon name="clock" size="20" color="#999"></u-icon>
+                  <up-icon name="clock" size="20" color="#999"></up-icon>
                   <text :class="{ urgent: coupon.isExpiring }">{{ formatExpiry(coupon) }}</text>
                 </view>
 
@@ -132,7 +132,7 @@
               <!-- 即将过期提醒 -->
               <view v-if="coupon.isExpiring && coupon.status === 'active'" class="expiring-badge"
 >
-                <u-icon name="bell" size="20" color="#fff"></u-icon>
+                <up-icon name="bell" size="20" color="#fff"></up-icon>
                 <text>{{ coupon.daysLeft }}天后过期</text>
               </view>
             </view>
@@ -142,7 +142,7 @@
         <!-- 空状态 -->
         <view v-if="filteredCoupons.length === 0" class="empty-state"
 >
-          <u-icon name="ticket" size="100" color="#ddd"></u-icon>
+          <up-icon name="ticket" size="100" color="#ddd"></up-icon>
           <text class="empty-text">{{ emptyText }}</text>
           <text class="empty-hint" @click="showAddModal">点击添加优惠券</text>
         </view>
@@ -150,7 +150,7 @@
     </view>
 
     <!-- 添加优惠券弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="addModalVisible"
       mode="bottom"
       round
@@ -173,8 +173,8 @@
               :class="{ active: addType === type.value }"
               @click="addType = type.value"
             >
-              <u-icon :name="type.icon" size="32" :color="addType === type.value ? '#5B8FF9' : '#999'"
-</u-icon>
+              <up-icon :name="type.icon" size="32" :color="addType === type.value ? '#5B8FF9' : '#999'"
+</up-icon>
               {{ type.label }}
             </view>
           </view>
@@ -183,7 +183,7 @@
           <view v-if="addType === 'scan'" class="scan-section">
             <view class="scan-area" @click="scanCouponCode"
 >
-              <u-icon name="scan" size="80" color="#5B8FF9"></u-icon>
+              <up-icon name="scan" size="80" color="#5B8FF9"></up-icon>
               <text class="scan-text">点击扫描优惠券码</text>
               <text class="scan-hint">支持二维码/条形码</text>
             </view>
@@ -316,10 +316,10 @@
           <view class="btn-confirm" @click="saveCoupon">添加</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
 
     <!-- 优惠券详情弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="detailModalVisible"
       mode="center"
       round
@@ -391,7 +391,7 @@
           </view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

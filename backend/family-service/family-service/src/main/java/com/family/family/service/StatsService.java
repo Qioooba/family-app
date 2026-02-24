@@ -20,4 +20,11 @@ public interface StatsService {
     Map<String, Object> getYearlyStats(Long familyId, int year);
     
     Map<String, Object> getTodayOverview(Long userId, Long familyId);
+    
+    /**
+     * 获取家庭本月统计
+     * @param familyId 家庭ID
+     * @return 本月统计数据
+     */
+    Map<String, Object> getFamilyMonthlyStats(Long familyId);
 }

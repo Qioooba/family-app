@@ -1,0 +1,135 @@
+# ============================================
+# 性能优化配置
+# 文件名: application-performance.yml
+# 用途: 数据库连接池、Redis连接池、JPA等性能相关配置
+# ============================================
+
+spring:
+  # 数据源连接池优化 (HikariCP)
+  datasource:
+    hikari:
+      # 连接池大小 = (核心数 * 2) + 有效磁盘数，一般16-32
+      maximum-pool-size: 20
+      minimum-idle: 10
+      # 连接空闲超时
+      idle-timeout: 300000
+      # 连接最大生命周期
+      max-lifetime: 1200000
+      # 连接超时
+      connection-timeout: 20000
+      # 测试连接SQL
+      connection-test-query: SELECT 1
+      # 自动提交
+      auto-commit: false
+      # 连接初始化SQL
+      connection-init-sql: SET NAMES utf8mb4
+      
+  # Redis连接池优化
+  redis:
+    lettuce:
+      pool:
+        # 最大活跃连接
+        max-active: 16
+        # 最大空闲连接
+        max-idle: 16
+        # 最小空闲连接
+        min-idle: 4
+        # 最大等待时间
+        max-wait: 5000ms
+        # 空闲连接超时
+        time-between-eviction-runs: 60000ms
+      # 关闭超时
+      shutdown-timeout: 200ms
+    # 超时配置
+    timeout: 3000ms
+    
+  # JPA/Hibernate优化
+  jpa:
+    hibernate:
+      # 批量操作大小
+      jdbc:
+        batch_size: 50
+        # 批量抓取大小
+        fetch_size: 100
+        # 排序插入
+        order_inserts: true
+        order_updates: true
+    # 显示SQL (生产环境关闭)
+    show-sql: false
+    
+  # Jackson序列化优化
+  jackson:
+    # 禁用日期时间戳
+    serialization:
+      write-dates-as-timestamps: false
+    # 忽略未知属性
+    deserialization:
+      fail-on-unknown-properties: false
+
+# MyBatis-Plus优化
+mybatis-plus:
+  configuration:
+    # 关闭SQL打印 (生产环境)
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    # 驼峰映射
+    map-underscore-to-camel-case: true
+    # 缓存启用
+    cache-enabled: true
+    # 延迟加载
+    lazy-loading-enabled: true
+    # 积极加载
+    aggressive-lazy-loading: false
+  global-config:
+    db-config:
+      # 逻辑删除字段
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      # 表前缀
+      table-prefix: ""
+      # ID类型
+      id-type: auto
+
+# 服务器优化
+server:
+  # 压缩
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+    min-response-size: 1024
+  # 连接超时
+  connection-timeout: 20000
+  # Tomcat优化
+  tomcat:
+    # 最大线程数
+    max-threads: 200
+    # 最小空闲线程
+    min-spare-threads: 20
+    # 接受连接数
+    accept-count: 100
+    # 连接超时
+    connection-timeout: 20000
+    # 最大连接数
+    max-connections: 10000
+
+# 日志优化
+logging:
+  level:
+    # 降低非关键日志级别
+    com.family: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+    com.baomidou: WARN
+  pattern:
+    # 简洁日志格式
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 缓存配置
+family:
+  cache:
+    # 默认过期时间(分钟)
+    default-expire: 30
+    # 缓存前缀
+    prefix: "family:"
+    # 空值缓存时间(分钟) - 防穿透
+    null-expire: 5

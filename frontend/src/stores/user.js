@@ -20,20 +20,20 @@ export const useUserStore = defineStore('user', () => {
   }
   
   const login = async (loginData) => {
-    const res = await request.post('/user/login', loginData)
+    const res = await request.post('/api/user/login', loginData)
     setToken(res)
     await getUserInfo()
     return res
   }
   
   const register = async (registerData) => {
-    const res = await request.post('/user/register', registerData)
+    const res = await request.post('/api/user/register', registerData)
     return res
   }
   
   const getUserInfo = async () => {
     try {
-      const res = await request.get('/user/info')
+      const res = await request.get('/api/user/info')
       setUserInfo(res)
       return res
     } catch (e) {
@@ -42,7 +42,7 @@ export const useUserStore = defineStore('user', () => {
   }
   
   const updateUserInfo = async (data) => {
-    const res = await request.put('/user/info', data)
+    const res = await request.put('/api/user/info', data)
     setUserInfo(res)
     return res
   }

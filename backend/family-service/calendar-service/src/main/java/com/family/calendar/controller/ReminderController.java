@@ -13,7 +13,7 @@ import java.util.List;
  * 用于管理各类提醒事项
  */
 @RestController
-@RequestMapping("/api/reminder")
+@RequestMapping("/api/calendar/reminder")
 @RequiredArgsConstructor
 @SaCheckLogin
 public class ReminderController {

@@ -12,32 +12,11 @@
       </view>
     </view>
 
-    <!-- 月度总结卡片 -->
-    <view class="summary-card">
-      <view class="summary-header">
-        <text class="summary-title">{{ currentMonth }}总结</text>
-        <view class="summary-badge" :class="summaryData.level">
-          <text>{{ summaryData.levelText }}</text>
-        </view>
-      </view>
-      <view class="summary-content">
-        <view class="summary-item">
-          <text class="summary-value">{{ summaryData.totalScore }}</text>
-          <text class="summary-label">综合评分</text>
-        </view>
-        <view class="summary-divider"></view>
-        <view class="summary-item">
-          <text class="summary-value">{{ summaryData.rank }}%</text>
-          <text class="summary-label">超越家庭</text>
-        </view>
-        <view class="summary-divider"></view>
-        <view class="summary-item">
-          <text class="summary-value">{{ summaryData.growth }}%</text>
-          <text class="summary-label">环比增长</text>
-        </view>
-      </view>
-      <view class="summary-quote">
-        <text>"{{ summaryData.quote }}"</text>
+    <!-- 月度标题卡片 -->
+    <view class="header-card">
+      <view class="header-content">
+        <text class="header-title">{{ currentMonth }}月度回顾</text>
+        <text class="header-subtitle">记录成长，见证美好时光</text>
       </view>
     </view>
 
@@ -199,8 +178,8 @@
           <view class="wish-detail-item">
             <view class="detail-icon total">★</view>
             <view class="detail-info">
-              <text class="detail-value">{{ wishStats.totalAmount }}元</text>
-              <text class="detail-label">总预算</text>
+              <text class="detail-value">{{ wishStats.total }}</text>
+              <text class="detail-label">心愿总数</text>
             </view>
           </view>
         </view>
@@ -217,7 +196,9 @@
             <text class="wish-name">{{ wish.name }}</text>
             <text class="wish-date">{{ wish.completedDate }}</text>
           </view>
-          <text class="wish-amount">{{ wish.amount }}元</text>
+          <view class="wish-status completed">
+            <text>已达成</text>
+          </view>
         </view>
       </view>
     </view>
@@ -253,16 +234,6 @@ import { statsApi } from '@/api/stats'
 const currentMonth = ref('')
 const showMonthPicker = ref(false)
 
-// 月度总结数据
-const summaryData = ref({
-  totalScore: 85,
-  rank: 68,
-  growth: 12,
-  level: 'good',
-  levelText: '优秀',
-  quote: '本月表现很棒，继续保持！'
-})
-
 // 任务统计数据
 const taskStats = ref({
   completionRate: 78,
@@ -296,11 +267,11 @@ const wishStats = ref({
   completionRate: 65,
   completed: 13,
   pending: 7,
-  totalAmount: 5680,
+  total: 20,
   recentWishes: [
-    { icon: '📚', name: '购买新书', completedDate: '01-15', amount: 128 },
-    { icon: '🎮', name: '游戏手柄', completedDate: '01-20', amount: 399 },
-    { icon: '🍰', name: '生日蛋糕', completedDate: '01-25', amount: 268 }
+    { icon: '📚', name: '购买新书', completedDate: '01-15' },
+    { icon: '🎮', name: '游戏手柄', completedDate: '01-20' },
+    { icon: '🍰', name: '生日蛋糕', completedDate: '01-25' }
   ]
 })
 
@@ -444,91 +415,27 @@ const getPointPosition = (value, max, axis) => {
   }
 }
 
-// 月度总结卡片
-.summary-card {
+// 月度标题卡片
+.header-card {
   margin: 30rpx;
-  padding: 40rpx;
+  padding: 50rpx 40rpx;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 32rpx;
   
-  .summary-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30rpx;
-    
-    .summary-title {
-      font-size: 32rpx;
-      font-weight: 600;
-      color: #fff;
-    }
-    
-    .summary-badge {
-      padding: 8rpx 24rpx;
-      border-radius: 24rpx;
-      
-      &.excellent {
-        background: #ffd700;
-        color: #333;
-      }
-      
-      &.good {
-        background: #4ade80;
-        color: #fff;
-      }
-      
-      &.average {
-        background: #fbbf24;
-        color: #fff;
-      }
-      
-      text {
-        font-size: 24rpx;
-        font-weight: 600;
-      }
-    }
-  }
-  
-  .summary-content {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin-bottom: 30rpx;
-    
-    .summary-item {
-      text-align: center;
-      
-      .summary-value {
-        display: block;
-        font-size: 48rpx;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 8rpx;
-      }
-      
-      .summary-label {
-        font-size: 24rpx;
-        color: rgba(255,255,255,0.7);
-      }
-    }
-    
-    .summary-divider {
-      width: 2rpx;
-      height: 60rpx;
-      background: rgba(255,255,255,0.2);
-    }
-  }
-  
-  .summary-quote {
-    padding: 20rpx;
-    background: rgba(255,255,255,0.1);
-    border-radius: 16rpx;
+  .header-content {
     text-align: center;
     
-    text {
-      font-size: 26rpx;
-      color: rgba(255,255,255,0.9);
-      font-style: italic;
+    .header-title {
+      display: block;
+      font-size: 40rpx;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16rpx;
+    }
+    
+    .header-subtitle {
+      font-size: 28rpx;
+      color: rgba(255,255,255,0.8);
     }
   }
 }
@@ -919,10 +826,16 @@ const getPointPosition = (value, max, axis) => {
       }
     }
     
-    .wish-amount {
-      font-size: 28rpx;
-      font-weight: 600;
-      color: #fbbf24;
+    .wish-status {
+      padding: 8rpx 20rpx;
+      border-radius: 24rpx;
+      font-size: 24rpx;
+      font-weight: 500;
+      
+      &.completed {
+        background: #dcfce7;
+        color: #22c55e;
+      }
     }
   }
 }

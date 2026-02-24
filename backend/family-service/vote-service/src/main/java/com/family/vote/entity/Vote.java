@@ -1,5 +1,6 @@
 package com.family.vote.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.family.common.core.BaseEntity;
 
 import java.time.LocalDateTime;
@@ -7,6 +8,7 @@ import java.time.LocalDateTime;
 /**
  * 投票实体
  */
+@TableName("vote")
 public class Vote extends BaseEntity {
     private static final long serialVersionUID = 1L;
     

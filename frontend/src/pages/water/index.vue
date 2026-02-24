@@ -3,11 +3,11 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">喝水打卡</text>
       <view class="right-btn" @click="showSettings">
-        <u-icon name="setting" size="40" color="#333"></u-icon>
+        <up-icon name="setting" size="40" color="#333"></up-icon>
       </view>
     </view>
 
@@ -67,12 +67,12 @@
             :class="{ 'active': selectedAmount === amount }"
             @click="selectedAmount = amount"
           >
-            <u-icon name="minus-circle" size="36" color="#5B8FF9"></u-icon>
+            <view class="water-icon">💧</view>
             <text>{{ amount }}ml</text>
           </view>
         </view>
         <button class="add-btn" @click="recordWater">
-          <u-icon name="plus" size="40" color="#fff"></u-icon>
+          <view class="btn-icon">💧</view>
           <text>记录喝水</text>
         </button>
       </view>
@@ -81,22 +81,25 @@
       <view class="records-section">
         <view class="section-header">
           <text class="section-title">今日记录</text>
-          <text class="record-count">{{ records.length }} 次</text>
+          <view class="header-actions">
+            <text class="record-count">{{ records.length }} 次</text>
+            <text class="history-link" @click="showHistory">查看历史></text>
+          </view>
         </view>
 
         <view v-if="records.length === 0" class="empty-state">
-          <u-icon name="clock" size="80" color="#ddd"></u-icon>
+          <up-icon name="clock" size="80" color="#ddd"></up-icon>
           <text>还没有喝水记录，快来打卡吧~</text>
         </view>
 
         <view v-else class="records-list">
           <view
             v-for="(record, index) in records"
-            :key="index"
+            :key="record.id || index"
             class="record-item"
           >
             <view class="record-icon">
-              <u-icon name="clock" size="36" color="#5B8FF9"></u-icon>
+              <up-icon name="clock" size="36" color="#5B8FF9"></up-icon>
             </view>
             <view class="record-info">
               <text class="record-amount">+{{ record.amount }}ml</text>
@@ -105,6 +108,12 @@
             <view class="record-progress">
               <text>{{ calculateProgress(record.amount) }}%</text>
             </view>
+            <view class="record-delete-wrapper" @click="deleteRecord(record.id)">
+              <view class="record-delete-btn" title="删除记录">
+                <up-icon name="trash" size="28" color="#fff"></up-icon>
+                <text class="delete-text">删除</text>
+              </view>
+            </view>
           </view>
         </view>
       </view>
@@ -112,7 +121,7 @@
       <!-- 健康提示 -->
       <view class="tips-section">
         <view class="tip-card">
-          <u-icon name="info-circle" size="40" color="#5AD8A6"></u-icon>
+          <up-icon name="info-circle" size="40" color="#5AD8A6"></up-icon>
           <view class="tip-content">
             <text class="tip-title">健康小贴士</text>
             <text class="tip-text">{{ currentTip }}</text>
@@ -148,6 +157,72 @@
         </view>
       </view>
     </view>
+
+    <!-- 历史记录弹窗 -->
+    <view v-if="historyVisible" class="modal-overlay" @click="closeHistory">
+      <view class="modal-content history-modal" @click.stop>
+        <view class="modal-header">
+          <text>历史记录</text>
+          <text class="close-btn" @click="closeHistory">✕</text>
+        </view>
+
+        <!-- 日期选择器 -->
+        <view class="date-picker-section">
+          <text class="picker-label">选择日期：</text>
+          <picker mode="date" :value="historyDate" :end="today" @change="onHistoryDateChange">
+            <view class="date-picker-btn">
+              <text>{{ formatDateDisplay(historyDate) }}</text>
+              <up-icon name="arrow-down" size="28" color="#666"></up-icon>
+            </view>
+          </picker>
+        </view>
+
+        <!-- 历史统计数据 -->
+        <view class="history-stats">
+          <view class="stat-item">
+            <text class="stat-value">{{ historyData.todayAmount || 0 }}</text>
+            <text class="stat-label">总饮水量(ml)</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value">{{ historyData.percent || 0 }}%</text>
+            <text class="stat-label">目标完成度</text>
+          </view>
+          <view class="stat-item">
+            <text class="stat-value">{{ (historyData.records || []).length }}</text>
+            <text class="stat-label">记录次数</text>
+          </view>
+        </view>
+
+        <!-- 历史记录列表 -->
+        <scroll-view scroll-y class="history-records-list" style="max-height: 600rpx;">
+          <view v-if="(historyData.records || []).length === 0" class="history-empty">
+            <up-icon name="calendar" size="80" color="#ddd"></up-icon>
+            <text>该日期暂无喝水记录</text>
+          </view>
+          
+          <view
+            v-for="(record, index) in (historyData.records || [])"
+            :key="record.id || index"
+            class="history-record-item"
+          >
+            <view class="record-left">
+              <view class="record-icon-small">
+                <up-icon name="clock" size="32" color="#5B8FF9"></up-icon>
+              </view>
+              <view class="record-info">
+                <text class="record-amount">+{{ record.amount }}ml</text>
+                <text class="record-time">{{ formatTime(record.recordTime) }}</text>
+              </view>
+            </view>
+            <view class="record-delete-wrapper" @click="deleteHistoryRecord(record.id)">
+              <view class="record-delete-btn history-delete-btn" title="删除记录">
+                <up-icon name="trash" size="24" color="#fff"></up-icon>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -161,8 +236,12 @@ const records = ref([])
 const selectedAmount = ref(200)
 const settingsVisible = ref(false)
 const tempTarget = ref(2000)
+const historyVisible = ref(false)
+const historyDate = ref('')
+const historyData = ref({})
+const today = ref(new Date().toISOString().split('T')[0])
 
-const quickAmounts = [100, 200, 250, 350, 500]
+const quickAmounts = [100, 150, 200, 250, 350, 500]
 const targetOptions = [1500, 2000, 2500, 3000, 3500]
 
 const healthTips = [
@@ -212,7 +291,7 @@ const loadTodayData = async () => {
     }
   } catch (e) {
     console.error('加载喝水数据失败', e)
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    // 不显示toast，避免干扰用户
   }
 }
 
@@ -220,25 +299,91 @@ const recordWater = async () => {
   try {
     const userInfo = uni.getStorageSync('userInfo')
     const userId = userInfo?.id || 1
+    
+    // 检查是否有token
+    const token = uni.getStorageSync('token')
+    console.log('=== 记录喝水调试信息 ===')
+    console.log('Token:', token ? '存在' : '不存在')
+    console.log('UserId:', userId)
+    console.log('SelectedAmount:', selectedAmount.value)
 
-    await waterApi.record({
+    // 格式化时间为 HH:mm:ss 格式
+    const now = new Date()
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const seconds = String(now.getSeconds()).padStart(2, '0')
+    const timeString = `${hours}:${minutes}:${seconds}`
+    
+    const requestData = {
       userId: userId,
       amount: selectedAmount.value,
-      recordTime: new Date().toISOString()
-    })
+      recordTime: timeString
+    }
+    console.log('请求参数:', JSON.stringify(requestData))
+
+    const result = await waterApi.record(requestData)
+    console.log('API响应:', result)
 
     uni.showToast({ title: '打卡成功', icon: 'success' })
     await loadTodayData()
   } catch (e) {
-    console.error('记录喝水失败', e)
-    uni.showToast({ title: '记录失败', icon: 'none' })
+    console.error('=== 记录喝水失败详情 ===')
+    console.error('错误对象:', e)
+    console.error('错误消息:', e.message)
+    console.error('错误响应:', e.response)
+    console.error('错误响应数据:', e.response?.data)
+    console.error('错误状态码:', e.statusCode || e.code)
+    
+    let errorMsg = '记录失败'
+    if (e.message) {
+      errorMsg += ': ' + e.message
+    } else if (e.response?.data?.message) {
+      errorMsg += ': ' + e.response.data.message
+    } else if (e.statusCode === 401) {
+      errorMsg = '请先登录后再记录'
+    } else if (e.statusCode === 500) {
+      errorMsg = '服务器错误，请稍后重试'
+    } else {
+      errorMsg += ': 请稍后重试'
+    }
+    
+    uni.showToast({ title: errorMsg, icon: 'none', duration: 3000 })
   }
 }
 
 const formatTime = (timeStr) => {
   if (!timeStr) return ''
-  const date = new Date(timeStr)
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  
+  try {
+    // 处理多种时间格式
+    let hours, minutes
+    
+    // 如果是完整日期时间格式 (如 2024-01-15T13:25:30 或 2024-01-15 13:25:30)
+    if (timeStr.includes('T') || timeStr.includes(' ')) {
+      const date = new Date(timeStr)
+      if (!isNaN(date.getTime())) {
+        hours = date.getHours()
+        minutes = date.getMinutes()
+      }
+    }
+    // 如果是时间字符串格式 (如 13:25 或 13:25:30)
+    else if (timeStr.includes(':')) {
+      const parts = timeStr.split(':')
+      hours = parseInt(parts[0])
+      minutes = parseInt(parts[1])
+    }
+    
+    // 验证获取的小时和分钟是否有效
+    if (isNaN(hours) || isNaN(minutes)) {
+      console.warn('无法解析时间:', timeStr)
+      return ''
+    }
+    
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+  } catch (e) {
+    console.error('时间格式化错误:', timeStr, e)
+    return ''
+  }
 }
 
 const calculateProgress = (amount) => {
@@ -270,6 +415,157 @@ const getTargetDesc = (target) => {
 
 const goBack = () => {
   uni.navigateBack()
+}
+
+// 删除记录
+const deleteRecord = async (recordId) => {
+  if (!recordId) {
+    uni.showToast({ title: '记录ID无效', icon: 'none' })
+    return
+  }
+  
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除这条喝水记录吗？',
+    confirmColor: '#FF4D4F',
+    success: async (res) => {
+      if (res.confirm) {
+        uni.showLoading({ title: '删除中...' })
+        try {
+          console.log('正在删除喝水记录:', recordId)
+          // 添加 silent 选项，阻止全局拦截器处理 401 错误，避免跳转
+          const result = await waterApi.deleteRecord(recordId, { silent: true })
+          console.log('删除成功:', result)
+          uni.hideLoading()
+          uni.showToast({ title: '删除成功', icon: 'success' })
+          // 刷新今日记录
+          await loadTodayData()
+        } catch (e) {
+          uni.hideLoading()
+          console.error('删除记录失败:', e)
+          let errorMsg = '删除失败'
+          if (e.statusCode === 401) {
+            errorMsg = '请先登录后再删除'
+          } else if (e.statusCode === 403) {
+            errorMsg = '无权删除此记录'
+          } else if (e.statusCode === 404) {
+            errorMsg = '记录不存在或已删除'
+          } else if (e.statusCode === 500) {
+            errorMsg = '服务器错误，请稍后重试'
+          } else if (e.message) {
+            errorMsg = e.message
+          } else if (e.response?.data?.message) {
+            errorMsg = e.response.data.message
+          }
+          uni.showToast({ title: errorMsg, icon: 'none', duration: 3000 })
+        }
+      }
+    }
+  })
+}
+
+// 显示历史记录弹窗
+const showHistory = () => {
+  // 默认显示昨天的日期
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  historyDate.value = yesterday.toISOString().split('T')[0]
+  historyData.value = {}
+  historyVisible.value = true
+  // 加载历史数据
+  loadHistoryData()
+}
+
+// 关闭历史记录弹窗
+const closeHistory = () => {
+  historyVisible.value = false
+}
+
+// 历史日期改变
+const onHistoryDateChange = (e) => {
+  historyDate.value = e.detail.value
+  loadHistoryData()
+}
+
+// 加载历史数据
+const loadHistoryData = async () => {
+  try {
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || 1
+    const res = await waterApi.getHistory(userId, historyDate.value)
+    if (res) {
+      historyData.value = res
+    }
+  } catch (e) {
+    console.error('加载历史数据失败', e)
+    historyData.value = { records: [], todayAmount: 0, percent: 0 }
+  }
+}
+
+// 格式化日期显示
+const formatDateDisplay = (dateStr) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const todayStr = new Date().toISOString().split('T')[0]
+  
+  if (dateStr === todayStr) return '今天'
+  
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (dateStr === yesterday.toISOString().split('T')[0]) return '昨天'
+  
+  return `${month}月${day}日`
+}
+
+// 删除历史记录
+const deleteHistoryRecord = async (recordId) => {
+  if (!recordId) {
+    uni.showToast({ title: '记录ID无效', icon: 'none' })
+    return
+  }
+  
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除这条喝水记录吗？',
+    confirmColor: '#FF4D4F',
+    success: async (res) => {
+      if (res.confirm) {
+        uni.showLoading({ title: '删除中...' })
+        try {
+          console.log('正在删除历史喝水记录:', recordId)
+          // 添加 silent 选项，阻止全局拦截器处理 401 错误，避免跳转
+          const result = await waterApi.deleteRecord(recordId, { silent: true })
+          console.log('删除成功:', result)
+          uni.hideLoading()
+          uni.showToast({ title: '删除成功', icon: 'success' })
+          // 刷新历史记录
+          await loadHistoryData()
+          // 同时刷新今日记录（可能删除的是今天的记录）
+          await loadTodayData()
+        } catch (e) {
+          uni.hideLoading()
+          console.error('删除历史记录失败:', e)
+          let errorMsg = '删除失败'
+          if (e.statusCode === 401) {
+            errorMsg = '请先登录后再删除'
+          } else if (e.statusCode === 403) {
+            errorMsg = '无权删除此记录'
+          } else if (e.statusCode === 404) {
+            errorMsg = '记录不存在或已删除'
+          } else if (e.statusCode === 500) {
+            errorMsg = '服务器错误，请稍后重试'
+          } else if (e.message) {
+            errorMsg = e.message
+          } else if (e.response?.data?.message) {
+            errorMsg = e.response.data.message
+          }
+          uni.showToast({ title: errorMsg, icon: 'none', duration: 3000 })
+        }
+      }
+    }
+  })
 }
 </script>
 
@@ -477,6 +773,10 @@ const goBack = () => {
         color: #666;
       }
 
+      .water-icon {
+        font-size: 32rpx;
+      }
+
       &.active {
         background: #E6F7FF;
         border-color: #5B8FF9;
@@ -498,6 +798,10 @@ const goBack = () => {
     justify-content: center;
     gap: 12rpx;
     border: none;
+
+    .btn-icon {
+      font-size: 36rpx;
+    }
 
     text {
       font-size: 30rpx;
@@ -528,9 +832,21 @@ const goBack = () => {
       color: #333;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 20rpx;
+    }
+
     .record-count {
       font-size: 26rpx;
       color: #999;
+    }
+
+    .history-link {
+      font-size: 26rpx;
+      color: #5B8FF9;
+      font-weight: 500;
     }
   }
 
@@ -591,10 +907,45 @@ const goBack = () => {
       }
 
       .record-progress {
+        margin-right: 16rpx;
+        
         text {
           font-size: 26rpx;
           color: #5B8FF9;
           font-weight: 500;
+        }
+      }
+
+      .record-delete-wrapper {
+        padding: 8rpx;
+        
+        .record-delete-btn {
+          width: 100rpx;
+          height: 64rpx;
+          background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
+          border-radius: 32rpx;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6rpx;
+          box-shadow: 0 4rpx 16rpx rgba(255, 77, 79, 0.4);
+          transition: all 0.2s ease;
+          
+          .delete-text {
+            font-size: 24rpx;
+            color: #fff;
+            font-weight: 500;
+          }
+          
+          &:hover {
+            transform: translateY(-2rpx);
+            box-shadow: 0 6rpx 20rpx rgba(255, 77, 79, 0.5);
+          }
+          
+          &:active {
+            transform: scale(0.95);
+            box-shadow: 0 2rpx 8rpx rgba(255, 77, 79, 0.6);
+          }
         }
       }
     }
@@ -726,6 +1077,151 @@ const goBack = () => {
     .btn-confirm {
       background: linear-gradient(135deg, #5B8FF9 0%, #2E6AD8 100%);
       color: #fff;
+    }
+  }
+}
+
+// 历史记录弹窗样式
+.history-modal {
+  max-height: 80vh;
+
+  .date-picker-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30rpx;
+
+    .picker-label {
+      font-size: 28rpx;
+      color: #666;
+    }
+
+    .date-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      padding: 12rpx 24rpx;
+      background: #f5f6fa;
+      border-radius: 12rpx;
+      margin-left: 16rpx;
+
+      text {
+        font-size: 28rpx;
+        color: #333;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .history-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 30rpx 0;
+    margin-bottom: 30rpx;
+    background: linear-gradient(135deg, #E6F7FF 0%, #F0F8FF 100%);
+    border-radius: 16rpx;
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .stat-value {
+        font-size: 40rpx;
+        font-weight: 700;
+        color: #5B8FF9;
+      }
+
+      .stat-label {
+        font-size: 24rpx;
+        color: #666;
+        margin-top: 8rpx;
+      }
+    }
+  }
+
+  .history-records-list {
+    .history-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 80rpx 0;
+
+      text {
+        margin-top: 20rpx;
+        font-size: 28rpx;
+        color: #999;
+      }
+    }
+
+    .history-record-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20rpx 0;
+      border-bottom: 1rpx solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .record-left {
+        display: flex;
+        align-items: center;
+        gap: 16rpx;
+
+        .record-icon-small {
+          width: 52rpx;
+          height: 52rpx;
+          background: #E6F7FF;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .record-info {
+          display: flex;
+          flex-direction: column;
+
+          .record-amount {
+            font-size: 28rpx;
+            font-weight: 600;
+            color: #333;
+          }
+
+          .record-time {
+            font-size: 22rpx;
+            color: #999;
+            margin-top: 4rpx;
+          }
+        }
+      }
+
+      .record-delete-wrapper {
+        padding: 6rpx;
+        
+        .record-delete-btn {
+          width: 56rpx;
+          height: 56rpx;
+          background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4rpx 12rpx rgba(255, 77, 79, 0.3);
+          transition: all 0.2s ease;
+          
+          &:hover {
+            transform: translateY(-2rpx);
+            box-shadow: 0 6rpx 16rpx rgba(255, 77, 79, 0.4);
+          }
+          
+          &:active {
+            transform: scale(0.9);
+            box-shadow: 0 2rpx 8rpx rgba(255, 77, 79, 0.5);
+          }
+        }
+      }
     }
   }
 }

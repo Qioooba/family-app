@@ -1,13 +1,13 @@
 <template>
   <view class="files-page">
     <!-- 自定义导航栏 -->
-    <u-navbar title="文件共享" :autoBack="true" bgColor="#fff" :fixed="true" :placeholder="true"></u-navbar>
+    <up-navbar title="文件共享" :autoBack="true" bgColor="#fff" :fixed="true" :placeholder="true"></up-navbar>
     
     <!-- 存储空间信息 -->
     <view class="storage-card">
       <view class="storage-info">
         <view class="storage-icon">
-          <u-icon name="folder-fill" size="60" color="#667eea"></u-icon>
+          <up-icon name="folder-fill" size="60" color="#667eea"></up-icon>
         </view>
         <view class="storage-detail">
           <text class="storage-title">家庭云存储</text>
@@ -43,23 +43,23 @@
       </view>
       <view class="toolbar-right">
         <view class="view-toggle" @click="toggleView">
-          <u-icon :name="viewMode === 'grid' ? 'grid' : 'list'" size="36" color="#666"></u-icon>
+          <up-icon :name="viewMode === 'grid' ? 'grid' : 'list'" size="36" color="#666"></up-icon>
         </view>
         <view class="more-btn" @click="showMoreActions">
-          <u-icon name="more-dot-fill" size="36" color="#666"></u-icon>
+          <up-icon name="more-dot-fill" size="36" color="#666"></up-icon>
         </view>
       </view>
     </view>
     
     <!-- 搜索栏 -->
     <view class="search-bar">
-      <u-search
+      <up-search
         v-model="searchKeyword"
         placeholder="搜索文件或文件夹"
         :show-action="false"
         @search="onSearch"
         @clear="clearSearch"
-      ></u-search>
+      ></up-search>
     </view>
     
     <!-- 文件列表 - 网格视图 -->
@@ -80,12 +80,12 @@
         >
           <view class="file-checkbox" v-if="isSelectMode" @click.stop="toggleSelect(item)">
             <view class="checkbox" :class="{ checked: selectedItems.includes(item.id) }">
-              <u-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></u-icon>
+              <up-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></up-icon>
             </view>
           </view>
           <view class="file-icon">
             <image v-if="item.type === 'image'" :src="item.thumbnail" mode="aspectFill" class="thumb-img" />
-            <u-icon v-else :name="getFileIcon(item)" size="80" :color="getFileColor(item)"></u-icon>
+            <up-icon v-else :name="getFileIcon(item)" size="80" :color="getFileColor(item)"></up-icon>
           </view>
           <view class="file-info">
             <text class="file-name" :class="{ folder: item.isFolder }">{{ item.name }}</text>
@@ -100,12 +100,12 @@
       
       <!-- 空状态 -->
       <view v-if="filteredFiles.length === 0" class="empty-state">
-        <u-icon name="folder-open" size="120" color="#ddd"></u-icon>
+        <up-icon name="folder-open" size="120" color="#ddd"></up-icon>
         <text class="empty-text">暂无文件</text>
         <text class="empty-hint">点击右上角上传文件</text>
       </view>
       
-      <u-loadmore :status="loadStatus" />
+      <up-loadmore :status="loadStatus" />
     </scroll-view>
     
     <!-- 文件列表 - 列表视图 -->
@@ -126,29 +126,29 @@
         >
           <view class="row-checkbox" v-if="isSelectMode" @click.stop="toggleSelect(item)">
             <view class="checkbox" :class="{ checked: selectedItems.includes(item.id) }">
-              <u-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></u-icon>
+              <up-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></up-icon>
             </view>
           </view>
           <view class="row-icon">
             <image v-if="item.type === 'image'" :src="item.thumbnail" mode="aspectFill" />
-            <u-icon v-else :name="getFileIcon(item)" size="50" :color="getFileColor(item)"></u-icon>
+            <up-icon v-else :name="getFileIcon(item)" size="50" :color="getFileColor(item)"></up-icon>
           </view>
           <view class="row-info">
             <text class="row-name">{{ item.name }}</text>
             <text class="row-meta">{{ formatSize(item.size) }} · {{ item.date }}</text>
           </view>
           <view class="row-action" @click.stop="showFileActions(item)">
-            <u-icon name="more-dot-fill" size="40" color="#999"></u-icon>
+            <up-icon name="more-dot-fill" size="40" color="#999"></up-icon>
           </view>
         </view>
       </view>
       
       <view v-if="filteredFiles.length === 0" class="empty-state">
-        <u-icon name="folder-open" size="120" color="#ddd"></u-icon>
+        <up-icon name="folder-open" size="120" color="#ddd"></up-icon>
         <text class="empty-text">暂无文件</text>
       </view>
       
-      <u-loadmore :status="loadStatus" />
+      <up-loadmore :status="loadStatus" />
     </scroll-view>
     
     <!-- 底部操作栏 -->
@@ -159,15 +159,15 @@
       </view>
       <view class="action-btns">
         <view class="action-btn" @click="downloadSelected">
-          <u-icon name="download" size="36" color="#5B8FF9"></u-icon>
+          <up-icon name="download" size="36" color="#5B8FF9"></up-icon>
           <text>下载</text>
         </view>
         <view class="action-btn" @click="moveSelected">
-          <u-icon name="folder" size="36" color="#FAAD14"></u-icon>
+          <up-icon name="folder" size="36" color="#FAAD14"></up-icon>
           <text>移动</text>
         </view>
         <view class="action-btn" @click="deleteSelected">
-          <u-icon name="trash" size="36" color="#FF4D4F"></u-icon>
+          <up-icon name="trash" size="36" color="#FF4D4F"></up-icon>
           <text>删除</text>
         </view>
       </view>
@@ -175,11 +175,11 @@
     
     <!-- 悬浮上传按钮 -->
     <view class="fab-upload" v-if="!isSelectMode" @click="showUploadMenu">
-      <u-icon name="plus" size="48" color="#fff"></u-icon>
+      <up-icon name="plus" size="48" color="#fff"></up-icon>
     </view>
     
     <!-- 新建文件夹弹窗 -->
-    <u-popup :show="showFolderPopup" mode="center" @close="showFolderPopup = false" round="20">
+    <up-popup :show="showFolderPopup" mode="center" @close="showFolderPopup = false" round="20">
       <view class="folder-popup">
         <text class="popup-title">新建文件夹</text>
         <input 
@@ -193,10 +193,10 @@
           <button class="dialog-btn primary" @click="createFolder">确定</button>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
     
     <!-- 重命名弹窗 -->
-    <u-popup :show="showRenamePopup" mode="center" @close="showRenamePopup = false" round="20">
+    <up-popup :show="showRenamePopup" mode="center" @close="showRenamePopup = false" round="20">
       <view class="folder-popup">
         <text class="popup-title">重命名</text>
         <input 
@@ -210,7 +210,7 @@
           <button class="dialog-btn primary" @click="confirmRename">确定</button>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

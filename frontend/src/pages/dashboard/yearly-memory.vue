@@ -59,14 +59,6 @@
             <text class="stat-label">活跃天数</text>
           </view>
         </view>
-        
-        <view class="stat-card score">
-          <view class="stat-icon">🏆</view>
-          <view class="stat-content">
-            <text class="stat-value">{{ yearlyStats.familyScore }}</text>
-            <text class="stat-label">家庭评分</text>
-          </view>
-        </view>
       </view>
     </view>
 
@@ -255,14 +247,13 @@ const currentYear = ref(new Date().getFullYear())
 const showYearPicker = ref(false)
 const previewIndex = ref(null)
 
-// 年度统计数据
+// 年度统计数据（移除家庭评分）
 const yearlyStats = ref({
   totalTasks: 368,
   completedWishes: 24,
   totalCalories: 78.5,
   totalPhotos: 156,
-  activeDays: 312,
-  familyScore: 92
+  activeDays: 312
 })
 
 // 照片墙数据
@@ -311,7 +302,7 @@ const photoWall = ref([
   }
 ])
 
-// 里程碑数据
+// 里程碑数据（更新为小清新配色）
 const milestones = ref([
   {
     date: '01',
@@ -319,7 +310,7 @@ const milestones = ref([
     icon: '🎆',
     title: '新年愿望清单',
     description: '制定了20个新年愿望，开始为梦想努力',
-    color: '#ff6b6b',
+    color: '#7DD3D8',
     image: ''
   },
   {
@@ -328,7 +319,7 @@ const milestones = ref([
     icon: '🌸',
     title: '春日家庭出游',
     description: '一起去了植物园，记录了美好的春日时光',
-    color: '#f472b6',
+    color: '#FFB7C5',
     image: '/static/photos/spring.jpg'
   },
   {
@@ -337,7 +328,7 @@ const milestones = ref([
     icon: '🎂',
     title: '宝贝生日',
     description: '全家人一起庆祝，收到了最想要的礼物',
-    color: '#fbbf24',
+    color: '#FFD93D',
     image: '/static/photos/birthday.jpg'
   },
   {
@@ -346,7 +337,7 @@ const milestones = ref([
     icon: '🏖️',
     title: '海边度假',
     description: '一家人去海边玩了一周，留下了难忘的回忆',
-    color: '#3b82f6',
+    color: '#87CEEB',
     image: '/static/photos/summer.jpg'
   },
   {
@@ -355,7 +346,7 @@ const milestones = ref([
     icon: '🍂',
     title: '国庆旅行',
     description: '自驾游去了五个城市，收获了满满的快乐',
-    color: '#f59e0b',
+    color: '#F4A460',
     image: '/static/photos/autumn.jpg'
   },
   {
@@ -364,12 +355,12 @@ const milestones = ref([
     icon: '🎄',
     title: '年终总结',
     description: '回顾这一年的点点滴滴，感谢有你们相伴',
-    color: '#10b981',
+    color: '#98D8C8',
     image: ''
   }
 ])
 
-// 年度徽章
+// 年度徽章（移除家庭评分相关徽章）
 const yearlyBadges = ref([
   { 
     emoji: '🔥', 
@@ -393,12 +384,6 @@ const yearlyBadges = ref([
     emoji: '💪', 
     name: '任务王', 
     description: '完成100个任务',
-    earned: true
-  },
-  { 
-    emoji: '🏆', 
-    name: '完美家庭', 
-    description: '家庭评分90+',
     earned: true
   },
   { 
@@ -518,9 +503,20 @@ const saveImage = () => {
 </script>
 
 <style lang="scss" scoped>
+// 小清新配色方案
+$bg-primary: #F0F9F4;      // 薄荷绿背景
+$bg-secondary: #FFF5F7;    // 淡粉色背景
+$color-primary: #7DD3D8;    // 薄荷绿主色
+$color-secondary: #FFB7C5;  // 淡粉色
+$color-accent: #87CEEB;     // 天蓝色
+$color-text: #4A5568;       // 深灰文字
+$color-text-light: #718096; // 浅灰文字
+$color-white: #FFFFFF;
+$shadow-soft: 0 4rpx 20rpx rgba(125, 211, 216, 0.15);
+
 .yearly-memory-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  background: linear-gradient(180deg, $bg-primary 0%, $bg-secondary 100%);
   padding-bottom: 60rpx;
 }
 
@@ -537,17 +533,20 @@ const saveImage = () => {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: rgba($color-white, 0.8);
+    border-radius: 50%;
+    box-shadow: $shadow-soft;
     
     .icon {
       font-size: 48rpx;
-      color: #fff;
+      color: $color-text;
     }
   }
   
   .nav-title {
     font-size: 36rpx;
     font-weight: 600;
-    color: #fff;
+    color: $color-text;
   }
   
   .nav-action {
@@ -555,16 +554,18 @@ const saveImage = () => {
     align-items: center;
     gap: 8rpx;
     padding: 12rpx 24rpx;
-    background: rgba(255,255,255,0.1);
+    background: rgba($color-white, 0.8);
     border-radius: 30rpx;
+    box-shadow: $shadow-soft;
     
     text {
       font-size: 24rpx;
-      color: rgba(255,255,255,0.8);
+      color: $color-text;
     }
     
     .icon-small {
       font-size: 18rpx;
+      color: $color-primary;
     }
   }
 }
@@ -581,17 +582,18 @@ const saveImage = () => {
     
     .year-badge {
       padding: 12rpx 32rpx;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, $color-primary 0%, $color-accent 100%);
       border-radius: 40rpx;
       font-size: 40rpx;
       font-weight: 700;
-      color: #fff;
+      color: $color-white;
+      box-shadow: 0 4rpx 16rpx rgba(125, 211, 216, 0.4);
     }
     
     text:last-child {
       font-size: 36rpx;
       font-weight: 600;
-      color: #fff;
+      color: $color-text;
     }
   }
   
@@ -602,17 +604,26 @@ const saveImage = () => {
     
     .stat-card {
       padding: 30rpx 20rpx;
-      background: rgba(255,255,255,0.05);
+      background: $color-white;
       border-radius: 24rpx;
       text-align: center;
-      border: 1rpx solid rgba(255,255,255,0.08);
+      box-shadow: $shadow-soft;
       
-      &.tasks .stat-icon { background: rgba(34,197,94,0.2); }
-      &.wishes .stat-icon { background: rgba(251,191,36,0.2); }
-      &.calories .stat-icon { background: rgba(239,68,68,0.2); }
-      &.moments .stat-icon { background: rgba(139,92,246,0.2); }
-      &.days .stat-icon { background: rgba(59,130,246,0.2); }
-      &.score .stat-icon { background: rgba(236,72,153,0.2); }
+      &.tasks .stat-icon { 
+        background: linear-gradient(135deg, #A8E6CF 0%, #88D8A3 100%);
+      }
+      &.wishes .stat-icon { 
+        background: linear-gradient(135deg, #FFD3E1 0%, #FFB7C5 100%);
+      }
+      &.calories .stat-icon { 
+        background: linear-gradient(135deg, #FFE4B5 0%, #FFD93D 100%);
+      }
+      &.moments .stat-icon { 
+        background: linear-gradient(135deg, #E2D5F8 0%, #D4C4F7 100%);
+      }
+      &.days .stat-icon { 
+        background: linear-gradient(135deg, #B8E6F0 0%, #87CEEB 100%);
+      }
       
       .stat-icon {
         width: 72rpx;
@@ -623,6 +634,7 @@ const saveImage = () => {
         justify-content: center;
         margin: 0 auto 16rpx;
         font-size: 36rpx;
+        box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
       }
       
       .stat-content {
@@ -630,13 +642,13 @@ const saveImage = () => {
           display: block;
           font-size: 36rpx;
           font-weight: 700;
-          color: #fff;
+          color: $color-text;
           margin-bottom: 8rpx;
         }
         
         .stat-label {
           font-size: 22rpx;
-          color: rgba(255,255,255,0.6);
+          color: $color-text-light;
         }
       }
     }
@@ -647,9 +659,9 @@ const saveImage = () => {
 .section {
   margin: 0 30rpx 40rpx;
   padding: 30rpx;
-  background: rgba(255,255,255,0.03);
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(255,255,255,0.05);
+  background: $color-white;
+  border-radius: 32rpx;
+  box-shadow: $shadow-soft;
   
   .section-header {
     display: flex;
@@ -663,7 +675,7 @@ const saveImage = () => {
       gap: 12rpx;
       font-size: 32rpx;
       font-weight: 600;
-      color: #fff;
+      color: $color-text;
       
       .title-icon {
         font-size: 36rpx;
@@ -672,7 +684,8 @@ const saveImage = () => {
     
     .view-more {
       font-size: 26rpx;
-      color: #667eea;
+      color: $color-primary;
+      font-weight: 500;
     }
   }
 }
@@ -686,8 +699,9 @@ const saveImage = () => {
   
   .photo-item {
     position: relative;
-    border-radius: 16rpx;
+    border-radius: 20rpx;
     overflow: hidden;
+    box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
     
     &.large {
       grid-column: span 2;
@@ -713,18 +727,18 @@ const saveImage = () => {
       left: 0;
       right: 0;
       padding: 20rpx;
-      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      background: linear-gradient(transparent, rgba(0,0,0,0.5));
       
       .photo-date {
         display: block;
         font-size: 22rpx;
-        color: rgba(255,255,255,0.8);
+        color: rgba(255,255,255,0.9);
         margin-bottom: 4rpx;
       }
       
       .photo-desc {
         font-size: 24rpx;
-        color: #fff;
+        color: $color-white;
       }
     }
     
@@ -735,13 +749,14 @@ const saveImage = () => {
       transform: translate(-50%, -50%);
       width: 80rpx;
       height: 80rpx;
-      background: rgba(0,0,0,0.5);
+      background: rgba($color-primary, 0.9);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      color: $color-white;
       font-size: 32rpx;
+      box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.2);
     }
   }
 }
@@ -769,12 +784,12 @@ const saveImage = () => {
         display: block;
         font-size: 32rpx;
         font-weight: 700;
-        color: #fff;
+        color: $color-text;
       }
       
       .timeline-month {
         font-size: 22rpx;
-        color: rgba(255,255,255,0.5);
+        color: $color-text-light;
       }
     }
     
@@ -790,7 +805,7 @@ const saveImage = () => {
         width: 20rpx;
         height: 20rpx;
         border-radius: 50%;
-        border: 4rpx solid rgba(255,255,255,0.2);
+        border: 4rpx solid rgba($color-primary, 0.3);
       }
     }
     
@@ -799,8 +814,8 @@ const saveImage = () => {
       
       .content-card {
         padding: 24rpx;
-        background: rgba(255,255,255,0.05);
-        border-radius: 16rpx;
+        background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+        border-radius: 20rpx;
         border-left: 6rpx solid;
         
         .card-header {
@@ -816,22 +831,23 @@ const saveImage = () => {
           .milestone-title {
             font-size: 30rpx;
             font-weight: 600;
-            color: #fff;
+            color: $color-text;
           }
         }
         
         .milestone-desc {
           display: block;
           font-size: 26rpx;
-          color: rgba(255,255,255,0.6);
+          color: $color-text-light;
           line-height: 1.6;
         }
         
         .milestone-image {
           margin-top: 16rpx;
           height: 160rpx;
-          border-radius: 12rpx;
+          border-radius: 16rpx;
           overflow: hidden;
+          box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
           
           image {
             width: 100%;
@@ -852,15 +868,16 @@ const saveImage = () => {
     
     .badge-card {
       padding: 30rpx 20rpx;
-      background: rgba(255,255,255,0.03);
-      border-radius: 20rpx;
+      background: #F8F9FA;
+      border-radius: 24rpx;
       text-align: center;
-      border: 1rpx solid rgba(255,255,255,0.05);
       opacity: 0.5;
+      transition: all 0.3s ease;
       
       &.earned {
         opacity: 1;
-        background: rgba(255,255,255,0.08);
+        background: linear-gradient(135deg, $color-white 0%, #F0FDF4 100%);
+        box-shadow: $shadow-soft;
         
         .badge-icon-wrapper {
           .badge-emoji {
@@ -885,13 +902,14 @@ const saveImage = () => {
           right: -4rpx;
           width: 32rpx;
           height: 32rpx;
-          background: #22c55e;
+          background: $color-primary;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 18rpx;
-          color: #fff;
+          color: $color-white;
+          box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.15);
         }
       }
       
@@ -900,13 +918,13 @@ const saveImage = () => {
           display: block;
           font-size: 26rpx;
           font-weight: 600;
-          color: #fff;
+          color: $color-text;
           margin-bottom: 8rpx;
         }
         
         .badge-desc {
           font-size: 20rpx;
-          color: rgba(255,255,255,0.5);
+          color: $color-text-light;
         }
       }
     }
@@ -917,14 +935,15 @@ const saveImage = () => {
 .share-section {
   margin: 0 30rpx;
   padding: 40rpx 30rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, $color-primary 0%, $color-accent 100%);
   border-radius: 32rpx;
   text-align: center;
+  box-shadow: 0 8rpx 32rpx rgba(125, 211, 216, 0.3);
   
   .share-title {
     font-size: 32rpx;
     font-weight: 600;
-    color: #fff;
+    color: $color-white;
     margin-bottom: 30rpx;
   }
   
@@ -936,8 +955,10 @@ const saveImage = () => {
     .share-btn {
       flex: 1;
       padding: 24rpx;
-      background: rgba(255,255,255,0.15);
+      background: rgba($color-white, 0.2);
       border-radius: 20rpx;
+      backdrop-filter: blur(10rpx);
+      transition: all 0.2s ease;
       
       .btn-icon {
         display: block;
@@ -947,13 +968,12 @@ const saveImage = () => {
       
       text:last-child {
         font-size: 24rpx;
-        color: rgba(255,255,255,0.9);
+        color: rgba($color-white, 0.95);
       }
       
-      &.wechat:active,
-      &.moments:active,
-      &.save:active {
-        background: rgba(255,255,255,0.25);
+      &:active {
+        background: rgba($color-white, 0.35);
+        transform: scale(0.98);
       }
     }
   }
@@ -976,13 +996,13 @@ const saveImage = () => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.4);
   }
   
   .modal-content {
     position: relative;
     width: 100%;
-    background: #1a1a2e;
+    background: $color-white;
     border-radius: 40rpx 40rpx 0 0;
     padding: 40rpx;
     animation: slideUp 0.3s ease;
@@ -1001,11 +1021,11 @@ const saveImage = () => {
       text {
         font-size: 32rpx;
         font-weight: 600;
-        color: #fff;
+        color: $color-text;
         
         &.close-btn {
           font-size: 36rpx;
-          color: rgba(255,255,255,0.5);
+          color: $color-text-light;
         }
       }
     }
@@ -1016,31 +1036,31 @@ const saveImage = () => {
         justify-content: space-between;
         align-items: center;
         padding: 30rpx;
-        background: rgba(255,255,255,0.05);
-        border-radius: 16rpx;
+        background: #F8F9FA;
+        border-radius: 20rpx;
         margin-bottom: 20rpx;
         
         &.active {
-          background: rgba(102,126,234,0.2);
-          border: 1rpx solid rgba(102,126,234,0.5);
+          background: linear-gradient(135deg, rgba($color-primary, 0.1) 0%, rgba($color-accent, 0.1) 100%);
+          border: 2rpx solid $color-primary;
           
           .year-text {
-            color: #667eea;
+            color: $color-primary;
             font-weight: 600;
           }
         }
         
         .year-text {
           font-size: 32rpx;
-          color: #fff;
+          color: $color-text;
         }
         
         .year-check {
           width: 44rpx;
           height: 44rpx;
-          background: #667eea;
+          background: $color-primary;
           border-radius: 50%;
-          color: #fff;
+          color: $color-white;
           font-size: 24rpx;
           display: flex;
           align-items: center;
@@ -1088,7 +1108,7 @@ const saveImage = () => {
       
       .preview-desc {
         font-size: 32rpx;
-        color: #fff;
+        color: $color-white;
       }
     }
     
@@ -1101,13 +1121,13 @@ const saveImage = () => {
       .nav-btn {
         width: 80rpx;
         height: 80rpx;
-        background: rgba(255,255,255,0.2);
+        background: rgba($color-white, 0.2);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 40rpx;
-        color: #fff;
+        color: $color-white;
         
         &.disabled {
           opacity: 0.3;

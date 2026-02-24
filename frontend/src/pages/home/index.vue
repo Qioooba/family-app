@@ -18,15 +18,20 @@
         <view class="bg-pattern"></view>
       </view>
       <view class="header-content">
-        <view class="greeting">
-          <text class="time-label">{{ greeting }}</text>
-          <text class="user-name">{{ userStore.userInfo?.nickname || '亲爱的用户' }}</text>
+        <view class="header-left">
+          <view class="greeting">
+            <text class="time-label">{{ greeting }}</text>
+            <text class="user-name">{{ userStore.userInfo?.nickname || '亲爱的用户' }}</text>
+          </view>
+          <text class="current-date">{{ currentDate }}</text>
         </view>
         
-        <view class="family-selector" @click="selectFamily">
-          <text class="family-name">{{ currentFamily?.name || '选择家庭' }}</text>
-          <view class="selector-arrow">
-            <u-icon name="arrow-down" size="20" color="#fff"></u-icon>
+        <view class="header-right">
+          <view class="family-selector" @click="selectFamily">
+            <text class="family-name">{{ currentFamily?.name || '幸福小家' }}</text>
+            <view class="selector-arrow">
+              <text class="arrow-icon">▼</text>
+            </view>
           </view>
         </view>
       </view>
@@ -46,6 +51,56 @@
           <u-icon :name="item.icon" size="38" color="#fff"></u-icon>
         </view>
         <text class="action-name">{{ item.name }}</text>
+      </view>
+    </view>
+    
+    <!-- 今日概览卡片 -->
+    <view class="overview-cards animate-in">
+      <!-- 今日喝水 -->
+      <view class="overview-card water-card" @click="navigateTo('/pages/food/water')">
+        <view class="card-header">
+          <view class="card-icon-wrapper water-icon">
+            <text class="card-icon">💧</text>
+          </view>
+          <text class="card-title">今日喝水</text>
+        </view>
+        <view class="water-progress-section">
+          <view class="water-progress-bar">
+            <view 
+              class="water-progress-fill"
+              :style="{ width: (overviewData.water / overviewData.waterTarget * 100) + '%' }"
+            ></view>
+          </view>
+          <text class="water-text">{{ overviewData.water }}ml / {{ overviewData.waterTarget }}ml</text>
+        </view>
+      </view>
+      
+      <!-- 今日饮食 -->
+      <view class="overview-card diet-card" @click="navigateTo('/pages/food/record')">
+        <view class="card-header">
+          <view class="card-icon-wrapper diet-icon">
+            <text class="card-icon">🍽️</text>
+          </view>
+          <text class="card-title">今日饮食</text>
+        </view>
+        <view class="card-value">
+          <text class="value-num">{{ overviewData.calories }}</text>
+          <text class="value-unit">千卡</text>
+        </view>
+      </view>
+      
+      <!-- 今日支出 -->
+      <view class="overview-card expense-card" @click="navigateTo('/pages/account/index')">
+        <view class="card-header">
+          <view class="card-icon-wrapper expense-icon">
+            <text class="card-icon">💰</text>
+          </view>
+          <text class="card-title">今日支出</text>
+        </view>
+        <view class="card-value">
+          <text class="value-num">{{ overviewData.expense }}</text>
+          <text class="value-unit">元</text>
+        </view>
       </view>
     </view>
     
@@ -274,24 +329,32 @@ const { loading: pageLoading, hide: hideSkeleton } = useSkeleton({ minDuration: 
 // 问候语
 const greeting = computed(() => {
   const hour = new Date().getHours()
-  if (hour < 6) return '🌙 凌晨好'
-  if (hour < 9) return '🌅 早上好'
-  if (hour < 12) return '☀️ 上午好'
-  if (hour < 14) return '🍱 中午好'
-  if (hour < 18) return '🌤️ 下午好'
-  return '🌆 晚上好'
+  if (hour < 6) return '凌晨好'
+  if (hour < 9) return '早上好'
+  if (hour < 12) return '上午好'
+  if (hour < 14) return '中午好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
+})
+
+// 当前日期
+const currentDate = computed(() => {
+  const now = new Date()
+  const month = now.getMonth() + 1
+  const day = now.getDate()
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const weekDay = weekDays[now.getDay()]
+  return `${month}月${day}日 ${weekDay}`
 })
 
 const currentFamily = ref({ name: '幸福小家' })
 
 // 快捷功能 - 添加阴影
 const quickActions = [
-  { name: '添加任务', icon: 'file-text', bgColor: '#6B8DD6', shadow: '0 8rpx 20rpx rgba(107, 141, 214, 0.35)', path: '/pages/task/create' },
-  { name: '记录饮食', icon: 'photo', bgColor: '#68d391', shadow: '0 8rpx 20rpx rgba(104, 211, 145, 0.35)', path: '/pages/food/record' },
-  { name: '喝水打卡', icon: 'minus-circle', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/water/index' },
-  { name: '优惠券', icon: 'coupon', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/coupon/index' },
-  { name: '营养成分', icon: 'file-text', bgColor: '#52C41A', shadow: '0 8rpx 20rpx rgba(82, 196, 26, 0.35)', path: '/pages/nutrition/index' },
-  { name: 'AI助手', icon: 'robot', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/ai/index' }
+  { name: '纪念日', icon: 'heart', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
+  { name: '记账', icon: 'red-packet', bgColor: '#68d391', shadow: '0 8rpx 20rpx rgba(104, 211, 145, 0.35)', path: '/pages/food/record' },
+  { name: 'AI', icon: 'robot', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/ai/chat' },
+  { name: '天气', icon: 'cloud', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
 ]
 
 // 今日任务
@@ -319,6 +382,14 @@ const healthData = ref({
   calories: 1250,
   target: 2000,
   water: 5
+})
+
+// 今日概览数据
+const overviewData = ref({
+  water: 500,
+  waterTarget: 2000,
+  calories: 1200,
+  expense: 128
 })
 
 const navigateTo = (path) => {
@@ -407,29 +478,42 @@ onMounted(() => {
   .header-content {
     position: relative;
     z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
   }
   
-  .greeting {
-    margin-bottom: 24rpx;
-    
-    .time-label {
-      display: block;
-      font-size: 28rpx;
-      color: rgba(255,255,255,0.85);
+  .header-left {
+    .greeting {
       margin-bottom: 12rpx;
-      font-weight: 500;
-      letter-spacing: 1rpx;
+      
+      .time-label {
+        display: block;
+        font-size: 28rpx;
+        color: rgba(255,255,255,0.85);
+        margin-bottom: 8rpx;
+        font-weight: 500;
+        letter-spacing: 1rpx;
+      }
+      
+      .user-name {
+        font-size: 48rpx;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+      }
     }
     
-    .user-name {
-      font-size: 48rpx;
-      font-weight: 700;
-      color: #fff;
-      text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+    .current-date {
+      display: block;
+      font-size: 24rpx;
+      color: rgba(255,255,255,0.75);
+      margin-top: 8rpx;
     }
   }
   
-  .family-selector {
+  .header-right {
+    .family-selector {
     display: inline-flex;
     align-items: center;
     background: rgba(255,255,255,0.2);
@@ -453,7 +537,13 @@ onMounted(() => {
     
     .selector-arrow {
       opacity: 0.8;
+      
+      .arrow-icon {
+        color: #fff;
+        font-size: 20rpx;
+      }
     }
+  }
   }
 }
 
@@ -462,7 +552,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  padding: 36rpx 28rpx;
+  padding: 36rpx 48rpx;
   margin: 0 32rpx;
   background: #fff;
   border-radius: 28rpx;
@@ -475,12 +565,12 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: calc(33.33% - 16rpx);
+    width: calc(50% - 24rpx);
     margin-bottom: 28rpx;
     animation: fadeInUp 0.5s ease-out forwards;
     opacity: 0;
     
-    &:nth-child(n+4) {
+    &:nth-child(n+3) {
       margin-bottom: 0;
     }
     
@@ -519,6 +609,111 @@ onMounted(() => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// 今日概览卡片
+.overview-cards {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 32rpx;
+  margin-top: 28rpx;
+  
+  .overview-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 24rpx;
+    margin-right: 20rpx;
+    box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.1), 0 2rpx 8rpx rgba(0,0,0,0.04);
+    transition: all 0.3s ease;
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+    
+    &:last-child {
+      margin-right: 0;
+    }
+    
+    &:active {
+      transform: scale(0.96);
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20rpx;
+      
+      .card-icon-wrapper {
+        width: 56rpx;
+        height: 56rpx;
+        border-radius: 16rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12rpx;
+        
+        .card-icon {
+          font-size: 28rpx;
+        }
+        
+        &.water-icon {
+          background: linear-gradient(135deg, #4ECDC4, #44A08D);
+          box-shadow: 0 6rpx 16rpx rgba(78, 205, 196, 0.35);
+        }
+        
+        &.diet-icon {
+          background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+          box-shadow: 0 6rpx 16rpx rgba(255, 107, 107, 0.35);
+        }
+        
+        &.expense-icon {
+          background: linear-gradient(135deg, #68d391, #48bb78);
+          box-shadow: 0 6rpx 16rpx rgba(104, 211, 145, 0.35);
+        }
+      }
+      
+      .card-title {
+        font-size: 26rpx;
+        color: #5a6c7d;
+        font-weight: 500;
+      }
+    }
+    
+    .water-progress-section {
+      .water-progress-bar {
+        height: 12rpx;
+        background: #e8f5f3;
+        border-radius: 6rpx;
+        overflow: hidden;
+        margin-bottom: 12rpx;
+        
+        .water-progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #4ECDC4, #44A08D);
+          border-radius: 6rpx;
+          transition: width 0.5s ease;
+        }
+      }
+      
+      .water-text {
+        font-size: 22rpx;
+        color: #8b9aad;
+      }
+    }
+    
+    .card-value {
+      .value-num {
+        font-size: 40rpx;
+        font-weight: 700;
+        color: #2d3748;
+      }
+      
+      .value-unit {
+        font-size: 24rpx;
+        color: #8b9aad;
+        margin-left: 6rpx;
+      }
+    }
   }
 }
 

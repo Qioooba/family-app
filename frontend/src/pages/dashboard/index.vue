@@ -129,6 +129,7 @@
           <text class="report-arrow">›</text>
         </view>
         
+        <!-- 财务报表入口已隐藏
         <view class="report-card" @click="navigateTo('/pages/dashboard/finance')">
           <view class="report-icon finance">💰</view>
           <view class="report-info">
@@ -137,7 +138,7 @@
           </view>
           <text class="report-arrow">›</text>
         </view>
-        
+        -->
         <view class="report-card" @click="navigateTo('/pages/dashboard/yearly-memory')">
           <view class="report-icon memory">🎞️</view>
           <view class="report-info">
@@ -180,9 +181,17 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { statsApi } from '@/api/stats'
+import { useUserStore } from '@/stores/user'
+import { getDefaultFamily } from '@/utils/defaultFamily.js'
 
+const userStore = useUserStore()
 const currentDate = ref('')
-const todayData = ref({})
+const todayData = ref({
+  todayTasks: 0,
+  todayCalories: 0,
+  weeklyCompletedTasks: 0,
+  memberCount: 0
+})
 const calorieTrend = ref([])
 const weeklyAvgCalories = ref(0)
 const taskStats = ref({
@@ -191,8 +200,15 @@ const taskStats = ref({
   completionRate: 0,
   statusDistribution: {}
 })
-const monthlyData = ref([])
+const monthlyData = ref([
+  { icon: '🔥', value: '0 kcal', label: '本月总热量', bgColor: '#fff3e0' },
+  { icon: '📅', value: '0 天', label: '记录天数', bgColor: '#e3f2fd' },
+  { icon: '⚡', value: '0 kcal', label: '日均热量', bgColor: '#f3e5f5' }
+])
 const badges = ref([])
+const familyId = ref(null)
+const isLoading = ref(false)
+const loadError = ref(null)
 
 // 任务状态列表
 const taskStatusList = computed(() => [
@@ -219,54 +235,192 @@ const getBarHeight = (calories) => {
   return Math.min((calories / max) * 100, 100)
 }
 
+// 获取默认家庭ID
+const initFamilyId = async () => {
+  console.log('[Dashboard] 开始获取familyId...')
+  
+  try {
+    const family = await getDefaultFamily()
+    if (family && family.id) {
+      familyId.value = family.id
+      console.log('[Dashboard] 获取到默认家庭:', familyId.value)
+      return family.id
+    }
+  } catch (e) {
+    console.error('[Dashboard] 获取默认家庭失败:', e)
+  }
+  
+  // 使用默认值
+  familyId.value = 1
+  console.log('[Dashboard] 使用默认familyId: 1')
+  return 1
+}
+
 // 加载数据
 const loadData = async () => {
+  loadError.value = null
   const now = new Date()
   currentDate.value = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`
   
+  // 确保有familyId
+  let fid = familyId.value
+  if (!fid) {
+    fid = await initFamilyId()
+  }
+  
+  if (!fid || isNaN(fid)) {
+    console.warn('[Dashboard] 未获取到有效的 familyId，使用默认值')
+    fid = 1
+    familyId.value = fid
+  }
+  
+  console.log('[Dashboard] 开始加载数据, familyId:', fid)
+  isLoading.value = true
+  
   try {
     // 今日概览
-    const todayRes = await statsApi.getTodayOverview()
-    if (todayRes.code === 200) {
-      todayData.value = todayRes.data
-    }
+    await loadTodayOverview(fid)
     
     // 饮食统计（周）
-    const dietRes = await statsApi.getDietStats('weekly')
-    if (dietRes.code === 200) {
-      calorieTrend.value = dietRes.data.calorieTrend || []
-      weeklyAvgCalories.value = dietRes.data.avgCalories || 0
-    }
+    await loadDietStats()
     
     // 任务统计
+    await loadTaskStats(fid, now)
+    
+    // 月度数据
+    await loadMonthlyStats(now)
+    
+    // 年度徽章
+    await loadYearlyStats(fid, now)
+    
+    console.log('[Dashboard] 所有数据加载完成')
+  } catch (error) {
+    console.error('[Dashboard] 加载统计数据失败:', error)
+    // 不显示toast,静默处理错误
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 加载今日概览
+const loadTodayOverview = async (fid) => {
+  try {
+    console.log('[Dashboard] 加载今日概览, familyId:', fid)
+    const todayRes = await statsApi.getTodayOverview(fid)
+    console.log('[Dashboard] 今日概览原始响应:', todayRes)
+    
+    if (todayRes && typeof todayRes === 'object') {
+      todayData.value = {
+        todayTasks: todayRes.todayTasks ?? 0,
+        todayCalories: todayRes.todayCalories ?? 0,
+        weeklyCompletedTasks: todayRes.weeklyCompletedTasks ?? 0,
+        memberCount: todayRes.memberCount ?? 0
+      }
+      console.log('[Dashboard] 今日概览数据:', todayData.value)
+    } else {
+      console.warn('[Dashboard] 今日概览响应格式不正确:', todayRes)
+    }
+  } catch (todayErr) {
+    console.error('[Dashboard] 加载今日概览失败:', todayErr)
+    // 保持默认值
+  }
+}
+
+// 加载饮食统计
+const loadDietStats = async () => {
+  try {
+    console.log('[Dashboard] 加载饮食统计')
+    const dietRes = await statsApi.getDietStats('weekly')
+    console.log('[Dashboard] 饮食统计原始响应:', dietRes)
+    
+    if (dietRes && typeof dietRes === 'object') {
+      // 处理calorieTrend
+      if (Array.isArray(dietRes.calorieTrend) && dietRes.calorieTrend.length > 0) {
+        calorieTrend.value = dietRes.calorieTrend
+        console.log('[Dashboard] 热量趋势数据:', calorieTrend.value)
+      } else {
+        console.warn('[Dashboard] 热量趋势数据为空或格式不正确')
+        calorieTrend.value = []
+      }
+      weeklyAvgCalories.value = dietRes.avgCalories ?? 0
+    } else {
+      console.warn('[Dashboard] 饮食统计响应格式不正确:', dietRes)
+      calorieTrend.value = []
+      weeklyAvgCalories.value = 0
+    }
+  } catch (dietErr) {
+    console.error('[Dashboard] 加载饮食统计失败:', dietErr)
+    calorieTrend.value = []
+    weeklyAvgCalories.value = 0
+  }
+}
+
+// 加载任务统计
+const loadTaskStats = async (fid, now) => {
+  try {
     const startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     const endDate = new Date()
+    console.log('[Dashboard] 加载任务统计, familyId:', fid)
     const taskRes = await statsApi.getTaskStats(
+      fid,
       formatDate(startDate),
       formatDate(endDate)
     )
-    if (taskRes.code === 200) {
-      taskStats.value = taskRes.data
-    }
+    console.log('[Dashboard] 任务统计原始响应:', taskRes)
     
-    // 月度数据
-    const monthRes = await statsApi.getPersonalStats('monthly', formatDate(now).substring(0, 7))
-    if (monthRes.code === 200) {
-      const data = monthRes.data
+    if (taskRes && typeof taskRes === 'object') {
+      taskStats.value = {
+        totalTasks: taskRes.totalTasks ?? 0,
+        completedTasks: taskRes.completedTasks ?? 0,
+        completionRate: taskRes.completionRate ?? 0,
+        statusDistribution: taskRes.statusDistribution ?? {}
+      }
+    } else {
+      console.warn('[Dashboard] 任务统计响应格式不正确:', taskRes)
+    }
+  } catch (taskErr) {
+    console.error('[Dashboard] 加载任务统计失败:', taskErr)
+  }
+}
+
+// 加载月度统计
+const loadMonthlyStats = async (now) => {
+  try {
+    const monthStr = formatDate(now).substring(0, 7)
+    console.log('[Dashboard] 加载月度统计:', monthStr)
+    const monthRes = await statsApi.getPersonalStats('monthly', monthStr)
+    console.log('[Dashboard] 月度统计原始响应:', monthRes)
+    
+    if (monthRes && typeof monthRes === 'object') {
       monthlyData.value = [
-        { icon: '🔥', value: (data.totalCalories || 0) + ' kcal', label: '本月总热量', bgColor: '#fff3e0' },
-        { icon: '📅', value: (data.dietDays || 0) + ' 天', label: '记录天数', bgColor: '#e3f2fd' },
-        { icon: '⚡', value: (data.avgDailyCalories || 0) + ' kcal', label: '日均热量', bgColor: '#f3e5f5' }
+        { icon: '🔥', value: (monthRes.totalCalories || 0) + ' kcal', label: '本月总热量', bgColor: '#fff3e0' },
+        { icon: '📅', value: (monthRes.dietDays || 0) + ' 天', label: '记录天数', bgColor: '#e3f2fd' },
+        { icon: '⚡', value: (monthRes.avgDailyCalories || 0) + ' kcal', label: '日均热量', bgColor: '#f3e5f5' }
       ]
+    } else {
+      console.warn('[Dashboard] 月度统计响应格式不正确:', monthRes)
     }
+  } catch (monthErr) {
+    console.error('[Dashboard] 加载月度统计失败:', monthErr)
+  }
+}
+
+// 加载年度徽章
+const loadYearlyStats = async (fid, now) => {
+  try {
+    console.log('[Dashboard] 加载年度统计, familyId:', fid)
+    const yearRes = await statsApi.getYearlyStats(fid, now.getFullYear())
+    console.log('[Dashboard] 年度统计原始响应:', yearRes)
     
-    // 年度徽章
-    const yearRes = await statsApi.getYearlyStats(now.getFullYear())
-    if (yearRes.code === 200) {
-      badges.value = yearRes.data.badges || []
+    if (yearRes && typeof yearRes === 'object') {
+      badges.value = yearRes.badges || []
+    } else {
+      console.warn('[Dashboard] 年度统计响应格式不正确:', yearRes)
+      badges.value = []
     }
-  } catch (error) {
-    console.error('加载统计数据失败', error)
+  } catch (yearErr) {
+    console.error('[Dashboard] 加载年度统计失败:', yearErr)
+    badges.value = []
   }
 }
 

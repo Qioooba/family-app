@@ -150,13 +150,7 @@
               </text>
             </view>
             
-            <!-- 子任务进度 -->
-            <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
-              <view class="progress-bar">
-                <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
-              </view>
-              <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
-            </view>
+
           </view>
           
           <view class="task-status">
@@ -298,21 +292,7 @@
             </view>
           </view>
           
-          <!-- 子任务 -->
-          <view v-if="selectedTask.subtasks && selectedTask.subtasks.length > 0" class="subtask-section">
-            <view class="section-title">
-              子任务 ({{ subtaskCompleted(selectedTask) }}/{{ selectedTask.subtasks.length }})
-            </view>
-            <view 
-              v-for="(sub, idx) in selectedTask.subtasks" 
-              :key="idx"
-              class="subtask-item"
-              @click="toggleSubtask(sub)"
-            >
-              <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
-              <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
-            </view>
-          </view>
+
           
           <view class="detail-actions">
             <view class="detail-btn edit" @click="editTask(selectedTask)">
@@ -605,15 +585,7 @@ const isOverdue = (task) => {
 
 const priorityText = (p) => priorities[p] || '普通'
 
-const subtaskCompleted = (task) => {
-  if (!task.subtasks) return 0
-  return task.subtasks.filter(s => s.status === 1).length
-}
 
-const subtaskProgress = (task) => {
-  if (!task.subtasks || task.subtasks.length === 0) return 0
-  return Math.round((subtaskCompleted(task) / task.subtasks.length) * 100)
-}
 
 const toggleTask = async (task) => {
   const newStatus = task.status === 2 ? 0 : 2
@@ -642,14 +614,6 @@ const closeDetailModal = () => {
   selectedTask.value = null
 }
 
-const toggleSubtask = async (sub) => {
-  try {
-    await taskApi.toggleSubtask(sub.id)
-    sub.status = sub.status === 0 ? 1 : 0
-  } catch (e) {
-    console.error('切换子任务状态失败', e)
-  }
-}
 
 const selectFilter = (filter) => {
   currentFilter.value = filter
@@ -687,16 +651,48 @@ const addTask = async () => {
 
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
-    await taskApi.create({
-      ...newTask.value,
-      familyId
-    })
+    // 获取当前用户信息
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || userInfo?.userId
+
+    // 处理截止时间格式
+    let dueTime = null
+    if (newTask.value.dueDate) {
+      const time = newTask.value.dueTime || '23:59'
+      dueTime = `${newTask.value.dueDate}T${time}:00`
+    } else {
+      // 默认今天 23:59
+      const today = new Date().toISOString().split('T')[0]
+      dueTime = `${today}T23:59:00`
+    }
+
+    const taskData = {
+      title: newTask.value.title,
+      familyId: familyId,
+      priority: newTask.value.priority,
+      dueTime: dueTime,  // 后端期望 LocalDateTime 格式
+      status: 0,
+      creatorId: userId
+    }
+
+    console.log('[Calendar] 创建任务请求数据:', taskData)
+    await taskApi.create(taskData)
     uni.showToast({ title: '添加成功', icon: 'success' })
     closeModal()
     loadTasks()
   } catch (e) {
     console.error('创建任务失败', e)
-    uni.showToast({ title: '创建失败', icon: 'none' })
+    let errorMsg = '创建失败'
+    if (e?.message) {
+      errorMsg = e.message
+    } else if (typeof e === 'string') {
+      errorMsg = e
+    }
+    uni.showModal({
+      title: '创建失败',
+      content: errorMsg,
+      showCancel: false
+    })
   }
 }
 
@@ -1272,31 +1268,6 @@ onMounted(() => {
   }
 }
 
-.subtask-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  
-  .progress-bar {
-    flex: 1;
-    height: 4px;
-    background: #E5E7EB;
-    border-radius: 2px;
-    overflow: hidden;
-    
-    .progress-fill {
-      height: 100%;
-      background: #10B981;
-      border-radius: 2px;
-      transition: width 0.3s;
-    }
-  }
-  
-  .progress-text {
-    font-size: 11px;
-    color: #6B7280;
-  }
-}
 
 .task-status {
   margin-left: 8px;
@@ -1590,47 +1561,6 @@ onMounted(() => {
   }
 }
 
-.subtask-section {
-  margin-bottom: 20px;
-  
-  .section-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 12px;
-  }
-  
-  .subtask-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #F3F4F6;
-    
-    .subtask-checkbox {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #D1D5DB;
-      border-radius: 50%;
-      margin-right: 12px;
-      
-      &.checked {
-        background: #10B981;
-        border-color: #10B981;
-      }
-    }
-    
-    .subtask-title {
-      font-size: 14px;
-      color: #374151;
-      flex: 1;
-      
-      &.completed {
-        text-decoration: line-through;
-        color: #9CA3AF;
-      }
-    }
-  }
-}
 
 .detail-actions {
   display: flex;

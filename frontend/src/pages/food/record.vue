@@ -1,247 +1,326 @@
 <template>
   <view class="food-record-page">
+    <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">记录饮食</text>
-      <view class="right-btn" @click="saveRecord">
-        <text>保存</text>
+      <view class="setting-btn" @click="showTargetModal">
+        <up-icon name="setting" size="36" color="#5AD8A6"></up-icon>
       </view>
     </view>
     
-    <view class="record-container">
-      <!-- 摄入统计 -->
+    <scroll-view class="record-container" scroll-y>
+      <!-- 顶部统计卡片 -->
       <view class="stats-card">
         <view class="stats-header">
           <text class="date">{{ today }}</text>
-          <view class="total-calories">
+          <view class="total-calories" @click="showTargetModal">
             <text class="num">{{ todayCalories }}</text>
             <text class="unit">千卡</text>
+            <up-icon name="edit-pen" size="24" color="rgba(255,255,255,0.8)" class="edit-icon"></up-icon>
           </view>
         </view>
         
         <view class="progress-bar">
-          <view class="progress-fill" :style="{ width: progressPercent + '%' }"></view>
+          <view class="progress-fill" :style="{ width: progressPercent + '%', background: progressColor }"></view>
         </view>
         
         <view class="stats-footer">
           <text>目标 {{ targetCalories }} 千卡</text>
-          <text :class="{ 'over': remaining < 0 }">{{ remaining >= 0 ? '剩余 ' + remaining : '超出 ' + Math.abs(remaining) }} 千卡</text>
+          <text :class="{ 'over': remaining < 0 }">{{ remainingText }}</text>
         </view>
       </view>
 
-      <!-- 体重快捷入口 -->
-      <view class="weight-entry" @click="showWeightModal">
-        <view class="weight-info">
-          <u-icon name="edit-pen" size="36" color="#5AD8A6"></u-icon>
-          <view class="weight-text">
-            <text class="label">今日体重</text>
-            <text class="value">{{ latestWeight ? latestWeight + ' kg' : '未记录' }}</text>
+      <!-- 拍照识别区域 -->
+      <view class="section-card">
+        <view class="section-title">
+          <text class="title-icon">📷</text>
+          <text>AI拍照识别</text>
+        </view>
+        
+        <view class="camera-area" @click="takePhoto">
+          <view v-if="photoUrls.length === 0" class="camera-placeholder">
+            <view class="camera-icon">
+              <up-icon name="camera" size="60" color="#5AD8A6"></up-icon>
+            </view>
+            <text class="camera-text">点击拍照识别食物</text>
+            <text class="camera-subtext">AI自动识别食物并估算卡路里（可拍多张）</text>
+          </view>
+          <view v-else class="photo-grid">
+            <view v-for="(photo, index) in photoUrls" :key="index" class="photo-item">
+              <image :src="photo" mode="aspectFill" class="preview-img" />
+              <view class="remove-photo-btn" @click.stop="removePhoto(index)">
+                <up-icon name="close" size="24" color="#fff"></up-icon>
+              </view>
+            </view>
+            <view class="add-more-btn" @click.stop="takePhoto">
+              <up-icon name="plus" size="40" color="#5AD8A6"></up-icon>
+              <text>继续添加</text>
+            </view>
           </view>
         </view>
-        <u-icon name="arrow-right" size="32" color="#ccc"></u-icon>
-      </view>
-      
-      <!-- 记录方式选择 -->
-      <view class="record-type">
-        <view 
-          v-for="(type, index) in recordTypes" :key="type.id || index" 
-          
-          class="type-item"
-          :class="{ active: currentType === type.value }"
-          @click="currentType = type.value"
-        >
-          <u-icon :name="type.icon" size="40" :color="currentType === type.value ? '#fff' : '#666'"></u-icon>
-          <text>{{ type.label }}</text>
+        
+        <!-- 识别结果 -->
+        <view v-if="recognizedResult" class="recognized-result">
+          <view class="result-header">
+            <text class="result-title">识别结果</text>
+            <text class="result-edit" @click="editRecognizedResult">修正</text>
+          </view>
+          <view class="food-list">
+            <view v-for="(food, index) in recognizedResult" :key="index" class="food-item">
+              <view class="food-info">
+                <text class="food-name">{{ food.name }}</text>
+                <text class="food-weight">{{ food.weight }}g</text>
+              </view>
+              <text class="food-calories">{{ food.calories }}卡</text>
+            </view>
+          </view>
+          <view class="result-total">
+            <text>预估总热量：</text>
+            <text class="total-num">{{ recognizedTotalCalories }}千卡</text>
+          </view>
+        </view>
+
+        <!-- AI识别中状态 -->
+        <view v-if="isRecognizing" class="recognizing-state">
+          <view class="loading-spinner"></view>
+          <text>AI正在识别食物...</text>
         </view>
       </view>
       
-      <!-- 表单区域 -->
-      <view class="form-card">
-        <!-- 餐别选择 -->
+      <!-- 手动录入表单 -->
+      <view class="section-card">
+        <view class="section-title">
+          <text class="title-icon">✏️</text>
+          <text>手动录入</text>
+        </view>
+        
+        <!-- 餐次选择 -->
         <view class="meal-selector">
           <view 
-            v-for="(meal, index) in meals" :key="meal.id || index" 
-            
+            v-for="(meal, index) in meals" 
+            :key="index"
             class="meal-item"
             :class="{ active: form.meal === meal.value }"
             @click="form.meal = meal.value"
           >
-            {{ meal.label }}
+            <text class="meal-icon">{{ meal.icon }}</text>
+            <text class="meal-label">{{ meal.label }}</text>
           </view>
         </view>
         
-        <!-- 拍照识别 -->
-        <view v-if="currentType === 'camera'" class="camera-section">
-          <view class="camera-area" @click="takePhoto">
-            <view v-if="!form.photo" class="camera-placeholder">
-              <u-icon name="camera" size="80" color="#ccc"></u-icon>
-              <text>点击拍照识别食物</text>
+        <!-- 食物名称输入 -->
+        <view class="input-group">
+          <text class="input-label">食物名称</text>
+          <view class="input-wrapper">
+            <input 
+              v-model="form.foodName" 
+              placeholder="例如：米饭、鸡蛋" 
+              class="input"
+              @input="onFoodNameInput"
+              @focus="showSearchResults = true"
+            />
+            <view v-if="form.foodName" class="clear-btn" @click="clearFoodName">
+              <up-icon name="close-circle" size="32" color="#ccc"></up-icon>
             </view>
-            <image v-else :src="form.photo" mode="aspectFill" class="preview-img" />
           </view>
-          
-          <view v-if="recognizedFood" class="recognized-result">
-            <text class="result-title">识别结果</text>
-            <view class="food-list">
-              <view v-for="(food, index) in recognizedFood" :key="index" class="food-item">
-                <text class="name">{{ food.name }}</text>
-                <view class="info">
-                  <text class="weight">{{ food.weight }}g</text>
-                  <text class="calories">{{ food.calories }}卡</text>
-                </view>
+          <!-- 搜索结果下拉框 -->
+          <view v-if="showSearchResults && searchResults.length > 0" class="search-results">
+            <view 
+              v-for="(food, index) in searchResults" 
+              :key="index" 
+              class="search-result-item"
+              @click="selectSearchFood(food)"
+            >
+              <view class="result-left">
+                <text class="food-name">{{ food.name }}</text>
+                <text class="food-cal">{{ food.calories }}卡/{{ food.unit }}</text>
               </view>
-            </view>          
-          </view>
-        </view>
-        
-        <!-- 手动输入 -->
-        <view v-if="currentType === 'manual'" class="manual-section">
-          <view class="input-item">
-            <text class="label">食物名称</text>
-            <input v-model="form.foodName" placeholder="例如：米饭、鸡蛋" class="input" />
-          </view>
-          
-          <view class="input-item">
-            <text class="label">重量(g)</text>
-            <input v-model="form.weight" type="digit" placeholder="0" class="input" />
-          </view>
-          
-          <view class="input-item">
-            <text class="label">热量(千卡)</text>
-            <input v-model="form.calories" type="digit" placeholder="0" class="input" />
-          </view>
-          
-          <view class="quick-foods">
-            <text class="section-title">常用食物</text>
-            <view class="food-tags">
-              <view 
-                v-for="(food, index) in quickFoods" :key="food.id || index" 
-                
-                class="food-tag"
-                @click="selectQuickFood(food)"
-              >
-                {{ food.name }} {{ food.calories }}卡
-              </view>
+              <text class="select-text">选择</text>
             </view>
           </view>
         </view>
         
-        <!-- 语音记录 -->
-        <view v-if="currentType === 'voice'" class="voice-section">
-          <view class="voice-btn" :class="{ recording: isRecording }" @click="toggleRecording">
-            <u-icon :name="isRecording ? 'mic-fill' : 'mic'" size="80" :color="isRecording ? '#fff' : '#5AD8A6'"></u-icon>
+        <!-- 重量输入 -->
+        <view class="input-group">
+          <text class="input-label">多少克？ <text class="input-hint">输入重量(g)</text></text>
+          <view class="weight-input-wrapper">
+            <input 
+              v-model="form.weight" 
+              type="digit" 
+              placeholder="请输入食物重量" 
+              class="input weight-input"
+              @input="calculateCalories"
+            />
+            <text class="unit-text">g</text>
+          </view>
+          <!-- 快捷重量选择 -->
+          <view class="quick-weights">
+            <view 
+              v-for="(w, index) in quickWeights" 
+              :key="index"
+              class="quick-weight-tag"
+              :class="{ active: form.weight == w }"
+              @click="setWeight(w)"
+            >
+              {{ w }}g
+            </view>
+          </view>
+        </view>
+        
+        <!-- AI计算结果 -->
+        <view v-if="form.calories > 0" class="calorie-result">
+          <text class="result-label">AI计算结果</text>
+          <view class="result-value">
+            <text class="calorie-num">{{ form.calories }}</text>
+            <text class="calorie-unit">千卡</text>
+          </view>
+        </view>
+        
+        <!-- 常用食物快捷选择 -->
+        <view class="quick-foods">
+          <text class="quick-title">常用食物</text>
+          <view class="food-tags">
+            <view 
+              v-for="(food, index) in quickFoods" 
+              :key="index"
+              class="food-tag"
+              @click="selectQuickFood(food)"
+            >
+              {{ food.name }}
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 当天饮食展示 -->
+      <view class="section-card today-records" v-if="todayRecords.length > 0">
+        <view class="section-title">
+          <text class="title-icon">📋</text>
+          <text>今日已记录 ({{ todayRecords.length }}条)</text>
+        </view>
+        
+        <view class="record-list">
+          <view v-for="(record, index) in todayRecords" :key="index" class="record-item">
+            <image v-if="record.photo" :src="record.photo" mode="aspectFill" class="record-thumb" />
+            <view v-else class="record-thumb-placeholder">
+              <text>{{ record.meal === 'breakfast' ? '🌅' : record.meal === 'lunch' ? '☀️' : record.meal === 'dinner' ? '🌙' : '🍪' }}</text>
+            </view>
+            <view class="record-info">
+              <text class="record-name">{{ record.foodName }}</text>
+              <text class="record-detail">{{ record.weight }}g · {{ mealLabels[record.meal] }}</text>
+            </view>
+            <text class="record-calories">{{ record.calories }}卡</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 保存按钮 -->
+      <view class="save-section">
+        <button 
+          class="save-btn" 
+          :class="{ disabled: !canSave }"
+          :disabled="!canSave"
+          @click="saveRecord"
+        >
+          <text v-if="!isSaving">保存记录</text>
+          <text v-else>保存中...</text>
+        </button>
+        <button class="continue-btn" @click="saveAndContinue">
+          <text>保存并继续添加</text>
+        </button>
+      </view>
+      
+      <!-- 底部留白 -->
+      <view class="bottom-space"></view>
+    </scroll-view>
+
+    <!-- 每日目标设置弹窗 -->
+    <view v-if="targetModalVisible" class="modal-overlay" @click="closeTargetModal">
+      <view class="modal-content" @click.stop>
+        <view class="modal-header">
+          <text>设置每日目标</text>
+          <text class="close-btn" @click="closeTargetModal">✕</text>
+        </view>
+        
+        <view class="target-input-section">
+          <text class="input-desc">每日卡路里目标</text>
+          <view class="target-input-wrapper">
+            <input 
+              v-model="targetInput" 
+              type="number" 
+              class="target-input"
+              placeholder="2000"
+            />
+            <text class="unit">千卡</text>
           </view>
           
-          <text class="voice-hint">{{ isRecording ? '正在录音...' : '点击开始语音记录' }}</text>
-          
-          <view v-if="voiceText" class="voice-result">
-            <text class="result-title">识别内容</text>
-            <text class="result-text">{{ voiceText }}</text>
+          <!-- 快捷目标选择 -->
+          <view class="quick-targets">
+            <view 
+              v-for="(t, index) in quickTargets" 
+              :key="index"
+              class="quick-target-tag"
+              :class="{ active: targetInput == t }"
+              @click="targetInput = t.toString()"
+            >
+              {{ t }}卡
+            </view>
           </view>
+        </view>
+        
+        <view class="modal-actions">
+          <button class="btn-cancel" @click="closeTargetModal">取消</button>
+          <button class="btn-confirm" @click="saveTarget">保存</button>
         </view>
       </view>
     </view>
 
-    <!-- 体重记录弹窗 -->
-    <view v-if="weightModalVisible" class="modal-overlay" @click="closeWeightModal">
-      <view class="modal-content weight-modal" @click.stop>
+    <!-- 识别结果修正弹窗 -->
+    <view v-if="editModalVisible" class="modal-overlay" @click="closeEditModal">
+      <view class="modal-content edit-modal" @click.stop>
         <view class="modal-header">
-          <text>记录体重</text>
-          <text class="close-btn" @click="closeWeightModal">✕</text>
+          <text>修正识别结果</text>
+          <text class="close-btn" @click="closeEditModal">✕</text>
         </view>
-
-        <!-- 体重输入 -->
-        <view class="weight-input-section">
-          <view class="weight-display">
-            <input 
-              v-model="weightInput" 
-              type="digit" 
-              class="weight-number"
-              placeholder="0.0"
-              maxlength="5"
-            />
-            <text class="weight-unit">kg</text>
-          </view>
-
-          <!-- 快速选择 -->
-          <view class="quick-weights">
-            <view 
-              v-for="(w, index) in quickWeights" :key="w.id || index" 
-              
-              class="quick-weight-item"
-              :class="{ active: weightInput === w.toString() }"
-              @click="weightInput = w.toString()"
-            >
-              {{ w }}
+        
+        <scroll-view class="edit-list" scroll-y>
+          <view 
+            v-for="(food, index) in editingResult" 
+            :key="index"
+            class="edit-item"
+          >
+            <view class="edit-field">
+              <text class="field-label">食物</text>
+              <input v-model="food.name" class="field-input" />
             </view>
-          </view>
-        </view>
-
-        <!-- 备注 -->
-        <view class="form-item">
-          <text class="label">备注（选填）</text>
-          <input v-model="weightNote" class="input" placeholder="例如：空腹、运动后..." />
-        </view>
-
-        <!-- 历史趋势图 -->
-        <view class="weight-chart-section" v-if="weightHistory.length > 1">
-          <text class="chart-title">近7天趋势</text>
-          <view class="chart-container">
-            <view class="chart-line">
-              <view 
-                v-for="(point, index) in chartPoints" 
-                :key="index"
-                class="chart-point"
-                :style="{ 
-                  left: point.x + '%', 
-                  bottom: point.y + '%',
-                  background: index === chartPoints.length - 1 ? '#5AD8A6' : '#ccc'
-                }"
-              >
-                <view class="point-tooltip">{{ point.weight }}</view>
+            <view class="edit-row">
+              <view class="edit-field half">
+                <text class="field-label">重量(g)</text>
+                <input v-model="food.weight" type="digit" class="field-input" />
               </view>
-              <view class="chart-line-svg" v-if="chartPoints.length > 1">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <polyline 
-                    :points="chartPath" 
-                    fill="none" 
-                    stroke="#5AD8A6" 
-                    stroke-width="2"
-                  />
-                </svg>
+              <view class="edit-field half">
+                <text class="field-label">热量(卡)</text>
+                <input v-model="food.calories" type="digit" class="field-input" />
               </view>
             </view>
-            <view class="chart-labels">
-              <text v-for="(item, index) in chartLabels" :key="index" class="chart-label">
-                {{ item }}
-              </text>
+            <view class="delete-btn" @click="removeFoodItem(index)">
+              <up-icon name="trash" size="32" color="#ff4d4f"></up-icon>
             </view>
           </view>
+        </scroll-view>
+        
+        <view class="add-food-btn" @click="addFoodItem">
+          <up-icon name="plus" size="28" color="#5AD8A6"></up-icon>
+          <text>添加食物</text>
         </view>
-
-        <!-- 历史列表 -->
-        <view class="weight-history-section" v-if="weightHistory.length > 0">
-          <text class="history-title">历史记录</text>
-          <scroll-view scroll-y class="history-list">
-            <view 
-              v-for="(item, index) in weightHistory.slice(0, 10)" 
-              :key="item.id || index"
-              class="history-item"
-            >
-              <view class="history-left">
-                <text class="history-weight">{{ item.weight }} kg</text>
-                <text v-if="item.note" class="history-note">{{ item.note }}</text>
-              </view>
-              <text class="history-date">{{ formatDate(item.recordDate) }}</text>
-            </view>
-          </scroll-view>
-        </view>
-
+        
         <view class="modal-actions">
-          <button class="btn-cancel" @click="closeWeightModal">取消</button>
-          <button class="btn-confirm" @click="saveWeight">保存</button>
+          <button class="btn-cancel" @click="closeEditModal">取消</button>
+          <button class="btn-continue" @click="saveEditAndContinue">继续添加</button>
+          <button class="btn-confirm" @click="confirmEdit">确认</button>
         </view>
       </view>
     </view>
@@ -250,196 +329,527 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { dietApi } from '../../api/index.js'
+import { dietApi, userApi } from '../../api/index.js'
 
-const today = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })
-const todayCalories = ref(1250)
+const today = new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'short' })
+const todayDate = new Date().toISOString().split('T')[0]
+const todayCalories = ref(0)
 const targetCalories = ref(2000)
+const currentUser = ref(null)
 
-// 体重相关数据
-const weightModalVisible = ref(false)
-const weightInput = ref('')
-const weightNote = ref('')
-const latestWeight = ref(null)
-const weightHistory = ref([])
-const quickWeights = [45, 50, 55, 60, 65, 70, 75, 80]
-
-const remaining = computed(() => targetCalories.value - todayCalories.value)
-const progressPercent = computed(() => Math.min((todayCalories.value / targetCalories.value) * 100, 100))
-
-const currentType = ref('camera')
-
-const recordTypes = [
-  { label: '拍照', value: 'camera', icon: 'camera' },
-  { label: '手动', value: 'manual', icon: 'edit-pen' },
-  { label: '语音', value: 'voice', icon: 'mic' }
-]
-
-const meals = [
-  { label: '早餐', value: 'breakfast' },
-  { label: '午餐', value: 'lunch' },
-  { label: '晚餐', value: 'dinner' },
-  { label: '加餐', value: 'snack' }
-]
-
+// 表单数据
 const form = ref({
   meal: 'breakfast',
-  photo: '',
   foodName: '',
   weight: '',
   calories: ''
 })
 
+// 拍照识别相关
+const photoUrl = ref('')
+const photoUrls = ref([])  // 支持多张照片
+const isRecognizing = ref(false)
+const recognizedResult = ref(null)
+const recognizedResults = ref([])  // 多张照片识别结果
+
+// 搜索相关
+const searchResults = ref([])
+const showSearchResults = ref(false)
+
+// 弹窗相关
+const targetModalVisible = ref(false)
+const targetInput = ref('2000')
+const editModalVisible = ref(false)
+const editingResult = ref([])
+const isSaving = ref(false)
+
+// 今日记录
+const todayRecords = ref([])
+
+// 餐次标签
+const mealLabels = {
+  breakfast: '早餐',
+  lunch: '午餐',
+  dinner: '晚餐',
+  snack: '加餐'
+}
+
+// 餐次选项
+const meals = [
+  { label: '早餐', value: 'breakfast', icon: '🌅' },
+  { label: '午餐', value: 'lunch', icon: '☀️' },
+  { label: '晚餐', value: 'dinner', icon: '🌙' },
+  { label: '加餐', value: 'snack', icon: '🍪' }
+]
+
+// 快捷重量
+const quickWeights = [50, 100, 150, 200, 250, 300]
+
+// 快捷目标
+const quickTargets = [1500, 1800, 2000, 2200, 2500, 2800]
+
+// 常用食物
 const quickFoods = [
   { name: '米饭(1碗)', calories: 200, weight: 150 },
   { name: '鸡蛋(1个)', calories: 70, weight: 50 },
   { name: '牛奶(1杯)', calories: 150, weight: 250 },
   { name: '苹果(1个)', calories: 95, weight: 180 },
   { name: '香蕉(1根)', calories: 105, weight: 120 },
-  { name: '鸡胸肉(100g)', calories: 165, weight: 100 }
+  { name: '鸡胸肉(100g)', calories: 165, weight: 100 },
+  { name: '牛肉(100g)', calories: 250, weight: 100 },
+  { name: '青菜(100g)', calories: 25, weight: 100 }
 ]
 
-const recognizedFood = ref(null)
-const isRecording = ref(false)
-const voiceText = ref('')
+// 食物数据库
+const foodDatabase = [
+  { name: '米饭', calories: 116, unit: '100g' },
+  { name: '小米粥', calories: 46, unit: '100g' },
+  { name: '面条', calories: 137, unit: '100g' },
+  { name: '馒头', calories: 223, unit: '100g' },
+  { name: '鸡蛋', calories: 144, unit: '100g' },
+  { name: '牛奶', calories: 54, unit: '100ml' },
+  { name: '豆浆', calories: 31, unit: '100ml' },
+  { name: '面包', calories: 265, unit: '100g' },
+  { name: '苹果', calories: 52, unit: '100g' },
+  { name: '香蕉', calories: 89, unit: '100g' },
+  { name: '橙子', calories: 47, unit: '100g' },
+  { name: '葡萄', calories: 69, unit: '100g' },
+  { name: '鸡胸肉', calories: 165, unit: '100g' },
+  { name: '牛肉', calories: 250, unit: '100g' },
+  { name: '猪肉', calories: 242, unit: '100g' },
+  { name: '鱼肉', calories: 206, unit: '100g' },
+  { name: '虾', calories: 85, unit: '100g' },
+  { name: '豆腐', calories: 76, unit: '100g' },
+  { name: '西红柿', calories: 18, unit: '100g' },
+  { name: '黄瓜', calories: 16, unit: '100g' },
+  { name: '白菜', calories: 13, unit: '100g' },
+  { name: '菠菜', calories: 23, unit: '100g' },
+  { name: '西兰花', calories: 34, unit: '100g' },
+  { name: '胡萝卜', calories: 41, unit: '100g' },
+  { name: '土豆', calories: 77, unit: '100g' },
+  { name: '红薯', calories: 86, unit: '100g' },
+  { name: '玉米', calories: 106, unit: '100g' },
+  { name: '可乐', calories: 43, unit: '100ml' },
+  { name: '酸奶', calories: 72, unit: '100g' },
+  { name: '可乐鸡翅', calories: 180, unit: '100g' },
+  { name: '红烧肉', calories: 470, unit: '100g' },
+  { name: '清蒸鱼', calories: 120, unit: '100g' },
+  { name: '炒青菜', calories: 45, unit: '100g' },
+  { name: '煎蛋', calories: 195, unit: '100g' },
+  { name: '炒饭', calories: 163, unit: '100g' },
+  { name: '饺子', calories: 220, unit: '100g' },
+  { name: '包子', calories: 230, unit: '100g' },
+  { name: '油条', calories: 386, unit: '100g' },
+  { name: '煎饼果子', calories: 160, unit: '100g' }
+]
+
+// 计算属性
+const remaining = computed(() => targetCalories.value - todayCalories.value)
+const remainingText = computed(() => {
+  if (remaining.value >= 0) {
+    return `剩余 ${remaining.value} 千卡`
+  } else {
+    return `超出 ${Math.abs(remaining.value)} 千卡`
+  }
+})
+const progressPercent = computed(() => {
+  const percent = (todayCalories.value / targetCalories.value) * 100
+  return Math.min(percent, 100)
+})
+const progressColor = computed(() => {
+  if (progressPercent.value >= 100) return '#ff4d4f'
+  if (progressPercent.value >= 80) return '#faad14'
+  return '#5AD8A6'
+})
+
+const recognizedTotalCalories = computed(() => {
+  if (!recognizedResult.value) return 0
+  return recognizedResult.value.reduce((sum, food) => sum + (parseInt(food.calories) || 0), 0)
+})
+
+const canSave = computed(() => {
+  return form.value.foodName && form.value.weight > 0 && form.value.calories > 0
+})
 
 onMounted(() => {
-  loadLatestWeight()
+  loadCurrentUser()
+  loadTargetFromStorage()
 })
 
-// 加载最新体重
-const loadLatestWeight = async () => {
+// 加载当前用户信息
+const loadCurrentUser = async () => {
   try {
-    const res = await dietApi.getLatestWeight()
+    const res = await userApi.getCurrentUser()
     if (res) {
-      latestWeight.value = res.weight
+      currentUser.value = res
+      targetCalories.value = res.targetCalories || 2000
+      loadTodayStatistics()
     }
   } catch (e) {
-    console.error('加载最新体重失败', e)
+    console.error('加载用户信息失败', e)
   }
 }
 
-// 加载体重历史
-const loadWeightHistory = async () => {
+// 加载今日统计数据
+const loadTodayStatistics = async () => {
+  if (!currentUser.value?.id) return
   try {
-    const res = await dietApi.getWeightHistory()
-    weightHistory.value = res || []
-  } catch (e) {
-    console.error('加载体重历史失败', e)
-  }
-}
-
-// 显示体重弹窗
-const showWeightModal = async () => {
-  weightModalVisible.value = true
-  weightInput.value = ''
-  weightNote.value = ''
-  await loadWeightHistory()
-}
-
-// 关闭体重弹窗
-const closeWeightModal = () => {
-  weightModalVisible.value = false
-}
-
-// 保存体重
-const saveWeight = async () => {
-  const weight = parseFloat(weightInput.value)
-  if (!weight || weight <= 0) {
-    uni.showToast({ title: '请输入有效的体重', icon: 'none' })
-    return
-  }
-  
-  try {
-    await dietApi.recordWeight({
-      weight: weight,
-      note: weightNote.value
-    })
+    // 加载统计数据
+    const res = await dietApi.getDayStatistics(currentUser.value.id, todayDate)
+    if (res) {
+      todayCalories.value = res.intake || 0
+      if (res.target) targetCalories.value = res.target
+    }
     
-    latestWeight.value = weight
-    uni.showToast({ title: '记录成功', icon: 'success' })
-    closeWeightModal()
-    await loadWeightHistory()
+    // 加载今日记录列表
+    const recordsRes = await dietApi.getDayRecords(currentUser.value.id, todayDate)
+    if (recordsRes && recordsRes.records) {
+      todayRecords.value = recordsRes.records
+    }
   } catch (e) {
-    console.error('记录体重失败', e)
-    uni.showToast({ title: '记录失败', icon: 'none' })
+    console.error('加载今日统计失败', e)
   }
 }
 
-// 格式化日期
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return `${date.getMonth() + 1}/${date.getDate()}`
+// 从本地存储加载目标
+const loadTargetFromStorage = () => {
+  const saved = uni.getStorageSync('dailyCalorieTarget')
+  if (saved) {
+    targetCalories.value = parseInt(saved)
+  }
 }
 
-// 计算趋势图数据
-const chartPoints = computed(() => {
-  if (weightHistory.value.length < 2) return []
-  
-  const recent7 = weightHistory.value.slice(0, 7).reverse()
-  const weights = recent7.map(item => parseFloat(item.weight))
-  const min = Math.min(...weights) - 1
-  const max = Math.max(...weights) + 1
-  const range = max - min || 1
-  
-  return recent7.map((item, index) => ({
-    x: (index / (recent7.length - 1)) * 80 + 10,
-    y: ((parseFloat(item.weight) - min) / range) * 70 + 15,
-    weight: item.weight
-  }))
-})
-
-// 计算趋势图路径
-const chartPath = computed(() => {
-  return chartPoints.value.map(p => `${p.x},${100 - p.y}`).join(' ')
-})
-
-// 图表标签
-const chartLabels = computed(() => {
-  const recent7 = weightHistory.value.slice(0, 7).reverse()
-  return recent7.map(item => formatDate(item.recordDate))
-})
-
-const goBack = () => {
-  uni.navigateBack()
-}
-
+// 拍照识别 - 支持多张照片
 const takePhoto = () => {
   uni.chooseImage({
-    count: 1,
-    sourceType: ['camera'],
+    count: 9,  // 最多9张
+    sourceType: ['camera', 'album'],
     success: (res) => {
-      form.value.photo = res.tempFilePaths[0]
-      // 模拟识别结果
-      recognizedFood.value = [
-        { name: '米饭', weight: 200, calories: 260 },
-        { name: '红烧肉', weight: 100, calories: 350 }
-      ]
+      const newPhotos = res.tempFilePaths
+      photoUrls.value.push(...newPhotos)
+      // 识别所有新照片
+      recognizeMultipleFoods(newPhotos)
     }
   })
 }
 
-const selectQuickFood = (food) => {
+// 识别多张照片
+const recognizeMultipleFoods = async (imagePaths) => {
+  for (const imagePath of imagePaths) {
+    await recognizeFood(imagePath)
+  }
+}
+
+// 重新拍照 - 改为删除单张照片
+const removePhoto = (index) => {
+  photoUrls.value.splice(index, 1)
+  recognizedResults.value.splice(index, 1)
+  if (photoUrls.value.length === 0) {
+    recognizedResult.value = null
+  }
+}
+
+// AI识别食物
+const recognizeFood = async (imagePath) => {
+  isRecognizing.value = true
+  
+  try {
+    // 调用AI识别API
+    const res = await dietApi.recognizeFood(imagePath)
+    
+    if (res && res.foods && res.foods.length > 0) {
+      // 合并识别结果
+      const newFoods = res.foods.map(food => ({
+        name: food.name,
+        weight: food.weight || 100,
+        calories: food.calories || 0
+      }))
+      
+      if (!recognizedResult.value) {
+        recognizedResult.value = []
+      }
+      recognizedResult.value.push(...newFoods)
+      recognizedResults.value.push({
+        photo: imagePath,
+        foods: newFoods
+      })
+    } else {
+      // Mock数据用于测试
+      const mockFoods = [
+        { name: '米饭', weight: 200, calories: 232 },
+        { name: '红烧肉', weight: 100, calories: 470 }
+      ]
+      
+      if (!recognizedResult.value) {
+        recognizedResult.value = []
+      }
+      recognizedResult.value.push(...mockFoods)
+      recognizedResults.value.push({
+        photo: imagePath,
+        foods: mockFoods
+      })
+    }
+  } catch (e) {
+    console.error('识别失败', e)
+    uni.showToast({ title: '识别失败，请手动输入', icon: 'none' })
+  } finally {
+    isRecognizing.value = false
+  }
+}
+
+// 编辑识别结果
+const editRecognizedResult = () => {
+  editingResult.value = JSON.parse(JSON.stringify(recognizedResult.value))
+  editModalVisible.value = true
+}
+
+// 关闭编辑弹窗
+const closeEditModal = () => {
+  editModalVisible.value = false
+}
+
+// 确认编辑
+const confirmEdit = () => {
+  recognizedResult.value = editingResult.value
+  closeEditModal()
+}
+
+// 保存编辑并继续添加（修正弹窗中的继续添加按钮）
+const saveEditAndContinue = () => {
+  recognizedResult.value = editingResult.value
+  // 添加一个新的空食物项继续编辑
+  editingResult.value.push({ name: '', weight: '', calories: '' })
+  // 保持弹窗打开，让用户继续添加
+  uni.showToast({ title: '请填写新食物', icon: 'none' })
+}
+
+// 添加食物项
+const addFoodItem = () => {
+  editingResult.value.push({ name: '', weight: '', calories: '' })
+}
+
+// 删除食物项
+const removeFoodItem = (index) => {
+  editingResult.value.splice(index, 1)
+}
+
+// 搜索食物
+const onFoodNameInput = () => {
+  const keyword = form.value.foodName
+  if (!keyword) {
+    searchResults.value = []
+    return
+  }
+  searchResults.value = foodDatabase.filter(food => 
+    food.name.includes(keyword)
+  ).slice(0, 5)
+}
+
+// 选择搜索结果
+const selectSearchFood = (food) => {
   form.value.foodName = food.name
+  form.value.weight = 100
+  form.value.calories = food.calories
+  showSearchResults.value = false
+}
+
+// 清空食物名称
+const clearFoodName = () => {
+  form.value.foodName = ''
+  form.value.calories = ''
+  searchResults.value = []
+}
+
+// 设置重量
+const setWeight = (weight) => {
+  form.value.weight = weight
+  calculateCalories()
+}
+
+// 计算卡路里 - 调用AI API
+const calculateCalories = async () => {
+  const weight = parseFloat(form.value.weight)
+  const foodName = form.value.foodName
+  if (!weight || !foodName) return
+  
+  try {
+    // 调用API获取AI计算的卡路里
+    const res = await dietApi.calculateCalories({
+      foodName: foodName,
+      weight: weight
+    })
+    
+    if (res && res.calories) {
+      form.value.calories = res.calories
+    } else {
+      // 本地计算作为fallback
+      const food = foodDatabase.find(f => f.name === foodName)
+      if (food) {
+        form.value.calories = Math.round((food.calories * weight) / 100)
+      }
+    }
+  } catch (e) {
+    console.error('AI计算失败', e)
+    // 本地计算作为fallback
+    const food = foodDatabase.find(f => f.name === foodName)
+    if (food) {
+      form.value.calories = Math.round((food.calories * weight) / 100)
+    }
+  }
+}
+
+// 选择常用食物
+const selectQuickFood = (food) => {
+  form.value.foodName = food.name.replace(/\(.+\)/, '')
   form.value.weight = food.weight
   form.value.calories = food.calories
 }
 
-const toggleRecording = () => {
-  isRecording.value = !isRecording.value
-  if (isRecording.value) {
-    // 模拟语音识别
+// 保存记录
+const saveRecord = async () => {
+  if (!canSave.value) {
+    uni.showToast({ title: '请填写完整信息', icon: 'none' })
+    return
+  }
+  
+  // 检查用户登录状态
+  if (!currentUser.value?.id) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
+  
+  isSaving.value = true
+  
+  try {
+    const recordData = {
+      userId: currentUser.value.id,
+      meal: form.value.meal,
+      foodName: form.value.foodName,
+      weight: parseFloat(form.value.weight),
+      calories: parseFloat(form.value.calories),
+      recordDate: todayDate,
+      photo: photoUrls.value.length > 0 ? photoUrls.value[0] : null
+    }
+    
+    console.log('保存记录:', recordData)
+    
+    const res = await dietApi.addRecord(recordData)
+    console.log('保存结果:', res)
+    
+    // 如果有拍照识别结果，也保存
+    if (recognizedResult.value && recognizedResult.value.length > 0) {
+      for (const food of recognizedResult.value) {
+        await dietApi.addRecord({
+          userId: currentUser.value.id,
+          meal: form.value.meal,
+          foodName: food.name,
+          weight: parseFloat(food.weight),
+          calories: parseFloat(food.calories),
+          recordDate: todayDate,
+          photo: photoUrls.value.length > 0 ? photoUrls.value[0] : null
+        })
+      }
+    }
+    
+    await loadTodayStatistics()
+    
+    uni.showToast({ title: '保存成功', icon: 'success' })
+    
+    // 延迟返回
     setTimeout(() => {
-      isRecording.value = false
-      voiceText.value = '中午吃了米饭、红烧肉和青菜'
-    }, 2000)
+      uni.navigateBack()
+    }, 1000)
+  } catch (e) {
+    console.error('保存失败', e)
+    uni.showToast({ title: '保存失败: ' + (e.message || '请重试'), icon: 'none' })
+  } finally {
+    isSaving.value = false
   }
 }
 
-const saveRecord = () => {
-  uni.showToast({ title: '记录成功', icon: 'success' })
-  setTimeout(() => uni.navigateBack(), 1500)
+// 保存并继续添加
+const saveAndContinue = async () => {
+  if (!canSave.value) {
+    uni.showToast({ title: '请填写完整信息', icon: 'none' })
+    return
+  }
+  
+  // 检查用户登录状态
+  if (!currentUser.value?.id) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
+  
+  isSaving.value = true
+  
+  try {
+    const recordData = {
+      userId: currentUser.value.id,
+      meal: form.value.meal,
+      foodName: form.value.foodName,
+      weight: parseFloat(form.value.weight),
+      calories: parseFloat(form.value.calories),
+      recordDate: todayDate,
+      photo: photoUrls.value.length > 0 ? photoUrls.value[0] : null
+    }
+    
+    console.log('保存并继续:', recordData)
+    
+    const res = await dietApi.addRecord(recordData)
+    console.log('保存结果:', res)
+    
+    await loadTodayStatistics()
+    
+    // 重置表单但保留餐次
+    const currentMeal = form.value.meal
+    form.value = {
+      meal: currentMeal,
+      foodName: '',
+      weight: '',
+      calories: ''
+    }
+    photoUrls.value = []
+    recognizedResult.value = null
+    recognizedResults.value = []
+    
+    uni.showToast({ title: '保存成功，继续添加', icon: 'success' })
+  } catch (e) {
+    console.error('保存失败', e)
+    uni.showToast({ title: '保存失败: ' + (e.message || '请重试'), icon: 'none' })
+  } finally {
+    isSaving.value = false
+  }
+}
+
+// 显示目标设置弹窗
+const showTargetModal = () => {
+  targetInput.value = targetCalories.value.toString()
+  targetModalVisible.value = true
+}
+
+// 关闭目标设置弹窗
+const closeTargetModal = () => {
+  targetModalVisible.value = false
+}
+
+// 保存目标
+const saveTarget = () => {
+  const target = parseInt(targetInput.value)
+  if (!target || target < 500 || target > 5000) {
+    uni.showToast({ title: '请输入有效的目标值(500-5000)', icon: 'none' })
+    return
+  }
+  
+  targetCalories.value = target
+  uni.setStorageSync('dailyCalorieTarget', target.toString())
+  
+  uni.showToast({ title: '目标设置成功', icon: 'success' })
+  closeTargetModal()
+}
+
+// 返回上一页
+const goBack = () => {
+  uni.navigateBack()
 }
 </script>
 
@@ -471,27 +881,27 @@ const saveRecord = () => {
     color: #333;
   }
   
-  .right-btn {
-    padding: 12rpx 30rpx;
-    background: #5AD8A6;
-    border-radius: 30rpx;
-    
-    text {
-      font-size: 28rpx;
-      color: #fff;
-    }
+  .setting-btn {
+    width: 60rpx;
+    height: 60rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
 .record-container {
   padding: 30rpx;
+  height: calc(100vh - 140rpx);
 }
 
+// 统计卡片
 .stats-card {
   background: linear-gradient(135deg, #5AD8A6 0%, #5B8FF9 100%);
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   padding: 40rpx;
   margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 32rpx rgba(90, 216, 166, 0.3);
   
   .stats-header {
     display: flex;
@@ -505,6 +915,10 @@ const saveRecord = () => {
     }
     
     .total-calories {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      
       .num {
         font-size: 56rpx;
         font-weight: bold;
@@ -514,6 +928,9 @@ const saveRecord = () => {
       .unit {
         font-size: 26rpx;
         color: rgba(255,255,255,0.8);
+      }
+      
+      .edit-icon {
         margin-left: 8rpx;
       }
     }
@@ -530,7 +947,7 @@ const saveRecord = () => {
       height: 100%;
       background: #fff;
       border-radius: 6rpx;
-      transition: width 0.3s;
+      transition: width 0.3s, background 0.3s;
     }
   }
   
@@ -542,112 +959,188 @@ const saveRecord = () => {
     
     .over {
       color: #FFE4E1;
+      font-weight: 600;
     }
   }
 }
 
-.record-type {
-  display: flex;
-  justify-content: space-around;
+// 区块卡片
+.section-card {
   background: #fff;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   padding: 30rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.05);
   
-  .type-item {
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    font-size: 30rpx;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 24rpx;
+    
+    .title-icon {
+      font-size: 36rpx;
+    }
+  }
+}
+
+// 拍照区域
+.camera-area {
+  height: 320rpx;
+  background: linear-gradient(135deg, #f0f9f4 0%, #e6f7ff 100%);
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border: 2rpx dashed #5AD8A6;
+  
+  .camera-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12rpx;
-    padding: 20rpx 40rpx;
-    border-radius: 16rpx;
     
-    text {
-      font-size: 26rpx;
-      color: #666;
+    .camera-icon {
+      width: 100rpx;
+      height: 100rpx;
+      background: rgba(90, 216, 166, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
-    &.active {
-      background: #5AD8A6;
+    .camera-text {
+      font-size: 30rpx;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    .camera-subtext {
+      font-size: 24rpx;
+      color: #999;
+    }
+  }
+  
+  .preview-img {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .photo-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16rpx;
+    width: 100%;
+    height: 100%;
+    padding: 16rpx;
+    
+    .photo-item {
+      position: relative;
+      width: calc(33.33% - 11rpx);
+      height: 160rpx;
+      border-radius: 12rpx;
+      overflow: hidden;
       
-      text {
-        color: #fff;
+      .preview-img {
+        width: 100%;
+        height: 100%;
+      }
+      
+      .remove-photo-btn {
+        position: absolute;
+        top: 4rpx;
+        right: 4rpx;
+        width: 40rpx;
+        height: 40rpx;
+        background: rgba(0,0,0,0.5);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
-  }
-}
-
-.form-card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-}
-
-.meal-selector {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 30rpx;
-  
-  .meal-item {
-    flex: 1;
-    text-align: center;
-    padding: 20rpx 0;
-    background: #f5f5f5;
-    border-radius: 12rpx;
-    font-size: 26rpx;
-    color: #666;
     
-    &.active {
-      background: #5AD8A6;
-      color: #fff;
-    }
-  }
-}
-
-.camera-section {
-  .camera-area {
-    height: 400rpx;
-    background: #f9f9f9;
-    border-radius: 16rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    
-    .camera-placeholder {
+    .add-more-btn {
+      width: calc(33.33% - 11rpx);
+      height: 160rpx;
+      background: rgba(90, 216, 166, 0.1);
+      border-radius: 12rpx;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20rpx;
+      justify-content: center;
+      gap: 8rpx;
+      border: 2rpx dashed #5AD8A6;
       
       text {
-        font-size: 28rpx;
-        color: #999;
+        font-size: 22rpx;
+        color: #5AD8A6;
       }
-    }
-    
-    .preview-img {
-      width: 100%;
-      height: 100%;
     }
   }
 }
 
-.recognized-result {
-  margin-top: 30rpx;
+// 识别中状态
+.recognizing-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  padding: 40rpx;
   
-  .result-title {
-    font-size: 28rpx;
-    font-weight: 600;
-    color: #333;
-    display: block;
-    margin-bottom: 20rpx;
+  .loading-spinner {
+    width: 48rpx;
+    height: 48rpx;
+    border: 4rpx solid #f0f0f0;
+    border-top-color: #5AD8A6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  text {
+    font-size: 26rpx;
+    color: #666;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// 识别结果
+.recognized-result {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid #f0f0f0;
+  
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16rpx;
+    
+    .result-title {
+      font-size: 28rpx;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .result-edit {
+      font-size: 26rpx;
+      color: #5AD8A6;
+    }
   }
   
   .food-list {
     display: flex;
     flex-direction: column;
-    gap: 16rpx;
+    gap: 12rpx;
     
     .food-item {
       display: flex;
@@ -657,170 +1150,337 @@ const saveRecord = () => {
       background: #f9f9f9;
       border-radius: 12rpx;
       
-      .name {
-        font-size: 28rpx;
-        color: #333;
-      }
-      
-      .info {
+      .food-info {
         display: flex;
-        gap: 20rpx;
+        flex-direction: column;
+        gap: 4rpx;
         
-        .weight {
+        .food-name {
+          font-size: 28rpx;
+          color: #333;
+          font-weight: 500;
+        }
+        
+        .food-weight {
           font-size: 24rpx;
           color: #999;
         }
-        
-        .calories {
-          font-size: 28rpx;
-          color: #5AD8A6;
-          font-weight: 600;
-        }
+      }
+      
+      .food-calories {
+        font-size: 28rpx;
+        color: #5AD8A6;
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .result-total {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8rpx;
+    margin-top: 16rpx;
+    padding-top: 16rpx;
+    border-top: 2rpx solid #f0f0f0;
+    font-size: 26rpx;
+    color: #666;
+    
+    .total-num {
+      font-size: 32rpx;
+      color: #5AD8A6;
+      font-weight: 600;
+    }
+  }
+}
+
+// 餐次选择
+.meal-selector {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 30rpx;
+  
+  .meal-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8rpx;
+    padding: 20rpx 0;
+    background: #f5f5f5;
+    border-radius: 16rpx;
+    transition: all 0.2s;
+    
+    .meal-icon {
+      font-size: 36rpx;
+    }
+    
+    .meal-label {
+      font-size: 24rpx;
+      color: #666;
+    }
+    
+    &.active {
+      background: linear-gradient(135deg, #5AD8A6 0%, #5B8FF9 100%);
+      
+      .meal-label {
+        color: #fff;
+        font-weight: 500;
       }
     }
   }
 }
 
-.manual-section {
-  .input-item {
-    margin-bottom: 30rpx;
+// 输入组
+.input-group {
+  margin-bottom: 30rpx;
+  position: relative;
+  
+  .input-label {
+    display: block;
+    font-size: 28rpx;
+    color: #333;
+    margin-bottom: 12rpx;
+    font-weight: 500;
     
-    .label {
-      font-size: 26rpx;
-      color: #666;
-      display: block;
-      margin-bottom: 16rpx;
+    .input-hint {
+      font-size: 24rpx;
+      color: #999;
+      font-weight: normal;
+      margin-left: 8rpx;
     }
+  }
+  
+  .input-wrapper {
+    position: relative;
     
     .input {
-      height: 80rpx;
+      width: 100%;
+      height: 88rpx;
       background: #f5f5f5;
       border-radius: 12rpx;
       padding: 0 24rpx;
       font-size: 28rpx;
+      padding-right: 70rpx;
+    }
+    
+    .clear-btn {
+      position: absolute;
+      right: 20rpx;
+      top: 50%;
+      transform: translateY(-50%);
     }
   }
   
-  .quick-foods {
-    margin-top: 40rpx;
+  // 搜索结果
+  .search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-radius: 12rpx;
+    box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.1);
+    z-index: 100;
+    margin-top: 8rpx;
+    overflow: hidden;
     
-    .section-title {
-      font-size: 28rpx;
-      font-weight: 600;
-      color: #333;
-      display: block;
-      margin-bottom: 20rpx;
-    }
-    
-    .food-tags {
+    .search-result-item {
       display: flex;
-      flex-wrap: wrap;
-      gap: 16rpx;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24rpx;
+      border-bottom: 1rpx solid #f0f0f0;
       
-      .food-tag {
-        padding: 16rpx 24rpx;
-        background: #E6F7FF;
-        border-radius: 30rpx;
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:active {
+        background: #f9f9f9;
+      }
+      
+      .result-left {
+        display: flex;
+        flex-direction: column;
+        gap: 4rpx;
+        
+        .food-name {
+          font-size: 28rpx;
+          color: #333;
+        }
+        
+        .food-cal {
+          font-size: 24rpx;
+          color: #5AD8A6;
+        }
+      }
+      
+      .select-text {
         font-size: 24rpx;
-        color: #1890FF;
+        color: #5AD8A6;
+        padding: 8rpx 16rpx;
+        background: rgba(90, 216, 166, 0.1);
+        border-radius: 20rpx;
       }
     }
   }
 }
 
-.voice-section {
+// 重量输入
+.weight-input-wrapper {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 60rpx 0;
+  gap: 16rpx;
+  position: relative;
   
-  .voice-btn {
-    width: 180rpx;
-    height: 180rpx;
-    border-radius: 50%;
-    background: #E6F7FF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    
-    &.recording {
-      background: #FF4D4F;
-      animation: pulse 1s infinite;
-    }
+  .weight-input {
+    flex: 1;
+    text-align: right;
+    padding-right: 60rpx;
+    font-weight: 600;
+    font-size: 32rpx;
+    border: 2rpx solid #5AD8A6;
+    background: #f0fff7;
   }
   
-  .voice-hint {
-    margin-top: 30rpx;
+  .unit-text {
+    position: absolute;
+    right: 24rpx;
     font-size: 28rpx;
-    color: #666;
+    color: #5AD8A6;
+    font-weight: 600;
   }
+}
+
+// 快捷重量
+.quick-weights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
   
-  .voice-result {
-    width: 100%;
-    margin-top: 40rpx;
-    padding: 30rpx;
-    background: #f9f9f9;
-    border-radius: 16rpx;
+  .quick-weight-tag {
+    padding: 12rpx 24rpx;
+    background: #f0f0f0;
+    border-radius: 24rpx;
+    font-size: 24rpx;
+    color: #666;
     
-    .result-title {
-      font-size: 26rpx;
-      color: #999;
-      display: block;
-      margin-bottom: 16rpx;
-    }
-    
-    .result-text {
-      font-size: 30rpx;
-      color: #333;
-      line-height: 1.6;
+    &.active {
+      background: linear-gradient(135deg, #5AD8A6 0%, #5B8FF9 100%);
+      color: #fff;
     }
   }
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-// 体重入口样式
-.weight-entry {
+// 卡路里计算结果
+.calorie-result {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
-  padding: 30rpx;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #f0f9f4 0%, #e6f7ff 100%);
   border-radius: 16rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
   
-  .weight-info {
-    display: flex;
-    align-items: center;
-    gap: 20rpx;
-    
-    .weight-text {
-      display: flex;
-      flex-direction: column;
-      
-      .label {
-        font-size: 24rpx;
-        color: #999;
-      }
-      
-      .value {
-        font-size: 32rpx;
-        font-weight: 600;
-        color: #333;
-      }
-    }
+  .result-label {
+    font-size: 26rpx;
+    color: #666;
   }
   
-  &:active {
-    background: #f9f9f9;
+  .result-value {
+    display: flex;
+    align-items: baseline;
+    gap: 8rpx;
+    
+    .calorie-num {
+      font-size: 48rpx;
+      font-weight: bold;
+      color: #5AD8A6;
+    }
+    
+    .calorie-unit {
+      font-size: 24rpx;
+      color: #999;
+    }
   }
 }
 
-// 体重弹窗样式
+// 常用食物
+.quick-foods {
+  .quick-title {
+    display: block;
+    font-size: 26rpx;
+    color: #666;
+    margin-bottom: 16rpx;
+  }
+  
+  .food-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12rpx;
+    
+    .food-tag {
+      padding: 16rpx 24rpx;
+      background: #e6f7ff;
+      border-radius: 28rpx;
+      font-size: 24rpx;
+      color: #5B8FF9;
+      
+      &:active {
+        background: #d0e8ff;
+      }
+    }
+  }
+}
+
+// 保存区域
+.save-section {
+  padding: 20rpx 0 40rpx;
+  
+  .save-btn {
+    width: 100%;
+    height: 96rpx;
+    background: linear-gradient(135deg, #5AD8A6 0%, #5B8FF9 100%);
+    border-radius: 48rpx;
+    color: #fff;
+    font-size: 32rpx;
+    font-weight: 600;
+    border: none;
+    margin-bottom: 20rpx;
+    box-shadow: 0 8rpx 24rpx rgba(90, 216, 166, 0.4);
+    
+    &.disabled {
+      background: #ccc;
+      box-shadow: none;
+    }
+    
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+  
+  .continue-btn {
+    width: 100%;
+    height: 88rpx;
+    background: #fff;
+    border: 2rpx solid #5AD8A6;
+    border-radius: 44rpx;
+    color: #5AD8A6;
+    font-size: 30rpx;
+    
+    &:active {
+      background: #f0f9f4;
+    }
+  }
+}
+
+.bottom-space {
+  height: 40rpx;
+}
+
+// 弹窗样式
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -829,21 +1489,23 @@ const saveRecord = () => {
   bottom: 0;
   background: rgba(0,0,0,0.5);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
 .modal-content {
-  width: 100%;
+  width: 80%;
   background: #fff;
-  border-radius: 30rpx 30rpx 0 0;
-  padding: 40rpx 30rpx;
-  max-height: 85vh;
-  overflow-y: auto;
-}
-
-.weight-modal {
+  border-radius: 24rpx;
+  padding: 40rpx;
+  
+  &.edit-modal {
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
   .modal-header {
     display: flex;
     justify-content: space-between;
@@ -851,7 +1513,7 @@ const saveRecord = () => {
     margin-bottom: 40rpx;
     
     text {
-      font-size: 36rpx;
+      font-size: 34rpx;
       font-weight: 600;
       color: #333;
     }
@@ -859,214 +1521,218 @@ const saveRecord = () => {
     .close-btn {
       font-size: 40rpx;
       color: #999;
-      padding: 10rpx;
     }
   }
+}
+
+// 目标设置
+.target-input-section {
+  text-align: center;
+  margin-bottom: 40rpx;
   
-  .weight-input-section {
-    text-align: center;
-    margin-bottom: 40rpx;
-    
-    .weight-display {
-      display: flex;
-      align-items: baseline;
-      justify-content: center;
-      gap: 10rpx;
-      margin-bottom: 30rpx;
-      
-      .weight-number {
-        font-size: 80rpx;
-        font-weight: bold;
-        color: #333;
-        width: 250rpx;
-        text-align: center;
-        border: none;
-        background: transparent;
-      }
-      
-      .weight-unit {
-        font-size: 40rpx;
-        color: #999;
-      }
-    }
-    
-    .quick-weights {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 16rpx;
-      
-      .quick-weight-item {
-        padding: 16rpx 30rpx;
-        background: #f5f5f5;
-        border-radius: 30rpx;
-        font-size: 28rpx;
-        color: #666;
-        
-        &.active {
-          background: #5AD8A6;
-          color: #fff;
-        }
-      }
-    }
+  .input-desc {
+    display: block;
+    font-size: 26rpx;
+    color: #666;
+    margin-bottom: 20rpx;
   }
   
-  .form-item {
+  .target-input-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12rpx;
     margin-bottom: 30rpx;
     
-    .label {
-      display: block;
-      font-size: 26rpx;
-      color: #666;
-      margin-bottom: 16rpx;
-    }
-    
-    .input {
-      width: 100%;
+    .target-input {
+      width: 200rpx;
       height: 80rpx;
       background: #f5f5f5;
       border-radius: 12rpx;
-      padding: 0 24rpx;
+      text-align: center;
+      font-size: 40rpx;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .unit {
       font-size: 28rpx;
+      color: #666;
     }
   }
   
-  .weight-chart-section {
-    margin-bottom: 30rpx;
+  .quick-targets {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16rpx;
     
-    .chart-title {
-      display: block;
-      font-size: 28rpx;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 20rpx;
+    .quick-target-tag {
+      padding: 16rpx 32rpx;
+      background: #f0f0f0;
+      border-radius: 28rpx;
+      font-size: 26rpx;
+      color: #666;
+      
+      &.active {
+        background: linear-gradient(135deg, #5AD8A6 0%, #5B8FF9 100%);
+        color: #fff;
+      }
+    }
+  }
+}
+
+// 编辑列表
+.edit-list {
+  max-height: 400rpx;
+  margin-bottom: 20rpx;
+  
+  .edit-item {
+    position: relative;
+    padding: 20rpx;
+    background: #f9f9f9;
+    border-radius: 12rpx;
+    margin-bottom: 16rpx;
+    
+    .delete-btn {
+      position: absolute;
+      top: 20rpx;
+      right: 20rpx;
     }
     
-    .chart-container {
+    .edit-field {
+      margin-bottom: 16rpx;
+      
+      &.half {
+        flex: 1;
+      }
+      
+      .field-label {
+        display: block;
+        font-size: 24rpx;
+        color: #999;
+        margin-bottom: 8rpx;
+      }
+      
+      .field-input {
+        width: 100%;
+        height: 64rpx;
+        background: #fff;
+        border-radius: 8rpx;
+        padding: 0 16rpx;
+        font-size: 28rpx;
+      }
+    }
+    
+    .edit-row {
+      display: flex;
+      gap: 16rpx;
+    }
+  }
+}
+
+.add-food-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  padding: 20rpx;
+  border: 2rpx dashed #5AD8A6;
+  border-radius: 12rpx;
+  margin-bottom: 30rpx;
+  
+  text {
+    font-size: 26rpx;
+    color: #5AD8A6;
+  }
+}
+
+// 弹窗按钮
+.modal-actions {
+  display: flex;
+  gap: 16rpx;
+  
+  button {
+    flex: 1;
+    height: 88rpx;
+    border-radius: 44rpx;
+    font-size: 28rpx;
+    border: none;
+  }
+  
+  .btn-cancel {
+    background: #f5f5f5;
+    color: #666;
+  }
+  
+  .btn-continue {
+    background: #e6f7ff;
+    color: #5B8FF9;
+    border: 2rpx solid #5B8FF9;
+  }
+  
+  .btn-confirm {
+    background: linear-gradient(135deg, #5AD8A6 0%, #5B8FF9 100%);
+    color: #fff;
+  }
+}
+
+// 今日记录区域
+.today-records {
+  .record-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16rpx;
+    
+    .record-item {
+      display: flex;
+      align-items: center;
+      gap: 16rpx;
+      padding: 16rpx;
       background: #f9f9f9;
       border-radius: 16rpx;
-      padding: 30rpx 20rpx;
       
-      .chart-line {
-        position: relative;
-        height: 200rpx;
-        margin-bottom: 20rpx;
-        
-        .chart-point {
-          position: absolute;
-          width: 16rpx;
-          height: 16rpx;
-          border-radius: 50%;
-          transform: translate(-50%, 50%);
-          
-          .point-tooltip {
-            position: absolute;
-            bottom: 20rpx;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 20rpx;
-            color: #666;
-            white-space: nowrap;
-          }
-        }
-        
-        .chart-line-svg {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 30rpx;
-          
-          svg {
-            width: 100%;
-            height: 100%;
-          }
-        }
+      .record-thumb {
+        width: 80rpx;
+        height: 80rpx;
+        border-radius: 12rpx;
+        object-fit: cover;
       }
       
-      .chart-labels {
+      .record-thumb-placeholder {
+        width: 80rpx;
+        height: 80rpx;
+        border-radius: 12rpx;
+        background: linear-gradient(135deg, #f0f9f4 0%, #e6f7ff 100%);
         display: flex;
-        justify-content: space-between;
-        
-        .chart-label {
-          font-size: 20rpx;
-          color: #999;
-        }
-      }
-    }
-  }
-  
-  .weight-history-section {
-    max-height: 300rpx;
-    margin-bottom: 30rpx;
-    
-    .history-title {
-      display: block;
-      font-size: 28rpx;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 20rpx;
-    }
-    
-    .history-list {
-      max-height: 250rpx;
-      
-      .history-item {
-        display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 20rpx 0;
-        border-bottom: 1rpx solid #f0f0f0;
+        justify-content: center;
+        font-size: 36rpx;
+      }
+      
+      .record-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4rpx;
         
-        &:last-child {
-          border-bottom: none;
+        .record-name {
+          font-size: 28rpx;
+          color: #333;
+          font-weight: 500;
         }
         
-        .history-left {
-          display: flex;
-          flex-direction: column;
-          
-          .history-weight {
-            font-size: 30rpx;
-            color: #333;
-            font-weight: 500;
-          }
-          
-          .history-note {
-            font-size: 24rpx;
-            color: #999;
-            margin-top: 4rpx;
-          }
-        }
-        
-        .history-date {
+        .record-detail {
           font-size: 24rpx;
           color: #999;
         }
       }
-    }
-  }
-  
-  .modal-actions {
-    display: flex;
-    gap: 20rpx;
-    
-    button {
-      flex: 1;
-      height: 90rpx;
-      border-radius: 45rpx;
-      font-size: 30rpx;
-      border: none;
-    }
-    
-    .btn-cancel {
-      background: #f5f5f5;
-      color: #666;
-    }
-    
-    .btn-confirm {
-      background: #5AD8A6;
-      color: #fff;
+      
+      .record-calories {
+        font-size: 28rpx;
+        color: #5AD8A6;
+        font-weight: 600;
+      }
     }
   }
 }

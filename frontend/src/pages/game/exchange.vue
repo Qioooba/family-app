@@ -6,7 +6,7 @@
 >
       <view class="back-btn" @click="goBack"
 >
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">积分兑换</text>
       <view class="right-btn" @click="showRules">
@@ -149,7 +149,7 @@
           
           <view v-if="exchangeHistory.length === 0" class="empty-history"
 >
-            <u-icon name="file-text" size="60" color="#ddd"></u-icon>
+            <up-icon name="file-text" size="60" color="#ddd"></up-icon>
             <text>暂无兑换记录</text>
           </view>
         </view>
@@ -157,7 +157,7 @@
     </view>
 
     <!-- 兑换确认弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="exchangeModalVisible"
       mode="bottom"
       round
@@ -205,7 +205,7 @@
 
           <view class="exchange-notice"
 >
-            <u-icon name="info-circle" size="28" color="#FAAD14"></u-icon>
+            <up-icon name="info-circle" size="28" color="#FAAD14"></up-icon>
             <text>兑换后积分将立即扣除，虚拟商品将发送至账户</text>
           </view>
         </view>
@@ -216,10 +216,10 @@
           <view class="btn-confirm" @click="confirmExchange">确认兑换</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
 
     <!-- 兑换成功动画弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="successModalVisible"
       mode="center"
     >
@@ -229,7 +229,7 @@
 >
           <view class="success-circle"
 >
-            <u-icon name="checkmark" size="60" color="#fff"></u-icon>
+            <up-icon name="checkmark" size="60" color="#fff"></up-icon>
           </view>          
           
           <view class="confetti"
@@ -261,7 +261,7 @@
           </view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

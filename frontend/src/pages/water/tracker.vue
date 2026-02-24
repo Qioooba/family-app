@@ -4,11 +4,11 @@
     <view class="nav-bar"
 >
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">喝水打卡</text>
       <view class="right-btn" @click="showSettings">
-        <u-icon name="setting" size="36" color="#333"></u-icon>
+        <up-icon name="setting" size="36" color="#333"></up-icon>
       </view>
     </view>
 
@@ -107,8 +107,8 @@
         <scroll-view class="records-list" scroll-y style="max-height: 400rpx;"
 >
           <view
-            v-for="(record, index) in waterRecords"
-            :key="index"
+            v-for="record in waterRecords"
+            :key="record.id"
             class="record-item"
           >
             <view class="record-info"
@@ -125,15 +125,19 @@
               <text>+{{ record.amount }}ml</text>
             </view>
             
-            <view class="record-delete" @click="deleteRecord(index)"
+            <view class="record-delete-wrapper" @click="deleteRecord(record.id)"
 >
-              <u-icon name="trash" size="28" color="#FF4D4F"></u-icon>
+              <view class="record-delete-btn" title="删除记录"
+>
+                <up-icon name="trash" size="24" color="#fff"></up-icon>
+                <text class="delete-text">删除</text>
+              </view>
             </view>
           </view>
           
           <view v-if="waterRecords.length === 0" class="empty-records"
 >
-            <u-icon name="file-text" size="60" color="#ddd"></u-icon>
+            <up-icon name="file-text" size="60" color="#ddd"></up-icon>
             <text>今天还没有喝水记录</text>
           </view>
         </scroll-view>
@@ -146,7 +150,7 @@
 >
           <view class="reminder-info"
 >
-            <u-icon name="bell" size="40" color="#1890FF"></u-icon>
+            <up-icon name="bell" size="40" color="#1890FF"></up-icon>
             <view class="reminder-text"
 >
               <text class="reminder-title">喝水提醒</text>
@@ -205,7 +209,7 @@
     </view>
 
     <!-- 设置弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="settingsVisible"
       mode="bottom"
       round
@@ -269,13 +273,14 @@
           <view class="btn-confirm" @click="saveSettings">保存设置</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
+import { waterApi } from '../../api/index.js'
 
 // 响应式数据
 const dailyTarget = ref(2000)
@@ -347,71 +352,234 @@ const loadSettings = () => {
 }
 
 // 加载今日记录
-const loadTodayRecords = () => {
-  const today = dayjs().format('YYYY-MM-DD')
-  const records = uni.getStorageSync(`waterRecords_${today}`)
-  if (records) {
-    waterRecords.value = records
-    // 重新计算今日摄入量
-    todayIntake.value = records.reduce((sum, r) => sum + r.amount, 0)
+const loadTodayRecords = async () => {
+  try {
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || userInfo?.userId
+    
+    if (!userId) {
+      console.warn('[WaterTracker] 未找到用户信息，跳过饮水数据加载')
+      // 显示登录提示
+      waterRecords.value = []
+      todayIntake.value = 0
+      return
+    }
+    
+    // 检查token
+    const token = uni.getStorageSync('token')
+    if (!token) {
+      console.warn('[WaterTracker] 用户未登录，无法加载饮水数据')
+      return
+    }
+    
+    console.log('[WaterTracker] 开始加载今日饮水记录, userId:', userId)
+    const res = await waterApi.getToday(userId)
+    console.log('[WaterTracker] 饮水数据响应:', res)
+    
+    if (res) {
+      todayIntake.value = res.todayAmount || 0
+      dailyTarget.value = res.targetAmount || 2000
+      // 转换后端记录格式为前端显示格式
+      waterRecords.value = (res.records || []).map(record => ({
+        id: record.id,
+        name: '喝水记录',
+        amount: record.amount,
+        time: formatTime(record.recordTime),
+        icon: '💧'
+      }))
+      console.log('[WaterTracker] 今日饮水记录加载完成，共', waterRecords.value.length, '条')
+    }
+  } catch (e) {
+    console.error('[WaterTracker] 加载喝水数据失败:', e)
+    // 降级到本地存储
+    const today = dayjs().format('YYYY-MM-DD')
+    const records = uni.getStorageSync(`waterRecords_${today}`)
+    if (records) {
+      waterRecords.value = records
+      todayIntake.value = records.reduce((sum, r) => sum + r.amount, 0)
+    }
+  }
+}
+
+// 格式化时间
+const formatTime = (timeStr) => {
+  if (!timeStr) return ''
+  
+  try {
+    // 处理多种时间格式
+    let hours, minutes
+    
+    // 如果是完整日期时间格式
+    if (timeStr.includes('T') || timeStr.includes(' ')) {
+      const date = new Date(timeStr)
+      if (!isNaN(date.getTime())) {
+        hours = date.getHours()
+        minutes = date.getMinutes()
+      }
+    }
+    // 如果是时间字符串格式
+    else if (timeStr.includes(':')) {
+      const parts = timeStr.split(':')
+      hours = parseInt(parts[0])
+      minutes = parseInt(parts[1])
+    }
+    
+    if (isNaN(hours) || isNaN(minutes)) {
+      return ''
+    }
+    
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+  } catch (e) {
+    console.error('时间格式化错误:', timeStr, e)
+    return ''
   }
 }
 
 // 添加水量
-const addWater = (amount, cupIndex) => {
+const addWater = async (amount, cupIndex) => {
   // 如果是点击已填满的杯子，不做处理
   if (cupIndex !== undefined && cupIndex < filledCups.value) {
     uni.showToast({ title: '这杯水已经喝过啦', icon: 'none' })
     return
   }
   
-  todayIntake.value += amount
-  
-  const record = {
-    name: cupIndex !== undefined ? cupLabels[cupIndex] || `第${cupIndex + 1}杯` : '喝水',
-    amount,
-    time: dayjs().format('HH:mm'),
-    icon: '💧'
+  try {
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || 1
+    
+    // 格式化时间
+    const now = new Date()
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const seconds = String(now.getSeconds()).padStart(2, '0')
+    const timeString = `${hours}:${minutes}:${seconds}`
+    
+    const requestData = {
+      userId: userId,
+      amount: amount,
+      recordTime: timeString
+    }
+    
+    await waterApi.record(requestData)
+    
+    // 刷新记录列表
+    await loadTodayRecords()
+    
+    // 检查是否达成目标
+    if (todayIntake.value >= dailyTarget.value && todayIntake.value - amount < dailyTarget.value) {
+      uni.showModal({
+        title: '🎉 恭喜！',
+        content: '今日喝水目标已达成！继续保持健康生活习惯！',
+        showCancel: false
+      })
+    } else {
+      uni.showToast({ title: `+${amount}ml`, icon: 'none' })
+    }
+    
+    // 更新本周数据
+    updateWeekData()
+  } catch (e) {
+    console.error('记录喝水失败:', e)
+    let errorMsg = '记录失败'
+    if (e.statusCode === 401) {
+      errorMsg = '请先登录后再记录'
+    } else if (e.message) {
+      errorMsg = e.message
+    }
+    uni.showToast({ title: errorMsg, icon: 'none', duration: 3000 })
+    
+    // 降级到本地存储
+    todayIntake.value += amount
+    const record = {
+      name: cupIndex !== undefined ? cupLabels[cupIndex] || `第${cupIndex + 1}杯` : '喝水',
+      amount,
+      time: dayjs().format('HH:mm'),
+      icon: '💧'
+    }
+    waterRecords.value.unshift(record)
+    const today = dayjs().format('YYYY-MM-DD')
+    uni.setStorageSync(`waterRecords_${today}`, waterRecords.value)
+    updateWeekData()
   }
-  
-  waterRecords.value.unshift(record)
-  
-  // 保存记录
-  const today = dayjs().format('YYYY-MM-DD')
-  uni.setStorageSync(`waterRecords_${today}`, waterRecords.value)
-  
-  // 检查是否达成目标
-  if (todayIntake.value >= dailyTarget.value && todayIntake.value - amount < dailyTarget.value) {
-    uni.showModal({
-      title: '🎉 恭喜！',
-      content: '今日喝水目标已达成！继续保持健康生活习惯！',
-      showCancel: false
-    })
-  } else {
-    uni.showToast({ title: `+${amount}ml`, icon: 'none' })
-  }
-  
-  // 更新本周数据
-  updateWeekData()
 }
 
 // 删除记录
-const deleteRecord = (index) => {
+const deleteRecord = async (recordId) => {
+  if (!recordId) {
+    uni.showToast({ title: '记录ID无效', icon: 'none' })
+    return
+  }
+  
+  // 检查登录状态
+  const token = uni.getStorageSync('token')
+  if (!token) {
+    console.error('[WaterTracker] 删除记录失败: 用户未登录')
+    uni.showModal({
+      title: '请先登录',
+      content: '您需要登录后才能删除饮水记录',
+      showCancel: false,
+      success: () => {
+        uni.navigateTo({ url: '/pages/login/index' })
+      }
+    })
+    return
+  }
+  
   uni.showModal({
     title: '确认删除',
-    content: '删除这条记录？',
-    success: (res) => {
+    content: '确定要删除这条喝水记录吗？',
+    confirmColor: '#FF4D4F',
+    success: async (res) => {
       if (res.confirm) {
-        const record = waterRecords.value[index]
-        todayIntake.value -= record.amount
-        waterRecords.value.splice(index, 1)
-        
-        // 保存记录
-        const today = dayjs().format('YYYY-MM-DD')
-        uni.setStorageSync(`waterRecords_${today}`, waterRecords.value)
-        
-        updateWeekData()
-        uni.showToast({ title: '已删除', icon: 'success' })
+        uni.showLoading({ title: '删除中...' })
+        try {
+          console.log('[WaterTracker] 正在删除喝水记录:', recordId)
+          
+          // 先检查记录是否存在
+          const record = waterRecords.value.find(r => r.id === recordId)
+          if (!record) {
+            console.warn('[WaterTracker] 记录不存在:', recordId)
+            uni.hideLoading()
+            uni.showToast({ title: '记录不存在', icon: 'none' })
+            return
+          }
+          
+          // 调用API删除 - 不使用silent选项，确保能看到错误
+          await waterApi.deleteRecord(recordId)
+          
+          uni.hideLoading()
+          uni.showToast({ title: '删除成功', icon: 'success' })
+          
+          // 本地更新列表
+          waterRecords.value = waterRecords.value.filter(r => r.id !== recordId)
+          todayIntake.value = Math.max(0, todayIntake.value - (record.amount || 0))
+          
+          // 刷新今日记录
+          await loadTodayRecords()
+        } catch (e) {
+          uni.hideLoading()
+          console.error('[WaterTracker] 删除记录失败:', e)
+          
+          let errorMsg = '删除失败'
+          if (e?.code === 401 || e?.code === 4010) {
+            errorMsg = '请先登录后再删除'
+            // 清除token并跳转登录
+            uni.removeStorageSync('token')
+            uni.removeStorageSync('userInfo')
+            uni.navigateTo({ url: '/pages/login/index' })
+            return
+          } else if (e?.code === 403) {
+            errorMsg = '无权删除此记录'
+          } else if (e?.code === 404) {
+            errorMsg = '记录不存在或已删除'
+          } else if (e?.code === 500) {
+            errorMsg = '服务器错误，请稍后重试'
+          } else if (e?.message) {
+            errorMsg = e.message
+          }
+          
+          uni.showToast({ title: errorMsg, icon: 'none', duration: 3000 })
+        }
       }
     }
   })
@@ -819,8 +987,32 @@ const goBack = () => {
     margin-right: 20rpx;
   }
 
-  .record-delete {
-    padding: 10rpx;
+  .record-delete-wrapper {
+    padding: 8rpx;
+    
+    .record-delete-btn {
+      width: 100rpx;
+      height: 56rpx;
+      background: linear-gradient(135deg, #FF4D4F 0%, #FF7875 100%);
+      border-radius: 28rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6rpx;
+      box-shadow: 0 4rpx 16rpx rgba(255, 77, 79, 0.4);
+      transition: all 0.2s ease;
+      
+      .delete-text {
+        font-size: 22rpx;
+        color: #fff;
+        font-weight: 500;
+      }
+      
+      &:active {
+        transform: scale(0.95);
+        box-shadow: 0 2rpx 8rpx rgba(255, 77, 79, 0.6);
+      }
+    }
   }
 }
 

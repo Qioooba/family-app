@@ -6,11 +6,11 @@
 >
       <view class="back-btn" @click="goBack"
 >
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">贺卡生成</text>
       <view class="right-btn" @click="showHistory">
-        <u-icon name="file-text" size="36" color="#333"></u-icon>
+        <up-icon name="file-text" size="36" color="#333"></up-icon>
       </view>
     </view>
 
@@ -111,20 +111,20 @@
       <!-- 操作按钮 -->
       <view class="actions-section">
         <view class="action-btn primary" @click="generateCard">
-          <u-icon name="photo" size="32" color="#fff"></u-icon>
+          <up-icon name="photo" size="32" color="#fff"></up-icon>
           <text>生成贺卡</text>
         </view>
         
         <view class="action-row"
 >
           <view class="action-btn secondary" @click="saveToAlbum">
-            <u-icon name="download" size="28" color="#5B8FF9"></u-icon>
+            <up-icon name="download" size="28" color="#5B8FF9"></up-icon>
             <text>保存</text>
           </view>
           
           <view class="action-btn secondary" @click="shareCard"
 >
-            <u-icon name="share" size="28" color="#52C41A"></u-icon>
+            <up-icon name="share" size="28" color="#52C41A"></up-icon>
             <text>分享</text>
           </view>
         </view>
@@ -132,7 +132,7 @@
     </view>
 
     <!-- 生成的贺卡预览弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="previewModalVisible"
       mode="center"
     >
@@ -164,7 +164,7 @@
           <view class="btn-share" @click="shareCard">分享贺卡</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

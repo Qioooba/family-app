@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
  * 用户控制器
  */
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 @SaCheckLogin
 public class UserController {

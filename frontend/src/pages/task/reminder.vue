@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">提醒设置</text>
       <view class="right-btn" @click="saveReminder">
@@ -17,7 +17,7 @@
         <view class="switch-card">
           <view class="switch-row">
             <view class="switch-info">
-              <u-icon name="bell" size="40" color="#5B8FF9"></u-icon>
+              <up-icon name="bell" size="40" color="#5B8FF9"></up-icon>
               <view class="switch-text">
                 <text class="switch-title">开启提醒</text>
                 <text class="switch-desc">到达设定时间时收到通知</text>
@@ -42,7 +42,7 @@
             <picker mode="date" :value="reminderDate" @change="onDateChange">
               <view class="picker-value">
                 <text class="date-text">{{ reminderDate || '选择日期' }}</text>
-                <u-icon name="arrow-right" size="28" color="#999"></u-icon>
+                <up-icon name="arrow-right" size="28" color="#999"></up-icon>
               </view>
             </picker>
           </view>
@@ -52,7 +52,7 @@
             <picker mode="time" :value="reminderTime" @change="onTimeChange">
               <view class="picker-value">
                 <text class="time-text">{{ reminderTime || '选择时间' }}</text>
-                <u-icon name="arrow-right" size="28" color="#999"></u-icon>
+                <up-icon name="arrow-right" size="28" color="#999"></up-icon>
               </view>
             </picker>
           </view>
@@ -69,7 +69,7 @@
               :class="{ active: isQuickTimeSelected(option) }"
               @click="selectQuickTime(option)"
             >
-              <u-icon :name="option.icon" size="28" :color="isQuickTimeSelected(option) ? '#5B8FF9' : '#999'"></u-icon>
+              <up-icon :name="option.icon" size="28" :color="isQuickTimeSelected(option) ? '#5B8FF9' : '#999'"></up-icon>
               <text>{{ option.label }}</text>
             </view>
           </view>

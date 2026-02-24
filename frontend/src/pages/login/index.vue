@@ -9,7 +9,16 @@
     <view class="login-content">
       <view class="login-header">
         <view class="logo-wrapper">
-          <image class="logo" src="/static/logo.png" mode="aspectFit" />
+          <view class="logo-svg">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="100" r="90" fill="#6B8DD6"/>
+              <polygon points="100,45 55,95 145,95" fill="white"/>
+              <rect x="65" y="95" width="70" height="60" fill="white"/>
+              <rect x="88" y="125" width="24" height="30" fill="#6B8DD6"/>
+              <rect x="75" y="105" width="15" height="15" fill="#6B8DD6"/>
+              <rect x="110" y="105" width="15" height="15" fill="#6B8DD6"/>
+            </svg>
+          </view>
         </view>
         <view class="title">欢迎回家</view>
         <view class="subtitle">记录美好生活的每一天</view>
@@ -52,15 +61,18 @@
           </view>
           
           <view class="form-item">
-            <view class="input-wrapper">
+            <view class="input-wrapper password-wrapper">
               <text class="input-icon">🔒</text>
               <input
                 v-model="form.password"
-                class="login-input"
-                password
+                class="login-input password-input"
+                :type="passwordVisible ? 'text' : 'password'"
                 placeholder="请输入密码"
                 placeholder-class="input-placeholder"
               />
+              <view class="password-toggle" @click="togglePasswordVisible">
+                <up-icon :name="passwordVisible ? 'eye-off' : 'eye'" size="20" color="#999"></up-icon>
+              </view>
             </view>
           </view>
         </template>
@@ -117,9 +129,8 @@
           <text v-else class="btn-text">登录中...</text>
         </button>
         
-        <view class="register-link">
-          <text class="link-text">还没有账号？</text>
-          <text class="link-action" @click="goRegister">立即注册</text>
+        <view class="tips-text">
+          <text>请使用家人分享的邀请码登录</text>
         </view>
       </view>
       
@@ -134,7 +145,7 @@
         <view class="login-icons">
           <view class="icon-item" @click="wxLogin">
             <view class="icon wechat">
-              <u-icon name="weixin-fill" size="44" color="#fff"></u-icon>
+              <up-icon name="weixin-fill" size="44" color="#fff"></up-icon>
             </view>
             <text class="icon-text">微信</text>
           </view>
@@ -153,6 +164,11 @@ const userStore = useUserStore()
 const loginType = ref('password')
 const loading = ref(false)
 const codeCountdown = ref(0)
+const passwordVisible = ref(false)
+
+const togglePasswordVisible = () => {
+  passwordVisible.value = !passwordVisible.value
+}
 
 const form = reactive({
   username: '',
@@ -182,12 +198,17 @@ const handleLogin = async () => {
     
     await userStore.login(loginData)
     uni.showToast({ title: '登录成功', icon: 'success' })
-    
+
     setTimeout(() => {
       uni.switchTab({ url: '/pages/home/index' })
     }, 1500)
   } catch (e) {
-    console.error(e)
+    console.error('登录失败:', e)
+    uni.showToast({ 
+      title: e.message || '登录失败，请检查网络或账号密码', 
+      icon: 'none',
+      duration: 2500
+    })
   } finally {
     loading.value = false
   }
@@ -214,10 +235,6 @@ const sendCode = async () => {
   } catch (e) {
     uni.showToast({ title: e.message || '发送失败', icon: 'none' })
   }
-}
-
-const goRegister = () => {
-  uni.navigateTo({ url: '/pages/register/index' })
 }
 
 const forgotPassword = () => {
@@ -330,7 +347,7 @@ button::after {
     box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.15);
     animation: scaleIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     
-    .logo {
+    .logo-svg {
       width: 140rpx;
       height: 140rpx;
       display: block;
@@ -479,6 +496,20 @@ button::after {
     color: #a0aec0;
     font-size: 28rpx;
   }
+  
+  .password-toggle {
+    padding: 16rpx;
+    margin-right: -8rpx;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    
+    &:active {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
 }
 
 .code-item {
@@ -570,26 +601,14 @@ button::after {
   }
 }
 
-.register-link {
+.tips-text {
   text-align: center;
   margin-top: 32rpx;
   padding: 16rpx 0;
   
-  .link-text {
-    font-size: 26rpx;
-    color: #8b9aad;
-  }
-  
-  .link-action {
-    font-size: 26rpx;
-    color: #6B8DD6;
-    font-weight: 600;
-    margin-left: 8rpx;
-    transition: all 0.2s ease;
-    
-    &:active {
-      opacity: 0.7;
-    }
+  text {
+    font-size: 24rpx;
+    color: #999;
   }
 }
 
@@ -666,7 +685,7 @@ button::after {
       padding: 16rpx;
       margin-bottom: 20rpx;
       
-      .logo {
+      .logo-svg {
         width: 120rpx;
         height: 120rpx;
       }

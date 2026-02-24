@@ -1,5 +1,6 @@
 package com.family.calendar.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.family.common.core.BaseEntity;
 
 import java.time.LocalDate;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 /**
  * 纪念日实体
  */
+@TableName("calendar_anniversary")
 public class Anniversary extends BaseEntity {
     private static final long serialVersionUID = 1L;
     

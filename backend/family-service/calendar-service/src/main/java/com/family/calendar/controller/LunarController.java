@@ -16,7 +16,7 @@ import java.util.List;
  */
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/lunar")
+@RequestMapping("/api/calendar/lunar")
 @RequiredArgsConstructor
 public class LunarController {
     

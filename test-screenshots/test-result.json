@@ -1,0 +1,60 @@
+{
+  "test_time": "2026-02-23 03:58:57",
+  "login": {
+    "title": "欢迎回家",
+    "url_after_login": "http://localhost:3000/#/",
+    "success": true
+  },
+  "home": {
+    "username": "TestUser",
+    "shortcuts": {
+      "添加任务": "visible",
+      "记录饮食": "visible",
+      "喝水打卡": "visible",
+      "优惠券": "visible",
+      "营养成分": "visible",
+      "AI助手": "visible"
+    },
+    "add_task_click": "success",
+    "navigation": "success",
+    "task_more": "success",
+    "food_record": "success",
+    "water_check": "success",
+    "ai_assistant": "success",
+    "scroll": "success"
+  },
+  "task": {
+    "page_load": "success",
+    "form": "filled"
+  },
+  "family": {
+    "page_load": "success",
+    "content": [
+      "家庭",
+      "成员",
+      "邀请"
+    ]
+  },
+  "profile": {
+    "page_load": "success",
+    "menu": {
+      "设置": "found",
+      "关于": "found",
+      "帮助": "not_found",
+      "退出": "found",
+      "账号": "not_found",
+      "通知": "not_found"
+    }
+  },
+  "issues": [
+    {
+      "module": "任务",
+      "desc": "任务标题输入框未找到",
+      "level": "P1",
+      "time": "03:59:53"
+    }
+  ],
+  "navigation": {
+    "back_to_home": "success"
+  }
+}

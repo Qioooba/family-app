@@ -3,11 +3,11 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">里程碑</text>
       <view class="right-btn" @click="showAddMilestone">
-        <u-icon name="plus" size="36" color="#fff"></u-icon>
+        <up-icon name="plus" size="36" color="#fff"></up-icon>
       </view>
     </view>
 
@@ -92,12 +92,12 @@
               <!-- 时间线中轴 -->
               <view class="timeline-axis">
                 <view class="axis-dot">
-                  <u-icon 
+                  <up-icon 
                     v-if="milestone.status === 'completed'" 
                     name="checkmark" 
                     size="20" 
                     color="#fff"
-                  ></u-icon>
+                  ></up-icon>
                   <view v-else-if="milestone.status === 'active'" class="pulse-dot"></view>
                 </view>
                 <view v-if="index !== filteredMilestones.length - 1" class="axis-line"></view>
@@ -127,14 +127,14 @@
                       :class="{ done: task.done }"
                     >
                       <view class="task-checkbox">
-                        <u-icon v-if="task.done" name="checkmark" size="16" color="#52C41A"></u-icon>
+                        <up-icon v-if="task.done" name="checkmark" size="16" color="#52C41A"></up-icon>
                       </view>
                       <text class="task-text">{{ task.name }}</text>
                     </view>
                   </view>
 
                   <view v-if="milestone.reward" class="milestone-reward">
-                    <u-icon name="gift" size="24" color="#FAAD14"></u-icon>
+                    <up-icon name="gift" size="24" color="#FAAD14"></up-icon>
                     <text>{{ milestone.reward }}</text>
                   </view>
 
@@ -169,7 +169,7 @@
           </view>
           
           <view v-if="filteredMilestones.length === 0" class="empty-timeline">
-            <u-icon name="file-text" size="80" color="#ddd"></u-icon>
+            <up-icon name="file-text" size="80" color="#ddd"></up-icon>
             <text class="empty-text">暂无里程碑</text>
             <text class="empty-hint">点击右上角 + 添加第一个里程碑</text>
           </view>
@@ -178,7 +178,7 @@
     </view>
 
     <!-- 添加/编辑里程碑弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="milestoneModalVisible"
       mode="bottom"
       round
@@ -262,7 +262,7 @@
           <view class="btn-confirm" @click="saveMilestone">确定</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

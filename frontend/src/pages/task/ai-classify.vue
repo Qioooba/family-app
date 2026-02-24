@@ -145,15 +145,41 @@ const generateSuggestions = (category, text) => {
 const createTask = async () => {
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
-    await taskApi.create({
+    // 获取当前用户信息
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || userInfo?.userId
+
+    // 默认今天 23:59
+    const today = new Date().toISOString().split('T')[0]
+    const dueTime = `${today}T23:59:00`
+
+    const taskData = {
       title: taskText.value,
       categoryName: classificationResult.value.category,
-      familyId
-    })
+      familyId: familyId,
+      dueTime: dueTime,  // 后端期望 LocalDateTime 格式
+      status: 0,
+      priority: 0,
+      creatorId: userId
+    }
+
+    console.log('[AIClassify] 创建任务请求数据:', taskData)
+    await taskApi.create(taskData)
     uni.showToast({ title: '创建成功', icon: 'success' })
     setTimeout(() => uni.navigateBack(), 1500)
   } catch (e) {
-    uni.showToast({ title: '创建失败', icon: 'none' })
+    console.error('创建任务失败', e)
+    let errorMsg = '创建失败'
+    if (e?.message) {
+      errorMsg = e.message
+    } else if (typeof e === 'string') {
+      errorMsg = e
+    }
+    uni.showModal({
+      title: '创建失败',
+      content: errorMsg,
+      showCancel: false
+    })
   }
 }
 

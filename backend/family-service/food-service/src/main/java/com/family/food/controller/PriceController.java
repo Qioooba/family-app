@@ -19,7 +19,7 @@ import java.util.List;
  */
 @RestController
 @SaCheckLogin
-@RequestMapping("/api/price")
+@RequestMapping("/api/food/price")
 public class PriceController {
     
     private static final Logger log = LoggerFactory.getLogger(PriceController.class);

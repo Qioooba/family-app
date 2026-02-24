@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 圆形背景 -->
+  <circle cx="100" cy="100" r="90" fill="#6B8DD6"/>
+  
+  <!-- 房子屋顶 -->
+  <polygon points="100,45 55,95 145,95" fill="white"/>
+  
+  <!-- 房子主体 -->
+  <rect x="65" y="95" width="70" height="60" fill="white"/>
+  
+  <!-- 门 -->
+  <rect x="88" y="125" width="24" height="30" fill="#6B8DD6"/>
+  
+  <!-- 窗户 -->
+  <rect x="75" y="105" width="15" height="15" fill="#6B8DD6"/>
+  <rect x="110" y="105" width="15" height="15" fill="#6B8DD6"/>
+</svg>

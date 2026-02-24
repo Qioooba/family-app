@@ -60,5 +60,31 @@ CREATE TABLE IF NOT EXISTS task (
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 心愿表
+CREATE TABLE IF NOT EXISTS wish (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    family_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(50) DEFAULT 'custom',
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    budget_min DECIMAL(10,2),
+    budget_max DECIMAL(10,2),
+    expect_date DATE,
+    visibility VARCHAR(20) DEFAULT 'family',
+    priority INT DEFAULT 2,
+    difficulty INT DEFAULT 1,
+    status INT DEFAULT 0,
+    claimant_id BIGINT,
+    progress INT DEFAULT 0,
+    images TEXT,
+    finish_time DATE,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_family_id (family_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 更多表结构...
 -- 实际部署时请使用 database/schema.sql 中的完整表结构

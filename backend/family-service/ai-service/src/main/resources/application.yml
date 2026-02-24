@@ -19,10 +19,10 @@ spring:
   redis:
     host: ${REDIS_HOST:localhost}
     port: ${REDIS_PORT:6379}
-    password: your_secure_redis_password
+    password:
     database: ${REDIS_DB:0}
   redisson:
-    password: your_secure_redis_password
+    password:
     timeout: 10s
     lettuce:
       pool:

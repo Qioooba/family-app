@@ -1,5 +1,6 @@
 package com.family.recipe.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.family.common.core.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,6 +10,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TableName("recipe")
 public class Recipe extends BaseEntity {
     private static final long serialVersionUID = 1L;
     

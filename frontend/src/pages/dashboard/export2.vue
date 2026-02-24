@@ -4,7 +4,7 @@
     <view class="nav-bar"
 >
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">数据导出</text>
       <view class="right-btn" @click="showHistory">
@@ -149,8 +149,8 @@
             <text>导出中 {{ exportProgress }}%</text>          
           </view>          
           <block v-else>
-            <u-icon :name="exportStatus === 'success' ? 'checkmark' : 'download'" size="32" color="#fff"
-</u-icon>            
+            <up-icon :name="exportStatus === 'success' ? 'checkmark' : 'download'" size="32" color="#fff"
+</up-icon>            
             <text>{{ exportButtonText }}</text>          
           </block>        
         </view>        
@@ -162,24 +162,24 @@
       <view class="tips-section"
 >
         <view class="tip-item">
-          <u-icon name="info-circle" size="28" color="#999"></u-icon>          
+          <up-icon name="info-circle" size="28" color="#999"></up-icon>          
           <text>导出的数据仅包含您有权限查看的内容</text>        
         </view>        
         
         <view class="tip-item">
-          <u-icon name="info-circle" size="28" color="#999"></u-icon>          
+          <up-icon name="info-circle" size="28" color="#999"></up-icon>          
           <text>导出完成后将自动保存到手机相册或下载目录</text>        
         </view>        
         
         <view class="tip-item">
-          <u-icon name="info-circle" size="28" color="#999"></u-icon>          
+          <up-icon name="info-circle" size="28" color="#999"></up-icon>          
           <text>大型数据导出可能需要较长时间，请保持应用在前台</text>        
         </view>      
       </view>
     </view>
 
     <!-- 导出成功弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="successModalVisible"
       mode="center"
     >
@@ -188,7 +188,7 @@
         <view class="success-icon">
           <view class="icon-circle"
 >
-            <u-icon name="checkmark" size="60" color="#fff"></u-icon>
+            <up-icon name="checkmark" size="60" color="#fff"></up-icon>
           </view>        
         </view>        
         
@@ -210,7 +210,7 @@
           <view class="btn-done" @click="successModalVisible = false">完成</view>        
         </view>      
       </view>    
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

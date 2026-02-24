@@ -1,14 +1,14 @@
 <template>
   <view class="account-page">
     <!-- 自定义导航栏 -->
-    <u-navbar title="家庭账本" :autoBack="true" bgColor="#fff" :fixed="true" :placeholder="true"></u-navbar>
+    <up-navbar title="家庭账本" :autoBack="true" bgColor="#fff" :fixed="true" :placeholder="true"></up-navbar>
     
     <!-- 月度概览卡片 -->
     <view class="overview-card">
       <view class="overview-header">
         <view class="month-selector" @click="showMonthPicker">
           <text class="month-text">{{ currentMonth }}</text>
-          <u-icon name="arrow-down" size="24" color="#fff"></u-icon>
+          <up-icon name="arrow-down" size="24" color="#fff"></up-icon>
         </view>
         <view class="budget-status" :class="{ warning: budgetProgress > 80 }">
           <text>{{ budgetProgress }}%</text>
@@ -51,15 +51,15 @@
     <!-- 快速记账按钮 -->
     <view class="quick-actions">
       <view class="action-btn expense" @click="openRecord('expense')">
-        <u-icon name="minus-circle" size="40" color="#fff"></u-icon>
+        <up-icon name="minus-circle" size="40" color="#fff"></up-icon>
         <text>记支出</text>
       </view>
       <view class="action-btn income" @click="openRecord('income')">
-        <u-icon name="plus-circle" size="40" color="#fff"></u-icon>
+        <up-icon name="plus-circle" size="40" color="#fff"></up-icon>
         <text>记收入</text>
       </view>
       <view class="action-btn stats" @click="showStats">
-        <u-icon name="chart" size="40" color="#fff"></u-icon>
+        <up-icon name="chart" size="40" color="#fff"></up-icon>
         <text>统计</text>
       </view>
     </view>
@@ -101,15 +101,15 @@
     <view class="filter-bar">
       <view class="filter-item" @click="showTypeFilter">
         <text :class="{ active: filterType }">{{ filterType || '全部类型' }}</text>
-        <u-icon name="arrow-down" size="20" :color="filterType ? '#667eea' : '#999'"></u-icon>
+        <up-icon name="arrow-down" size="20" :color="filterType ? '#667eea' : '#999'"></up-icon>
       </view>
       <view class="filter-item" @click="showCategoryFilter">
         <text :class="{ active: filterCategory }">{{ filterCategory || '全部分类' }}</text>
-        <u-icon name="arrow-down" size="20" :color="filterCategory ? '#667eea' : '#999'"></u-icon>
+        <up-icon name="arrow-down" size="20" :color="filterCategory ? '#667eea' : '#999'"></up-icon>
       </view>
       <view class="filter-item" @click="showDateFilter">
         <text :class="{ active: filterDate }">{{ filterDate || '全部时间' }}</text>
-        <u-icon name="arrow-down" size="20" :color="filterDate ? '#667eea' : '#999'"></u-icon>
+        <up-icon name="arrow-down" size="20" :color="filterDate ? '#667eea' : '#999'"></up-icon>
       </view>
     </view>
     
@@ -138,7 +138,7 @@
           @longpress="deleteRecord(record)"
         >
           <view class="record-icon" :style="{ background: record.color }">
-            <u-icon :name="record.icon" size="36" color="#fff"></u-icon>
+            <up-icon :name="record.icon" size="36" color="#fff"></up-icon>
           </view>
           <view class="record-info">
             <text class="record-category">{{ record.category }}</text>
@@ -157,11 +157,11 @@
     </scroll-view>
     
     <!-- 记帐弹窗 -->
-    <u-popup :show="showRecordPopup" mode="bottom" @close="closeRecordPopup" round="20">
+    <up-popup :show="showRecordPopup" mode="bottom" @close="closeRecordPopup" round="20">
       <view class="record-popup">
         <view class="popup-header">
           <text class="popup-title">{{ recordForm.type === 'income' ? '记收入' : '记支出' }}</text>
-          <u-icon name="close" size="32" color="#999" @click="closeRecordPopup"></u-icon>
+          <up-icon name="close" size="32" color="#999" @click="closeRecordPopup"></up-icon>
         </view>
         
         <view class="amount-input">
@@ -195,7 +195,7 @@
             @click="selectCategory(cat)"
           >
             <view class="cat-icon" :style="{ background: cat.color }">
-              <u-icon :name="cat.icon" size="32" color="#fff"></u-icon>
+              <up-icon :name="cat.icon" size="32" color="#fff"></up-icon>
             </view>
             <text>{{ cat.name }}</text>
           </view>
@@ -211,15 +211,15 @@
               type="text"
             />
           </view>
-          <u-datetime-picker
+          <up-datetime-picker
             :show="showDatePicker"
             v-model="recordForm.datetime"
             mode="datetime"
             @confirm="confirmDate"
             @cancel="showDatePicker = false"
-          ></u-datetime-picker>
+          ></up-datetime-picker>
           <view class="date-field" @click="showDatePicker = true">
-            <u-icon name="calendar" size="28" color="#999"></u-icon>
+            <up-icon name="calendar" size="28" color="#999"></up-icon>
             <text>{{ formatDateTime(recordForm.datetime) }}</text>
           </view>
         </view>
@@ -230,10 +230,10 @@
           </button>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
     
     <!-- 预算设置弹窗 -->
-    <u-popup :show="showBudgetPopup" mode="center" @close="showBudgetPopup = false" round="20">
+    <up-popup :show="showBudgetPopup" mode="center" @close="showBudgetPopup = false" round="20">
       <view class="budget-popup">
         <view class="popup-title">设置月度预算</view>
         <input 
@@ -251,7 +251,7 @@
           </button>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

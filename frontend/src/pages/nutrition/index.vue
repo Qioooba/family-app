@@ -3,18 +3,18 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">营养成分查询</text>
       <view class="right-btn" @click="showScan">
-        <u-icon name="scan" size="40" color="#333"></u-icon>
+        <up-icon name="scan" size="40" color="#333"></up-icon>
       </view>
     </view>
 
     <!-- 搜索栏 -->
     <view class="search-section">
       <view class="search-box">
-        <u-icon name="search" size="36" color="#999"></u-icon>
+        <up-icon name="search" size="36" color="#999"></up-icon>
         <input
           v-model="searchKey"
           placeholder="搜索食物，如：鸡蛋、苹果、米饭..."
@@ -23,7 +23,7 @@
           focus
         />
         <view v-if="searchKey" class="clear-btn" @click="clearSearch">
-          <u-icon name="close-circle" size="32" color="#999"></u-icon>
+          <up-icon name="close-circle" size="32" color="#999"></up-icon>
         </view>
       </view>
     </view>
@@ -45,7 +45,7 @@
           <text class="food-name">{{ food.name }}</text>
           <text class="food-calories">{{ food.calories }} 千卡/100g</text>
         </view>
-        <u-icon name="arrow-right" size="32" color="#ccc"></u-icon>
+        <up-icon name="arrow-right" size="32" color="#ccc"></up-icon>
       </view>
     </view>
 
@@ -195,7 +195,7 @@
         <!-- 操作按钮 -->
         <view class="modal-actions">
           <button class="btn-fav" :class="{ active: isFavorite }" @click="toggleFavorite">
-            <u-icon :name="isFavorite ? 'star-fill' : 'star'" size="32" :color="isFavorite ? '#FF6B6B' : '#999'"></u-icon>
+            <up-icon :name="isFavorite ? 'star-fill' : 'star'" size="32" :color="isFavorite ? '#FF6B6B' : '#999'"></up-icon>
             <text>{{ isFavorite ? '已收藏' : '收藏' }}</text>
           </button>
           <button class="btn-add" @click="addToRecord">添加到记录</button>

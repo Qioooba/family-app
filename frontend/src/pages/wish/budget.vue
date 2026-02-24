@@ -3,11 +3,11 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">心愿预算</text>
       <view class="right-btn" @click="showBudgetModal">
-        <u-icon name="setting" size="36" color="#fff"></u-icon>
+        <up-icon name="setting" size="36" color="#fff"></up-icon>
       </view>
     </view>
 
@@ -146,7 +146,7 @@
           </view>
           
           <view v-if="expenseList.length === 0" class="empty-state">
-            <u-icon name="file-text" size="80" color="#ddd"></u-icon>
+            <up-icon name="file-text" size="80" color="#ddd"></up-icon>
             <text class="empty-text">暂无支出记录</text>
           </view>
         </scroll-view>
@@ -154,7 +154,7 @@
     </view>
 
     <!-- 预算设置弹窗 -->
-    <u-popup 
+    <up-popup 
       v-model:show="budgetModalVisible" 
       mode="bottom"
       round
@@ -217,10 +217,10 @@
           <view class="btn-confirm" @click="saveBudget">确定</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
 
     <!-- 分类预算设置弹窗 -->
-    <u-popup 
+    <up-popup 
       v-model:show="categoryModalVisible" 
       mode="bottom"
       round
@@ -270,7 +270,7 @@
           <view class="btn-confirm" @click="saveCategoryBudget">确定</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

@@ -9,8 +9,8 @@
     <view v-if="state === 'pending' || state === 'loading'" class="placeholder">
       <slot name="placeholder">
         <view class="default-placeholder" :style="{ backgroundColor: placeholderColor }">
-          <u-loading-icon v-if="showLoading" mode="circle" size="24" :color="loadingColor"></u-loading-icon>
-          <u-icon v-else name="photo" size="32" :color="iconColor"></u-icon>
+          <up-loading-icon v-if="showLoading" mode="circle" size="24" :color="loadingColor"></up-loading-icon>
+          <up-icon v-else name="photo" size="32" :color="iconColor"></up-icon>
         </view>
       </slot>
     </view>
@@ -19,7 +19,7 @@
     <view v-else-if="state === 'error'" class="error-placeholder" @click.stop="retry">
       <slot name="error">
         <view class="default-error">
-          <u-icon name="error-circle" size="32" color="#ef5350"></u-icon>
+          <up-icon name="error-circle" size="32" color="#ef5350"></up-icon>
           <text class="error-text">加载失败</text>
           <text class="retry-text">点击重试</text>
         </view>

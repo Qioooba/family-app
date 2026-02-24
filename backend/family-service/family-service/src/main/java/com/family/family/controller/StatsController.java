@@ -42,9 +42,13 @@ public class StatsController {
     
     @GetMapping("/tasks")
     public Result<Map<String, Object>> getTaskStats(
-            @RequestParam Long familyId,
+            @RequestParam(required = false) Long familyId,
             @RequestParam String startDate,
             @RequestParam String endDate) {
+        // 如果familyId为空,使用默认值1
+        if (familyId == null) {
+            familyId = 1L;
+        }
         return Result.success(statsService.getTaskStats(familyId, startDate, endDate));
     }
     
@@ -57,15 +61,33 @@ public class StatsController {
     
     @GetMapping("/yearly")
     public Result<Map<String, Object>> getYearlyStats(
-            @RequestParam Long familyId,
+            @RequestParam(required = false) Long familyId,
             @RequestParam int year) {
+        // 如果familyId为空,使用默认值1
+        if (familyId == null) {
+            familyId = 1L;
+        }
         return Result.success(statsService.getYearlyStats(familyId, year));
     }
     
     @GetMapping("/today")
     public Result<Map<String, Object>> getTodayOverview(
-            @RequestParam Long familyId) {
+            @RequestParam(required = false) Long familyId) {
         Long userId = StpUtil.getLoginIdAsLong();
+        // 如果familyId为空,使用默认值1
+        if (familyId == null) {
+            familyId = 1L;
+        }
         return Result.success(statsService.getTodayOverview(userId, familyId));
+    }
+    
+    @GetMapping("/family/{familyId}/monthly")
+    public Result<Map<String, Object>> getFamilyMonthlyStats(
+            @PathVariable(required = false) Long familyId) {
+        // 如果familyId为空,使用默认值1
+        if (familyId == null) {
+            familyId = 1L;
+        }
+        return Result.success(statsService.getFamilyMonthlyStats(familyId));
     }
 }

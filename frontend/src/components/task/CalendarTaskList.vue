@@ -64,14 +64,6 @@
               <text class="meta-icon">⏰</text>{{ task.dueTime }}
             </text>
           </view>
-          
-          <!-- 子任务进度 -->
-          <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
-            <view class="progress-bar">
-              <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
-            </view>
-            <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
-          </view>
         </view>
         
         <view class="task-status">
@@ -137,16 +129,6 @@ const isOverdue = (task) => {
   const due = new Date(task.dueDate)
   const now = new Date()
   return due < now && due.toDateString() !== now.toDateString()
-}
-
-const subtaskCompleted = (task) => {
-  if (!task.subtasks) return 0
-  return task.subtasks.filter(s => s.status === 1).length
-}
-
-const subtaskProgress = (task) => {
-  if (!task.subtasks || task.subtasks.length === 0) return 0
-  return Math.round((subtaskCompleted(task) / task.subtasks.length) * 100)
 }
 
 const selectFilter = (value) => {
@@ -308,33 +290,6 @@ const selectFilter = (value) => {
             .meta-icon {
               margin-right: 8rpx;
             }
-          }
-        }
-        
-        .subtask-progress {
-          display: flex;
-          align-items: center;
-          gap: 16rpx;
-          margin-top: 16rpx;
-          
-          .progress-bar {
-            flex: 1;
-            height: 8rpx;
-            background: #f0f0f0;
-            border-radius: 4rpx;
-            overflow: hidden;
-            
-            .progress-fill {
-              height: 100%;
-              background: #4caf50;
-              border-radius: 4rpx;
-              transition: width 0.3s;
-            }
-          }
-          
-          .progress-text {
-            font-size: 22rpx;
-            color: #999;
           }
         }
       }

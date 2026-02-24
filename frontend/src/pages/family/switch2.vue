@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">切换家庭</text>
       <view class="right-btn" @click="showJoinModal">
@@ -91,7 +91,7 @@
         <view class="action-card" @click="createFamily">
           <view class="action-icon create"
 >
-            <u-icon name="plus" size="40" color="#fff"></u-icon>
+            <up-icon name="plus" size="40" color="#fff"></up-icon>
           </view>          
           
           <view class="action-info"
@@ -99,14 +99,14 @@
             <text class="action-title">创建新家庭</text>
             <text class="action-desc">创建属于您的家庭空间</text>
           </view>          
-          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
         </view>
 
         <view class="action-card" @click="showJoinModal"
 >
           <view class="action-icon join"
 >
-            <u-icon name="user-plus" size="40" color="#fff"></u-icon>
+            <up-icon name="user-plus" size="40" color="#fff"></up-icon>
           </view>          
           
           <view class="action-info"
@@ -114,7 +114,7 @@
             <text class="action-title">加入家庭</text>
             <text class="action-desc">通过邀请码加入</text>
           </view>          
-          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
         </view>
       </view>
 
@@ -126,38 +126,38 @@
         <view class="manage-list">
           <view class="manage-item" @click="manageMembers"
 >
-            <u-icon name="account" size="36" color="#5B8FF9"></u-icon>
+            <up-icon name="account" size="36" color="#5B8FF9"></up-icon>
             <text class="item-label">成员管理</text>
             <text class="item-value">{{ currentFamily.members.length }}人</text>
-            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
           </view>          
           
           <view class="manage-item" @click="setDefault"
 >
-            <u-icon name="star" size="36" color="#FAAD14"></u-icon>
+            <up-icon name="star" size="36" color="#FAAD14"></up-icon>
             <text class="item-label">设为默认</text>
             <text class="item-value">{{ currentFamily.isDefault ? '已是默认' : '' }}</text>
-            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
           </view>          
           
           <view class="manage-item" @click="familySettings"
 >
-            <u-icon name="setting" size="36" color="#52C41A"></u-icon>
+            <up-icon name="setting" size="36" color="#52C41A"></up-icon>
             <text class="item-label">家庭设置</text>
-            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
           </view>          
           
           <view class="manage-item danger" @click="exitFamily">
-            <u-icon name="logout" size="36" color="#FF4D4F"></u-icon>
+            <up-icon name="logout" size="36" color="#FF4D4F"></up-icon>
             <text class="item-label">退出家庭</text>
-            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
           </view>
         </view>
       </view>
     </view>
 
     <!-- 切换确认弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="switchModalVisible"
       mode="center"
     >
@@ -181,10 +181,10 @@
           <view class="btn-confirm" @click="confirmSwitch">>切换</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
 
     <!-- 加入家庭弹窗 -->
-    <u-popup
+    <up-popup
       v-model:show="joinModalVisible"
       mode="bottom"
       round
@@ -219,7 +219,7 @@
           <view class="btn-confirm" @click="joinFamily">加入家庭</view>
         </view>
       </view>
-    </u-popup>
+    </up-popup>
   </view>
 </template>
 

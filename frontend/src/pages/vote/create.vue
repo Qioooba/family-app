@@ -2,7 +2,7 @@
   <view class="create-vote-page">
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
+        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
       </view>
       <text class="title">发起投票</text>
       <view class="right-btn" @click="submitVote">
@@ -52,13 +52,13 @@
               class="delete-btn"
               @click="removeOption(index)"
             >
-              <u-icon name="close" size="32" color="#999"></u-icon>
+              <up-icon name="close" size="32" color="#999"></up-icon>
             </view>
           </view>
         </view>
         
         <view class="add-option" @click="addOption">
-          <u-icon name="plus" size="32" color="#5B8FF9"></u-icon>
+          <up-icon name="plus" size="32" color="#5B8FF9"></up-icon>
           <text>添加选项</text>
         </view>
       </view>

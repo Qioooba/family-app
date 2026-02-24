@@ -700,3 +700,14 @@ CREATE TABLE IF NOT EXISTS family_report (
     is_read TINYINT DEFAULT 0 COMMENT '是否已读',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='家庭报告表';
+
+-- 喝水记录表
+CREATE TABLE IF NOT EXISTS water_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '记录ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    amount INT NOT NULL COMMENT '喝水量(ml)',
+    record_date DATE NOT NULL COMMENT '记录日期',
+    record_time TIME COMMENT '记录时间',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_user_date (user_id, record_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='喝水记录表';

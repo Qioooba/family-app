@@ -1,5 +1,6 @@
 package com.family.health.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.family.common.core.BaseEntity;
 
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 /**
  * 饮食记录实体
  */
+@TableName("diet_record")
 public class DietRecord extends BaseEntity {
     private static final long serialVersionUID = 1L;
     
