@@ -230,7 +230,7 @@ const uploadAvatar = async (filePath) => {
     // 这里调用上传接口
     const uploadRes = await new Promise((resolve, reject) => {
       uni.uploadFile({
-        url: '/api/user/avatar',
+        url: '/api/file/upload/simple',
         filePath: filePath,
         name: 'file',
         success: (res) => {
@@ -245,9 +245,9 @@ const uploadAvatar = async (filePath) => {
       })
     })
     
-    if (uploadRes.url) {
+    if (uploadRes.data?.url) {
       await userStore.updateUserInfo({
-        avatar: uploadRes.url
+        avatar: uploadRes.data.url
       })
       uni.showToast({
         title: '上传成功',
