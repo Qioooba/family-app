@@ -17,7 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -185,6 +189,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         log.info("发送验证码到 {}: {}", phone, code);
         // TODO: 接入短信服务商发送真实短信
+    }
+    
+    @Override
+    public String uploadAvatar(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR.getCode(), "文件不能为空");
+        }
+        
+        try {
+            // 获取当前登录用户ID
+            long userId = StpUtil.getLoginIdAsLong();
+            
+            // 创建上传目录
+            String uploadDir = System.getProperty("user.home") + "/uploads/avatars/";
+            File dir = new File(uploadDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String fileName = userId + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
+            
+            // 保存文件
+            File targetFile = new File(uploadDir + fileName);
+            file.transferTo(targetFile);
+            
+            // 返回访问URL
+            String avatarUrl = "/uploads/avatars/" + fileName;
+            log.info("用户 {} 上传头像: {}", userId, avatarUrl);
+            
+            return avatarUrl;
+        } catch (IOException e) {
+            log.error("上传头像失败", e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR.getCode(), "上传头像失败");
+        }
     }
     
     private UserVO convertToVO(User user) {

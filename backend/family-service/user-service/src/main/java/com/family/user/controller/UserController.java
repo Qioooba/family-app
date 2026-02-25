@@ -9,6 +9,7 @@ import com.family.user.service.UserService;
 import com.family.user.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 
@@ -88,5 +89,27 @@ public class UserController {
     public Result<Void> sendSmsCode(@RequestParam String phone) {
         userService.sendSmsCode(phone);
         return Result.success();
+    }
+    
+    /**
+     * 上传头像
+     */
+    @PostMapping("/avatar")
+    public Result<String> uploadAvatar(@RequestParam MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return Result.error("文件不能为空");
+        }
+        // 限制文件大小 2MB
+        if (file.getSize() > 2 * 1024 * 1024) {
+            return Result.error("图片大小不能超过2MB");
+        }
+        // 限制文件类型
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return Result.error("只能上传图片文件");
+        }
+        
+        String avatarUrl = userService.uploadAvatar(file);
+        return Result.success(avatarUrl);
     }
 }

@@ -5,6 +5,7 @@ import com.family.user.dto.UserLoginDTO;
 import com.family.user.dto.UserRegisterDTO;
 import com.family.user.entity.User;
 import com.family.user.vo.UserVO;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户服务接口
@@ -45,4 +46,9 @@ public interface UserService extends IService<User> {
      * 发送验证码
      */
     void sendSmsCode(String phone);
+    
+    /**
+     * 上传头像
+     */
+    String uploadAvatar(MultipartFile file);
 }
