@@ -266,7 +266,6 @@ const getTodayString = () => {
 
 const categories = [
   { name: '待办', id: 1, status: 0 },
-  { name: '已办', id: 2, status: 1 },
   { name: '完成', id: 3, status: 2 }
 ]
 
