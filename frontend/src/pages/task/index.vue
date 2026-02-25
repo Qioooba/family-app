@@ -413,25 +413,27 @@ const selectMember = (userId) => {
 }
 
 const filteredTasks = computed(() => {
-  // 防御性检查
-  if (!tasks.value || !Array.isArray(tasks.value)) {
+  try {
+    if (!tasks.value || !Array.isArray(tasks.value)) {
+      return []
+    }
+    const status = categories[currentCategory.value]?.status
+    let result = tasks.value
+    if (status !== undefined) {
+      result = result.filter(function(t) { return t.status === status })
+    }
+    if (result.length > 1) {
+      return result.slice().sort(function(a, b) {
+        const dateA = a.dueTime ? new Date(a.dueTime).getTime() : 0
+        const dateB = b.dueTime ? new Date(b.dueTime).getTime() : 0
+        return dateA - dateB
+      })
+    }
+    return result
+  } catch(e) {
+    console.error('filteredTasks error:', e)
     return []
   }
-  // 根据状态筛选任务
-  const status = categories[currentCategory.value]?.status
-  let result = tasks.value
-  if (status !== undefined) {
-    result = result.filter(t => t.status === status)
-  }
-  // 按日期时间从近到远排序
-  if (result.length > 1) {
-    return result.slice().sort((a, b) => {
-      const dateA = a.dueTime ? new Date(a.dueTime).getTime() : 0
-      const dateB = b.dueTime ? new Date(b.dueTime).getTime() : 0
-      return dateA - dateB
-    })
-  }
-  return result
 })
 
 const switchCategory = (index) => {
