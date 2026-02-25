@@ -233,6 +233,9 @@ const uploadAvatar = async (filePath) => {
         url: '/api/user/avatar',
         filePath: filePath,
         name: 'file',
+        header: {
+          'Authorization': uni.getStorageSync('token') || ''
+        },
         success: (res) => {
           try {
             const data = JSON.parse(res.data)
