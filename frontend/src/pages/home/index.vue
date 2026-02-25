@@ -325,6 +325,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
+import { waterApi } from '../../api/water'
 import LazyImage from '@/components/common/LazyImage.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import PullRefresh2 from '@/components/common/PullRefresh2.vue'
@@ -443,12 +444,24 @@ const onRefresh = async ({ finish, success, error }) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   // 加载首页数据
   // 模拟数据加载完成，隐藏骨架屏
   setTimeout(() => {
     hideSkeleton()
   }, 800)
+  
+  // 加载喝水数据
+  try {
+    const userId = userStore.userInfo?.id || uni.getStorageSync('userInfo')?.id || 1
+    const waterData = await waterApi.getToday(userId)
+    if (waterData) {
+      overviewData.value.water = waterData.todayAmount || 0
+      overviewData.value.waterTarget = waterData.targetAmount || 2000
+    }
+  } catch (e) {
+    console.error('加载喝水数据失败', e)
+  }
 })
 </script>
 
