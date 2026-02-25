@@ -370,6 +370,11 @@ const onRefresh = async ({ finish, success, error }) => {
 }
 
 onMounted(async () => {
+  // 加载用户信息
+  if (!userStore.userInfo) {
+    await userStore.getUserInfo()
+  }
+  
   // 加载首页数据
   // 模拟数据加载完成，隐藏骨架屏
   setTimeout(() => {
