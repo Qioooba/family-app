@@ -6,9 +6,10 @@
 import { cacheManager } from './cache.js'
 
 // 基础配置
+// 生产环境使用实际服务器地址
 const CONFIG = {
-  BASE_URL: 'http://localhost:8092',
-  USER_SERVICE_URL: 'http://localhost:8092',
+  BASE_URL: 'http://qioba.cn:8081',
+  USER_SERVICE_URL: 'http://qioba.cn:8081',
   TIMEOUT: 30000,
   RETRY_TIMES: 2,
   RETRY_DELAY: 1000
