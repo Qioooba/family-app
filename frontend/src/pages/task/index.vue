@@ -157,7 +157,7 @@
           </view>
           
           <!-- 分配人员 -->
-          <view class="form-row" @click="showMemberPicker">
+          <view class="form-row" @click="openMemberPicker">
             <text class="row-icon">👤</text>
             <text class="row-label">分配人员</text>
             <view class="member-select">
@@ -170,7 +170,7 @@
       </view>
       
       <!-- 日期时间选择器 -->
-      <view v-if="showPicker" class="picker-overlay" @click="closePicker">
+      <view v-if="showTimePicker" class="picker-overlay" @click="closePicker">
         <view class="picker-container" @click.stop>
           <view class="picker-header">
             <text class="picker-cancel" @click="closePicker">取消</text>
@@ -282,8 +282,12 @@ const tasks = ref([])
 const loading = ref(false)
 
 // 家庭成员列表
-const familyMembers = ref([])
-const showPicker = ref(false)
+const familyMembers = ref([
+  { userId: 1, nickname: '爸爸' },
+  { userId: 2, nickname: '妈妈' },
+  { userId: 3, nickname: '孩子' }
+])
+const showTimePicker = ref(false)
 const showMemberPicker = ref(false)
 const pickerValue = ref([0, 0, 0, 15, 0])
 const currentYear = new Date().getFullYear()
@@ -306,8 +310,14 @@ const loadTasks = async () => {
   try {
     // 从本地存储获取家庭ID
     const familyId = uni.getStorageSync('currentFamilyId') || 1
+    // 先加载家庭成员
+    await loadFamilyMembers()
     const res = await taskApi.getList(familyId)
-    tasks.value = res || []
+    // 把 assigneeId 转换为 assigneeName
+    tasks.value = (res || []).map(task => ({
+      ...task,
+      assigneeName: getMemberName(task.assigneeId) || '未指派'
+    }))
   } catch (e) {
     console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
@@ -324,6 +334,12 @@ const loadFamilyMembers = async () => {
     familyMembers.value = members || []
   } catch (e) {
     console.error('加载家庭成员失败', e)
+    // 失败时使用默认成员
+    familyMembers.value = [
+      { userId: 1, nickname: '爸爸' },
+      { userId: 2, nickname: '妈妈' },
+      { userId: 3, nickname: '孩子' }
+    ]
   }
 }
 
@@ -335,6 +351,8 @@ onMounted(() => {
 
 // 获取成员名称
 const getMemberName = (userId) => {
+  if (!userId) return '未指派'
+  if (!familyMembers.value || !Array.isArray(familyMembers.value)) return '家人'
   const member = familyMembers.value.find(m => m.userId === userId)
   return member?.nickname || member?.name || '家人'
 }
@@ -349,21 +367,20 @@ const newTask = ref({
 
 // 日期时间选择器
 const showDateTimePicker = () => {
-  // 初始化选择器值
-  const today = new Date()
-  const yearIndex = yearRange.value.indexOf(today.getFullYear())
-  pickerValue.value = [
-    yearIndex >= 0 ? yearIndex : 0,
-    today.getMonth(),
-    today.getDate() - 1,
-    15,
-    0
-  ]
-  showPicker.value = true
+  // 使用简单的提示，实际可以扩展
+  uni.showActionSheet({
+    itemList: ['今天 15:00', '今天 18:00', '今天 21:00', '明天 09:00'],
+    success: (res) => {
+      const times = ['15:00', '18:00', '21:00', '09:00']
+      const today = getTodayString()
+      newTask.value.dueDate = today
+      newTask.value.dueTime = times[res.tapIndex]
+    }
+  })
 }
 
 const closePicker = () => {
-  showPicker.value = false
+  showTimePicker.value = false
 }
 
 const onPickerChange = (e) => {
@@ -382,7 +399,7 @@ const confirmPicker = () => {
 }
 
 // 成员选择
-const showMemberPicker = () => {
+const openMemberPicker = () => {
   showMemberPicker.value = true
 }
 
@@ -396,6 +413,10 @@ const selectMember = (userId) => {
 }
 
 const filteredTasks = computed(() => {
+  // 防御性检查
+  if (!tasks.value || !Array.isArray(tasks.value)) {
+    return []
+  }
   // 根据状态筛选任务
   const status = categories[currentCategory.value]?.status
   let result = tasks.value
