@@ -1,4 +1,4 @@
-package com.family.wish.entity;
+package com.family.family.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

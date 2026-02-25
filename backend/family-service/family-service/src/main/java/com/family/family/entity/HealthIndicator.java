@@ -1,4 +1,4 @@
-package com.family.health.entity;
+package com.family.family.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.family.common.core.BaseEntity;
