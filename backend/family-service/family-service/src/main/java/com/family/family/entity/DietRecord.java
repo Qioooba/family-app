@@ -1,8 +1,7 @@
-package com.family.family.entity;
+package com.family.health.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.family.common.core.BaseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,14 +11,14 @@ import java.time.LocalDateTime;
  * 饮食记录实体
  */
 @TableName("diet_record")
-public class DietRecord {
-    
-    @TableId(type = IdType.AUTO)
-    private Long id;
+public class DietRecord extends BaseEntity {
+    private static final long serialVersionUID = 1L;
     
     private Long userId;
     private Long familyId;
     private String mealType;
+    private LocalDate recordDate;
+    private LocalDateTime recordTime;
     private String foodName;
     private BigDecimal quantity;
     private String unit;
@@ -27,19 +26,10 @@ public class DietRecord {
     private BigDecimal protein;
     private BigDecimal carbs;
     private BigDecimal fat;
-    private String imageUrl;
-    private LocalDate recordDate;
-    private LocalDateTime recordTime;
-    private String remark;
-    private LocalDateTime createTime;
-    
-    public Long getId() {
-        return id;
-    }
-    
-    public void setId(Long id) {
-        this.id = id;
-    }
+    private BigDecimal fiber;
+    private String image;
+    private String recognitionSource;
+    private String aiAnalysis;
     
     public Long getUserId() {
         return userId;
@@ -63,6 +53,22 @@ public class DietRecord {
     
     public void setMealType(String mealType) {
         this.mealType = mealType;
+    }
+    
+    public LocalDate getRecordDate() {
+        return recordDate;
+    }
+    
+    public void setRecordDate(LocalDate recordDate) {
+        this.recordDate = recordDate;
+    }
+    
+    public LocalDateTime getRecordTime() {
+        return recordTime;
+    }
+    
+    public void setRecordTime(LocalDateTime recordTime) {
+        this.recordTime = recordTime;
     }
     
     public String getFoodName() {
@@ -121,43 +127,35 @@ public class DietRecord {
         this.fat = fat;
     }
     
-    public String getImageUrl() {
-        return imageUrl;
+    public BigDecimal getFiber() {
+        return fiber;
     }
     
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setFiber(BigDecimal fiber) {
+        this.fiber = fiber;
     }
     
-    public LocalDate getRecordDate() {
-        return recordDate;
+    public String getImage() {
+        return image;
     }
     
-    public void setRecordDate(LocalDate recordDate) {
-        this.recordDate = recordDate;
+    public void setImage(String image) {
+        this.image = image;
     }
     
-    public LocalDateTime getRecordTime() {
-        return recordTime;
+    public String getRecognitionSource() {
+        return recognitionSource;
     }
     
-    public void setRecordTime(LocalDateTime recordTime) {
-        this.recordTime = recordTime;
+    public void setRecognitionSource(String recognitionSource) {
+        this.recognitionSource = recognitionSource;
     }
     
-    public String getRemark() {
-        return remark;
+    public String getAiAnalysis() {
+        return aiAnalysis;
     }
     
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-    
-    public LocalDateTime getCreateTime() {
-        return createTime;
-    }
-    
-    public void setCreateTime(LocalDateTime createTime) {
-        this.createTime = createTime;
+    public void setAiAnalysis(String aiAnalysis) {
+        this.aiAnalysis = aiAnalysis;
     }
 }

@@ -10,62 +10,11 @@ spring:
         locator:
           enabled: false
       routes:
-        - id: user-service
+        # 所有API都路由到统一的服务
+        - id: family-service
           uri: http://localhost:8081
           predicates:
-            - Path=/api/user/**
-        - id: task-service
-          uri: http://localhost:8083
-          predicates:
-            - Path=/api/task/**
-        - id: recipe-service
-          uri: http://localhost:8086
-          predicates:
-            - Path=/api/recipe/**
-        - id: health-service
-          uri: http://localhost:8096
-          predicates:
-            - Path=/api/health/**
-        - id: anniversary-service
-          uri: http://localhost:8087
-          predicates:
-            - Path=/api/anniversary/**
-        - id: family-service
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/family/**
-        - id: wish-service
-          uri: http://localhost:8092
-          predicates:
-            - Path=/api/wish/**
-        - id: vote-service
-          uri: http://localhost:8091
-          predicates:
-            - Path=/api/vote/**
-        - id: calendar-service
-          uri: http://localhost:8088
-          predicates:
-            - Path=/api/calendar/**
-        - id: food-service
-          uri: http://localhost:8095
-          predicates:
-            - Path=/api/food/**
-        - id: ai-service
-          uri: http://localhost:8090
-          predicates:
-            - Path=/api/ai/**
-        - id: message-service
-          uri: http://localhost:8094
-          predicates:
-            - Path=/api/message/**
-        - id: notify-service
-          uri: http://localhost:8093
-          predicates:
-            - Path=/api/notify/**
-        - id: file-service
-          uri: http://localhost:8084
-          predicates:
-            - Path=/api/file/**
+            - Path=/api/**
 
 logging:
   level:

@@ -38,4 +38,9 @@ public @interface CachePut {
      * 条件缓存，支持SpEL表达式
      */
     String condition() default "";
+    
+    /**
+     * 是否使用互斥锁
+     */
+    boolean useMutex() default false;
 }
