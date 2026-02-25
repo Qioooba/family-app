@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onShow, ref } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { gameApi } from '../../api/game'
 import { isDarkMode, toggleTheme } from '../../utils/theme.js'
@@ -118,7 +118,8 @@ const displayAvatar = computed(() => {
   return '/static/avatar-default.png'
 })
 
-onMounted(async () => {
+// 每次页面显示时都加载用户信息
+onShow(async () => {
   // 始终尝试获取最新的用户信息
   try {
     await userStore.getUserInfo()

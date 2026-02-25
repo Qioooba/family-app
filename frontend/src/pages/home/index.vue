@@ -250,7 +250,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onShow } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { waterApi } from '../../api/water'
 import { taskApi } from '../../api/task'
@@ -367,6 +367,15 @@ const onRefresh = async ({ finish, success, error }) => {
     error()
   }
 }
+
+// 每次页面显示时都加载用户信息
+onShow(async () => {
+  try {
+    await userStore.getUserInfo()
+  } catch (e) {
+    console.log('获取用户信息失败', e)
+  }
+})
 
 onMounted(async () => {
   // 加载用户信息

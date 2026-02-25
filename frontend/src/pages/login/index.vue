@@ -227,7 +227,7 @@ const handleLogin = async () => {
     uni.showToast({ title: '登录成功', icon: 'success' })
 
     setTimeout(() => {
-      uni.switchTab({ url: '/pages/home/index' })
+      uni.reLaunch({ url: '/pages/home/index' })
     }, 1500)
   } catch (e) {
     console.error('登录失败:', e)
