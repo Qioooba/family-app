@@ -113,9 +113,14 @@
           <text class="section-icon">📋</text>
           <text class="section-title">今日待办</text>
         </view>
-        <view class="more-btn" @click="navigateTo('/pages/task/index')">
-          <text>更多</text>
-          ›
+        <view class="header-actions">
+          <view class="add-btn" @click="navigateTo('/pages/task/create')">
+            <text>+</text>
+          </view>
+          <view class="more-btn" @click="navigateTo('/pages/task/index')">
+            <text>更多</text>
+            ›
+          </view>
         </view>
       </view>
       
@@ -873,6 +878,36 @@ onMounted(async () => {
         color: #6B8DD6;
         font-weight: 500;
         margin-right: 6rpx;
+      }
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
+    }
+    
+    .add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56rpx;
+      height: 56rpx;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.4);
+      transition: all 0.2s ease;
+      
+      &:active {
+        transform: scale(0.9);
+        box-shadow: 0 2rpx 8rpx rgba(102, 126, 234, 0.3);
+      }
+      
+      text {
+        font-size: 36rpx;
+        color: #fff;
+        font-weight: 400;
+        line-height: 1;
       }
     }
   }
