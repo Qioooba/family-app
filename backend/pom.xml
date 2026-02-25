@@ -30,7 +30,6 @@
 
     <modules>
         <module>family-common/common-core</module>
-        <module>family-gateway</module>
         <module>family-service/family-service</module>
     </modules>
 
