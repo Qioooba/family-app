@@ -581,14 +581,15 @@ const addTask = async () => {
       priority: newTask.value.priority || 0,
       dueTime: dueTimeValue
     }
-    await taskApi.create(data)
+    const res = await taskApi.create(data)
+    console.log('创建任务结果:', res)
     uni.showToast({ title: '添加成功', icon: 'success' })
     closeModal()
     // 重新加载任务列表
     loadTasks()
   } catch (e) {
     console.error('创建任务失败', e)
-    uni.showToast({ title: '创建失败', icon: 'none' })
+    uni.showToast({ title: '创建失败: ' + (e.message || e), icon: 'none', duration: 3000 })
   }
 }
 </script>
