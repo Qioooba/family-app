@@ -424,11 +424,14 @@ const filteredTasks = computed(() => {
     result = result.filter(t => t.status === status)
   }
   // 按日期时间从近到远排序
-  return result.sort((a, b) => {
-    const dateA = new Date(a.dueTime || '1970-01-01')
-    const dateB = new Date(b.dueTime || '1970-01-01')
-    return dateA - dateB
-  })
+  if (result.length > 1) {
+    return result.slice().sort((a, b) => {
+      const dateA = a.dueTime ? new Date(a.dueTime).getTime() : 0
+      const dateB = b.dueTime ? new Date(b.dueTime).getTime() : 0
+      return dateA - dateB
+    })
+  }
+  return result
 })
 
 const switchCategory = (index) => {
