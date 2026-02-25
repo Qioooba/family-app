@@ -114,7 +114,13 @@ const displayAvatar = computed(() => {
   // 优先使用微信头像
   if (info.wxAvatar) return info.wxAvatar
   // 其次使用用户自定义头像
-  if (info.avatar) return info.avatar
+  if (info.avatar) {
+    // 如果是相对路径，添加服务器地址
+    if (info.avatar.startsWith('/uploads')) {
+      return 'http://qioba.cn:3000' + info.avatar
+    }
+    return info.avatar
+  }
   // 默认头像
   return '/static/avatar-default.png'
 })
