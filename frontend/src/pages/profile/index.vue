@@ -230,7 +230,7 @@ const uploadAvatar = async (filePath) => {
     // 这里调用上传接口
     const uploadRes = await new Promise((resolve, reject) => {
       uni.uploadFile({
-        url: getApp().globalData?.baseUrl + '/api/user/avatar',
+        url: '/api/user/avatar',
         filePath: filePath,
         name: 'file',
         success: (res) => {

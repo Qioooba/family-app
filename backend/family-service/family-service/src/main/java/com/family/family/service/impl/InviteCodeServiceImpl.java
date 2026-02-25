@@ -9,6 +9,7 @@ import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.mapper.FamilyMapper;
 import com.family.family.mapper.InviteCodeMapper;
 import com.family.family.service.InviteCodeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,16 +23,11 @@ import java.util.UUID;
 @Service
 public class InviteCodeServiceImpl extends ServiceImpl<InviteCodeMapper, InviteCode> implements InviteCodeService {
     
-    private final FamilyMapper familyMapper;
-    private final FamilyMemberMapper familyMemberMapper;
+    @Autowired
+    private FamilyMapper familyMapper;
     
-    public InviteCodeServiceImpl(InviteCodeMapper inviteCodeMapper, 
-                                  FamilyMapper familyMapper,
-                                  FamilyMemberMapper familyMemberMapper) {
-        super(inviteCodeMapper);
-        this.familyMapper = familyMapper;
-        this.familyMemberMapper = familyMemberMapper;
-    }
+    @Autowired
+    private FamilyMemberMapper familyMemberMapper;
     
     @Override
     public InviteCode createInviteCode(Long familyId, Long creatorId, Integer maxUses, Integer expireDays) {

@@ -416,11 +416,11 @@ const saveTask = async () => {
     const data = {
       title: form.value.title,
       familyId: familyId,
-      category: form.value.category,
+      categoryId: form.value.category,
+      content: form.value.remark,
       priority: form.value.priority,
       dueTime: dueTime,  // 后端期望 LocalDateTime 格式
       assigneeId: form.value.assigneeId,
-      remark: form.value.remark,
       status: form.value.status || 0,
       creatorId: userId
     }
