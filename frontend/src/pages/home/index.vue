@@ -88,20 +88,6 @@
           <text class="value-unit">千卡</text>
         </view>
       </view>
-      
-      <!-- 今日支出 -->
-      <view class="overview-card expense-card" @click="navigateTo('/pages/account/index')">
-        <view class="card-header">
-          <view class="card-icon-wrapper expense-icon">
-            <text class="card-icon">💰</text>
-          </view>
-          <text class="card-title">今日支出</text>
-        </view>
-        <view class="card-value">
-          <text class="value-num">{{ overviewData.expense }}</text>
-          <text class="value-unit">元</text>
-        </view>
-      </view>
     </view>
     
     <!-- 今日概览 -->
