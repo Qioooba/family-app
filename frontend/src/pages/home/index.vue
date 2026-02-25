@@ -451,10 +451,15 @@ onMounted(async () => {
   // 加载喝水数据
   try {
     const userId = userStore.userInfo?.id || uni.getStorageSync('userInfo')?.id || 1
+    // 获取今日喝水量
     const waterData = await waterApi.getToday(userId)
     if (waterData) {
       overviewData.value.water = waterData.todayAmount || 0
-      overviewData.value.waterTarget = waterData.targetAmount || 2000
+    }
+    // 获取喝水目标
+    const targetData = await waterApi.getTarget(userId)
+    if (targetData) {
+      overviewData.value.waterTarget = targetData.targetAmount || 2000
     }
   } catch (e) {
     console.error('加载喝水数据失败', e)
