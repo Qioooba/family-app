@@ -586,28 +586,40 @@ const addTask = async () => {
 <style lang="scss" scoped>
 .page-container {
   min-height: 100vh;
-  background: #F5F7FA;
+  background: #F8FBF8;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 50px 20px 20px;
-  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  padding: 60px 24px 24px;
+  background: linear-gradient(180deg, #E8F5E9 0%, #F8FBF8 100%);
   
   .header-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #2C3E50;
+    font-size: 28px;
+    font-weight: 600;
+    color: #2D5A3D;
+    letter-spacing: 1px;
   }
   
   .header-action {
-    width: 44px;
-    height: 44px;
-    background: #4CAF50;
-    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #81C784, #4CAF50);
+    border-radius: 16px;
     display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    
+    .icon {
+      font-size: 28px;
+      color: #fff;
+      font-weight: 300;
+    }
+  }
+}
     align-items: center;
     justify-content: center;
     
@@ -620,22 +632,25 @@ const addTask = async () => {
 }
 
 .category-tabs {
-  padding: 15px;
+  padding: 16px 20px;
   white-space: nowrap;
   background: #fff;
+  border-bottom: 1px solid #F0F5F0;
   
   .category-tab {
     display: inline-block;
-    padding: 8px 20px;
-    margin-right: 10px;
-    background: #F5F7FA;
-    border-radius: 20px;
+    padding: 10px 24px;
+    margin-right: 12px;
+    background: #F5FAF5;
+    border-radius: 24px;
     font-size: 14px;
-    color: #7F8C8D;
+    color: #8B9A8B;
+    transition: all 0.3s ease;
     
     &.active {
-      background: #4CAF50;
+      background: linear-gradient(135deg, #81C784, #4CAF50);
       color: #fff;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
     }
   }
 }
@@ -691,15 +706,23 @@ const addTask = async () => {
 
 .task-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 12px 20px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+  border: 1px solid #F5FAF5;
+  transition: all 0.3s ease;
+  
+  &:active {
+    transform: scale(0.98);
+  }
   
   &.completed {
-    opacity: 0.7;
+    opacity: 0.65;
+    background: #FAFFFA;
     .task-title {
       text-decoration: line-through;
+      color: #A8D8A8;
     }
   }
   
@@ -713,32 +736,35 @@ const addTask = async () => {
 .task-header {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
   
   .checkbox {
-    width: 22px;
-    height: 22px;
-    border: 2px solid #E0E6ED;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #C8E6C9;
     border-radius: 50%;
-    margin-right: 12px;
+    margin-right: 14px;
+    transition: all 0.3s ease;
     
     &.checked {
-      background: #4CAF50;
+      background: linear-gradient(135deg, #81C784, #4CAF50);
       border-color: #4CAF50;
     }
   }
   
   .task-title {
     flex: 1;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 500;
-    color: #2C3E50;
+    color: #3D5A4D;
+    line-height: 1.4;
   }
   
   .task-priority {
-    padding: 4px 10px;
-    border-radius: 10px;
-    font-size: 11px;
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
     
     &.priority-0 {
       background: #E8F5E9;
@@ -759,10 +785,10 @@ const addTask = async () => {
 
 .task-info {
   display: flex;
-  gap: 15px;
-  font-size: 12px;
-  color: #7F8C8D;
-  margin-bottom: 10px;
+  gap: 16px;
+  font-size: 13px;
+  color: #8B9A8B;
+  margin-bottom: 12px;
 }
 
 .subtask-progress {
@@ -880,37 +906,147 @@ const addTask = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(45, 90, 61, 0.3);
+  backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
-  width: 85%;
-  max-height: 80vh;
-  background: #fff;
-  border-radius: 20px;
-  padding: 20px;
+  width: 100%;
+  max-height: 85vh;
+  background: #FAFFFA;
+  border-radius: 32px 32px 0 0;
+  padding: 28px;
   overflow-y: auto;
+  animation: slideUp 0.3s ease;
   
   &.detail-modal {
-    width: 90%;
+    width: 100%;
+    border-radius: 32px 32px 0 0;
   }
 }
 
-.modal-header {
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  font-size: 18px;
-  font-weight: 600;
+  margin-bottom: 24px;
   
   .close-btn {
+    width: 36px;
+    height: 36px;
+    background: #F5FAF5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .close-icon {
+      font-size: 18px;
+      color: #8B9A8B;
+    }
+  }
+  
+  .modal-title {
     font-size: 20px;
-    color: #7F8C8D;
+    font-weight: 600;
+    color: #2D5A3D;
+  }
+  
+  .save-btn {
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #81C784, #4CAF50);
+    border-radius: 20px;
+    
+    .save-text {
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+    }
+  }
+}
+
+.modal-body {
+  margin-bottom: 20px;
+  
+  .task-input {
+    width: 100%;
+    height: 56px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 0 20px;
+    font-size: 17px;
+    border: 2px solid #E8F5E9;
+    color: #3D5A4D;
+    
+    &:focus {
+      border-color: #81C784;
+    }
+  }
+}
+
+.modal-bottom {
+  .form-row {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    background: #fff;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #F0F5F0;
+    
+    .row-icon {
+      font-size: 22px;
+      margin-right: 14px;
+    }
+    
+    .row-label {
+      flex: 1;
+      font-size: 15px;
+      color: #3D5A4D;
+      font-weight: 500;
+    }
+    
+    .row-value {
+      font-size: 14px;
+      color: #8B9A8B;
+    }
+    
+    .member-select {
+      display: flex;
+      align-items: center;
+      
+      .select-placeholder {
+        font-size: 14px;
+        color: #C8E6C9;
+      }
+      
+      .select-value {
+        font-size: 14px;
+        color: #4CAF50;
+        font-weight: 500;
+      }
+      
+      .row-arrow {
+        font-size: 20px;
+        color: #C8E6C9;
+        margin-left: 8px;
+      }
+    }
   }
 }
 
