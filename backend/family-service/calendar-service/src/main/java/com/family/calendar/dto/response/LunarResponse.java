@@ -21,9 +21,34 @@ public class LunarResponse {
     private String lunarDate;
     
     /**
+     * 年份
+     */
+    private Integer year;
+    
+    /**
+     * 月份
+     */
+    private Integer month;
+    
+    /**
+     * 日
+     */
+    private Integer day;
+    
+    /**
      * 农历年份(干支)
      */
-    private String lunarYear;
+    private String ganZhiYear;
+    
+    /**
+     * 农历月份(干支)
+     */
+    private String ganZhiMonth;
+    
+    /**
+     * 农历日(干支)
+     */
+    private String ganZhiDay;
     
     /**
      * 农历月份
@@ -56,14 +81,19 @@ public class LunarResponse {
     private String solarTerm;
     
     /**
-     * 下一个节气
+     * 节日
      */
-    private String nextSolarTerm;
+    private String festival;
     
     /**
-     * 距离下一个节气天数
+     * 宜
      */
-    private Integer daysToNextSolarTerm;
+    private List<String> yi;
+    
+    /**
+     * 忌
+     */
+    private List<String> ji;
     
     /**
      * 节日列表
@@ -71,12 +101,12 @@ public class LunarResponse {
     private List<String> festivals;
     
     /**
-     * 宜
+     * 宜（兼容旧字段）
      */
     private List<String> suitable;
     
     /**
-     * 忌
+     * 忌（兼容旧字段）
      */
     private List<String> avoid;
     

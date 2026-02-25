@@ -10,8 +10,10 @@ import { gameApi } from './game.js'
 import { scheduleApi } from './schedule.js'
 import { waterApi } from './water.js'
 import { aiShoppingApi } from './ai-shopping.js'
+import { healthApi } from './health.js'
+import { messageApi } from './message.js'
 
-export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi, familyApi, shoppingApi, gameApi, scheduleApi, waterApi, aiShoppingApi }
+export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi, familyApi, shoppingApi, gameApi, scheduleApi, waterApi, aiShoppingApi, healthApi, messageApi }
 
 // 食材相关API
 export const ingredientApi = {
