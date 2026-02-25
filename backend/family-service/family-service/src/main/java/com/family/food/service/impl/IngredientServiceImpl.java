@@ -1,7 +1,7 @@
 package com.family.food.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.family.food.entity.Ingredient;
+import com.family.family.entity.Ingredient;
 import com.family.food.mapper.IngredientMapper;
 import com.family.food.service.IngredientService;
 import org.springframework.stereotype.Service;

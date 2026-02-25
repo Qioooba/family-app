@@ -1,7 +1,7 @@
 package com.family.file.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.file.entity.FileRecord;
+import com.family.family.entity.FileRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

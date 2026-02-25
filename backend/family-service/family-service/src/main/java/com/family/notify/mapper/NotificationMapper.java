@@ -1,7 +1,7 @@
 package com.family.notify.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.notify.entity.Notification;
+import com.family.family.entity.Notification;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

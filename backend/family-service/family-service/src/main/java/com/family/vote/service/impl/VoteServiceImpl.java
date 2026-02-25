@@ -3,7 +3,7 @@ package com.family.vote.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.family.common.cache.Cacheable;
 import com.family.common.cache.CacheEvict;
-import com.family.vote.entity.Vote;
+import com.family.family.entity.Vote;
 import com.family.vote.mapper.VoteMapper;
 import com.family.vote.service.VoteService;
 import org.springframework.stereotype.Service;

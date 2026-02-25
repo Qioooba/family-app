@@ -6,7 +6,7 @@ import com.family.common.core.Result;
 import com.family.health.dto.request.NutritionRequest;
 import com.family.health.dto.response.NutritionResponse;
 import com.family.health.dto.response.NutritionWeeklyResponse;
-import com.family.health.entity.WeightRecord;
+import com.family.family.entity.WeightRecord;
 import com.family.health.service.WeightService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

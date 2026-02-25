@@ -1,7 +1,7 @@
 package com.family.ai.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.ai.entity.ChatHistory;
+import com.family.family.entity.ChatHistory;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

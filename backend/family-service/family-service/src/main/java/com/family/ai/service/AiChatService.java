@@ -6,7 +6,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.family.ai.config.AiConfig;
-import com.family.ai.entity.ChatHistory;
+import com.family.family.entity.ChatHistory;
 import com.family.ai.mapper.ChatHistoryMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

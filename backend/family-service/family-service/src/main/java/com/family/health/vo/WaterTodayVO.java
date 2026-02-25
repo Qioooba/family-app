@@ -1,6 +1,6 @@
 package com.family.health.vo;
 
-import com.family.health.entity.WaterRecord;
+import com.family.family.entity.WaterRecord;
 
 import java.util.List;
 

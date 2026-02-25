@@ -1,7 +1,7 @@
 package com.family.notify.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.family.notify.entity.NotificationSetting;
+import com.family.family.entity.NotificationSetting;
 import com.family.notify.mapper.NotificationSettingMapper;
 import com.family.notify.service.NotificationSettingService;
 import lombok.RequiredArgsConstructor;

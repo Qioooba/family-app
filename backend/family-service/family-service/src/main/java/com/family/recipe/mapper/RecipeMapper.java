@@ -1,7 +1,7 @@
 package com.family.recipe.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.recipe.entity.Recipe;
+import com.family.family.entity.Recipe;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

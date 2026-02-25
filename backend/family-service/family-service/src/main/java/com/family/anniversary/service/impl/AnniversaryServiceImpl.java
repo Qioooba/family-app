@@ -1,7 +1,7 @@
 package com.family.anniversary.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.family.anniversary.entity.Anniversary;
+import com.family.family.entity.Anniversary;
 import com.family.anniversary.mapper.AnniversaryMapper;
 import com.family.anniversary.service.AnniversaryService;
 import lombok.extern.slf4j.Slf4j;

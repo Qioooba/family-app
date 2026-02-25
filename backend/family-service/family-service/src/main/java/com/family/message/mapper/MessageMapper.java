@@ -1,7 +1,7 @@
 package com.family.message.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.message.entity.Message;
+import com.family.family.entity.Message;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 

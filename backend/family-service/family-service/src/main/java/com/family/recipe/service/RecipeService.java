@@ -1,7 +1,7 @@
 package com.family.recipe.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.family.recipe.entity.Recipe;
+import com.family.family.entity.Recipe;
 
 import java.util.List;
 

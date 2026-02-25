@@ -1,7 +1,7 @@
 package com.family.food.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
-import com.family.food.entity.Ingredient;
+import com.family.family.entity.Ingredient;
 import com.family.food.service.IngredientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

@@ -3,7 +3,7 @@ package com.family.calendar.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.family.calendar.dto.AnniversaryReminderDTO;
-import com.family.calendar.entity.AnniversaryReminder;
+import com.family.family.entity.AnniversaryReminder;
 import com.family.calendar.mapper.AnniversaryReminderMapper;
 import com.family.common.core.Result;
 import org.springframework.web.bind.annotation.*;

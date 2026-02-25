@@ -12,7 +12,7 @@ import com.family.common.core.exception.BusinessException;
 import com.family.file.config.FileStorageProperties;
 import com.family.file.config.FileUploadProperties;
 import com.family.file.dto.*;
-import com.family.file.entity.FileRecord;
+import com.family.family.entity.FileRecord;
 import com.family.file.enums.FilePermissionEnum;
 import com.family.file.enums.FileTypeEnum;
 import com.family.file.mapper.FileRecordMapper;

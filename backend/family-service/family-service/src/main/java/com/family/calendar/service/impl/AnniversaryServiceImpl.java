@@ -1,7 +1,7 @@
 package com.family.calendar.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.family.calendar.entity.Anniversary;
+import com.family.family.entity.Anniversary;
 import com.family.calendar.mapper.AnniversaryMapper;
 import com.family.calendar.service.AnniversaryService;
 import org.springframework.stereotype.Service;

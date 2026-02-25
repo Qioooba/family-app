@@ -1,7 +1,7 @@
 package com.family.food.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.food.entity.Store;
+import com.family.family.entity.Store;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

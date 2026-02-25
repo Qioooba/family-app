@@ -1,7 +1,7 @@
 package com.family.health.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.health.entity.UserWaterGoal;
+import com.family.family.entity.UserWaterGoal;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

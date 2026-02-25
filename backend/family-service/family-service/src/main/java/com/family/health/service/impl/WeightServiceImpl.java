@@ -1,7 +1,7 @@
 package com.family.health.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.family.health.entity.WeightRecord;
+import com.family.family.entity.WeightRecord;
 import com.family.health.mapper.WeightRecordMapper;
 import com.family.health.service.WeightService;
 import lombok.RequiredArgsConstructor;

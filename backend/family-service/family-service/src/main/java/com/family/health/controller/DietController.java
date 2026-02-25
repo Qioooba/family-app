@@ -4,7 +4,7 @@ package com.family.health.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
-import com.family.health.entity.DietRecord;
+import com.family.family.entity.DietRecord;
 import com.family.health.service.DietService;
 import com.family.health.vo.DailyNutritionVO;
 import com.family.health.vo.WeeklyNutritionVO;

@@ -1,9 +1,9 @@
 package com.family.ai.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.family.ai.entity.AiInventory;
-import com.family.ai.entity.AiShoppingList;
-import com.family.ai.entity.AiSubstitute;
+import com.family.family.entity.AiInventory;
+import com.family.family.entity.AiShoppingList;
+import com.family.family.entity.AiSubstitute;
 import com.family.ai.mapper.AiInventoryMapper;
 import com.family.ai.mapper.AiShoppingListMapper;
 import com.family.ai.mapper.AiSubstituteMapper;

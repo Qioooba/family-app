@@ -9,7 +9,7 @@ import com.family.common.core.exception.BusinessException;
 import com.family.file.dto.FolderCreateDTO;
 import com.family.file.dto.FolderMoveDTO;
 import com.family.file.dto.FolderRenameDTO;
-import com.family.file.entity.FileFolder;
+import com.family.family.entity.FileFolder;
 import com.family.file.enums.FilePermissionEnum;
 import com.family.file.mapper.FileFolderMapper;
 import com.family.file.service.FileFolderService;

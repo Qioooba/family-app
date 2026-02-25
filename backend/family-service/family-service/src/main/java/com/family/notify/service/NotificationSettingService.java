@@ -1,7 +1,7 @@
 package com.family.notify.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.family.notify.entity.NotificationSetting;
+import com.family.family.entity.NotificationSetting;
 
 /**
  * 通知设置服务接口

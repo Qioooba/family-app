@@ -1,7 +1,7 @@
 package com.family.vote.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.family.vote.entity.Vote;
+import com.family.family.entity.Vote;
 
 import java.util.List;
 
