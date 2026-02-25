@@ -86,7 +86,9 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 // 简化的 token 获取方式
 const getToken = () => {
-  return uni.getStorageSync('token') || ''
+  const token = uni.getStorageSync('token') || ''
+  console.log('[Token] 读取token:', token ? token.substring(0, 20) + '...' : '空')
+  return token
 }
 
 /**
