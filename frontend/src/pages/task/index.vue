@@ -625,16 +625,6 @@ const addTask = async () => {
     }
   }
 }
-    align-items: center;
-    justify-content: center;
-    
-    .icon {
-      font-size: 28px;
-      color: #fff;
-      font-weight: 300;
-    }
-  }
-}
 
 .category-tabs {
   padding: 16px 20px;
