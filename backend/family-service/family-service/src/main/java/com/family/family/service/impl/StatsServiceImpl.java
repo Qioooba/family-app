@@ -532,8 +532,7 @@ public class StatsServiceImpl implements StatsService {
             try {
                 LambdaQueryWrapper<Wish> wishWrapper = new LambdaQueryWrapper<>();
                 wishWrapper.eq(Wish::getFamilyId, finalFamilyId)
-                        .eq(Wish::getStatus, 2) // 已实现
-                        .between(Wish::getFulfillDate, startDateTime, endDateTime);
+                        .eq(Wish::getStatus, 2);
                 Long wishesCompleted = wishMapper.selectCount(wishWrapper);
                 result.put("wishesCompleted", wishesCompleted != null ? wishesCompleted.intValue() : 0);
                 log.debug("[Stats] 本月心愿实现数: {}", wishesCompleted);
