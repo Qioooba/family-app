@@ -2,7 +2,7 @@ package com.family.wish.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.wish.dto.WishBudgetDTO;
-import com.family.family.entity.Wish;
+import com.family.wish.entity.Wish;
 import com.family.wish.service.WishService;
 import com.family.wish.vo.BudgetStatsVO;
 import lombok.RequiredArgsConstructor;

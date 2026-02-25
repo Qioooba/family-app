@@ -1,6 +1,6 @@
 package com.family.wish.mapper;
 
-import com.family.family.entity.Wish;
+import com.family.wish.entity.Wish;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;

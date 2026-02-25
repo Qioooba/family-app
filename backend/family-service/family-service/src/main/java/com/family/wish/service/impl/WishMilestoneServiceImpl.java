@@ -2,8 +2,8 @@ package com.family.wish.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.family.wish.dto.WishMilestoneDTO;
-import com.family.family.entity.Wish;
-import com.family.family.entity.WishMilestone;
+import com.family.wish.entity.Wish;
+import com.family.wish.entity.WishMilestone;
 import com.family.wish.mapper.WishMilestoneMapper;
 import com.family.wish.service.WishMilestoneService;
 import com.family.wish.service.WishService;

@@ -1,7 +1,7 @@
 package com.family.recipe.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
-import com.family.family.entity.Recipe;
+import com.family.recipe.entity.Recipe;
 import com.family.recipe.service.RecipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

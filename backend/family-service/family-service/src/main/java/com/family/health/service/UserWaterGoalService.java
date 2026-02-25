@@ -1,6 +1,6 @@
 package com.family.health.service;
 
-import com.family.family.entity.UserWaterGoal;
+import com.family.health.entity.UserWaterGoal;
 
 /**
  * 用户饮水目标服务接口

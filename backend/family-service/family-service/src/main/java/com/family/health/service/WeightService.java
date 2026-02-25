@@ -1,6 +1,6 @@
 package com.family.health.service;
 
-import com.family.family.entity.WeightRecord;
+import com.family.health.entity.WeightRecord;
 
 import java.util.List;
 

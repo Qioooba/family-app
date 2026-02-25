@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.family.common.cache.Cacheable;
 import com.family.common.cache.CacheEvict;
 import com.family.common.cache.CachePut;
-import com.family.family.entity.Recipe;
+import com.family.recipe.entity.Recipe;
 import com.family.recipe.mapper.RecipeMapper;
 import com.family.recipe.service.RecipeService;
 import org.springframework.stereotype.Service;

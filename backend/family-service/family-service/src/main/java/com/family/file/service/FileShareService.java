@@ -3,7 +3,7 @@ package com.family.file.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.file.dto.FileShareAccessDTO;
 import com.family.file.dto.FileShareCreateDTO;
-import com.family.family.entity.FileShare;
+import com.family.file.entity.FileShare;
 import com.family.file.vo.FileShareVO;
 import com.family.file.vo.FileVO;
 

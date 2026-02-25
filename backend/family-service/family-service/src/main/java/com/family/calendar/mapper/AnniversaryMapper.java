@@ -1,7 +1,7 @@
 package com.family.calendar.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.family.entity.Anniversary;
+import com.family.calendar.entity.Anniversary;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

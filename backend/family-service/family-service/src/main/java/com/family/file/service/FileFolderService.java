@@ -2,7 +2,7 @@ package com.family.file.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.file.dto.*;
-import com.family.family.entity.FileFolder;
+import com.family.file.entity.FileFolder;
 import com.family.file.vo.FolderContentVO;
 import com.family.file.vo.FolderVO;
 

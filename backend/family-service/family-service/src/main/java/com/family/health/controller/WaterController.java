@@ -2,7 +2,7 @@ package com.family.health.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
-import com.family.family.entity.WaterRecord;
+import com.family.health.entity.WaterRecord;
 import com.family.health.mapper.WaterRecordMapper;
 import com.family.health.service.UserWaterGoalService;
 import com.family.health.vo.WaterTodayVO;

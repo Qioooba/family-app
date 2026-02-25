@@ -2,7 +2,7 @@ package com.family.wish.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.wish.dto.WishBudgetDTO;
-import com.family.family.entity.Wish;
+import com.family.wish.entity.Wish;
 import com.family.wish.vo.BudgetStatsVO;
 
 import java.util.List;

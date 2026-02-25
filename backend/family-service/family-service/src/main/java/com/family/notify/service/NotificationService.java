@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.common.core.PageResult;
 import com.family.notify.dto.NotificationQueryDTO;
 import com.family.notify.dto.SendNotificationDTO;
-import com.family.family.entity.Notification;
+import com.family.notify.entity.Notification;
 import com.family.notify.vo.NotificationStatsVO;
 import com.family.notify.vo.NotificationVO;
 

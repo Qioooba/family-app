@@ -1,7 +1,7 @@
 package com.family.vote.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
-import com.family.family.entity.Vote;
+import com.family.vote.entity.Vote;
 import com.family.vote.service.VoteService;
 import org.springframework.web.bind.annotation.*;
 

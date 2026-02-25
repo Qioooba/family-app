@@ -2,7 +2,7 @@ package com.family.file.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.file.dto.*;
-import com.family.family.entity.FileRecord;
+import com.family.file.entity.FileRecord;
 import com.family.file.vo.FileUploadInitVO;
 import com.family.file.vo.FileVO;
 import org.springframework.web.multipart.MultipartFile;

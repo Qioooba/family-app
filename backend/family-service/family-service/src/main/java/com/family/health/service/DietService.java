@@ -1,7 +1,7 @@
 package com.family.health.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.family.family.entity.DietRecord;
+import com.family.health.entity.DietRecord;
 import com.family.health.vo.DailyNutritionVO;
 import com.family.health.vo.WeeklyNutritionVO;
 

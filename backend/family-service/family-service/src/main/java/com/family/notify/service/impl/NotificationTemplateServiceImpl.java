@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.family.common.core.ErrorCode;
 import com.family.common.core.PageResult;
 import com.family.common.core.exception.BusinessException;
-import com.family.family.entity.NotificationTemplate;
+import com.family.notify.entity.NotificationTemplate;
 import com.family.notify.mapper.NotificationTemplateMapper;
 import com.family.notify.service.NotificationTemplateService;
 import lombok.RequiredArgsConstructor;

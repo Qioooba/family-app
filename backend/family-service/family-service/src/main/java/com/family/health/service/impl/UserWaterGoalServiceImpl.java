@@ -1,6 +1,6 @@
 package com.family.health.service.impl;
 
-import com.family.family.entity.UserWaterGoal;
+import com.family.health.entity.UserWaterGoal;
 import com.family.health.mapper.UserWaterGoalMapper;
 import com.family.health.service.UserWaterGoalService;
 import org.slf4j.Logger;

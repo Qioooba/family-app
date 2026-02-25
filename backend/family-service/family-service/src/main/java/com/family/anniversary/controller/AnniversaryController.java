@@ -2,7 +2,7 @@ package com.family.anniversary.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
-import com.family.family.entity.Anniversary;
+import com.family.anniversary.entity.Anniversary;
 import com.family.anniversary.service.AnniversaryService;
 import com.family.common.core.Result;
 import org.springframework.web.bind.annotation.*;

@@ -1,7 +1,7 @@
 package com.family.file.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.family.family.entity.FileVersion;
+import com.family.file.entity.FileVersion;
 import com.family.file.vo.FileVersionVO;
 
 import java.util.List;

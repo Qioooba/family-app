@@ -3,7 +3,7 @@ package com.family.notify.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.PageResult;
 import com.family.common.core.Result;
-import com.family.family.entity.NotificationTemplate;
+import com.family.notify.entity.NotificationTemplate;
 import com.family.notify.service.NotificationTemplateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

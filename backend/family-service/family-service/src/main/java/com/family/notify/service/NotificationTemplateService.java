@@ -2,7 +2,7 @@ package com.family.notify.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.common.core.PageResult;
-import com.family.family.entity.NotificationTemplate;
+import com.family.notify.entity.NotificationTemplate;
 
 import java.util.List;
 import java.util.Map;

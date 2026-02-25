@@ -3,7 +3,7 @@ package com.family.message.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.message.dto.MessageListDTO;
 import com.family.message.dto.MessageSendDTO;
-import com.family.family.entity.Message;
+import com.family.message.entity.Message;
 import com.family.message.vo.MessageVO;
 import com.family.common.core.PageResult;
 

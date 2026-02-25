@@ -2,7 +2,7 @@ package com.family.wish.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.family.wish.dto.WishMilestoneDTO;
-import com.family.family.entity.WishMilestone;
+import com.family.wish.entity.WishMilestone;
 import com.family.wish.vo.WishMilestoneVO;
 
 import java.util.List;

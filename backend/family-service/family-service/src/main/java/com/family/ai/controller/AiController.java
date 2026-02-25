@@ -2,9 +2,9 @@ package com.family.ai.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
-import com.family.family.entity.AiInventory;
-import com.family.family.entity.AiShoppingList;
-import com.family.family.entity.AiSubstitute;
+import com.family.ai.entity.AiInventory;
+import com.family.ai.entity.AiShoppingList;
+import com.family.ai.entity.AiSubstitute;
 import com.family.ai.service.AiChatService;
 import com.family.ai.service.AiDailyReportService;
 import com.family.ai.service.AiShoppingService;

@@ -1,7 +1,7 @@
 package com.family.health.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.family.family.entity.WeightRecord;
+import com.family.health.entity.WeightRecord;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
