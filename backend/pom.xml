@@ -30,7 +30,21 @@
 
     <modules>
         <module>family-common/common-core</module>
+        <module>family-gateway</module>
+        <module>family-service/user-service</module>
+        <module>family-service/task-service</module>
         <module>family-service/family-service</module>
+        <module>family-service/health-service</module>
+        <module>family-service/recipe-service</module>
+        <module>family-service/wish-service</module>
+        <module>family-service/vote-service</module>
+        <module>family-service/food-service</module>
+        <module>family-service/file-service</module>
+        <module>family-service/calendar-service</module>
+        <module>family-service/anniversary-service</module>
+        <module>family-service/ai-service</module>
+        <module>family-service/message-service</module>
+        <module>family-service/notify-service</module>
     </modules>
 
     <dependencyManagement>
