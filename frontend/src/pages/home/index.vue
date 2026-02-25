@@ -11,7 +11,6 @@
       <Skeleton v-if="pageLoading" type="card" :rows="5" show-image :list-count="3" />
     
     <!-- 实际内容 -->
-    <template v-else>
       <!-- 顶部欢迎区 -->
     <view class="header-section">
       <view class="header-bg">
@@ -239,7 +238,6 @@
     </view>
     
     </PullRefresh2>
-    </template>
     
     <!-- 设置饮水目标弹窗 -->
     <WaterGoalModal
