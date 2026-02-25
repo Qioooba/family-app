@@ -238,6 +238,7 @@
       </view>
     </view>
     
+    </template>
     </PullRefresh2>
     
     <!-- 设置饮水目标弹窗 -->
