@@ -42,7 +42,7 @@
             <text class="stats-unit">ml</text>
           </view>
           <text class="stats-divider">/</text>
-          <view class="stats-item">
+          <view class="stats-item" @click="showSettings">
             <text class="stats-num target">{{ targetAmount }}</text>
             <text class="stats-unit">ml 目标</text>
           </view>
