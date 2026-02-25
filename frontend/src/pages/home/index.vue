@@ -371,11 +371,9 @@ const onRefresh = async ({ finish, success, error }) => {
 onMounted(async () => {
   // 加载用户信息
   try {
-    if (!userStore.userInfo) {
-      await userStore.getUserInfo()
-    }
+    await userStore.getUserInfo()
   } catch (e) {
-    console.log('用户未登录或获取用户信息失败', e)
+    console.log('获取用户信息失败', e)
   }
   
   // 加载首页数据

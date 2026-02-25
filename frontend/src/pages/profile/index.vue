@@ -118,7 +118,14 @@ const displayAvatar = computed(() => {
   return '/static/avatar-default.png'
 })
 
-onMounted(() => {
+onMounted(async () => {
+  // 始终尝试获取最新的用户信息
+  try {
+    await userStore.getUserInfo()
+  } catch (e) {
+    console.log('获取用户信息失败', e)
+  }
+  
   // 如果已登录，刷新用户信息和积分
   if (isLogin.value) {
     loadUserData()
