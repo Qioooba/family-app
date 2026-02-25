@@ -84,11 +84,25 @@ const generateRequestKey = (options) => {
  */
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-// 简化的 token 获取方式
+// 简化的 token 获取方式 - 优先从 storage，备选从 window 全局
 const getToken = () => {
-  const token = uni.getStorageSync('token') || ''
-  console.log('[Token] 读取token:', token ? token.substring(0, 20) + '...' : '空')
-  return token
+  try {
+    // 优先从 storage 读取
+    let token = uni.getStorageSync('token')
+    
+    // 如果 storage 没有，尝试从 window 全局获取
+    if (!token && typeof window !== 'undefined' && window.__APP_TOKEN__) {
+      token = window.__APP_TOKEN__
+      // 同步到 storage
+      uni.setStorageSync('token', token)
+    }
+    
+    console.log('[Token] 读取token:', token ? token.substring(0, 20) + '...' : '空')
+    return token || ''
+  } catch (e) {
+    console.log('[Token] 读取token失败:', e)
+    return ''
+  }
 }
 
 /**
@@ -115,7 +129,7 @@ const baseRequest = async (options, retryCount = 0) => {
   return new Promise((resolve, reject) => {
     const requestHeaders = {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
+      'Authorization': token ? token : '',
       'X-Request-Id': generateRequestId(),
       ...(options.headers || {})
     }
@@ -192,8 +206,9 @@ const handleResponse = (res, options) => {
     }
   }
   
-  // 业务错误
-  if (data.code !== 200) {
+    // 业务错误
+    console.log('[Response] data:', JSON.stringify(data))
+    if (data.code !== 200) {
     handleBusinessError(data, options)
     return {
       success: false,
@@ -406,7 +421,7 @@ request.upload = (url, filePath, options = {}) => {
       name: options.name || 'file',
       formData: options.formData || {},
       header: {
-        'Authorization': token ? `Bearer ${token}` : ''
+        'Authorization': token ? token : ''
       },
       success: (res) => {
         try {

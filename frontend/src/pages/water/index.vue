@@ -1097,6 +1097,8 @@ const deleteHistoryRecord = async (recordId) => {
     display: flex;
     align-items: center;
     margin-bottom: 30rpx;
+    position: relative;
+    z-index: 1001;
 
     .picker-label {
       font-size: 28rpx;
@@ -1110,6 +1112,8 @@ const deleteHistoryRecord = async (recordId) => {
       padding: 12rpx 24rpx;
       background: #f5f6fa;
       border-radius: 12rpx;
+      position: relative;
+      z-index: 1002;
       margin-left: 16rpx;
 
       text {

@@ -9,8 +9,10 @@
     <view v-if="state === 'pending' || state === 'loading'" class="placeholder">
       <slot name="placeholder">
         <view class="default-placeholder" :style="{ backgroundColor: placeholderColor }">
-          <up-loading-icon v-if="showLoading" mode="circle" size="24" :color="loadingColor"></up-loading-icon>
-          <up-icon v-else name="photo" size="32" :color="iconColor"></up-icon>
+          <view v-if="showLoading" class="loading-icon">
+            <text class="loading-text">...</text>
+          </view>
+          <text v-else class="placeholder-icon">📷</text>
         </view>
       </slot>
     </view>
@@ -19,7 +21,7 @@
     <view v-else-if="state === 'error'" class="error-placeholder" @click.stop="retry">
       <slot name="error">
         <view class="default-error">
-          <up-icon name="error-circle" size="32" color="#ef5350"></up-icon>
+          <text class="error-icon">⚠️</text>
           <text class="error-text">加载失败</text>
           <text class="retry-text">点击重试</text>
         </view>
@@ -155,17 +157,29 @@ const createObserver = () => {
   }
 
   // 使用 IntersectionObserver
-  observer = uni.createIntersectionObserver({
-    thresholds: [0],
-    initialRatio: 0
-  })
-  
-  observer.relativeToViewport({ bottom: props.threshold }).observe(imageRef.value?.$el || '.lazy-image', (res) => {
-    if (res.intersectionRatio > 0 && state.value === 'pending') {
+  try {
+    observer = uni.createIntersectionObserver({
+      thresholds: [0],
+      initialRatio: 0
+    })
+    
+    const targetEl = imageRef.value?.$el
+    if (!targetEl) {
+      // 如果获取不到元素，直接加载
       startLoad()
-      observer.disconnect()
+      return
     }
-  })
+    
+    observer.relativeToViewport({ bottom: props.threshold }).observe(targetEl, (res) => {
+      if (res.intersectionRatio > 0 && state.value === 'pending') {
+        startLoad()
+        observer.disconnect()
+      }
+    })
+  } catch (e) {
+    console.warn('IntersectionObserver not supported, loading directly:', e)
+    startLoad()
+  }
 }
 
 // 开始加载
@@ -275,6 +289,23 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
+    
+    .placeholder-icon {
+      font-size: 48rpx;
+      opacity: 0.5;
+    }
+    
+    .loading-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .loading-text {
+        font-size: 32rpx;
+        color: #999;
+        animation: pulse 1s ease-in-out infinite;
+      }
+    }
   }
   
   .default-error {
@@ -282,6 +313,10 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    
+    .error-icon {
+      font-size: 48rpx;
+    }
     
     .error-text {
       font-size: 24rpx;
@@ -294,6 +329,11 @@ onUnmounted(() => {
       color: #999;
       margin-top: 4rpx;
     }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
   }
   
   .lazy-image {

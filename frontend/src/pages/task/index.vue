@@ -252,6 +252,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { taskApi, familyApi } from '../../api/index.js'
 
 // 获取今天的日期字符串
@@ -280,6 +281,7 @@ const currentSubtaskTask = ref(null)
 const newSubtaskTitle = ref('')
 const tasks = ref([])
 const loading = ref(false)
+const isRefreshing = ref(false) // 防重复加载标志
 
 // 家庭成员列表
 const familyMembers = ref([
@@ -305,7 +307,12 @@ const daysInMonth = computed(() => {
 })
 
 // 加载任务列表
-const loadTasks = async () => {
+const loadTasks = async (force = false) => {
+  // 防重复：如果正在加载且不是强制刷新，则跳过
+  if (!force && isRefreshing.value) {
+    return
+  }
+  isRefreshing.value = true
   loading.value = true
   try {
     // 从本地存储获取家庭ID
@@ -323,6 +330,7 @@ const loadTasks = async () => {
     uni.showToast({ title: '加载任务失败', icon: 'none' })
   } finally {
     loading.value = false
+    isRefreshing.value = false
   }
 }
 
@@ -345,8 +353,13 @@ const loadFamilyMembers = async () => {
 
 // 页面加载时获取任务
 onMounted(() => {
-  loadTasks()
+  loadTasks(true)
   loadFamilyMembers()
+})
+
+// 页面显示时自动刷新数据
+onShow(() => {
+  loadTasks(true)
 })
 
 // 获取成员名称

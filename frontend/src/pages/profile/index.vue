@@ -95,7 +95,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onShow, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../stores/user'
 import { gameApi } from '../../api/game'
 import { isDarkMode, toggleTheme } from '../../utils/theme.js'

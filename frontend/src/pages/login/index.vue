@@ -226,9 +226,10 @@ const handleLogin = async () => {
     saveCredentials()
     uni.showToast({ title: '登录成功', icon: 'success' })
 
+    // 延迟一点跳转，让 storage 同步完成
     setTimeout(() => {
       uni.reLaunch({ url: '/pages/home/index' })
-    }, 1500)
+    }, 500)
   } catch (e) {
     console.error('登录失败:', e)
     uni.showToast({ 

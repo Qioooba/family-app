@@ -18,11 +18,28 @@
       </view>
       <view class="header-content">
         <view class="header-left">
-          <view class="greeting">
-            <text class="time-label">{{ greeting }}</text>
-            <text class="user-name">{{ userStore.userInfo?.nickname || '亲爱的用户' }}</text>
+          <!-- 用户头像 -->
+          <view class="user-avatar" @click="goToProfile">
+            <image 
+              v-if="userStore.userInfo?.avatar" 
+              :src="userStore.userInfo.avatar" 
+              class="avatar-img"
+              mode="aspectFill"
+            />
+            <text v-else class="avatar-placeholder">
+              {{ (userStore.userInfo?.nickname || userStore.userInfo?.username || '用').substring(0, 1) }}
+            </text>
           </view>
-          <text class="current-date">{{ currentDate }}</text>
+          <view class="header-info">
+            <view class="greeting-row">
+              <text class="time-label">{{ greeting }}</text>
+              <text class="user-name">{{ userStore.userInfo?.nickname || '亲爱的用户' }}</text>
+            </view>
+            <view class="date-row">
+              <text class="date-icon">📅</text>
+              <text class="current-date">{{ currentDate }}</text>
+            </view>
+          </view>
         </view>
         
         <view class="header-right">
@@ -250,17 +267,20 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onShow } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../stores/user'
 import { waterApi } from '../../api/water'
 import { taskApi } from '../../api/task'
 import LazyImage from '@/components/common/LazyImage.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import PullRefresh2 from '@/components/common/PullRefresh2.vue'
+import WaterGoalModal from '@/components/water/WaterGoalModal.vue'
 import { useSkeleton } from '@/utils/performance.js'
 
 const userStore = useUserStore()
 const pullRefreshRef = ref(null)
+const waterGoalModalVisible = ref(false)
 const { loading: pageLoading, hide: hideSkeleton } = useSkeleton({ minDuration: 500 })
 
 // 问候语
@@ -338,12 +358,38 @@ const selectFamily = () => {
   uni.navigateTo({ url: '/pages/family/switch' })
 }
 
-const toggleTask = (task) => {
-  task.status = task.status === 2 ? 0 : 2
+const toggleTask = async (task) => {
+  const isCompleting = task.status === 0
+  const originalStatus = task.status
+  
+  // 乐观更新 UI
+  task.status = isCompleting ? 2 : 0
+  
+  try {
+    // 调用后端 API 完成/取消完成任务
+    await taskApi.complete(task.id)
+  } catch (error) {
+    // API 调用失败，回滚状态
+    task.status = originalStatus
+    console.error('切换任务状态失败:', error)
+    uni.showToast({
+      title: isCompleting ? '完成任务失败' : '取消任务失败',
+      icon: 'none'
+    })
+  }
 }
 
 const goTaskDetail = (task) => {
   uni.navigateTo({ url: `/pages/task/detail?id=${task.id}` })
+}
+
+const goToProfile = () => {
+  uni.navigateTo({ url: '/pages/profile/index' })
+}
+
+const handleSetWaterGoal = (goal) => {
+  waterGoalModalVisible.value = false
+  overviewData.value.waterTarget = goal
 }
 
 const goRecipeDetail = (recipe) => {
@@ -368,12 +414,31 @@ const onRefresh = async ({ finish, success, error }) => {
   }
 }
 
+// 防止重复加载的标志
+let isUserInfoLoaded = false
+
 // 每次页面显示时都加载用户信息
 onShow(async () => {
-  try {
-    await userStore.getUserInfo()
-  } catch (e) {
-    console.log('获取用户信息失败', e)
+  // H5 兼容：强制从 storage 同步 token
+  const storedToken = uni.getStorageSync('token')
+  console.log('[Home onShow] storage token:', storedToken ? storedToken.substring(0, 20) + '...' : '空')
+  console.log('[Home onShow] store token:', userStore.token ? userStore.token.substring(0, 20) + '...' : '空')
+  console.log('[Home onShow] window token:', window.__APP_TOKEN__ ? window.__APP_TOKEN__.substring(0, 20) + '...' : '空')
+  
+  if (storedToken && storedToken !== userStore.token) {
+    userStore.setToken(storedToken)
+  }
+  
+  // 如果刚进入页面（onMounted还没执行），跳过onShow的加载
+  // 避免onShow和onMounted重复调用
+  if (isUserInfoLoaded) {
+    try {
+      // 首页忽略 401 错误（可能是后端 /api/user/info 问题，其他接口都正常）
+      await userStore.getUserInfo()
+    } catch (e) {
+      console.log('获取用户信息失败', e)
+      // 401 错误时跳转登录页
+    }
   }
 })
 
@@ -381,6 +446,7 @@ onMounted(async () => {
   // 加载用户信息
   try {
     await userStore.getUserInfo()
+    isUserInfoLoaded = true
   } catch (e) {
     console.log('获取用户信息失败', e)
   }
@@ -470,31 +536,75 @@ onMounted(async () => {
   }
   
   .header-left {
-    .greeting {
-      margin-bottom: 12rpx;
+    display: flex;
+    align-items: center;
+    
+    .user-avatar {
+      width: 96rpx;
+      height: 96rpx;
+      border-radius: 50%;
+      overflow: hidden;
+      margin-right: 24rpx;
+      border: 4rpx solid rgba(255,255,255,0.3);
+      box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.15);
       
-      .time-label {
-        display: block;
-        font-size: 28rpx;
-        color: rgba(255,255,255,0.85);
-        margin-bottom: 8rpx;
-        font-weight: 500;
-        letter-spacing: 1rpx;
+      .avatar-img {
+        width: 100%;
+        height: 100%;
       }
       
-      .user-name {
-        font-size: 48rpx;
-        font-weight: 700;
+      .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: #fff;
-        text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
+        font-size: 36rpx;
+        font-weight: 600;
       }
     }
     
-    .current-date {
-      display: block;
-      font-size: 24rpx;
-      color: rgba(255,255,255,0.75);
-      margin-top: 8rpx;
+    .header-info {
+      .greeting-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8rpx;
+        margin-bottom: 8rpx;
+        
+        .time-label {
+          font-size: 26rpx;
+          color: rgba(255,255,255,0.85);
+          font-weight: 500;
+        }
+        
+        .user-name {
+          font-size: 40rpx;
+          font-weight: 700;
+          color: #fff;
+          text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.15);
+        }
+      }
+      
+      .date-row {
+        display: flex;
+        align-items: center;
+        gap: 6rpx;
+        
+        .date-icon {
+          font-size: 22rpx;
+        }
+        
+        .current-date {
+          font-size: 24rpx;
+          color: rgba(255,255,255,0.8);
+          background: rgba(255,255,255,0.15);
+          padding: 6rpx 16rpx;
+          border-radius: 20rpx;
+        }
+      }
     }
   }
   

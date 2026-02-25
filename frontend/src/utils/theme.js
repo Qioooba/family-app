@@ -64,25 +64,31 @@ const applyTheme = (theme) => {
     }
   }
   
-  // 设置页面背景色
+  // 设置页面背景色 - 仅在 App 和小程序可用
+  // #ifndef H5
   const bgColor = isDark ? '#1a1a2e' : '#f5f6fa'
   uni.setBackgroundColor({ backgroundColor: bgColor })
+  // #endif
   
-  // 设置导航栏颜色
+  // 设置导航栏颜色 - 仅在 App 和小程序可用
+  // #ifndef H5
   const navColor = isDark ? '#1a1a2e' : '#ffffff'
   const titleColor = isDark ? '#ffffff' : '#000000'
   uni.setNavigationBarColor({
     frontColor: titleColor,
     backgroundColor: navColor
   })
+  // #endif
   
-  // 设置TabBar颜色
+  // 设置TabBar颜色 - 仅在 App 和小程序可用
+  // #ifndef H5
   uni.setTabBarStyle({
     color: isDark ? '#999999' : '#999999',
     selectedColor: '#5B8FF9',
     backgroundColor: isDark ? '#1a1a2e' : '#ffffff',
     borderStyle: isDark ? 'black' : 'white'
   })
+  // #endif
 }
 
 /**
