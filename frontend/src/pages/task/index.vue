@@ -570,11 +570,16 @@ const addTask = async () => {
 
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
+    // 组合日期和时间
+    let dueTimeValue = null
+    if (newTask.value.dueDate && newTask.value.dueTime) {
+      dueTimeValue = newTask.value.dueDate + ' ' + newTask.value.dueTime
+    }
     const data = {
       title: newTask.value.title,
       familyId: familyId,
-      priority: newTask.value.priority,
-      dueDate: newTask.value.dueDate
+      priority: newTask.value.priority || 0,
+      dueTime: dueTimeValue
     }
     await taskApi.create(data)
     uni.showToast({ title: '添加成功', icon: 'success' })
