@@ -84,35 +84,9 @@ const generateRequestKey = (options) => {
  */
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
-// 从 cookie 中获取 token
-const getTokenFromCookie = () => {
-  try {
-    // H5 环境从 document.cookie 获取
-    if (typeof document !== 'undefined' && document.cookie) {
-      const cookies = document.cookie.split(';')
-      for (let cookie of cookies) {
-        const [name, value] = cookie.trim().split('=')
-        if (name === 'Authorization') {
-          return value
-        }
-      }
-    }
-  } catch (e) {
-    console.log('从cookie获取token失败', e)
-  }
-  return null
-}
-
-// 获取 token（优先从 localStorage，其次从 cookie）
+// 简化的 token 获取方式
 const getToken = () => {
-  let token = uni.getStorageSync('token')
-  if (!token) {
-    token = getTokenFromCookie()
-    if (token) {
-      uni.setStorageSync('token', token)
-    }
-  }
-  return token || ''
+  return uni.getStorageSync('token') || ''
 }
 
 /**
