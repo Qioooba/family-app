@@ -326,6 +326,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { waterApi } from '../../api/water'
+import { taskApi } from '../../api/task'
 import LazyImage from '@/components/common/LazyImage.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import PullRefresh2 from '@/components/common/PullRefresh2.vue'
@@ -367,11 +368,7 @@ const quickActions = [
 ]
 
 // 今日任务
-const todayTasks = ref([
-  { id: 1, title: '买牛奶和鸡蛋', assigneeName: '妈妈', time: '今天 18:00', priority: 1, status: 0 },
-  { id: 2, title: '给孩子检查作业', assigneeName: '爸爸', time: '今天 20:00', priority: 2, status: 0 },
-  { id: 3, title: '周末出游规划', assigneeName: '全家', time: '今天 21:00', priority: 0, status: 2 }
-])
+const todayTasks = ref([])
 
 // 纪念日
 const upcomingAnniversaries = ref([
@@ -461,6 +458,21 @@ onMounted(async () => {
     }
   } catch (e) {
     console.error('加载喝水数据失败', e)
+  }
+  
+  // 加载今日待办数据
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const taskData = await taskApi.getTodayTasks(familyId)
+    if (taskData && taskData.length > 0) {
+      todayTasks.value = taskData.slice(0, 3).map(task => ({
+        ...task,
+        assigneeName: task.assigneeName || '家人',
+        time: task.dueTime ? '今天 ' + task.dueTime.substring(11, 16) : '今天'
+      }))
+    }
+  } catch (e) {
+    console.error('加载待办数据失败', e)
   }
 })
 </script>
