@@ -48,7 +48,7 @@
         :style="{ animationDelay: `${index * 0.05}s` }"
       >
         <view class="icon-box" :style="{ background: item.bgColor, boxShadow: item.shadow }">
-          <u-icon :name="item.icon" size="38" color="#fff"></u-icon>
+          <text class="icon-emoji">{{ item.icon }}</text>
         </view>
         <text class="action-name">{{ item.name }}</text>
       </view>
@@ -99,7 +99,7 @@
         </view>
         <view class="more-btn" @click="navigateTo('/pages/task/index')">
           <text>更多</text>
-          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
+          ›
         </view>
       </view>
       
@@ -114,7 +114,7 @@
         >
           <view class="task-checkbox" @click.stop="toggleTask(task)">
             <view v-if="task.status === 2" class="checked">
-              <u-icon name="checkmark" size="20" color="#fff"></u-icon>
+              ✓
             </view>
             <view v-else class="unchecked"></view>
           </view>
@@ -159,7 +159,7 @@
         </view>
         <view class="more-btn" @click="navigateTo('/pages/calendar/index')">
           <text>更多</text>
-          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
+          ›
         </view>
       </view>
       
@@ -198,7 +198,7 @@
         </view>
         <view class="more-btn" @click="navigateTo('/pages/recipe/index')">
           <text>更多</text>
-          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
+          ›
         </view>
       </view>
       
@@ -289,10 +289,10 @@ const currentFamily = ref({ name: '幸福小家' })
 
 // 快捷功能 - 添加阴影
 const quickActions = [
-  { name: '纪念日', icon: 'heart', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
-  { name: '记账', icon: 'red-packet', bgColor: '#68d391', shadow: '0 8rpx 20rpx rgba(104, 211, 145, 0.35)', path: '/pages/food/record' },
-  { name: 'AI', icon: 'robot', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/ai/chat' },
-  { name: '天气', icon: 'cloud', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
+  { name: '纪念日', icon: '❤️', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
+  { name: '记账', icon: '💰', bgColor: '#68d391', shadow: '0 8rpx 20rpx rgba(104, 211, 145, 0.35)', path: '/pages/food/record' },
+  { name: 'AI', icon: '🤖', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/ai/chat' },
+  { name: '天气', icon: '🌤️', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
 ]
 
 // 今日任务
