@@ -239,6 +239,7 @@
     </view>
     
     </PullRefresh2>
+    </template>
     
     <!-- 设置饮水目标弹窗 -->
     <WaterGoalModal
