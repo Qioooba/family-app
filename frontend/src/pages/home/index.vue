@@ -114,7 +114,7 @@
           <text class="section-title">今日待办</text>
         </view>
         <view class="header-actions">
-          <view class="add-btn" @click="navigateTo('/pages/task/create')">
+          <view class="add-btn" @click="navigateTo('/pages/task/index')">
             <text>+</text>
           </view>
           <view class="more-btn" @click="navigateTo('/pages/task/index')">

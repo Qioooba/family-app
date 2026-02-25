@@ -30,19 +30,12 @@
     {
       "path": "pages/task/index",
       "style": {
-        "navigationBarTitleText": "任务清单",
+        "navigationBarTitleText": "待办事项",
         "navigationStyle": "custom",
         "scrollIndicator": "none",
         "pageScroll": false,
         "swipeBack": false,
         "enablePopGesture": false
-      }
-    },
-    {
-      "path": "pages/task/create",
-      "style": {
-        "navigationBarTitleText": "创建任务",
-        "navigationStyle": "custom"
       }
     },
     {
