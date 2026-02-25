@@ -156,7 +156,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { userApi } from '../../api/index'
 
@@ -165,6 +165,32 @@ const loginType = ref('password')
 const loading = ref(false)
 const codeCountdown = ref(0)
 const passwordVisible = ref(false)
+
+// 加载保存的账号密码
+const loadSavedCredentials = () => {
+  const savedUsername = uni.getStorageSync('savedUsername')
+  const savedPhone = uni.getStorageSync('savedPhone')
+  if (savedUsername) {
+    form.username = savedUsername
+  }
+  if (savedPhone) {
+    form.phone = savedPhone
+  }
+}
+
+// 保存账号密码
+const saveCredentials = () => {
+  if (form.username) {
+    uni.setStorageSync('savedUsername', form.username)
+  }
+  if (form.phone) {
+    uni.setStorageSync('savedPhone', form.phone)
+  }
+}
+
+onMounted(() => {
+  loadSavedCredentials()
+})
 
 const togglePasswordVisible = () => {
   passwordVisible.value = !passwordVisible.value
@@ -197,6 +223,7 @@ const handleLogin = async () => {
       : { phone: form.phone, code: form.code, loginType: 'sms' }
     
     await userStore.login(loginData)
+    saveCredentials()
     uni.showToast({ title: '登录成功', icon: 'success' })
 
     setTimeout(() => {
