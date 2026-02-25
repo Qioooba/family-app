@@ -238,64 +238,6 @@
       </view>
     </view>
     
-    <!-- 健康数据概览 -->
-    <view class="section-card health-card animate-in">
-      <view class="section-header">
-        <view class="title-wrapper">
-          <text class="section-icon">💪</text>
-          <text class="section-title">健康概览</text>
-        </view>
-        <view class="more-btn" @click="navigateTo('/pages/food/record')">
-          <text>记录</text>
-          <u-icon name="arrow-right" size="22" color="#6B8DD6"></u-icon>
-        </view>
-      </view>
-      
-      <view class="health-stats">
-        <view class="stat-item">
-          <view class="stat-icon-wrapper" style="background: linear-gradient(135deg, #FF6B6B, #FF8E8E);">
-            <text class="stat-icon">🍽️</text>
-          </view>
-          <text class="stat-value">{{ healthData.calories }}</text>
-          <text class="stat-label">已摄入卡路里</text>
-        </view>
-        
-        <view class="stat-item">
-          <view class="stat-icon-wrapper" style="background: linear-gradient(135deg, #4ECDC4, #44A08D);">
-            <text class="stat-icon">✨</text>
-          </view>
-          <text class="stat-value">{{ healthData.target - healthData.calories }}</text>
-          <text class="stat-label">剩余卡路里</text>
-        </view>
-        
-        <view class="stat-item" @click="openWaterGoalModal">
-          <view class="stat-icon-wrapper" style="background: linear-gradient(135deg, #667eea, #764ba2);">
-            <text class="stat-icon">💧</text>
-          </view>
-          <text class="stat-value">{{ overviewData.water }}ml</text>
-          <text class="stat-label">已饮水</text>
-        </view>
-      </view>
-      
-      <view class="calorie-progress">
-        <view class="progress-header">
-          <text class="progress-title">今日摄入进度</text>
-          <text class="progress-percent">{{ Math.round(healthData.calories / healthData.target * 100) }}%</text>
-        </view>
-        <view class="progress-bar">
-          <view 
-            class="progress-fill"
-            :style="{ width: (healthData.calories / healthData.target * 100) + '%' }"
-          >
-            <view class="progress-shine"></view>
-          </view>
-        </view>
-        <text class="progress-text">
-          {{ healthData.calories }} / {{ healthData.target }} 千卡
-        </text>
-      </view>
-    </view>
-  </template>
     </PullRefresh2>
     
     <!-- 设置饮水目标弹窗 -->
