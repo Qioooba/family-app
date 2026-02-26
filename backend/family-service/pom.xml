@@ -19,6 +19,12 @@
     <description>家庭服务</description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Common Core -->
         <dependency>
             <groupId>com.family</groupId>
@@ -104,6 +110,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.family.family.FamilyServiceApplication</mainClass>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
