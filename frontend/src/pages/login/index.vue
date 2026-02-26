@@ -71,7 +71,7 @@
                 placeholder-class="input-placeholder"
               />
               <view class="password-toggle" @click="togglePasswordVisible">
-                <up-icon :name="passwordVisible ? 'eye-off' : 'eye'" size="20" color="#999"></up-icon>
+                <u-icon :name="passwordVisible ? 'eye-off' : 'eye'" size="20" color="#999"></u-icon>
               </view>
             </view>
           </view>
@@ -145,7 +145,7 @@
         <view class="login-icons">
           <view class="icon-item" @click="wxLogin">
             <view class="icon wechat">
-              <up-icon name="weixin-fill" size="44" color="#fff"></up-icon>
+              <u-icon name="weixin-fill" size="44" color="#fff"></u-icon>
             </view>
             <text class="icon-text">微信</text>
           </view>

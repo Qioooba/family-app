@@ -2,7 +2,7 @@
   <view class="create-wish-page">
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#666"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#666"></u-icon>
       </view>
       <view class="title-wrapper">
         <text class="title-icon">{{ isEdit ? '✏️' : '🌸' }}</text>

@@ -4,7 +4,7 @@
       <view class="modal-header">
         <text class="modal-title">{{ isEdit ? '✏️ 编辑纪念日' : '💝 添加纪念日' }}</text>
         <view class="modal-close" @click="handleClose">
-          <up-icon name="close" size="32" color="#999"></up-icon>
+          <u-icon name="close" size="32" color="#999"></u-icon>
         </view>
       </view>
 
@@ -46,7 +46,7 @@
               <text class="date-text" :class="{ placeholder: !formData.targetDate }">
                 {{ formData.targetDate || '请选择日期' }}
               </text>
-              <up-icon name="calendar" size="28" color="#999"></up-icon>
+              <u-icon name="calendar" size="28" color="#999"></u-icon>
             </view>
             <!-- 农历/公历切换 -->
             <view class="date-type-toggle">
@@ -112,7 +112,7 @@
 
       <view class="modal-footer">
         <view v-if="isEdit" class="btn-delete" @click="handleDelete">
-          <up-icon name="trash" size="28" color="#ff6b6b"></up-icon>
+          <u-icon name="trash" size="28" color="#ff6b6b"></u-icon>
         </view>
         <view class="btn-cancel" @click="handleClose">取消</view>
         <view class="btn-confirm" @click="handleConfirm">{{ isEdit ? '保存' : '添加' }}</view>

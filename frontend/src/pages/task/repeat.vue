@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">重复设置</text>
       <view class="right-btn" @click="confirm">
@@ -22,7 +22,7 @@
             :class="{ active: repeatType === type.value }"
             @click="selectRepeatType(type.value)"
           >
-            <up-icon :name="type.icon" size="36" :color="repeatType === type.value ? '#fff' : '#666'"></up-icon>
+            <u-icon :name="type.icon" size="36" :color="repeatType === type.value ? '#fff' : '#666'"></u-icon>
             <text class="tab-text">{{ type.label }}</text>
           </view>
         </view>
@@ -213,7 +213,7 @@
               <view class="picker-content">
                 <text class="picker-label">结束日期</text>
                 <text class="picker-value">{{ endDate || '请选择日期' }}</text>
-                <up-icon name="arrow-right" size="28" color="#999"></up-icon>
+                <u-icon name="arrow-right" size="28" color="#999"></u-icon>
               </view>
             </picker>
           </view>

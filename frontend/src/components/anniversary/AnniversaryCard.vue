@@ -12,7 +12,7 @@
         <view class="more-btn" @click="goToList"
         >
           <text>更多</text>
-          <up-icon name="arrow-right" size="22" color="#7FD8BE"></up-icon>
+          <u-icon name="arrow-right" size="22" color="#7FD8BE"></u-icon>
         </view>
       </view>
     </view>

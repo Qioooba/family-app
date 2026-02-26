@@ -38,7 +38,7 @@
           :class="{ active: currentTag === tag }"
           @click="selectTag(tag)"
         >
-          <up-icon name="tags" size="20" color="currentColor"></up-icon>
+          <u-icon name="tags" size="20" color="currentColor"></u-icon>
           <text>{{ tag }}</text>
         </view>
       </scroll-view>
@@ -52,7 +52,7 @@
           :class="{ active: viewMode === 'timeline' }"
           @click="switchView('timeline')"
         >
-          <up-icon name="clock" size="28" color="currentColor"></up-icon>
+          <u-icon name="clock" size="28" color="currentColor"></u-icon>
           <text>时光轴</text>
         </view>
         <view 
@@ -60,12 +60,12 @@
           :class="{ active: viewMode === 'album' }"
           @click="switchView('album')"
         >
-          <up-icon name="photo" size="28" color="currentColor"></up-icon>
+          <u-icon name="photo" size="28" color="currentColor"></u-icon>
           <text>相册</text>
         </view>
       </view>
       <view class="upload-btn" @click="uploadPhotos">
-        <up-icon name="plus" size="28" color="#fff"></up-icon>
+        <u-icon name="plus" size="28" color="#fff"></u-icon>
         <text>上传</text>
       </view>
     </view>
@@ -91,7 +91,7 @@
           >
             <image :src="photo.url" mode="aspectFill" class="photo-img" />
             <view v-if="photo.tags.length" class="photo-tags-mini">
-              <up-icon name="tags" size="16" color="#fff"></up-icon>
+              <u-icon name="tags" size="16" color="#fff"></u-icon>
             </view>
           </view>
         </view>
@@ -116,7 +116,7 @@
           <view class="album-cover">
             <image :src="album.cover" mode="aspectFill" />
             <view class="album-count">
-              <up-icon name="photo" size="20" color="#fff"></up-icon>
+              <u-icon name="photo" size="20" color="#fff"></u-icon>
               <text>{{ album.count }}</text>
             </view>
           </view>
@@ -129,7 +129,7 @@
         <!-- 创建相册 -->
         <view class="album-card create" @click="createAlbum">
           <view class="create-content">
-            <up-icon name="plus-circle" size="60" color="#ccc"></up-icon>
+            <u-icon name="plus-circle" size="60" color="#ccc"></u-icon>
             <text>创建相册</text>
           </view>
         </view>
@@ -144,15 +144,15 @@
       </view>
       <view class="action-btns">
         <view class="action-btn" @click="addToAlbum">
-          <up-icon name="folder" size="32" color="#5B8FF9"></up-icon>
+          <u-icon name="folder" size="32" color="#5B8FF9"></u-icon>
           <text>加入相册</text>
         </view>
         <view class="action-btn" @click="downloadPhotos">
-          <up-icon name="download" size="32" color="#52C41A"></up-icon>
+          <u-icon name="download" size="32" color="#52C41A"></u-icon>
           <text>下载</text>
         </view>
         <view class="action-btn" @click="deletePhotos">
-          <up-icon name="trash" size="32" color="#FF4D4F"></up-icon>
+          <u-icon name="trash" size="32" color="#FF4D4F"></u-icon>
           <text>删除</text>
         </view>
       </view>

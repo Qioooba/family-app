@@ -3,11 +3,11 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">心愿预算</text>
       <view class="right-btn" @click="showBudgetModal">
-        <up-icon name="setting" size="36" color="#fff"></up-icon>
+        <u-icon name="setting" size="36" color="#fff"></u-icon>
       </view>
     </view>
 
@@ -146,7 +146,7 @@
           </view>
           
           <view v-if="expenseList.length === 0" class="empty-state">
-            <up-icon name="file-text" size="80" color="#ddd"></up-icon>
+            <u-icon name="file-text" size="80" color="#ddd"></u-icon>
             <text class="empty-text">暂无支出记录</text>
           </view>
         </scroll-view>

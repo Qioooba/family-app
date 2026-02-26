@@ -8,7 +8,7 @@
           <text class="modal-title">{{ isEditMode ? '编辑任务' : '新建待办' }}</text>
         </view>
         <view class="close-btn" @click="handleClose">
-          <up-icon name="close" size="20" color="#999"></up-icon>
+          <u-icon name="close" size="20" color="#999"></u-icon>
         </view>
       </view>
       
@@ -33,12 +33,12 @@
           <view class="picker date-picker" @click="showDatePicker">
             <text class="picker-icon">📅</text>
             <text class="picker-text">{{ form.dueDate }}</text>
-            <up-icon name="arrow-down" size="14" color="#ccc"></up-icon>
+            <u-icon name="arrow-down" size="14" color="#ccc"></u-icon>
           </view>
           <view class="picker time-picker" @click="showTimePicker">
             <text class="picker-icon">🕐</text>
             <text class="picker-text">{{ form.dueTime }}</text>
-            <up-icon name="arrow-down" size="14" color="#ccc"></up-icon>
+            <u-icon name="arrow-down" size="14" color="#ccc"></u-icon>
           </view>
         </view>
       </view>

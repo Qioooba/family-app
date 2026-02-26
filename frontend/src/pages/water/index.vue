@@ -3,11 +3,11 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">喝水打卡</text>
       <view class="right-btn" @click="showSettings">
-        <up-icon name="setting" size="40" color="#333"></up-icon>
+        <u-icon name="setting" size="40" color="#333"></u-icon>
       </view>
     </view>
 
@@ -88,7 +88,7 @@
         </view>
 
         <view v-if="records.length === 0" class="empty-state">
-          <up-icon name="clock" size="80" color="#ddd"></up-icon>
+          <u-icon name="clock" size="80" color="#ddd"></u-icon>
           <text>还没有喝水记录，快来打卡吧~</text>
         </view>
 
@@ -99,7 +99,7 @@
             class="record-item"
           >
             <view class="record-icon">
-              <up-icon name="clock" size="36" color="#5B8FF9"></up-icon>
+              <u-icon name="clock" size="36" color="#5B8FF9"></u-icon>
             </view>
             <view class="record-info">
               <text class="record-amount">+{{ record.amount }}ml</text>
@@ -110,7 +110,7 @@
             </view>
             <view class="record-delete-wrapper" @click="deleteRecord(record.id)">
               <view class="record-delete-btn" title="删除记录">
-                <up-icon name="trash" size="28" color="#fff"></up-icon>
+                <u-icon name="trash" size="28" color="#fff"></u-icon>
                 <text class="delete-text">删除</text>
               </view>
             </view>
@@ -121,7 +121,7 @@
       <!-- 健康提示 -->
       <view class="tips-section">
         <view class="tip-card">
-          <up-icon name="info-circle" size="40" color="#5AD8A6"></up-icon>
+          <u-icon name="info-circle" size="40" color="#5AD8A6"></u-icon>
           <view class="tip-content">
             <text class="tip-title">健康小贴士</text>
             <text class="tip-text">{{ currentTip }}</text>
@@ -172,7 +172,7 @@
           <picker mode="date" :value="historyDate" :end="today" @change="onHistoryDateChange">
             <view class="date-picker-btn">
               <text>{{ formatDateDisplay(historyDate) }}</text>
-              <up-icon name="arrow-down" size="28" color="#666"></up-icon>
+              <u-icon name="arrow-down" size="28" color="#666"></u-icon>
             </view>
           </picker>
         </view>
@@ -196,7 +196,7 @@
         <!-- 历史记录列表 -->
         <scroll-view scroll-y class="history-records-list" style="max-height: 600rpx;">
           <view v-if="(historyData.records || []).length === 0" class="history-empty">
-            <up-icon name="calendar" size="80" color="#ddd"></up-icon>
+            <u-icon name="calendar" size="80" color="#ddd"></u-icon>
             <text>该日期暂无喝水记录</text>
           </view>
           
@@ -207,7 +207,7 @@
           >
             <view class="record-left">
               <view class="record-icon-small">
-                <up-icon name="clock" size="32" color="#5B8FF9"></up-icon>
+                <u-icon name="clock" size="32" color="#5B8FF9"></u-icon>
               </view>
               <view class="record-info">
                 <text class="record-amount">+{{ record.amount }}ml</text>
@@ -216,7 +216,7 @@
             </view>
             <view class="record-delete-wrapper" @click="deleteHistoryRecord(record.id)">
               <view class="record-delete-btn history-delete-btn" title="删除记录">
-                <up-icon name="trash" size="24" color="#fff"></up-icon>
+                <u-icon name="trash" size="24" color="#fff"></u-icon>
               </view>
             </view>
           </view>

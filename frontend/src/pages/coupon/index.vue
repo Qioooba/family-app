@@ -3,11 +3,11 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">优惠券管理</text>
       <view class="right-btn" @click="showAddModal">
-        <up-icon name="plus" size="40" color="#333"></up-icon>
+        <u-icon name="plus" size="40" color="#333"></u-icon>
       </view>
     </view>
 
@@ -46,7 +46,7 @@
     <!-- 优惠券列表 -->
     <scroll-view scroll-y class="coupon-list" @scrolltolower="loadMore">
       <view v-if="filteredCoupons.length === 0" class="empty-state">
-        <up-icon name="coupon" size="100" color="#ddd"></up-icon>
+        <u-icon name="coupon" size="100" color="#ddd"></u-icon>
         <text class="empty-title">暂无{{ currentTabLabel }}优惠券</text>
         <text class="empty-desc">点击右上角 + 号添加新优惠券</text>
       </view>
@@ -61,7 +61,7 @@
           <!-- 左侧装饰 -->
           <view class="coupon-left">
             <view class="coupon-icon">
-              <up-icon name="coupon" size="48" color="#fff"></up-icon>
+              <u-icon name="coupon" size="48" color="#fff"></u-icon>
             </view>
           </view>
 
@@ -75,7 +75,7 @@
             </view>
 
             <view class="coupon-store" v-if="coupon.storeName">
-              <up-icon name="home" size="24" color="#999"></up-icon>
+              <u-icon name="home" size="24" color="#999"></u-icon>
               <text>{{ coupon.storeName }}</text>
             </view>
 
@@ -85,7 +85,7 @@
 
             <view class="coupon-footer">
               <view class="expire-date">
-                <up-icon name="clock" size="24" color="#999"></up-icon>
+                <u-icon name="clock" size="24" color="#999"></u-icon>
                 <text :class="{ 'expiring-soon': isExpiringSoon(coupon) }">
                   {{ formatExpireDate(coupon.expireDate) }}
                 </text>
@@ -206,7 +206,7 @@
 >
                 {{ form.expireDate || '请选择到期日期' }}
               </text>
-              <up-icon name="calendar" size="32" color="#999"></up-icon>
+              <u-icon name="calendar" size="32" color="#999"></u-icon>
             </view>
           </view>
 

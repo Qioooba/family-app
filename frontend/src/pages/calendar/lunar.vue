@@ -3,12 +3,12 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">农历日历</text>
       <view class="right-btn" @click="showDatePicker">
         <text>{{ currentYear }}年</text>
-        <up-icon name="arrow-down" size="24" color="#333"></up-icon>
+        <u-icon name="arrow-down" size="24" color="#333"></u-icon>
       </view>
     </view>
 
@@ -36,7 +36,7 @@
         </view>
 
         <view v-if="today.festival" class="today-festival">
-          <up-icon name="gift" size="32" color="#FF6B6B"></up-icon>
+          <u-icon name="gift" size="32" color="#FF6B6B"></u-icon>
           <text>{{ today.festival }}</text>
         </view>
 
@@ -176,7 +176,7 @@
 
           <view v-if="selectedDay.festival" class="detail-festival"
 >
-            <up-icon name="gift" size="40" color="#FF6B6B"></up-icon>
+            <u-icon name="gift" size="40" color="#FF6B6B"></u-icon>
             <text>{{ selectedDay.festival }}</text>
           </view>
 
@@ -204,13 +204,13 @@
           <view class="detail-actions"
 >
             <view class="action-btn" @click="addReminder">
-              <up-icon name="bell" size="32" color="#5B8FF9"></up-icon>
+              <u-icon name="bell" size="32" color="#5B8FF9"></u-icon>
               <text>添加提醒</text>
             </view>
             
             <view class="action-btn" @click="shareDate"
 >
-              <up-icon name="share" size="32" color="#52C41A"></up-icon>
+              <u-icon name="share" size="32" color="#52C41A"></u-icon>
               <text>分享</text>
             </view>
           </view>

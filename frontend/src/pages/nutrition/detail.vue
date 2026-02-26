@@ -5,12 +5,12 @@
 >
       <view class="back-btn" @click="goBack"
 >
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">营养成分</text>
       <view class="right-btn" @click="showDatePicker">
         <text>{{ selectedDate }}</text>
-        <up-icon name="arrow-down" size="24" color="#333"></up-icon>
+        <u-icon name="arrow-down" size="24" color="#333"></u-icon>
       </view>
     </view>
 

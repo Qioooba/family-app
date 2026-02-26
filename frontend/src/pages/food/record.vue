@@ -3,11 +3,11 @@
     <!-- 导航栏 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">记录饮食</text>
       <view class="setting-btn" @click="showTargetModal">
-        <up-icon name="setting" size="36" color="#5AD8A6"></up-icon>
+        <u-icon name="setting" size="36" color="#5AD8A6"></u-icon>
       </view>
     </view>
     
@@ -19,7 +19,7 @@
           <view class="total-calories" @click="showTargetModal">
             <text class="num">{{ todayCalories }}</text>
             <text class="unit">千卡</text>
-            <up-icon name="edit-pen" size="24" color="rgba(255,255,255,0.8)" class="edit-icon"></up-icon>
+            <u-icon name="edit-pen" size="24" color="rgba(255,255,255,0.8)" class="edit-icon"></u-icon>
           </view>
         </view>
         
@@ -43,7 +43,7 @@
         <view class="camera-area" @click="takePhoto">
           <view v-if="photoUrls.length === 0" class="camera-placeholder">
             <view class="camera-icon">
-              <up-icon name="camera" size="60" color="#5AD8A6"></up-icon>
+              <u-icon name="camera" size="60" color="#5AD8A6"></u-icon>
             </view>
             <text class="camera-text">点击拍照识别食物</text>
             <text class="camera-subtext">AI自动识别食物并估算卡路里（可拍多张）</text>
@@ -52,11 +52,11 @@
             <view v-for="(photo, index) in photoUrls" :key="index" class="photo-item">
               <image :src="photo" mode="aspectFill" class="preview-img" />
               <view class="remove-photo-btn" @click.stop="removePhoto(index)">
-                <up-icon name="close" size="24" color="#fff"></up-icon>
+                <u-icon name="close" size="24" color="#fff"></u-icon>
               </view>
             </view>
             <view class="add-more-btn" @click.stop="takePhoto">
-              <up-icon name="plus" size="40" color="#5AD8A6"></up-icon>
+              <u-icon name="plus" size="40" color="#5AD8A6"></u-icon>
               <text>继续添加</text>
             </view>
           </view>
@@ -123,7 +123,7 @@
               @focus="showSearchResults = true"
             />
             <view v-if="form.foodName" class="clear-btn" @click="clearFoodName">
-              <up-icon name="close-circle" size="32" color="#ccc"></up-icon>
+              <u-icon name="close-circle" size="32" color="#ccc"></u-icon>
             </view>
           </view>
           <!-- 搜索结果下拉框 -->
@@ -307,13 +307,13 @@
               </view>
             </view>
             <view class="delete-btn" @click="removeFoodItem(index)">
-              <up-icon name="trash" size="32" color="#ff4d4f"></up-icon>
+              <u-icon name="trash" size="32" color="#ff4d4f"></u-icon>
             </view>
           </view>
         </scroll-view>
         
         <view class="add-food-btn" @click="addFoodItem">
-          <up-icon name="plus" size="28" color="#5AD8A6"></up-icon>
+          <u-icon name="plus" size="28" color="#5AD8A6"></u-icon>
           <text>添加食物</text>
         </view>
         

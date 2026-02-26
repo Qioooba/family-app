@@ -5,7 +5,7 @@
 >
       <view class="back-btn" @click="goBack"
 >
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">我的券包</text>
       <view class="right-btn" @click="showExpired">
@@ -117,7 +117,7 @@
 >
               <view class="code-toggle" @click="toggleCode(coupon)">
                 <text>{{ coupon.showCode ? '隐藏核销码' : '查看核销码' }}</text>
-                <up-icon :name="coupon.showCode ? 'eye-off' : 'eye'" size="24" color="#5B8FF9"></up-icon>
+                <u-icon :name="coupon.showCode ? 'eye-off' : 'eye'" size="24" color="#5B8FF9"></u-icon>
               </view>
 
               <view v-if="coupon.showCode" class="code-display"
@@ -168,7 +168,7 @@
         <!-- 空状态 -->
         <view v-if="filteredCoupons.length === 0" class="empty-state"
 >
-          <up-icon name="ticket" size="100" color="#ddd"></up-icon>
+          <u-icon name="ticket" size="100" color="#ddd"></u-icon>
           <text class="empty-text">暂无优惠券</text>
           <text class="empty-hint" @click="goToGet">去领券中心 ›</text>
         </view>

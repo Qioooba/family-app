@@ -5,16 +5,16 @@
       <view class="nav-bar">
         <view class="back-btn" @click="goBack">
           <view class="icon-bg">
-            <up-icon name="arrow-left" size="36" color="#fff"></up-icon>
+            <u-icon name="arrow-left" size="36" color="#fff"></u-icon>
           </view>
         </view>
         
         <view class="actions">
           <view class="icon-bg" @click="toggleFavorite">
-            <up-icon :name="isFavorite ? 'heart-fill' : 'heart'" size="36" :color="isFavorite ? '#FF4D4F' : '#fff'"></up-icon>
+            <u-icon :name="isFavorite ? 'heart-fill' : 'heart'" size="36" :color="isFavorite ? '#FF4D4F' : '#fff'"></u-icon>
           </view>
           <view class="icon-bg" @click="shareRecipe">
-            <up-icon name="share" size="36" color="#fff"></up-icon>
+            <u-icon name="share" size="36" color="#fff"></u-icon>
           </view>
         </view>
       </view>
@@ -34,15 +34,15 @@
         
         <view class="stats">
           <view class="stat-item">
-            <up-icon name="eye" size="28" color="#999"></up-icon>
+            <u-icon name="eye" size="28" color="#999"></u-icon>
             <text>{{ recipe.views }} 浏览</text>
           </view>
           <view class="stat-item">
-            <up-icon name="heart" size="28" color="#999"></up-icon>
+            <u-icon name="heart" size="28" color="#999"></u-icon>
             <text>{{ recipe.likes }} 收藏</text>
           </view>
           <view class="stat-item">
-            <up-icon name="checkmark-circle" size="28" color="#999"></up-icon>
+            <u-icon name="checkmark-circle" size="28" color="#999"></u-icon>
             <text>{{ recipe.made }} 人做过</text>
           </view>
         </view>
@@ -64,7 +64,7 @@
             @click="item.checked = !item.checked"
           >
             <view class="checkbox">
-              <up-icon v-if="item.checked" name="checkmark" size="24" color="#5AD8A6"></up-icon>
+              <u-icon v-if="item.checked" name="checkmark" size="24" color="#5AD8A6"></u-icon>
             </view>
             <text class="name">{{ item.name }}</text>
             <text class="amount">{{ item.amount }}</text>
@@ -119,12 +119,12 @@
     <!-- 底部操作 -->
     <view class="bottom-actions">
       <view class="action-btn secondary" @click="addToPlan">
-        <up-icon name="calendar" size="32" color="#5B8FF9"></up-icon>
+        <u-icon name="calendar" size="32" color="#5B8FF9"></u-icon>
         <text>加入计划</text>
       </view>
       
       <view class="action-btn primary" @click="markAsMade">
-        <up-icon name="checkmark" size="32" color="#fff"></up-icon>
+        <u-icon name="checkmark" size="32" color="#fff"></u-icon>
         <text>标记做过</text>
       </view>
     </view>

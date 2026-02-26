@@ -9,7 +9,7 @@
           <text class="modal-title">任务详情</text>
         </view>
         <view class="close-btn" @click="$emit('close')">
-          <up-icon name="close" size="20" color="#999"></up-icon>
+          <u-icon name="close" size="20" color="#999"></u-icon>
         </view>
       </view>
       

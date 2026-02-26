@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">{{ pageTitle }}</text>
       <view class="right-btn" @click="saveTask">
@@ -62,7 +62,7 @@
         <picker mode="multiSelector" :range="dateRange" :value="dateIndex" @change="onDateChange">
           <view class="picker-value">
             {{ form.deadline || '请选择截止时间' }}
-            <up-icon name="arrow-right" size="28" color="#999"></up-icon>
+            <u-icon name="arrow-right" size="28" color="#999"></u-icon>
           </view>
         </picker>
       </view>

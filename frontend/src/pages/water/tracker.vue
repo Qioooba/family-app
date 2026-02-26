@@ -4,11 +4,11 @@
     <view class="nav-bar"
 >
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">喝水打卡</text>
       <view class="right-btn" @click="showSettings">
-        <up-icon name="setting" size="36" color="#333"></up-icon>
+        <u-icon name="setting" size="36" color="#333"></u-icon>
       </view>
     </view>
 
@@ -61,7 +61,7 @@
               }"
               @click="addWater(cupSize, index)"
             >
-              <view class="cup-icon"
+              <view class="cu-icon"
 >
                 <text v-if="index < filledCups">💧</text>
                 <text v-else>🥛</text>
@@ -129,7 +129,7 @@
 >
               <view class="record-delete-btn" title="删除记录"
 >
-                <up-icon name="trash" size="24" color="#fff"></up-icon>
+                <u-icon name="trash" size="24" color="#fff"></u-icon>
                 <text class="delete-text">删除</text>
               </view>
             </view>
@@ -137,7 +137,7 @@
           
           <view v-if="waterRecords.length === 0" class="empty-records"
 >
-            <up-icon name="file-text" size="60" color="#ddd"></up-icon>
+            <u-icon name="file-text" size="60" color="#ddd"></u-icon>
             <text>今天还没有喝水记录</text>
           </view>
         </scroll-view>
@@ -150,7 +150,7 @@
 >
           <view class="reminder-info"
 >
-            <up-icon name="bell" size="40" color="#1890FF"></up-icon>
+            <u-icon name="bell" size="40" color="#1890FF"></u-icon>
             <view class="reminder-text"
 >
               <text class="reminder-title">喝水提醒</text>
@@ -834,7 +834,7 @@ const goBack = () => {
       border-radius: 16rpx;
       transition: all 0.3s;
 
-      .cup-icon {
+      .cu-icon {
         font-size: 40rpx;
         margin-bottom: 8rpx;
       }

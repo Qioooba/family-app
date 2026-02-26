@@ -103,7 +103,7 @@
           @click="goFeature(feature)"
         >
           <view class="feature-icon" :style="{ background: feature.bgColor }">
-            <up-icon :name="feature.icon" size="44" color="#fff"></up-icon>
+            <u-icon :name="feature.icon" size="44" color="#fff"></u-icon>
           </view>
           
           <text class="feature-name">{{ feature.name }}</text>

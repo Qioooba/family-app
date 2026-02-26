@@ -68,7 +68,7 @@
             <text class="days-num">{{ formatDays(item.daysUntil) }}</text>
             <text class="days-text">{{ getDaysText(item.daysUntil) }}</text>
           </view>
-          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
         </view>
       </view>
     </view>

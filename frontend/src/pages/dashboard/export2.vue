@@ -4,7 +4,7 @@
     <view class="nav-bar"
 >
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">数据导出</text>
       <view class="right-btn" @click="showHistory">
@@ -149,8 +149,8 @@
             <text>导出中 {{ exportProgress }}%</text>          
           </view>          
           <block v-else>
-            <up-icon :name="exportStatus === 'success' ? 'checkmark' : 'download'" size="32" color="#fff"
-</up-icon>            
+            <u-icon :name="exportStatus === 'success' ? 'checkmark' : 'download'" size="32" color="#fff"
+</u-icon>            
             <text>{{ exportButtonText }}</text>          
           </block>        
         </view>        
@@ -162,17 +162,17 @@
       <view class="tips-section"
 >
         <view class="tip-item">
-          <up-icon name="info-circle" size="28" color="#999"></up-icon>          
+          <u-icon name="info-circle" size="28" color="#999"></u-icon>          
           <text>导出的数据仅包含您有权限查看的内容</text>        
         </view>        
         
         <view class="tip-item">
-          <up-icon name="info-circle" size="28" color="#999"></up-icon>          
+          <u-icon name="info-circle" size="28" color="#999"></u-icon>          
           <text>导出完成后将自动保存到手机相册或下载目录</text>        
         </view>        
         
         <view class="tip-item">
-          <up-icon name="info-circle" size="28" color="#999"></up-icon>          
+          <u-icon name="info-circle" size="28" color="#999"></u-icon>          
           <text>大型数据导出可能需要较长时间，请保持应用在前台</text>        
         </view>      
       </view>
@@ -188,7 +188,7 @@
         <view class="success-icon">
           <view class="icon-circle"
 >
-            <up-icon name="checkmark" size="60" color="#fff"></up-icon>
+            <u-icon name="checkmark" size="60" color="#fff"></u-icon>
           </view>        
         </view>        
         

@@ -6,11 +6,11 @@
 >
       <view class="back-btn" @click="goBack"
 >
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">贺卡生成</text>
       <view class="right-btn" @click="showHistory">
-        <up-icon name="file-text" size="36" color="#333"></up-icon>
+        <u-icon name="file-text" size="36" color="#333"></u-icon>
       </view>
     </view>
 
@@ -111,20 +111,20 @@
       <!-- 操作按钮 -->
       <view class="actions-section">
         <view class="action-btn primary" @click="generateCard">
-          <up-icon name="photo" size="32" color="#fff"></up-icon>
+          <u-icon name="photo" size="32" color="#fff"></u-icon>
           <text>生成贺卡</text>
         </view>
         
         <view class="action-row"
 >
           <view class="action-btn secondary" @click="saveToAlbum">
-            <up-icon name="download" size="28" color="#5B8FF9"></up-icon>
+            <u-icon name="download" size="28" color="#5B8FF9"></u-icon>
             <text>保存</text>
           </view>
           
           <view class="action-btn secondary" @click="shareCard"
 >
-            <up-icon name="share" size="28" color="#52C41A"></up-icon>
+            <u-icon name="share" size="28" color="#52C41A"></u-icon>
             <text>分享</text>
           </view>
         </view>

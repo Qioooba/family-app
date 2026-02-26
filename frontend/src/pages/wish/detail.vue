@@ -2,11 +2,11 @@
   <view class="wish-detail-page">
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">心愿详情</text>
       <view class="more-btn" @click="showActions">
-        <up-icon name="more-dot-fill" size="40" color="#333"></up-icon>
+        <u-icon name="more-dot-fill" size="40" color="#333"></u-icon>
       </view>
     </view>
     
@@ -56,7 +56,7 @@
         <view class="section-title">
           <text>预算</text>
           <view class="budget-edit" @click="showBudgetModal">
-            <up-icon name="edit-pen" size="28" color="#5B8FF9"></up-icon>
+            <u-icon name="edit-pen" size="28" color="#5B8FF9"></u-icon>
             <text>编辑</text>
           </view>
         </view>
@@ -83,7 +83,7 @@
         <view class="section-title">
           <text>里程碑</text>
           <view class="milestone-add" @click="showMilestoneModal">
-            <up-icon name="plus" size="28" color="#5B8FF9"></up-icon>
+            <u-icon name="plus" size="28" color="#5B8FF9"></u-icon>
             <text>添加</text>
           </view>
         </view>
@@ -130,7 +130,7 @@
           class="btn btn-primary"
           @click="claimWish"
         >
-          <up-icon name="heart" size="32" color="#fff"></up-icon>
+          <u-icon name="heart" size="32" color="#fff"></u-icon>
           认领心愿
         </view>
         

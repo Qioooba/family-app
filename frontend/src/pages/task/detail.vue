@@ -3,11 +3,11 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">任务详情</text>
       <view class="more-btn" @click="showActions">
-        <up-icon name="more-dot-fill" size="40" color="#333"></up-icon>
+        <u-icon name="more-dot-fill" size="40" color="#333"></u-icon>
       </view>
     </view>
 
@@ -17,7 +17,7 @@
       <view class="task-title-card" :class="{ completed: task.status === 2 }">
         <view class="title-section">
           <view class="checkbox" :class="{ checked: task.status === 2 }" @click="toggleTaskStatus">
-            <up-icon v-if="task.status === 2" name="checkmark" size="36" color="#fff"></up-icon>
+            <u-icon v-if="task.status === 2" name="checkmark" size="36" color="#fff"></u-icon>
           </view>
           <view class="title-content">
             <text class="task-title-text" :class="{ 'line-through': task.status === 2 }">
@@ -35,13 +35,13 @@
         <!-- 截止时间 -->
         <view class="info-item" @click="editDeadline">
           <view class="info-icon deadline">
-            <up-icon name="clock" size="32" color="#fff"></up-icon>
+            <u-icon name="clock" size="32" color="#fff"></u-icon>
           </view>
           <view class="info-content">
             <text class="info-label">截止时间</text>
             <text class="info-value">{{ formatDeadline }}</text>
           </view>
-          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
         </view>
 
         <!-- 分割线 -->
@@ -50,7 +50,7 @@
         <!-- 优先级 -->
         <view class="info-item" @click="editPriority">
           <view class="info-icon priority" :class="getPriorityBgClass">
-            <up-icon name="flag" size="32" color="#fff"></up-icon>
+            <u-icon name="flag" size="32" color="#fff"></u-icon>
           </view>
           <view class="info-content">
             <text class="info-label">优先级</text>
@@ -59,7 +59,7 @@
               <text>{{ getPriorityText }}</text>
             </view>
           </view>
-          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
         </view>
 
         <!-- 分割线 -->
@@ -68,20 +68,20 @@
         <!-- 分类 -->
         <view class="info-item" @click="editCategory">
           <view class="info-icon category">
-            <up-icon name="grid" size="32" color="#fff"></up-icon>
+            <u-icon name="grid" size="32" color="#fff"></u-icon>
           </view>
           <view class="info-content">
             <text class="info-label">任务分类</text>
             <text class="info-value">{{ getCategoryText }}</text>
           </view>
-          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
         </view>
       </view>
 
       <!-- 备注卡片 -->
       <view class="remark-card" v-if="task.remark">
         <view class="card-header">
-          <up-icon name="file-text" size="32" color="#999"></up-icon>
+          <u-icon name="file-text" size="32" color="#999"></u-icon>
           <text>备注</text>
         </view>
         <view class="remark-content">
@@ -92,11 +92,11 @@
       <!-- 备注卡片（空状态） -->
       <view class="remark-card empty" v-else @click="addRemark">
         <view class="card-header">
-          <up-icon name="file-text" size="32" color="#999"></up-icon>
+          <u-icon name="file-text" size="32" color="#999"></u-icon>
           <text>备注</text>
         </view>
         <view class="add-remark">
-          <up-icon name="plus" size="32" color="#5AD8A6"></up-icon>
+          <u-icon name="plus" size="32" color="#5AD8A6"></u-icon>
           <text>添加备注</text>
         </view>
       </view>
@@ -105,18 +105,18 @@
       <view class="reminder-card" @click="showReminderModal">
         <view class="card-header">
           <view class="header-left">
-            <up-icon name="bell" size="32" color="#5B8FF9"></up-icon>
+            <u-icon name="bell" size="32" color="#5B8FF9"></u-icon>
             <text>提醒设置</text>
           </view>
           <view class="header-right">
-            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
           </view>
         </view>
 
         <view class="reminder-list" v-if="reminders.length > 0">
           <view v-for="(reminder, index) in reminders" :key="reminder.id" class="reminder-item">
             <view class="reminder-icon-wrapper" :class="reminder.reminderType">
-              <up-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#fff"></up-icon>
+              <u-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#fff"></u-icon>
             </view>
             <view class="reminder-info">
               <text class="reminder-text">{{ formatReminder(reminder) }}</text>
@@ -125,7 +125,7 @@
           </view>
         </view>
         <view class="no-reminder" v-else>
-          <up-icon name="plus-circle" size="48" color="#ddd"></up-icon>
+          <u-icon name="plus-circle" size="48" color="#ddd"></u-icon>
           <text>点击添加提醒</text>
         </view>
       </view>
@@ -139,16 +139,16 @@
     <!-- 底部操作栏 -->
     <view class="bottom-actions">
       <view v-if="task.status !== 2" class="action-btn btn-complete" @click="completeTask">
-        <up-icon name="checkmark-circle-2" size="36" color="#fff"></up-icon>
+        <u-icon name="checkmark-circle-2" size="36" color="#fff"></u-icon>
         <text>标记完成</text>
       </view>
       <view v-else class="action-btn btn-reopen" @click="reopenTask">
-        <up-icon name="refresh-circle" size="36" color="#5B8FF9"></up-icon>
+        <u-icon name="refresh-circle" size="36" color="#5B8FF9"></u-icon>
         <text>重新打开</text>
       </view>
 
       <view class="action-btn btn-delete" @click="deleteTask">
-        <up-icon name="trash-2" size="36" color="#FF4D4F"></up-icon>
+        <u-icon name="trash-2" size="36" color="#FF4D4F"></u-icon>
         <text>删除任务</text>
       </view>
     </view>
@@ -170,7 +170,7 @@
             :class="{ active: newReminder.reminderType === type.value }"
             @click="newReminder.reminderType = type.value"
           >
-            <up-icon :name="type.icon" size="36" :color="newReminder.reminderType === type.value ? '#fff' : '#666'"></up-icon>
+            <u-icon :name="type.icon" size="36" :color="newReminder.reminderType === type.value ? '#fff' : '#666'"></u-icon>
             <text>{{ type.label }}</text>
           </view>
         </view>
@@ -182,7 +182,7 @@
             <picker mode="multiSelector" :range="timeRange" :value="timeIndex" @change="onTimeChange">
               <view class="picker-value">
                 {{ newReminder.reminderTime || '选择时间' }}
-                <up-icon name="arrow-right" size="24" color="#ccc"></up-icon>
+                <u-icon name="arrow-right" size="24" color="#ccc"></u-icon>
               </view>
             </picker>
           </view>
@@ -209,11 +209,11 @@
             <text class="form-label">选择位置</text>
             <view class="location-picker" @click="chooseLocation">
               <view v-if="!newReminder.locationName" class="location-placeholder">
-                <up-icon name="map" size="48" color="#ccc"></up-icon>
+                <u-icon name="map" size="48" color="#ccc"></u-icon>
                 <text>点击选择地图位置</text>
               </view>
               <view v-else class="location-selected">
-                <up-icon name="map-fill" size="40" color="#5B8FF9"></up-icon>
+                <u-icon name="map-fill" size="40" color="#5B8FF9"></u-icon>
                 <view class="location-info">
                   <text class="location-name">{{ newReminder.locationName }}</text>
                   <text class="location-address" v-if="newReminder.locationAddress">{{ newReminder.locationAddress }}</text>
@@ -243,11 +243,11 @@
           <text class="section-title">已设置的提醒</text>
           <view v-for="(reminder, index) in reminders" :key="reminder.id" class="existing-item">
             <view class="existing-info">
-              <up-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#5B8FF9"></up-icon>
+              <u-icon :name="reminder.reminderType === 'location' ? 'map' : 'clock'" size="28" color="#5B8FF9"></u-icon>
               <text>{{ formatReminder(reminder) }}</text>
             </view>
             <view class="delete-btn" @click="deleteReminder(reminder.id)">
-              <up-icon name="trash" size="28" color="#FF4D4F"></up-icon>
+              <u-icon name="trash" size="28" color="#FF4D4F"></u-icon>
             </view>
           </view>
         </view>

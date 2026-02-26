@@ -2,7 +2,7 @@
   <view class="voice-page">
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">语音输入</text>
       <view class="right-placeholder"></view>
@@ -59,17 +59,17 @@
           @touchstart="startRecording"
           @touchend="stopRecording"
         >
-          <up-icon :name="isRecording ? 'mic-fill' : 'mic'" size="60" color="#fff"></up-icon>
+          <u-icon :name="isRecording ? 'mic-fill' : 'mic'" size="60" color="#fff"></u-icon>
         </view>
         
         <view v-else class="action-buttons">
           <view class="action-btn cancel" @click="reset">
-            <up-icon name="close" size="40" color="#999"></up-icon>
+            <u-icon name="close" size="40" color="#999"></u-icon>
             <text>重录</text>
           </view>
           
           <view class="action-btn confirm" @click="confirm">
-            <up-icon name="checkmark" size="40" color="#fff"></up-icon>
+            <u-icon name="checkmark" size="40" color="#fff"></u-icon>
             <text>确认</text>
           </view>
         </view>

@@ -2,7 +2,7 @@
   <view class="switch-family-page">
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">家庭信息</text>
       <view class="right-placeholder"></view>
@@ -18,18 +18,18 @@
         </view>
         
         <view class="current-badge">
-          <up-icon name="checkmark" size="28" color="#fff"></up-icon>
+          <u-icon name="checkmark" size="28" color="#fff"></u-icon>
         </view>
       </view>
       
       <view class="tip-section">
-        <up-icon name="info-circle" size="32" color="#5B8FF9"></up-icon>
+        <u-icon name="info-circle" size="32" color="#5B8FF9"></u-icon>
         <text class="tip-text">当前为单家庭模式，每个账号只能拥有一个家庭</text>
       </view>
       
       <view class="action-section">
         <view class="action-btn primary" @click="goToFamilyPage">
-          <up-icon name="home" size="36" color="#fff"></up-icon>
+          <u-icon name="home" size="36" color="#fff"></u-icon>
           <text>进入家庭空间</text>
         </view>
       </view>

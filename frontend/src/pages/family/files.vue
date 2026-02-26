@@ -7,7 +7,7 @@
     <view class="storage-card">
       <view class="storage-info">
         <view class="storage-icon">
-          <up-icon name="folder-fill" size="60" color="#667eea"></up-icon>
+          <u-icon name="folder-fill" size="60" color="#667eea"></u-icon>
         </view>
         <view class="storage-detail">
           <text class="storage-title">家庭云存储</text>
@@ -43,10 +43,10 @@
       </view>
       <view class="toolbar-right">
         <view class="view-toggle" @click="toggleView">
-          <up-icon :name="viewMode === 'grid' ? 'grid' : 'list'" size="36" color="#666"></up-icon>
+          <u-icon :name="viewMode === 'grid' ? 'grid' : 'list'" size="36" color="#666"></u-icon>
         </view>
         <view class="more-btn" @click="showMoreActions">
-          <up-icon name="more-dot-fill" size="36" color="#666"></up-icon>
+          <u-icon name="more-dot-fill" size="36" color="#666"></u-icon>
         </view>
       </view>
     </view>
@@ -80,12 +80,12 @@
         >
           <view class="file-checkbox" v-if="isSelectMode" @click.stop="toggleSelect(item)">
             <view class="checkbox" :class="{ checked: selectedItems.includes(item.id) }">
-              <up-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></up-icon>
+              <u-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></u-icon>
             </view>
           </view>
           <view class="file-icon">
             <image v-if="item.type === 'image'" :src="item.thumbnail" mode="aspectFill" class="thumb-img" />
-            <up-icon v-else :name="getFileIcon(item)" size="80" :color="getFileColor(item)"></up-icon>
+            <u-icon v-else :name="getFileIcon(item)" size="80" :color="getFileColor(item)"></u-icon>
           </view>
           <view class="file-info">
             <text class="file-name" :class="{ folder: item.isFolder }">{{ item.name }}</text>
@@ -100,7 +100,7 @@
       
       <!-- 空状态 -->
       <view v-if="filteredFiles.length === 0" class="empty-state">
-        <up-icon name="folder-open" size="120" color="#ddd"></up-icon>
+        <u-icon name="folder-open" size="120" color="#ddd"></u-icon>
         <text class="empty-text">暂无文件</text>
         <text class="empty-hint">点击右上角上传文件</text>
       </view>
@@ -126,25 +126,25 @@
         >
           <view class="row-checkbox" v-if="isSelectMode" @click.stop="toggleSelect(item)">
             <view class="checkbox" :class="{ checked: selectedItems.includes(item.id) }">
-              <up-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></up-icon>
+              <u-icon v-if="selectedItems.includes(item.id)" name="checkbox-mark" size="20" color="#fff"></u-icon>
             </view>
           </view>
           <view class="row-icon">
             <image v-if="item.type === 'image'" :src="item.thumbnail" mode="aspectFill" />
-            <up-icon v-else :name="getFileIcon(item)" size="50" :color="getFileColor(item)"></up-icon>
+            <u-icon v-else :name="getFileIcon(item)" size="50" :color="getFileColor(item)"></u-icon>
           </view>
           <view class="row-info">
             <text class="row-name">{{ item.name }}</text>
             <text class="row-meta">{{ formatSize(item.size) }} · {{ item.date }}</text>
           </view>
           <view class="row-action" @click.stop="showFileActions(item)">
-            <up-icon name="more-dot-fill" size="40" color="#999"></up-icon>
+            <u-icon name="more-dot-fill" size="40" color="#999"></u-icon>
           </view>
         </view>
       </view>
       
       <view v-if="filteredFiles.length === 0" class="empty-state">
-        <up-icon name="folder-open" size="120" color="#ddd"></up-icon>
+        <u-icon name="folder-open" size="120" color="#ddd"></u-icon>
         <text class="empty-text">暂无文件</text>
       </view>
       
@@ -159,15 +159,15 @@
       </view>
       <view class="action-btns">
         <view class="action-btn" @click="downloadSelected">
-          <up-icon name="download" size="36" color="#5B8FF9"></up-icon>
+          <u-icon name="download" size="36" color="#5B8FF9"></u-icon>
           <text>下载</text>
         </view>
         <view class="action-btn" @click="moveSelected">
-          <up-icon name="folder" size="36" color="#FAAD14"></up-icon>
+          <u-icon name="folder" size="36" color="#FAAD14"></u-icon>
           <text>移动</text>
         </view>
         <view class="action-btn" @click="deleteSelected">
-          <up-icon name="trash" size="36" color="#FF4D4F"></up-icon>
+          <u-icon name="trash" size="36" color="#FF4D4F"></u-icon>
           <text>删除</text>
         </view>
       </view>
@@ -175,7 +175,7 @@
     
     <!-- 悬浮上传按钮 -->
     <view class="fab-upload" v-if="!isSelectMode" @click="showUploadMenu">
-      <up-icon name="plus" size="48" color="#fff"></up-icon>
+      <u-icon name="plus" size="48" color="#fff"></u-icon>
     </view>
     
     <!-- 新建文件夹弹窗 -->

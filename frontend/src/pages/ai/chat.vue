@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       
       <view class="ai-info">
@@ -103,7 +103,7 @@
     <view class="input-area">
       <view class="toolbar">
         <view class="tool-btn" @click="showQuickActions">
-          <up-icon name="plus-circle" size="44" color="#999"></up-icon>
+          <u-icon name="plus-circle" size="44" color="#999"></u-icon>
         </view>
         
         <input 
@@ -115,7 +115,7 @@
         />
         
         <view class="tool-btn" @click="startVoice">
-          <up-icon name="mic" size="44" color="#999"></up-icon>
+          <u-icon name="mic" size="44" color="#999"></u-icon>
         </view>
         
         <view 
@@ -123,7 +123,7 @@
           :class="{ active: inputMessage.trim() }"
           @click="sendMessage()"
         >
-          <up-icon name="arrow-upward" size="36" color="#fff"></up-icon>
+          <u-icon name="arrow-upward" size="36" color="#fff"></u-icon>
         </view>
       </view>
     </view>

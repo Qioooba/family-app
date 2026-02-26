@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#333"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">切换家庭</text>
       <view class="right-btn" @click="showJoinModal">
@@ -91,7 +91,7 @@
         <view class="action-card" @click="createFamily">
           <view class="action-icon create"
 >
-            <up-icon name="plus" size="40" color="#fff"></up-icon>
+            <u-icon name="plus" size="40" color="#fff"></u-icon>
           </view>          
           
           <view class="action-info"
@@ -99,14 +99,14 @@
             <text class="action-title">创建新家庭</text>
             <text class="action-desc">创建属于您的家庭空间</text>
           </view>          
-          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
         </view>
 
         <view class="action-card" @click="showJoinModal"
 >
           <view class="action-icon join"
 >
-            <up-icon name="user-plus" size="40" color="#fff"></up-icon>
+            <u-icon name="user-plus" size="40" color="#fff"></u-icon>
           </view>          
           
           <view class="action-info"
@@ -114,7 +114,7 @@
             <text class="action-title">加入家庭</text>
             <text class="action-desc">通过邀请码加入</text>
           </view>          
-          <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
         </view>
       </view>
 
@@ -126,31 +126,31 @@
         <view class="manage-list">
           <view class="manage-item" @click="manageMembers"
 >
-            <up-icon name="account" size="36" color="#5B8FF9"></up-icon>
+            <u-icon name="account" size="36" color="#5B8FF9"></u-icon>
             <text class="item-label">成员管理</text>
             <text class="item-value">{{ currentFamily.members.length }}人</text>
-            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
           </view>          
           
           <view class="manage-item" @click="setDefault"
 >
-            <up-icon name="star" size="36" color="#FAAD14"></up-icon>
+            <u-icon name="star" size="36" color="#FAAD14"></u-icon>
             <text class="item-label">设为默认</text>
             <text class="item-value">{{ currentFamily.isDefault ? '已是默认' : '' }}</text>
-            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
           </view>          
           
           <view class="manage-item" @click="familySettings"
 >
-            <up-icon name="setting" size="36" color="#52C41A"></up-icon>
+            <u-icon name="setting" size="36" color="#52C41A"></u-icon>
             <text class="item-label">家庭设置</text>
-            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
           </view>          
           
           <view class="manage-item danger" @click="exitFamily">
-            <up-icon name="logout" size="36" color="#FF4D4F"></up-icon>
+            <u-icon name="logout" size="36" color="#FF4D4F"></u-icon>
             <text class="item-label">退出家庭</text>
-            <up-icon name="arrow-right" size="28" color="#ccc"></up-icon>
+            <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
           </view>
         </view>
       </view>

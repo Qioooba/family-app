@@ -3,11 +3,11 @@
     <!-- 顶部导航 -->
     <view class="nav-bar">
       <view class="back-btn" @click="goBack">
-        <up-icon name="arrow-left" size="40" color="#fff"></up-icon>
+        <u-icon name="arrow-left" size="40" color="#fff"></u-icon>
       </view>
       <text class="title">扫码录入</text>
       <view class="right-btn" @click="toggleFlash">
-        <up-icon :name="flashEnabled ? 'flashlight' : 'flashlight-off'" size="36" color="#fff"></up-icon>
+        <u-icon :name="flashEnabled ? 'flashlight' : 'flashlight-off'" size="36" color="#fff"></u-icon>
       </view>
     </view>
 
@@ -51,7 +51,7 @@
       <view class="result-card">
         <view class="result-header">
           <view class="success-icon">
-            <up-icon name="checkmark-circle" size="80" color="#52C41A"></up-icon>
+            <u-icon name="checkmark-circle" size="80" color="#52C41A"></u-icon>
           </view>
           <text class="result-title">扫描成功</text>
         </view>
@@ -73,13 +73,13 @@
 
           <!-- URL信息 -->
           <view v-else-if="scanResult.type === 'url'" class="url-info">
-            <up-icon name="link" size="60" color="#5B8FF9"></up-icon>
+            <u-icon name="link" size="60" color="#5B8FF9"></u-icon>
             <text class="url-text">{{ scanResult.content }}</text>
           </view>
 
           <!-- 文本信息 -->
           <view v-else class="text-info">
-            <up-icon name="file-text" size="60" color="#666"></up-icon>
+            <u-icon name="file-text" size="60" color="#666"></u-icon>
             <text class="text-content">{{ scanResult.content }}</text>
           </view>
 
@@ -95,7 +95,7 @@
                   :class="{ active: selectedTarget === target.value }"
                   @click="selectedTarget = target.value"
                 >
-                  <up-icon :name="target.icon" size="28" :color="selectedTarget === target.value ? '#5B8FF9' : '#999'"></up-icon>
+                  <u-icon :name="target.icon" size="28" :color="selectedTarget === target.value ? '#5B8FF9' : '#999'"></u-icon>
                   {{ target.label }}
                 </view>
               </view>
@@ -132,7 +132,7 @@
     <view v-if="!scanResult" class="bottom-actions">
       <view class="action-item" @click="scanFromAlbum">
         <view class="action-icon">
-          <up-icon name="photo" size="40" color="#fff"></up-icon>
+          <u-icon name="photo" size="40" color="#fff"></u-icon>
         </view>
         <text>相册</text>
       </view>
@@ -140,7 +140,7 @@
       <view class="action-item scan-btn" @click="startScan">
         <view class="scan-button"
 >
-          <up-icon name="scan" size="48" color="#5B8FF9"></up-icon>
+          <u-icon name="scan" size="48" color="#5B8FF9"></u-icon>
         </view>
       </view>
 
@@ -148,7 +148,7 @@
 >
         <view class="action-icon"
 >
-          <up-icon name="edit-pen" size="40" color="#fff"></up-icon>
+          <u-icon name="edit-pen" size="40" color="#fff"></u-icon>
         </view>
         <text>手动输入</text>
       </view>
@@ -217,7 +217,7 @@
           <image v-if="item.image" :src="item.image" class="history-image" mode="aspectFill" />
           <view v-else class="history-icon"
 >
-            <up-icon :name="item.type === 'url' ? 'link' : 'barcode'" size="40" color="#999"></up-icon>
+            <u-icon :name="item.type === 'url' ? 'link' : 'barcode'" size="40" color="#999"></u-icon>
           </view>
           
           <text class="history-name">{{ item.name || item.content.substring(0, 10) + '...' }}</text>

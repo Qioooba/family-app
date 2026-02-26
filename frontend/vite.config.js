@@ -40,6 +40,14 @@ export default defineConfig({
       '@styles': resolve(__dirname, 'src/styles')
     }
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "uview-plus/theme.scss"; @import "uview-plus/libs/css/mixin.scss";`,
+        silenceDeprecations: ['legacy-js-api', 'import']
+      }
+    }
+  },
   server: {
     allowedHosts: ['qioba.cn', '.qioba.cn'],
     host: '0.0.0.0',
@@ -47,11 +55,11 @@ export default defineConfig({
     open: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:8099',
+        target: 'http://localhost:8081',
         changeOrigin: true
       },
       '/user': {
-        target: 'http://localhost:8099',
+        target: 'http://localhost:8081',
         changeOrigin: true
       }
     }
