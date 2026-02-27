@@ -3,7 +3,6 @@ package com.family.vote.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
 import com.family.vote.entity.Vote;
-import com.family.vote.entity.VoteRecord;
 import com.family.vote.service.VoteService;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,11 +31,16 @@ public class VoteController {
     }
     
     @PostMapping("/{id}/vote")
-    public Result<VoteRecord> vote(@PathVariable Long id, @RequestBody Map<String, Object> params) {
-        Long userId = Long.valueOf(params.get("userId").toString());
-        String userName = params.get("userName").toString();
-        String selectedOptions = params.get("selectedOptions").toString();
-        return Result.success(voteService.castVote(id, userId, userName, selectedOptions));
+    public Result<?> vote(@PathVariable Long id, @RequestBody Map<String, Object> params) {
+        try {
+            Long userId = Long.valueOf(params.get("userId").toString());
+            String userName = params.get("userName") != null ? params.get("userName").toString() : "用户";
+            String selectedOptions = params.get("selectedOptions").toString();
+            voteService.castVote(id, userId, userName, selectedOptions);
+            return Result.success("投票成功");
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
     }
     
     @GetMapping("/{id}/result")
