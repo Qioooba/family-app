@@ -17,7 +17,7 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-alpha-4010220240409001",
     "dayjs": "^1.11.10",
     "echarts": "^5.5.0",
-    "pinia": "^2.1.7",
+    "pinia": "^2.0.36",
     "uview-plus": "^3.2.24",
     "vue": "^3.4.21",
     "vue-demi": "^0.14.6"

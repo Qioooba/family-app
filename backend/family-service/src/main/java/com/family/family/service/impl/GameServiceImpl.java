@@ -12,6 +12,7 @@ import com.family.family.mapper.FamilyChallengeMapper;
 import com.family.family.mapper.GameQuizMapper;
 import com.family.family.mapper.GameRiddleMapper;
 import com.family.family.service.GameService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,6 +25,7 @@ import java.util.Map;
 /**
  * 游戏服务实现
  */
+@Slf4j
 @Service
 public class GameServiceImpl implements GameService {
     
@@ -205,10 +207,19 @@ public class GameServiceImpl implements GameService {
     
     @Override
     public GameRiddle getRandomRiddle() {
-        QueryWrapper<GameRiddle> wrapper = new QueryWrapper<>();
-        wrapper.eq("status", 1)
-               .last("ORDER BY RAND() LIMIT 1");
-        return gameRiddleMapper.selectOne(wrapper);
+        try {
+            QueryWrapper<GameRiddle> wrapper = new QueryWrapper<>();
+            wrapper.eq("status", 1);
+            List<GameRiddle> list = gameRiddleMapper.selectList(wrapper);
+            if (list == null || list.isEmpty()) {
+                return null;
+            }
+            int index = (int) (Math.random() * list.size());
+            return list.get(index);
+        } catch (Exception e) {
+            log.warn("Get random riddle failed: {}", e.getMessage());
+            return null;
+        }
     }
     
     @Override
@@ -245,10 +256,19 @@ public class GameServiceImpl implements GameService {
     
     @Override
     public GameQuiz getRandomQuiz() {
-        QueryWrapper<GameQuiz> wrapper = new QueryWrapper<>();
-        wrapper.eq("status", 1)
-               .last("ORDER BY RAND() LIMIT 1");
-        return gameQuizMapper.selectOne(wrapper);
+        try {
+            QueryWrapper<GameQuiz> wrapper = new QueryWrapper<>();
+            wrapper.eq("status", 1);
+            List<GameQuiz> list = gameQuizMapper.selectList(wrapper);
+            if (list == null || list.isEmpty()) {
+                return null;
+            }
+            int index = (int) (Math.random() * list.size());
+            return list.get(index);
+        } catch (Exception e) {
+            log.warn("Get random quiz failed: {}", e.getMessage());
+            return null;
+        }
     }
     
     @Override

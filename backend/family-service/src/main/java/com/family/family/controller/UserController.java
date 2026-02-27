@@ -1,6 +1,7 @@
 package com.family.family.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,37 +13,33 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/user")
-@SaCheckLogin
 public class UserController {
 
     @GetMapping("/info")
+    @SaCheckLogin
     public Map<String, Object> info() {
         Map<String, Object> result = new HashMap<>();
         try {
-            // 尝试获取登录ID，如果失败返回默认用户
-            Long userId;
-            try {
-                userId = StpUtil.getLoginIdAsLong();
-            } catch (Exception e) {
-                // token无效时返回默认用户
-                userId = 1L;
-            }
-            
+            Long userId = StpUtil.getLoginIdAsLong();
+            String tokenValue = StpUtil.getTokenValue();
+
             result.put("code", 200);
             result.put("message", "success");
             Map<String, Object> data = new HashMap<>();
             data.put("id", userId);
             data.put("username", "user_" + userId);
             data.put("nickname", "用户" + userId);
+            data.put("token", tokenValue);
             result.put("data", data);
         } catch (Exception e) {
-            result.put("code", 500);
-            result.put("message", "获取用户信息失败");
+            result.put("code", 401);
+            result.put("message", "未登录或登录已过期");
         }
         return result;
     }
-    
+
     @PostMapping("/login")
+    @SaIgnore
     public Map<String, Object> login(@RequestBody Map<String, Object> params) {
         Map<String, Object> result = new HashMap<>();
         try {
@@ -52,17 +49,26 @@ public class UserController {
                 result.put("message", "手机号不能为空");
                 return result;
             }
+
+            // 模拟用户ID（实际应从数据库查询）
+            Long userId = 1L;
+
+            // 执行Sa-Token登录
+            StpUtil.login(userId);
+            String tokenValue = StpUtil.getTokenValue();
+
             result.put("code", 200);
             result.put("message", "success");
-            result.put("data", "test-token-" + System.currentTimeMillis());
+            result.put("data", tokenValue);
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "登录失败");
+            result.put("message", "登录失败：" + e.getMessage());
         }
         return result;
     }
-    
+
     @PostMapping("/register")
+    @SaIgnore
     public Map<String, Object> register(@RequestBody Map<String, Object> params) {
         Map<String, Object> result = new HashMap<>();
         try {
@@ -82,7 +88,22 @@ public class UserController {
             ));
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "注册失败");
+            result.put("message", "注册失败：" + e.getMessage());
+        }
+        return result;
+    }
+
+    @PostMapping("/logout")
+    @SaCheckLogin
+    public Map<String, Object> logout() {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            StpUtil.logout();
+            result.put("code", 200);
+            result.put("message", "退出成功");
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", "退出失败：" + e.getMessage());
         }
         return result;
     }

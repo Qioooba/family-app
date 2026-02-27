@@ -18,22 +18,22 @@ export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi, familyApi, shoppi
 // 食材相关API
 export const ingredientApi = {
   // 获取食材列表
-  getList: (familyId) => request.get(`/api/ingredient/list/${familyId}`),
-  
+  getList: (familyId) => request.get(`/api/food/ingredient/list/${familyId}`),
+
   // 添加食材
-  add: (data) => request.post('/api/ingredient/add', data),
-  
+  add: (data) => request.post('/api/food/ingredient/add', data),
+
   // 更新食材
-  update: (data) => request.put('/api/ingredient/update', data),
-  
+  update: (data) => request.put('/api/food/ingredient/update', data),
+
   // 图像识别食材
-  recognize: (imageBase64) => request.post('/api/ingredient/recognize', { imageBase64 }),
-  
+  recognize: (imageBase64) => request.post('/api/food/ingredient/recognize', { imageBase64 }),
+
   // 获取即将过期食材
-  getExpiring: (familyId) => request.get(`/api/ingredient/expiring/${familyId}`),
-  
+  getExpiring: (familyId) => request.get(`/api/food/ingredient/expiring/${familyId}`),
+
   // 删除食材
-  delete: (id) => request.delete(`/api/ingredient/${id}`)
+  delete: (id) => request.delete(`/api/food/ingredient/${id}`)
 }
 
 // 饮食记录相关API
