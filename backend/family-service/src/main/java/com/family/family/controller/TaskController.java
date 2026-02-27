@@ -1,5 +1,6 @@
 package com.family.family.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.family.entity.Task;
 import com.family.family.mapper.TaskMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/task")
+@SaCheckLogin
 public class TaskController {
 
     @Autowired

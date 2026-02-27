@@ -75,7 +75,7 @@ public class FamilyController {
             result.put("data", data);
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -122,7 +122,7 @@ public class FamilyController {
             result.put("data", Map.of("id", family.getId(), "name", family.getName()));
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -159,7 +159,7 @@ public class FamilyController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -178,7 +178,7 @@ public class FamilyController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -202,7 +202,7 @@ public class FamilyController {
             result.put("data", members);
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -240,7 +240,7 @@ public class FamilyController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -284,7 +284,7 @@ public class FamilyController {
             result.put("data", Map.of("isAdmin", isAdmin));
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;

@@ -55,7 +55,7 @@ public class InviteCodeController {
             ));
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -87,7 +87,7 @@ public class InviteCodeController {
             ));
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -132,7 +132,7 @@ public class InviteCodeController {
             ));
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -153,7 +153,7 @@ public class InviteCodeController {
             result.put("data", codes);
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -173,7 +173,7 @@ public class InviteCodeController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -194,7 +194,7 @@ public class InviteCodeController {
             result.put("data", Map.of("isAdmin", isAdmin));
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
