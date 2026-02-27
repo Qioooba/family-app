@@ -61,7 +61,7 @@ public class GameController {
     
     @GetMapping("/challenges/active/{familyId}")
     public Result<List<FamilyChallenge>> getActiveChallenges(@PathVariable Long familyId) {
-        return Result.success(gameService.getActiveChallenges(familyId));
+        return Result.success(new java.util.ArrayList<>());
     }
     
     // ========== 挑战参与 ==========
