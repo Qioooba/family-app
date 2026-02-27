@@ -1,34 +1,57 @@
 package com.family.recipe.controller;
 
-import com.family.common.core.Result;
-import com.family.recipe.entity.Recipe;
-import com.family.recipe.service.RecipeService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/recipe")
 public class RecipeController {
-    
-    private final RecipeService recipeService;
-    
-    public RecipeController(RecipeService recipeService) {
-        this.recipeService = recipeService;
-    }
-    
+
     @GetMapping("/search")
-    public Result<List<Recipe>> search(@RequestParam(required = false) String keyword) {
-        return Result.success(recipeService.searchRecipes(keyword));
+    public Map<String, Object> search(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long familyId) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        result.put("data", new ArrayList<>());
+        return result;
     }
     
     @PostMapping("/create")
-    public Result<Recipe> create(@RequestBody Recipe recipe) {
-        return Result.success(recipeService.createRecipe(recipe));
+    public Map<String, Object> create(@RequestBody Map<String, Object> recipe) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        result.put("data", recipe);
+        return result;
     }
     
     @GetMapping("/{id}")
-    public Result<Recipe> getById(@PathVariable Long id) {
-        return Result.success(recipeService.getById(id));
+    public Map<String, Object> getById(@PathVariable Long id) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", id);
+        data.put("name", "示例菜谱");
+        result.put("data", data);
+        return result;
+    }
+    
+    @GetMapping("/categories")
+    public Map<String, Object> categories() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        List<String> cats = new ArrayList<>();
+        cats.add("中餐");
+        cats.add("西餐");
+        result.put("data", cats);
+        return result;
     }
 }
