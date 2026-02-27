@@ -19,13 +19,14 @@
     "echarts": "^5.5.0",
     "pinia": "^2.1.7",
     "uview-plus": "^3.2.24",
-    "vue": "^3.4.21"
+    "vue": "^3.4.21",
+    "vue-demi": "^0.14.6"
   },
   "devDependencies": {
     "@dcloudio/vite-plugin-uni": "3.0.0-alpha-4010220240409001",
     "rollup-plugin-visualizer": "^7.0.0",
     "sass-embedded": "^1.97.3",
     "typescript": "^5.4.5",
-    "vite": "^5.2.8"
+    "vite": "^5.0.12"
   }
 }

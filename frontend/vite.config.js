@@ -2,33 +2,9 @@ import { defineConfig } from 'vite'
 import uni from '@dcloudio/vite-plugin-uni'
 import { resolve } from 'path'
 
-const fixExternalPlugin = () => ({
-  name: 'fix-external',
-  configResolved(config) {
-    if (config.build?.rollupOptions) {
-      config.build.rollupOptions.external = []
-    }
-    if (config.esbuild) {
-      // 移除esbuild的external配置，避免冲突
-    }
-    if (!config.optimizeDeps) {
-      config.optimizeDeps = {}
-    }
-    if (!config.optimizeDeps.include) {
-      config.optimizeDeps.include = []
-    }
-    const deps = ['vue', 'pinia']
-    deps.forEach(dep => {
-      if (!config.optimizeDeps.include.includes(dep)) {
-        config.optimizeDeps.include.push(dep)
-      }
-    })
-  }
-})
-
 export default defineConfig({
-  plugins: [uni(), fixExternalPlugin()],
-  esbuild: { external: [], platform: 'browser' },
+  plugins: [uni()],
+  esbuild: { platform: 'browser' },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -63,5 +39,9 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  optimizeDeps: {
+    noDiscovery: true,
+    include: []
   }
 })

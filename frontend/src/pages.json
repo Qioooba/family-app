@@ -691,39 +691,6 @@
       ]
     },
     {
-      "root": "pages/game",
-      "pages": [
-        {
-          "path": "index",
-          "style": {
-            "navigationBarTitleText": "家庭游戏",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "points",
-          "style": {
-            "navigationBarTitleText": "我的积分",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "challenges",
-          "style": {
-            "navigationBarTitleText": "家庭挑战",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "games",
-          "style": {
-            "navigationBarTitleText": "更多游戏",
-            "navigationStyle": "custom"
-          }
-        }
-      ]
-    },
-    {
       "root": "pages/water",
       "pages": [
         {

@@ -421,7 +421,7 @@ defineExpose({
   @for $i from 1 through 12 {
     .spinner-dot:nth-child(#{$i}) {
       transform: rotate($i * 30deg) translateX(20rpx);
-      opacity: $i / 12;
+      opacity: calc($i / 12);
     }
   }
 }
