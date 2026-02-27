@@ -101,8 +101,26 @@ public class InviteCodeController {
         Map<String, Object> result = new HashMap<>();
         
         try {
+            // 检查必要参数
+            if (data.get("code") == null || data.get("code").toString().isEmpty()) {
+                result.put("code", 400);
+                result.put("message", "邀请码不能为空");
+                return result;
+            }
+            
             String code = data.get("code").toString();
-            Long userId = Long.valueOf(data.get("userId").toString());
+            
+            // 如果没有提供userId，使用当前登录用户
+            Long userId = null;
+            if (data.get("userId") != null && !data.get("userId").toString().isEmpty()) {
+                userId = Long.valueOf(data.get("userId").toString());
+            }
+            
+            if (userId == null) {
+                result.put("code", 400);
+                result.put("message", "用户ID不能为空");
+                return result;
+            }
             
             Family family = inviteCodeService.joinFamilyByInviteCode(code, userId);
             
