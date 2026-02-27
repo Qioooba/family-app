@@ -16,7 +16,7 @@ public class Anniversary extends BaseEntity {
     private Long familyId;
     private String title;
     private String type;
-    private String dateType;
+    private String dateType; // 农历还是公历
     private LocalDate targetDate;
     private Boolean isRecurring;
     private String reminderDays;
