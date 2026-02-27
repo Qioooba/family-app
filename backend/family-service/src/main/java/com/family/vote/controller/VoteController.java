@@ -32,10 +32,10 @@ public class VoteController {
     }
     
     @PostMapping("/{id}/vote")
-    public Result<VoteRecord> vote(@PathVariable Long id,
-                                     @RequestParam Long userId,
-                                     @RequestParam String userName,
-                                     @RequestParam String selectedOptions) {
+    public Result<VoteRecord> vote(@PathVariable Long id, @RequestBody Map<String, Object> params) {
+        Long userId = Long.valueOf(params.get("userId").toString());
+        String userName = params.get("userName").toString();
+        String selectedOptions = params.get("selectedOptions").toString();
         return Result.success(voteService.castVote(id, userId, userName, selectedOptions));
     }
     
