@@ -32,4 +32,10 @@ public class AnniversaryApiController {
     public Result<Anniversary> create(@RequestBody Anniversary anniversary) {
         return Result.success(anniversaryService.createAnniversary(anniversary));
     }
+    
+    @GetMapping("/upcoming/{familyId}")
+    public Result<?> upcoming(@PathVariable Long familyId) {
+        // 简化返回
+        return Result.success(new java.util.ArrayList<>());
+    }
 }
