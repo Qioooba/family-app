@@ -4,6 +4,9 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [uni()],
+  build: {
+    sourcemap: false
+  },
   esbuild: { platform: 'browser' },
   resolve: {
     alias: {
