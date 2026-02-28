@@ -252,8 +252,18 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { onShow, onLoad } from '@dcloudio/uni-app'
 import { taskApi, familyApi } from '../../api/index.js'
+
+// 页面加载时检查是否需要打开添加弹窗
+onLoad((options) => {
+  if (options && options.action === 'add') {
+    // 延迟一点打开，确保页面渲染完成
+    setTimeout(() => {
+      showModal.value = true
+    }, 300)
+  }
+})
 
 // 获取今天的日期字符串
 const getTodayString = () => {
@@ -582,17 +592,31 @@ const addTask = async () => {
 
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
+    // 获取当前用户ID（用于"分配给自己"的情况）
+    const userInfo = uni.getStorageSync('userInfo') || {}
+    const currentUserId = userInfo.id || userInfo.userId
+    
     // 组合日期和时间
     let dueTimeValue = null
     if (newTask.value.dueDate && newTask.value.dueTime) {
       dueTimeValue = newTask.value.dueDate + ' ' + newTask.value.dueTime
     }
+    
+    // 处理分配人员：如果没有选择 assigneeId 或者选择的是"自己"
+    let assigneeId = newTask.value.assigneeId
+    if (assigneeId === null || assigneeId === undefined || assigneeId === '') {
+      // 未选择时默认为当前用户（分配给自己）
+      assigneeId = currentUserId || null
+    }
+    
     const data = {
       title: newTask.value.title,
       familyId: familyId,
       priority: newTask.value.priority || 0,
-      dueTime: dueTimeValue
+      dueTime: dueTimeValue,
+      assigneeId: assigneeId
     }
+    console.log('创建任务数据:', data)
     const res = await taskApi.create(data)
     console.log('创建任务结果:', res)
     uni.showToast({ title: '添加成功', icon: 'success' })
@@ -1210,6 +1234,137 @@ const addTask = async () => {
   .btn-confirm {
     background: #4CAF50;
     color: #fff;
+  }
+}
+
+/* 成员选择器样式 */
+.member-picker-container {
+  width: 100%;
+  max-height: 60vh;
+  background: #FAFFFA;
+  border-radius: 32px 32px 0 0;
+  padding: 24px;
+  animation: slideUp 0.3s ease;
+  
+  .picker-header {
+    text-align: center;
+    margin-bottom: 20px;
+    
+    .picker-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2D5A3D;
+    }
+  }
+  
+  .member-list {
+    max-height: 50vh;
+    overflow-y: auto;
+    
+    .member-item {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      margin-bottom: 8px;
+      background: #fff;
+      border-radius: 16px;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+      
+      &.active {
+        border-color: #4CAF50;
+        background: #F1F8E9;
+      }
+      
+      &:active {
+        transform: scale(0.98);
+      }
+      
+      .member-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        margin-right: 16px;
+        background: #E8F5E9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: #4CAF50;
+        font-weight: 500;
+        
+        &.default {
+          background: linear-gradient(135deg, #81C784, #4CAF50);
+          color: #fff;
+        }
+      }
+      
+      .member-name {
+        flex: 1;
+        font-size: 16px;
+        color: #3D5A4D;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+/* 日期时间选择器样式 */
+.picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(45, 90, 61, 0.3);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.picker-container {
+  width: 100%;
+  background: #FAFFFA;
+  border-radius: 32px 32px 0 0;
+  padding: 20px;
+  animation: slideUp 0.3s ease;
+  
+  .picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+    
+    .picker-cancel {
+      font-size: 16px;
+      color: #8B9A8B;
+    }
+    
+    .picker-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2D5A3D;
+    }
+    
+    .picker-confirm {
+      font-size: 16px;
+      color: #4CAF50;
+      font-weight: 600;
+    }
+  }
+  
+  .picker-view {
+    height: 240px;
+    
+    .picker-item {
+      line-height: 48px;
+      text-align: center;
+      font-size: 16px;
+      color: #3D5A4D;
+    }
   }
 }
 </style>

@@ -98,6 +98,25 @@
           </view>
         </view>
 
+        <!-- 可见成员 -->
+        <view class="form-item">
+          <text class="form-label">谁可以看</text>
+          <view class="member-tip">不选择则所有人可见</view>
+          <view class="member-options" v-if="familyMembers.length > 0">
+            <view
+              v-for="member in familyMembers"
+              :key="member.id"
+              class="member-option"
+              :class="{ active: selectedMembers.includes(member.id) }"
+              @click="toggleMember(member.id)"
+            >
+              <text class="member-avatar">{{ getMemberAvatar(member.nickname) }}</text>
+              <text class="member-name">{{ member.nickname || '家人' }}</text>
+            </view>
+          </view>
+          <view v-else class="no-members">加载中...</view>
+        </view>
+
         <!-- 描述 -->
         <view class="form-item">
           <text class="form-label">备注说明</text>
@@ -150,6 +169,13 @@ const userStore = useUserStore()
 
 const showDatePicker = ref(false)
 
+// 监听弹窗打开，加载家庭成员
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    loadFamilyMembers()
+  }
+})
+
 // 纪念日类型选项
 const typeOptions = [
   { value: 'birthday', label: '生日', icon: '🎂' },
@@ -175,8 +201,45 @@ const formData = ref({
 })
 
 const selectedReminders = ref([3])
+const familyMembers = ref([])
+const selectedMembers = ref([])
 
 const isEdit = computed(() => !!props.data?.id)
+
+// 加载家庭成员列表
+const loadFamilyMembers = async () => {
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId')
+    if (!familyId) return
+    
+    const res = await anniversaryApi.getMembers(familyId)
+    if (res && res.data) {
+      familyMembers.value = res.data
+    } else if (Array.isArray(res)) {
+      familyMembers.value = res
+    }
+  } catch (error) {
+    console.error('加载家庭成员失败:', error)
+  }
+}
+
+// 获取成员头像emoji
+const getMemberAvatar = (nickname) => {
+  const avatars = ['👨', '👩', '👴', '👵', '👦', '👧', '🧑', '👶']
+  if (!nickname) return avatars[0]
+  const index = nickname.charCodeAt(0) % avatars.length
+  return avatars[index]
+}
+
+// 切换成员选择
+const toggleMember = (memberId) => {
+  const index = selectedMembers.value.indexOf(memberId)
+  if (index > -1) {
+    selectedMembers.value.splice(index, 1)
+  } else {
+    selectedMembers.value.push(memberId)
+  }
+}
 
 // 重置表单 - 必须放在 watch 之前，因为 watch 的 immediate: true 会立即调用它
 const resetForm = () => {
@@ -190,6 +253,7 @@ const resetForm = () => {
     icon: ''
   }
   selectedReminders.value = [3]
+  selectedMembers.value = []
 }
 
 // 监听数据变化
@@ -212,6 +276,16 @@ watch(() => props.data, (newVal) => {
       } catch {
         selectedReminders.value = [3]
       }
+    }
+    // 解析可见成员
+    if (newVal.visibleMembers) {
+      try {
+        selectedMembers.value = JSON.parse(newVal.visibleMembers)
+      } catch {
+        selectedMembers.value = []
+      }
+    } else {
+      selectedMembers.value = []
     }
   } else {
     resetForm()
@@ -290,6 +364,7 @@ const handleConfirm = async () => {
       ...formData.value,
       familyId: familyId,
       reminderDays: JSON.stringify(selectedReminders.value),
+      visibleMembers: selectedMembers.value.length > 0 ? JSON.stringify(selectedMembers.value) : null,
       icon: typeOptions.find(t => t.value === formData.value.type)?.icon || '💝'
     }
 
@@ -590,6 +665,60 @@ const handleConfirm = async () => {
       transform: scale(0.95);
     }
   }
+}
+
+// 可见成员
+.member-tip {
+  font-size: 24rpx;
+  color: #a0aec0;
+  margin-bottom: 16rpx;
+}
+
+.member-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+
+  .member-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16rpx 20rpx;
+    background: #f7fafc;
+    border: 2rpx solid #e2e8f0;
+    border-radius: 16rpx;
+    min-width: 100rpx;
+    transition: all 0.2s;
+
+    &.active {
+      background: linear-gradient(135deg, #A8E6CF, #7FD8BE);
+      border-color: #7FD8BE;
+
+      .member-name {
+        color: #fff;
+      }
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    .member-avatar {
+      font-size: 40rpx;
+      margin-bottom: 8rpx;
+    }
+
+    .member-name {
+      font-size: 24rpx;
+      color: #4a5568;
+    }
+  }
+}
+
+.no-members {
+  font-size: 24rpx;
+  color: #a0aec0;
+  padding: 20rpx 0;
 }
 
 // 底部按钮

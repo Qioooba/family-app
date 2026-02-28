@@ -39,11 +39,15 @@ export const waterApi = {
   /**
    * 设置饮水目标
    * @param {number} targetAmount - 目标饮水量（毫升）
+   * @param {number} userId - 用户ID
    * @returns {Promise<object>} {userId, targetAmount, success}
    */
-  setTarget: (targetAmount) => {
-    console.log('[WaterAPI] setTarget 被调用，参数:', targetAmount, '类型:', typeof targetAmount)
-    const data = { targetAmount: parseInt(targetAmount) || 2000 }
+  setTarget: (targetAmount, userId) => {
+    console.log('[WaterAPI] setTarget 被调用，参数:', targetAmount, userId, '类型:', typeof targetAmount)
+    const data = { 
+      targetAmount: parseInt(targetAmount) || 2000,
+      userId: userId || 1
+    }
     console.log('[WaterAPI] 请求体:', data)
     return request.post('/api/health/water/target', data)
   },

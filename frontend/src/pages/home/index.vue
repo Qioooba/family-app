@@ -114,7 +114,7 @@
           <text class="section-title">今日待办</text>
         </view>
         <view class="header-actions">
-          <view class="add-btn" @click="navigateTo('/pages/task/index')">
+          <view class="add-btn" @click="navigateTo('/pages/task/index?action=add')">
             <text>+</text>
           </view>
           <view class="more-btn" @click="navigateTo('/pages/task/index')">
@@ -277,6 +277,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../stores/user'
 import { waterApi } from '../../api/water'
 import { taskApi } from '../../api/task'
+import { anniversaryApi } from '../../api/anniversary'
 import LazyImage from '@/components/common/LazyImage.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
 import PullRefresh2 from '@/components/common/PullRefresh2.vue'
@@ -323,10 +324,7 @@ const quickActions = [
 const todayTasks = ref([])
 
 // 纪念日
-const upcomingAnniversaries = ref([
-  { id: 1, title: '结婚纪念日', date: '12月25日', days: 5, icon: '💒' },
-  { id: 2, title: '宝贝生日', date: '1月8日', days: 19, icon: '🎂' }
-])
+const upcomingAnniversaries = ref([])
 
 // 今日菜谱
 const todayRecipes = ref([
@@ -493,7 +491,42 @@ onMounted(async () => {
   } catch (e) {
     console.error('加载待办数据失败', e)
   }
+  
+  // 加载近期纪念日数据
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const anniData = await anniversaryApi.getUpcoming(familyId, 30)
+    if (anniData && anniData.length > 0) {
+      upcomingAnniversaries.value = anniData.slice(0, 3).map(item => ({
+        id: item.id,
+        title: item.title,
+        date: item.anniversaryDate ? item.anniversaryDate.substring(5) : item.date,
+        days: item.daysUntil || item.days || 0,
+        icon: getAnniversaryIcon(item.type || item.category)
+      }))
+    } else {
+      upcomingAnniversaries.value = []
+    }
+  } catch (e) {
+    console.error('加载纪念日数据失败', e)
+    upcomingAnniversaries.value = []
+  }
 })
+
+// 获取纪念日图标
+const getAnniversaryIcon = (type) => {
+  const iconMap = {
+    'birthday': '🎂',
+    'wedding': '💒',
+    'love': '❤️',
+    'baby': '👶',
+    'work': '💼',
+    'holiday': '🎉',
+    'memory': '📸',
+    'other': '🎁'
+  }
+  return iconMap[type] || '🎁'
+}
 </script>
 
 <style lang="scss" scoped>

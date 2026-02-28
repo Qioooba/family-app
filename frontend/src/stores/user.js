@@ -33,10 +33,11 @@ export const useUserStore = defineStore('user', () => {
   const login = async (loginData) => {
     const res = await request.post('/api/user/login', loginData)
     setToken(res)
-    // 保存 currentFamilyId（从 res.data 或 res 中获取）
-    const familyId = res?.data?.currentFamilyId || res?.currentFamilyId
+    // 保存 currentFamilyId（request.post 已自动 unwrap response，res 已是内层 data）
+    const familyId = res?.currentFamilyId
     if (familyId) {
       uni.setStorageSync('currentFamilyId', familyId)
+      console.log('[Store] 保存 currentFamilyId:', familyId)
     }
     await getUserInfo()
     return res
@@ -44,6 +45,12 @@ export const useUserStore = defineStore('user', () => {
   
   const register = async (registerData) => {
     const res = await request.post('/api/user/register', registerData)
+    // 保存 currentFamilyId（register 也会返回 currentFamilyId）
+    const familyId = res?.currentFamilyId
+    if (familyId) {
+      uni.setStorageSync('currentFamilyId', familyId)
+      console.log('[Store] 注册后保存 currentFamilyId:', familyId)
+    }
     return res
   }
   
@@ -51,6 +58,11 @@ export const useUserStore = defineStore('user', () => {
     try {
       const res = await request.get('/api/user/info')
       console.log('[Store] getUserInfo result:', JSON.stringify(res))
+      // res 是完整响应 {code, message, data}，需要提取 data 部分
+      if (res && res.data) {
+        setUserInfo(res.data)
+        return res.data
+      }
       setUserInfo(res)
       return res
     } catch (e) {
@@ -61,7 +73,12 @@ export const useUserStore = defineStore('user', () => {
   
   const updateUserInfo = async (data) => {
     const res = await request.put('/api/user/info', data)
-    setUserInfo(res)
+    // res 是完整响应 {code, message, data}，需要提取 data 部分
+    if (res && res.data) {
+      setUserInfo(res.data)
+    } else {
+      setUserInfo(res)
+    }
     return res
   }
   

@@ -24,6 +24,7 @@ public class Anniversary extends BaseEntity {
     private String description;
     private String images;
     private String icon;
+    private String visibleMembers; // JSON格式存储可见成员ID列表，如：[1,2,3]
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     
@@ -113,6 +114,14 @@ public class Anniversary extends BaseEntity {
     
     public void setIcon(String icon) {
         this.icon = icon;
+    }
+    
+    public String getVisibleMembers() {
+        return visibleMembers;
+    }
+    
+    public void setVisibleMembers(String visibleMembers) {
+        this.visibleMembers = visibleMembers;
     }
     
     public LocalDateTime getCreateTime() {

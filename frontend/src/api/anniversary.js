@@ -47,7 +47,14 @@ export const anniversaryApi = {
    * @param {number} id - 纪念日ID
    * @returns {Promise<void>}
    */
-  delete: (id) => request.delete(`/api/anniversary/delete/${id}`)
+  delete: (id) => request.delete(`/api/anniversary/delete/${id}`),
+  
+  /**
+   * 获取家庭成员列表
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<Array>} 成员列表
+   */
+  getMembers: (familyId) => request.get(`/api/anniversary/members/${familyId}`)
 }
 
 export default anniversaryApi

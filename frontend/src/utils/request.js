@@ -5,11 +5,25 @@
 
 import { cacheManager } from './cache.js'
 
+// 动态获取后端地址
+const getBackendUrl = () => {
+  if (typeof window === 'undefined') return 'http://localhost:8081'
+  
+  const hostname = window.location.hostname
+  
+  // 如果是 localhost 开发，返回 localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8081'
+  }
+  
+  // 如果是局域网 IP 或域名，使用当前主机名 + 8081 端口
+  return `http://${hostname}:8081`
+}
+
 // 基础配置
-// 生产环境使用实际服务器地址
 const CONFIG = {
-  BASE_URL: 'http://localhost:8081',
-  USER_SERVICE_URL: 'http://localhost:8081',
+  BASE_URL: getBackendUrl(),
+  USER_SERVICE_URL: getBackendUrl(),
   TIMEOUT: 30000,
   RETRY_TIMES: 2,
   RETRY_DELAY: 1000

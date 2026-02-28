@@ -5,8 +5,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.family.family.entity.Family;
 import com.family.family.entity.FamilyMember;
+import com.family.family.entity.User;
 import com.family.family.mapper.FamilyMapper;
 import com.family.family.mapper.FamilyMemberMapper;
+import com.family.family.mapper.UserMapper;
 import com.family.family.service.InviteCodeService;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +26,16 @@ public class FamilyController {
     private final FamilyMapper familyMapper;
     private final FamilyMemberMapper familyMemberMapper;
     private final InviteCodeService inviteCodeService;
+    private final UserMapper userMapper;
 
     public FamilyController(FamilyMapper familyMapper,
                             FamilyMemberMapper familyMemberMapper,
-                            InviteCodeService inviteCodeService) {
+                            InviteCodeService inviteCodeService,
+                            UserMapper userMapper) {
         this.familyMapper = familyMapper;
         this.familyMemberMapper = familyMemberMapper;
         this.inviteCodeService = inviteCodeService;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -386,10 +391,31 @@ public class FamilyController {
                 new LambdaQueryWrapper<FamilyMember>()
                     .eq(FamilyMember::getFamilyId, familyId)
             );
+            
+            // 组装成员信息，包含用户头像
+            List<Map<String, Object>> memberList = new ArrayList<>();
+            for (FamilyMember member : members) {
+                Map<String, Object> memberInfo = new HashMap<>();
+                memberInfo.put("id", member.getId());
+                memberInfo.put("familyId", member.getFamilyId());
+                memberInfo.put("userId", member.getUserId());
+                memberInfo.put("role", member.getRole());
+                memberInfo.put("nickname", member.getNickname());
+                memberInfo.put("joinTime", member.getJoinTime());
+                
+                // 获取用户头像
+                User user = userMapper.selectById(member.getUserId());
+                if (user != null) {
+                    memberInfo.put("avatar", user.getAvatar());
+                    memberInfo.put("username", user.getUsername());
+                }
+                
+                memberList.add(memberInfo);
+            }
 
             result.put("code", 200);
             result.put("message", "success");
-            result.put("data", members);
+            result.put("data", memberList);
         } catch (Exception e) {
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");

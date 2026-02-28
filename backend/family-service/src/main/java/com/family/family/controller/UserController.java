@@ -9,12 +9,22 @@ import com.family.family.entity.FamilyMember;
 import com.family.family.mapper.UserMapper;
 import com.family.family.mapper.FamilyMemberMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 用户控制器
@@ -33,6 +43,13 @@ public class UserController {
     
     // 默认家庭ID - 所有用户自动加入这个家庭
     private static final Long DEFAULT_FAMILY_ID = 1L;
+    
+    // 文件上传配置
+    @Value("${file.upload.path:./uploads}")
+    private String uploadPath;
+    
+    @Value("${file.upload.base-url:http://qioba.cn:3000}")
+    private String baseUrl;
 
     @GetMapping("/info")
     @SaCheckLogin
@@ -42,17 +59,65 @@ public class UserController {
             Long userId = StpUtil.getLoginIdAsLong();
             String tokenValue = StpUtil.getTokenValue();
 
+            // 从数据库查询用户信息
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                result.put("code", 404);
+                result.put("message", "用户不存在");
+                return result;
+            }
+
             result.put("code", 200);
             result.put("message", "success");
             Map<String, Object> data = new HashMap<>();
-            data.put("id", userId);
-            data.put("username", "user_" + userId);
-            data.put("nickname", "用户" + userId);
+            data.put("id", user.getId());
+            data.put("username", user.getUsername());
+            data.put("nickname", user.getNickname());
+            data.put("phone", user.getPhone());
+            data.put("avatar", user.getAvatar());
             data.put("token", tokenValue);
             result.put("data", data);
         } catch (Exception e) {
             result.put("code", 401);
             result.put("message", "未登录或登录已过期");
+        }
+        return result;
+    }
+    
+    @PutMapping("/info")
+    @SaCheckLogin
+    public Map<String, Object> updateInfo(@RequestBody Map<String, Object> params) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            
+            // 查询当前用户
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                result.put("code", 404);
+                result.put("message", "用户不存在");
+                return result;
+            }
+            
+            // 更新可选字段
+            if (params.containsKey("nickname")) {
+                user.setNickname((String) params.get("nickname"));
+            }
+            if (params.containsKey("phone")) {
+                user.setPhone((String) params.get("phone"));
+            }
+            if (params.containsKey("avatar")) {
+                user.setAvatar((String) params.get("avatar"));
+            }
+            
+            userMapper.updateById(user);
+            
+            result.put("code", 200);
+            result.put("message", "success");
+            result.put("data", user);
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", "更新失败: " + e.getMessage());
         }
         return result;
     }
@@ -276,6 +341,82 @@ public class UserController {
             result.put("code", 500);
             result.put("message", "退出失败：" + e.getMessage());
         }
+        return result;
+    }
+    
+    /**
+     * 上传头像
+     * POST /api/user/avatar
+     */
+    @PostMapping("/avatar")
+    @SaCheckLogin
+    public Map<String, Object> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        Map<String, Object> result = new HashMap<>();
+        
+        if (file == null || file.isEmpty()) {
+            result.put("code", 400);
+            result.put("message", "请选择要上传的文件");
+            return result;
+        }
+        
+        // 限制文件大小 (5MB)
+        if (file.getSize() > 5 * 1024 * 1024) {
+            result.put("code", 400);
+            result.put("message", "文件大小不能超过5MB");
+            return result;
+        }
+        
+        // 限制文件类型
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            result.put("code", 400);
+            result.put("message", "只能上传图片文件");
+            return result;
+        }
+        
+        try {
+            // 创建上传目录
+            String avatarDir = uploadPath + "/avatars";
+            File dir = new File(avatarDir);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String newFileName = UUID.randomUUID().toString().replace("-", "") + extension;
+            
+            // 保存文件
+            Path filePath = Paths.get(avatarDir, newFileName);
+            Files.copy(file.getInputStream(), filePath);
+            
+            // 返回文件访问URL
+            String fileUrl = baseUrl + "/avatars/" + newFileName;
+            
+            // 更新用户头像
+            Long userId = StpUtil.getLoginIdAsLong();
+            User user = userMapper.selectById(userId);
+            if (user != null) {
+                user.setAvatar(fileUrl);
+                user.setUpdateTime(LocalDateTime.now());
+                userMapper.updateById(user);
+            }
+            
+            result.put("code", 200);
+            result.put("message", "上传成功");
+            Map<String, Object> data = new HashMap<>();
+            data.put("url", fileUrl);
+            result.put("data", data);
+            
+        } catch (IOException e) {
+            result.put("code", 500);
+            result.put("message", "文件保存失败: " + e.getMessage());
+        }
+        
         return result;
     }
 }

@@ -308,10 +308,36 @@ const loadTodayData = async () => {
   try {
     const userInfo = uni.getStorageSync('userInfo')
     const userId = userInfo?.id || 1
+    
+    // 优先从后端获取用户的喝水目标
+    try {
+      const targetRes = await waterApi.getTarget(userId)
+      if (targetRes && targetRes.data && targetRes.data.targetAmount) {
+        targetAmount.value = targetRes.data.targetAmount
+      } else {
+        // 后端没有保存的目标，尝试从本地存储获取
+        const localTarget = uni.getStorageSync('waterTarget')
+        if (localTarget) {
+          targetAmount.value = localTarget
+        }
+      }
+    } catch (e) {
+      console.error('获取喝水目标失败，使用默认值', e)
+      // 后端获取失败，从本地存储获取
+      const localTarget = uni.getStorageSync('waterTarget')
+      if (localTarget) {
+        targetAmount.value = localTarget
+      }
+    }
+    
+    // 获取今日喝水数据
     const res = await waterApi.getToday(userId)
     if (res) {
       todayAmount.value = res.todayAmount || 0
-      targetAmount.value = res.targetAmount || 2000
+      // 使用后端返回的目标（如果有）
+      if (res.targetAmount) {
+        targetAmount.value = res.targetAmount
+      }
       records.value = res.records || []
     }
   } catch (e) {
@@ -446,8 +472,10 @@ const saveTarget = async () => {
   
   targetAmount.value = tempTarget.value
   try {
-    // 调用API保存目标到后端
-    await waterApi.setTarget(tempTarget.value)
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || 1
+    // 调用API保存目标到后端，传递userId
+    await waterApi.setTarget(tempTarget.value, userId)
     uni.showToast({ title: '设置已保存', icon: 'success' })
   } catch (e) {
     console.error('保存目标失败', e)
