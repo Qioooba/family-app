@@ -61,6 +61,11 @@ export const useUserStore = defineStore('user', () => {
       // res 是完整响应 {code, message, data}，需要提取 data 部分
       if (res && res.data) {
         setUserInfo(res.data)
+        // 同时保存 currentFamilyId
+        const familyId = res.data.currentFamilyId
+        if (familyId) {
+          uni.setStorageSync('currentFamilyId', familyId)
+        }
         return res.data
       }
       setUserInfo(res)

@@ -112,6 +112,42 @@
       </view>
     </view>
 
+    <!-- 更多游戏 -->
+    <view class="more-games-section">
+      <view class="section-header">
+        <text class="section-title">🎮 更多游戏</text>
+      </view>
+      
+      <view class="games-grid">
+        <view class="game-card" @click="goMindMatch">
+          <view class="game-card-icon">💑</view>
+          <view class="game-card-info">
+            <text class="game-card-title">默契问答</text>
+            <text class="game-card-desc">测试家庭默契度</text>
+          </view>
+          <view class="game-card-arrow">›</view>
+        </view>
+        
+        <view class="game-card" @click="goChallenges">
+          <view class="game-card-icon">🏃</view>
+          <view class="game-card-info">
+            <text class="game-card-title">每日挑战</text>
+            <text class="game-card-desc">健康习惯养成</text>
+          </view>
+          <view class="game-card-arrow">›</view>
+        </view>
+        
+        <view class="game-card" @click="goRiddles">
+          <view class="game-card-icon">🧩</view>
+          <view class="game-card-info">
+            <text class="game-card-title">猜谜语</text>
+            <text class="game-card-desc">益智猜谜游戏</text>
+          </view>
+          <view class="game-card-arrow">›</view>
+        </view>
+      </view>
+    </view>
+
     <!-- 成就徽章 -->
     <view class="achievements-section"
     >
@@ -264,6 +300,22 @@ const spin = () => {
 
 const goPoints = () => {
   uni.navigateTo({ url: '/pages/game/points' })
+}
+
+const goMindMatch = () => {
+  uni.navigateTo({ url: '/pages/game/mindmatch' })
+}
+
+const goChallenges = () => {
+  uni.navigateTo({ url: '/pages/game/challenges' })
+}
+
+const goRiddles = () => {
+  // 跳转到猜谜游戏
+  uni.showToast({
+    title: '猜谜游戏即将上线',
+    icon: 'none'
+  })
 }
 
 const showBadgeDetail = (badge) => {
@@ -544,6 +596,64 @@ const showBadgeDetail = (badge) => {
     &.up { color: #22c55e; }
     &.down { color: #ef4444; }
     &.same { color: #64748b; }
+  }
+}
+
+.more-games-section {
+  padding: 0 20px;
+  margin-bottom: 20px;
+  
+  .games-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .game-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.08);
+    
+    &:active {
+      background: rgba(255,255,255,0.08);
+    }
+    
+    .game-card-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%);
+      border-radius: 12px;
+      font-size: 24px;
+    }
+    
+    .game-card-info {
+      flex: 1;
+      
+      .game-card-title {
+        display: block;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+      }
+      
+      .game-card-desc {
+        font-size: 13px;
+        color: rgba(255,255,255,0.5);
+      }
+    }
+    
+    .game-card-arrow {
+      font-size: 24px;
+      color: rgba(255,255,255,0.3);
+    }
   }
 }
 

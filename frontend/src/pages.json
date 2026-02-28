@@ -62,6 +62,48 @@
         "navigationBarTitleText": "我的",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/game/index",
+      "style": {
+        "navigationBarTitleText": "游戏中心",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/game/games",
+      "style": {
+        "navigationBarTitleText": "游戏列表",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/game/challenges",
+      "style": {
+        "navigationBarTitleText": "挑战赛",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/game/points",
+      "style": {
+        "navigationBarTitleText": "积分商城",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/game/exchange",
+      "style": {
+        "navigationBarTitleText": "兑换记录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/game/mindmatch",
+      "style": {
+        "navigationBarTitleText": "默契问答",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "subPackages": [

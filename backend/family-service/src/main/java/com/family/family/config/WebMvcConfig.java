@@ -24,7 +24,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 配置 /uploads/** 路径映射到本地文件系统
         String absolutePath = new File(uploadPath).getAbsolutePath();
+        
+        // 同时支持 /avatars/** 和 /api/avatars/** 路径
         registry.addResourceHandler("/avatars/**")
+                .addResourceLocations("file:" + absolutePath + "/avatars/");
+        registry.addResourceHandler("/api/avatars/**")
                 .addResourceLocations("file:" + absolutePath + "/avatars/");
         
         registry.addResourceHandler("/uploads/**")

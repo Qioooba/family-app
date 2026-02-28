@@ -205,7 +205,65 @@ export const gameApi = {
    * 获取成就列表
    * @returns {Promise<Array>} 成就列表
    */
-  getAchievements: () => request.get('/api/game/achievements')
+  getAchievements: () => request.get('/api/game/achievements'),
+  
+  // ========== 默契问答 ==========
+  
+  /**
+   * 初始化问题库
+   * @returns {Promise<void>}
+   */
+  initMindMatchQuestions: () => request.post('/api/game/mindmatch/init'),
+  
+  /**
+   * 获取随机问题
+   * @param {string} type - 题目类型: spouse/parent/family
+   * @returns {Promise<object>} 问题
+   */
+  getMindMatchQuestion: (type) => request.get('/api/game/mindmatch/question', { type }),
+  
+  /**
+   * 创建游戏会话
+   * @param {number} familyId - 家庭ID
+   * @param {number} player2Id - 对方玩家ID
+   * @returns {Promise<object>} 会话
+   */
+  createMindMatchSession: (familyId, player2Id) => request.post('/api/game/mindmatch/session', { familyId, player2Id }),
+  
+  /**
+   * 回答问题
+   * @param {number} sessionId - 会话ID
+   * @param {string} answer - 答案
+   * @returns {Promise<object>} 更新后的会话
+   */
+  answerMindMatchQuestion: (sessionId, answer) => request.post(`/api/game/mindmatch/session/${sessionId}/answer`, { answer }),
+  
+  /**
+   * 获取会话详情
+   * @param {number} sessionId - 会话ID
+   * @returns {Promise<object>} 会话详情
+   */
+  getMindMatchSession: (sessionId) => request.get(`/api/game/mindmatch/session/${sessionId}`),
+  
+  /**
+   * 获取家庭游戏历史
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<Array>} 历史记录
+   */
+  getMindMatchHistory: (familyId) => request.get(`/api/game/mindmatch/history/${familyId}`),
+  
+  /**
+   * 获取我的游戏统计
+   * @returns {Promise<object>} 统计数据
+   */
+  getMyMindMatchStats: () => request.get('/api/game/mindmatch/stats'),
+  
+  /**
+   * 获取家庭默契值
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<object>} 默契值数据
+   */
+  getMindMatchRate: (familyId) => request.get(`/api/game/mindmatch/match-rate/${familyId}`)
 }
 
 export default gameApi

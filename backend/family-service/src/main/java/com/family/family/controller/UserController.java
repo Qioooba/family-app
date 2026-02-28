@@ -71,10 +71,12 @@ public class UserController {
             result.put("message", "success");
             Map<String, Object> data = new HashMap<>();
             data.put("id", user.getId());
+            data.put("userId", user.getId());
             data.put("username", user.getUsername());
             data.put("nickname", user.getNickname());
             data.put("phone", user.getPhone());
             data.put("avatar", user.getAvatar());
+            data.put("currentFamilyId", user.getCurrentFamilyId());
             data.put("token", tokenValue);
             result.put("data", data);
         } catch (Exception e) {
@@ -394,8 +396,8 @@ public class UserController {
             Path filePath = Paths.get(avatarDir, newFileName);
             Files.copy(file.getInputStream(), filePath);
             
-            // 返回文件访问URL
-            String fileUrl = baseUrl + "/avatars/" + newFileName;
+            // 返回文件访问URL - 使用相对路径
+            String fileUrl = "/api/avatars/" + newFileName;
             
             // 更新用户头像
             Long userId = StpUtil.getLoginIdAsLong();

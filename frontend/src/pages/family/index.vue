@@ -395,7 +395,19 @@ const onRefresh = async () => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 确保有用户信息
+  if (!userStore.userInfo || !userStore.userInfo.id) {
+    await userStore.getUserInfo()
+  }
+  
+  // 优先使用用户信息中的 currentFamilyId
+  const userFamilyId = userStore.userInfo?.currentFamilyId || uni.getStorageSync('currentFamilyId')
+  if (userFamilyId) {
+    familyId.value = userFamilyId
+    console.log('[Family] 从用户信息获取到 familyId:', familyId.value)
+  }
+  
   loadFamilyData()
   loadFamilyStats()
 })
