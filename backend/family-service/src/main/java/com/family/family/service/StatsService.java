@@ -1,5 +1,6 @@
 package com.family.family.service;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 /**
@@ -27,4 +28,12 @@ public interface StatsService {
      * @return 本月统计数据
      */
     Map<String, Object> getFamilyMonthlyStats(Long familyId);
+    
+    /**
+     * 获取指定日期的饮食统计
+     * @param userId 用户ID
+     * @param date 日期
+     * @return 当日饮食统计数据
+     */
+    Map<String, Object> getDailyDietStats(Long userId, LocalDate date);
 }

@@ -11,7 +11,7 @@ export const waterApi = {
    * @param {object} data - {userId, amount, recordTime}
    * @returns {Promise<object>} 记录结果
    */
-  record: (data) => request.post('/api/health/water', data),
+  record: (data) => request.post('/api/health/water/record', data),
 
   /**
    * 获取今日喝水量

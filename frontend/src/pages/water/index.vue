@@ -139,16 +139,39 @@
         </view>
 
         <view class="target-options">
+          <!-- 预设选项 -->
           <view
             v-for="target in targetOptions"
             :key="target"
             class="target-option"
-            :class="{ 'active': tempTarget === target }"
-            @click="tempTarget = target"
+            :class="{ 'active': tempTarget === target && !isCustomTarget }"
+            @click="selectPresetTarget(target)"
           >
             <text class="target-value">{{ target }}ml</text>
             <text class="target-desc">{{ getTargetDesc(target) }}</text>
           </view>
+          
+          <!-- 自定义选项 -->
+          <view 
+            class="target-option" 
+            :class="{ 'active': isCustomTarget }"
+            @click="isCustomTarget = true"
+          >
+            <text class="target-value">自定义</text>
+            <text class="target-desc">输入任意值</text>
+          </view>
+        </view>
+        
+        <!-- 自定义输入框 -->
+        <view v-if="isCustomTarget" class="custom-input-section">
+          <input 
+            type="number" 
+            v-model="customTargetInput" 
+            placeholder="请输入目标饮水量(ml)" 
+            class="custom-input"
+            @focus="tempTarget = 2000"
+          />
+          <text class="custom-hint">建议值: 1500-4000ml</text>
         </view>
 
         <view class="modal-actions">
@@ -243,6 +266,8 @@ const today = ref(new Date().toISOString().split('T')[0])
 
 const quickAmounts = [100, 150, 200, 250, 350, 500]
 const targetOptions = [1500, 2000, 2500, 3000, 3500]
+const isCustomTarget = ref(false)
+const customTargetInput = ref('')
 
 const healthTips = [
   '早起一杯水，有助于唤醒身体代谢',
@@ -392,14 +417,33 @@ const calculateProgress = (amount) => {
 
 const showSettings = () => {
   tempTarget.value = targetAmount.value
+  isCustomTarget.value = false
+  customTargetInput.value = ''
   settingsVisible.value = true
 }
 
 const closeSettings = () => {
   settingsVisible.value = false
+  isCustomTarget.value = false
+  customTargetInput.value = ''
+}
+
+const selectPresetTarget = (target) => {
+  isCustomTarget.value = false
+  tempTarget.value = target
 }
 
 const saveTarget = async () => {
+  // 处理自定义输入
+  if (isCustomTarget.value && customTargetInput.value) {
+    const customValue = parseInt(customTargetInput.value)
+    if (isNaN(customValue) || customValue < 500 || customValue > 10000) {
+      uni.showToast({ title: '请输入500-10000之间的数值', icon: 'none' })
+      return
+    }
+    tempTarget.value = customValue
+  }
+  
   targetAmount.value = tempTarget.value
   try {
     // 调用API保存目标到后端
@@ -422,7 +466,7 @@ const getTargetDesc = (target) => {
 }
 
 const goBack = () => {
-  uni.navigateBack()
+  uni.switchTab({ url: '/pages/home/index' })
 }
 
 // 删除记录
@@ -1062,6 +1106,33 @@ const deleteHistoryRecord = async (recordId) => {
           color: #5B8FF9;
         }
       }
+    }
+  }
+
+  .custom-input-section {
+    padding: 20rpx 30rpx;
+    margin-top: 20rpx;
+    
+    .custom-input {
+      width: 100%;
+      height: 80rpx;
+      background: #f5f6fa;
+      border-radius: 20rpx;
+      padding: 0 30rpx;
+      font-size: 30rpx;
+      border: 2rpx solid #e0e0e0;
+      
+      &:focus {
+        border-color: #5B8FF9;
+      }
+    }
+    
+    .custom-hint {
+      display: block;
+      font-size: 24rpx;
+      color: #999;
+      margin-top: 10rpx;
+      text-align: center;
     }
   }
 

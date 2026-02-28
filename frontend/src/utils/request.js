@@ -8,24 +8,16 @@ import { cacheManager } from './cache.js'
 // 基础配置
 // 生产环境使用实际服务器地址
 const CONFIG = {
-  BASE_URL: 'http://qioba.cn:8081',
-  USER_SERVICE_URL: 'http://qioba.cn:8081',
+  BASE_URL: 'http://localhost:8081',
+  USER_SERVICE_URL: 'http://localhost:8081',
   TIMEOUT: 30000,
   RETRY_TIMES: 2,
   RETRY_DELAY: 1000
 }
 
-// H5开发模式下使用代理（修复手机访问问题）
+// 始终使用完整URL直接访问后端，避免前端静态服务器拦截API请求
+// 注意：如需使用vite代理，请在vite.config.js中配置server.proxy
 const isH5 = typeof window !== 'undefined' && window.location
-const isDev = isH5 && (window.location.hostname === 'localhost' || window.location.hostname === '192.168.1.209')
-
-// 外网访问时使用代理模式（H5 环境都走代理）
-const useProxy = isH5 || (window && window.location && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
-
-if (isH5 && (isDev || useProxy)) {
-  CONFIG.BASE_URL = ''
-  CONFIG.USER_SERVICE_URL = ''
-}
 
 // 请求队列（用于防止重复请求）
 const pendingRequests = new Map()

@@ -12,14 +12,16 @@ export const useUserStore = defineStore('user', () => {
   
   // Actions
   const setToken = (val) => {
-    token.value = val
+    // 处理对象类型（后端返回 {token: "xxx", ...}）或字符串类型
+    const tokenValue = typeof val === 'string' ? val : (val?.token || '')
+    token.value = tokenValue
     // H5 兼容：同时设置 window 全局变量
     if (typeof window !== 'undefined') {
-      window.__APP_TOKEN__ = val
+      window.__APP_TOKEN__ = tokenValue
     }
-    uni.setStorageSync('token', val)
+    uni.setStorageSync('token', tokenValue)
     // 确保同步完成
-    console.log('[Store] setToken:', val ? val.substring(0, 20) + '...' : '空')
+    console.log('[Store] setToken:', tokenValue ? tokenValue.substring(0, 20) + '...' : '空')
     console.log('[Store] verify token:', uni.getStorageSync('token') ? 'OK' : 'FAIL')
   }
   
@@ -31,6 +33,11 @@ export const useUserStore = defineStore('user', () => {
   const login = async (loginData) => {
     const res = await request.post('/api/user/login', loginData)
     setToken(res)
+    // 保存 currentFamilyId（从 res.data 或 res 中获取）
+    const familyId = res?.data?.currentFamilyId || res?.currentFamilyId
+    if (familyId) {
+      uni.setStorageSync('currentFamilyId', familyId)
+    }
     await getUserInfo()
     return res
   }

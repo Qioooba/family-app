@@ -266,6 +266,57 @@ public class FamilyController {
     }
 
     /**
+     * 修改家庭名称（管理员可操作）
+     */
+    @PutMapping("/{id}/name")
+    public Map<String, Object> updateFamilyName(@PathVariable Long id, @RequestBody Map<String, Object> data) {
+        Map<String, Object> result = new HashMap<>();
+        Long userId = getCurrentUserId();
+
+        if (userId == null) {
+            result.put("code", 401);
+            result.put("message", "请先登录");
+            return result;
+        }
+
+        try {
+            // 检查权限（只有管理员可以修改）
+            if (!isFamilyAdmin(id, userId)) {
+                result.put("code", 403);
+                result.put("message", "只有家庭管理员可以修改家庭名称");
+                return result;
+            }
+
+            Family family = familyMapper.selectById(id);
+            if (family == null) {
+                result.put("code", 404);
+                result.put("message", "家庭不存在");
+                return result;
+            }
+
+            String name = data.get("name") != null ? data.get("name").toString() : null;
+            if (name == null || name.trim().isEmpty()) {
+                result.put("code", 400);
+                result.put("message", "家庭名称不能为空");
+                return result;
+            }
+
+            family.setName(name.trim());
+            family.setUpdateTime(LocalDateTime.now());
+            familyMapper.updateById(family);
+
+            result.put("code", 200);
+            result.put("message", "success");
+            result.put("data", Map.of("id", family.getId(), "name", family.getName()));
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", "系统繁忙，请稍后重试");
+        }
+
+        return result;
+    }
+
+    /**
      * 删除家庭（逻辑删除）
      */
     @DeleteMapping("/{id}")

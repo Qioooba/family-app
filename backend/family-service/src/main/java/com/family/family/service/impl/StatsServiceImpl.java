@@ -592,4 +592,144 @@ public class StatsServiceImpl implements StatsService {
         
         return result;
     }
+    
+    @Override
+    public Map<String, Object> getDailyDietStats(Long userId, LocalDate date) {
+        Map<String, Object> result = new HashMap<>();
+        
+        // 参数校验
+        if (userId == null) {
+            log.warn("[Stats] getDailyDietStats userId为空,使用默认值1");
+            userId = 1L;
+        }
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        
+        final Long finalUserId = userId;
+        final LocalDate finalDate = date;
+        
+        try {
+            log.info("[Stats] 获取每日饮食统计: userId={}, date={}", finalUserId, finalDate);
+            
+            // 查询当日所有饮食记录
+            LambdaQueryWrapper<DietRecord> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(DietRecord::getUserId, finalUserId)
+                   .eq(DietRecord::getRecordDate, finalDate);
+            
+            List<DietRecord> records = new ArrayList<>();
+            if (dietRecordMapper != null) {
+                records = dietRecordMapper.selectList(wrapper);
+            }
+            
+            // 统计数据
+            int totalCalories = 0;
+            int breakfastCalories = 0;
+            int lunchCalories = 0;
+            int dinnerCalories = 0;
+            int snackCalories = 0;
+            BigDecimal totalProtein = BigDecimal.ZERO;
+            BigDecimal totalCarbs = BigDecimal.ZERO;
+            BigDecimal totalFat = BigDecimal.ZERO;
+            BigDecimal totalFiber = BigDecimal.ZERO;
+            
+            // 餐次食物列表
+            List<Map<String, Object>> breakfastFoods = new ArrayList<>();
+            List<Map<String, Object>> lunchFoods = new ArrayList<>();
+            List<Map<String, Object>> dinnerFoods = new ArrayList<>();
+            List<Map<String, Object>> snackFoods = new ArrayList<>();
+            
+            if (records != null) {
+                for (DietRecord record : records) {
+                    String mealType = record.getMealType();
+                    Integer calories = record.getCalories();
+                    if (calories == null) calories = 0;
+                    
+                    // 累加总热量
+                    totalCalories += calories;
+                    
+                    // 累加营养成分
+                    if (record.getProtein() != null) totalProtein = totalProtein.add(record.getProtein());
+                    if (record.getCarbs() != null) totalCarbs = totalCarbs.add(record.getCarbs());
+                    if (record.getFat() != null) totalFat = totalFat.add(record.getFat());
+                    if (record.getFiber() != null) totalFiber = totalFiber.add(record.getFiber());
+                    
+                    // 构建食物项
+                    Map<String, Object> foodItem = new HashMap<>();
+                    foodItem.put("name", record.getFoodName());
+                    foodItem.put("calories", calories);
+                    foodItem.put("quantity", record.getQuantity());
+                    foodItem.put("unit", record.getUnit());
+                    
+                    // 按餐次分类
+                    if ("breakfast".equals(mealType)) {
+                        breakfastCalories += calories;
+                        breakfastFoods.add(foodItem);
+                    } else if ("lunch".equals(mealType)) {
+                        lunchCalories += calories;
+                        lunchFoods.add(foodItem);
+                    } else if ("dinner".equals(mealType)) {
+                        dinnerCalories += calories;
+                        dinnerFoods.add(foodItem);
+                    } else {
+                        snackCalories += calories;
+                        snackFoods.add(foodItem);
+                    }
+                }
+            }
+            
+            // 构建营养数据
+            Map<String, Object> nutrition = new HashMap<>();
+            nutrition.put("protein", totalProtein.setScale(1, RoundingMode.HALF_UP).doubleValue());
+            nutrition.put("carbs", totalCarbs.setScale(1, RoundingMode.HALF_UP).doubleValue());
+            nutrition.put("fat", totalFat.setScale(1, RoundingMode.HALF_UP).doubleValue());
+            nutrition.put("fiber", totalFiber.setScale(1, RoundingMode.HALF_UP).doubleValue());
+            
+            // 构建餐次数据
+            Map<String, Object> meals = new HashMap<>();
+            meals.put("breakfast", createMealData(breakfastCalories, breakfastFoods));
+            meals.put("lunch", createMealData(lunchCalories, lunchFoods));
+            meals.put("dinner", createMealData(dinnerCalories, dinnerFoods));
+            meals.put("snack", createMealData(snackCalories, snackFoods));
+            
+            // 填充结果
+            result.put("userId", finalUserId);
+            result.put("date", finalDate.toString());
+            result.put("totalCalories", totalCalories);
+            result.put("targetCalories", 2000);
+            result.put("nutrition", nutrition);
+            result.put("meals", meals);
+            result.put("recordCount", records != null ? records.size() : 0);
+            
+            log.info("[Stats] 每日饮食统计查询成功: totalCalories={}, recordCount={}", totalCalories, records != null ? records.size() : 0);
+            
+        } catch (Exception e) {
+            log.error("[Stats] 获取每日饮食统计失败: {}", e.getMessage(), e);
+            // 返回默认值
+            result.put("userId", finalUserId);
+            result.put("date", finalDate.toString());
+            result.put("totalCalories", 0);
+            result.put("targetCalories", 2000);
+            result.put("nutrition", new HashMap<String, Object>() {{
+                put("protein", 0);
+                put("carbs", 0);
+                put("fat", 0);
+                put("fiber", 0);
+            }});
+            result.put("meals", new HashMap<String, Object>());
+            result.put("recordCount", 0);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 创建餐次数据
+     */
+    private Map<String, Object> createMealData(int calories, List<Map<String, Object>> foods) {
+        Map<String, Object> mealData = new HashMap<>();
+        mealData.put("calories", calories);
+        mealData.put("foods", foods);
+        return mealData;
+    }
 }

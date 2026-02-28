@@ -5,9 +5,13 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [uni()],
   build: {
+    sourcemap: false,
+    minify: 'esbuild'
+  },
+  esbuild: { 
+    platform: 'browser',
     sourcemap: false
   },
-  esbuild: { platform: 'browser' },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -45,6 +49,10 @@ export default defineConfig({
   },
   optimizeDeps: {
     noDiscovery: true,
-    include: []
+    include: undefined
+  },
+  // 禁用所有 sourcemap 相关功能
+  vueCompilerOptions: {
+    reactivityTransform: false
   }
 })

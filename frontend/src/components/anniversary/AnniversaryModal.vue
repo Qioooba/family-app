@@ -178,6 +178,20 @@ const selectedReminders = ref([3])
 
 const isEdit = computed(() => !!props.data?.id)
 
+// 重置表单 - 必须放在 watch 之前，因为 watch 的 immediate: true 会立即调用它
+const resetForm = () => {
+  formData.value = {
+    title: '',
+    type: 'custom',
+    targetDate: '',
+    dateType: 'solar',
+    isRecurring: 1,
+    description: '',
+    icon: ''
+  }
+  selectedReminders.value = [3]
+}
+
 // 监听数据变化
 watch(() => props.data, (newVal) => {
   if (newVal) {
@@ -203,20 +217,6 @@ watch(() => props.data, (newVal) => {
     resetForm()
   }
 }, { immediate: true })
-
-// 重置表单
-const resetForm = () => {
-  formData.value = {
-    title: '',
-    type: 'custom',
-    targetDate: '',
-    dateType: 'solar',
-    isRecurring: 1,
-    description: '',
-    icon: ''
-  }
-  selectedReminders.value = [3]
-}
 
 // 切换提醒选项
 const toggleReminder = (day) => {
