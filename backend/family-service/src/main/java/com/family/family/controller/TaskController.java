@@ -73,23 +73,40 @@ public class TaskController {
         }
 
         try {
-            // 按家庭ID和状态过滤查询
+            // 查询当前状态的任务列表
             LambdaQueryWrapper<Task> query = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
                 .eq(Task::getIsDeleted, 0);
             
-            // 如果传了 status 参数，则按状态过滤
             if (status != null) {
                 query.eq(Task::getStatus, status);
             }
             
             query.orderByDesc(Task::getCreateTime);
-
             List<Task> tasks = taskMapper.selectList(query);
+            
+            // 查询待办数量
+            LambdaQueryWrapper<Task> todoQuery = new LambdaQueryWrapper<Task>()
+                .eq(Task::getFamilyId, familyId)
+                .eq(Task::getIsDeleted, 0)
+                .eq(Task::getStatus, 0);
+            Long todoCount = taskMapper.selectCount(todoQuery);
+            
+            // 查询已完成数量
+            LambdaQueryWrapper<Task> doneQuery = new LambdaQueryWrapper<Task>()
+                .eq(Task::getFamilyId, familyId)
+                .eq(Task::getIsDeleted, 0)
+                .eq(Task::getStatus, 2);
+            Long doneCount = taskMapper.selectCount(doneQuery);
 
+            Map<String, Object> data = new HashMap<>();
+            data.put("list", tasks);
+            data.put("todoCount", todoCount);
+            data.put("doneCount", doneCount);
+            
             result.put("code", 200);
             result.put("message", "success");
-            result.put("data", tasks);
+            result.put("data", data);
         } catch (Exception e) {
             result.put("code", 500);
             result.put("message", "查询失败：" + e.getMessage());

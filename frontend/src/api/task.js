@@ -14,7 +14,14 @@ export const taskApi = {
    */
   getList: (familyId, status = null) => {
     const params = status !== null ? { familyId, status } : { familyId }
-    return request.get('/api/task/list', params)
+    return request.get('/api/task/list', params).then(res => {
+      // 兼容新旧接口格式
+      if (res && res.list) {
+        return res
+      }
+      // 旧格式直接返回
+      return { list: res, todoCount: 0, doneCount: 0 }
+    })
   },
   
   /**

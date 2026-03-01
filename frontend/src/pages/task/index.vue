@@ -338,10 +338,13 @@ const loadTasks = async (force = false) => {
     // 根据状态查询任务
     const res = await taskApi.getList(familyId, status)
     // 把 assigneeId 转换为 assigneeName
-    tasks.value = (res || []).map(task => ({
+    tasks.value = (res.list || []).map(task => ({
       ...task,
       assigneeName: getMemberName(task.assigneeId) || '未指派'
     }))
+    // 更新分类数量
+    categories.value[0].count = res.todoCount || 0
+    categories.value[1].count = res.doneCount || 0
   } catch (e) {
     console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
@@ -372,10 +375,6 @@ const loadFamilyMembers = async () => {
 onMounted(() => {
   loadTasks(true)
   loadFamilyMembers()
-  // 加载完成后更新分类数量
-  setTimeout(() => {
-    updateCategoryCounts()
-  }, 500)
 })
 
 // 页面显示时自动刷新数据
