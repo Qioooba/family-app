@@ -117,7 +117,7 @@
           <view class="add-btn" @click="navigateTo('/pages/task/index?action=add')">
             <text>+</text>
           </view>
-          <view class="more-btn" @click="navigateTo('/pages/task/index')">
+          <view class="more-btn" @click="goTaskList">
             <text>更多</text>
             ›
           </view>
@@ -385,6 +385,10 @@ const toggleTask = async (task) => {
 const goTaskDetail = (task) => {
   // 先存储任务ID到本地，跳转到待办页面后再读取显示详情
   uni.setStorageSync('pendingTaskDetailId', task.id)
+  uni.switchTab({ url: '/pages/task/index' })
+}
+
+const goTaskList = () => {
   uni.switchTab({ url: '/pages/task/index' })
 }
 
