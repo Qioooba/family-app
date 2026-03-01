@@ -342,8 +342,6 @@ const loadTasks = async (force = false) => {
       ...task,
       assigneeName: getMemberName(task.assigneeId) || '未指派'
     }))
-    // 更新分类数量（需要分别查询待办和已完成的数量）
-    await updateCategoryCounts()
   } catch (e) {
     console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
@@ -374,6 +372,10 @@ const loadFamilyMembers = async () => {
 onMounted(() => {
   loadTasks(true)
   loadFamilyMembers()
+  // 加载完成后更新分类数量
+  setTimeout(() => {
+    updateCategoryCounts()
+  }, 500)
 })
 
 // 页面显示时自动刷新数据
@@ -500,7 +502,6 @@ const toggleTask = async (task) => {
       await taskApi.complete(task.id)
     }
     task.status = newStatus
-    updateCategoryCounts()
     uni.showToast({ title: newStatus === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
   } catch (e) {
     console.error('更新任务状态失败', e)
