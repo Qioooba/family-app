@@ -45,40 +45,6 @@
           <text class="task-time">⏰ {{ task.dueTime }}</text>
           <text class="task-assignee">👤 {{ task.assigneeName || '未指派' }}</text>
         </view>
-        
-        <!-- 子任务进度 -->
-        <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
-          <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
-          </view>
-          <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
-        </view>
-        
-        <!-- 展开的子任务列表 -->
-        <view v-if="task.showSubtasks && task.subtasks" class="subtask-list">
-          <view 
-            v-for="(sub, sidx) in task.subtasks" 
-            :key="sub.id || sidx"
-            class="subtask-item"
-            @click.stop="toggleSubtask(task, sub)"
-          >
-            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
-            <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
-          </view>
-          <view class="add-subtask" @click.stop="addSubtask(task)">
-            <text>+ 添加子任务</text>
-          </view>
-        </view>
-        
-        <view class="task-footer">
-          <view class="task-tags">
-            <view class="task-tag">{{ task.categoryName }}</view>
-          </view>
-          <!-- 展开按钮 -->
-          <view v-if="task.subtasks && task.subtasks.length > 0" class="expand-btn" @click.stop="task.showSubtasks = !task.showSubtasks">
-            <text>{{ task.showSubtasks ? '收起' : '展开' }}</text>
-          </view>
-        </view>
       </view>
       
       <view v-if="filteredTasks.length === 0" class="empty-state">
@@ -140,29 +106,6 @@
             </view>
             <view class="action-btn delete-btn" @click="deleteTask(selectedTask)">
               🗑️ 删除
-            </view>
-          </view>
-          
-          <!-- 子任务管理 -->
-          <view class="subtask-section">
-            <view class="section-header">
-              <text>子任务 ({{ subtaskCompleted(selectedTask) }}/{{ selectedTask.subtasks?.length || 0 }})</text>
-              <text class="add-btn" @click="addSubtask(selectedTask)">+ 添加</text>
-            </view>
-            
-            <view v-if="selectedTask.subtasks && selectedTask.subtasks.length > 0" class="subtask-list-detail">
-              <view 
-                v-for="(sub, idx) in selectedTask.subtasks" 
-                :key="sub.id || idx"
-                class="subtask-item-detail"
-              >
-                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></view>
-                <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
-                <text class="delete-btn" @click="deleteSubtask(selectedTask, sub, idx)">🗑️</text>
-              </view>
-            </view>
-            <view v-else class="no-subtask">
-              <text>暂无子任务，点击添加</text>
             </view>
           </view>
         </view>
