@@ -114,7 +114,7 @@
           <text class="section-title">今日待办</text>
         </view>
         <view class="header-actions">
-          <view class="add-btn" @click="navigateTo('/pages/task/index?action=add')">
+          <view class="add-btn" @click="goAddTask">
             <text>+</text>
           </view>
           <view class="more-btn" @click="goTaskList">
@@ -388,7 +388,9 @@ const goTaskDetail = (task) => {
   uni.switchTab({ url: '/pages/task/index' })
 }
 
-const goTaskList = () => {
+const goAddTask = () => {
+  // 设置标记，告诉任务页面要打开添加弹窗
+  uni.setStorageSync('taskOpenAddModal', true)
   uni.switchTab({ url: '/pages/task/index' })
 }
 

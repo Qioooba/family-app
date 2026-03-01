@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
     <title>家庭小程序</title>
     <link rel="stylesheet" href="/src/styles/index.scss" />
+    <!-- IntersectionObserver polyfill for lazy-load -->
+    <script>
+      if (!window.IntersectionObserver) {
+        window.IntersectionObserver = function(callback) {
+          this.observe = function() {}
+          this.unobserve = function() {}
+          this.disconnect = function() {}
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

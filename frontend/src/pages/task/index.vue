@@ -334,7 +334,7 @@ const loadTasks = async (force = false) => {
     // 先加载家庭成员
     await loadFamilyMembers()
     // 获取当前分类的状态
-    const status = categories[currentCategory.value]?.status
+    const status = categories.value[currentCategory.value]?.status
     // 根据状态查询任务
     const res = await taskApi.getList(familyId, status)
     // 把 assigneeId 转换为 assigneeName
@@ -382,6 +382,14 @@ onShow(() => {
   loadTasks(true).then(() => {
     // 延迟一点执行，确保任务加载完成
     setTimeout(() => {
+      // 检查是否需要打开添加弹窗（从首页跳转过来）
+      const openAddModal = uni.getStorageSync('taskOpenAddModal')
+      if (openAddModal) {
+        uni.removeStorageSync('taskOpenAddModal')
+        showAddModal()
+        return
+      }
+      
       // 检查是否有传入的任务ID（优先从本地存储读取）
       let taskId = uni.getStorageSync('pendingTaskDetailId')
       uni.removeStorageSync('pendingTaskDetailId')
@@ -466,7 +474,7 @@ const filteredTasks = computed(() => {
       return []
     }
     // 根据当前分类过滤任务
-    const status = categories[currentCategory.value]?.status
+    const status = categories.value[currentCategory.value]?.status
     let result = tasks.value
     if (status !== undefined) {
       result = result.filter(t => t.status === status)
