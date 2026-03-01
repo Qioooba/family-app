@@ -64,16 +64,28 @@
             v-for="amount in quickAmounts"
             :key="amount"
             class="quick-btn"
-            :class="{ 'active': selectedAmount === amount }"
-            @click="selectedAmount = amount"
+            :class="{ 'active': selectedAmount === amount && !isCustomAmount }"
+            @click="selectQuickAmount(amount)"
           >
             <view class="water-icon">💧</view>
             <text>{{ amount }}ml</text>
           </view>
         </view>
+        
+        <!-- 自定义输入 -->
+        <view class="custom-input-row">
+          <input 
+            type="number" 
+            v-model="customAmount" 
+            placeholder="自定义数值(ml)" 
+            class="custom-amount-input"
+            @input="onCustomAmountInput"
+          />
+        </view>
+        
         <button class="add-btn" @click="recordWater">
           <view class="btn-icon">💧</view>
-          <text>记录喝水</text>
+          <text>记录喝水 {{ selectedAmount > 0 ? selectedAmount + 'ml' : '' }}</text>
         </button>
       </view>
 
@@ -257,6 +269,27 @@ const todayAmount = ref(0)
 const targetAmount = ref(2000)
 const records = ref([])
 const selectedAmount = ref(200)
+const customAmount = ref('')
+const isCustomAmount = ref(false)
+
+const selectQuickAmount = (amount) => {
+  isCustomAmount.value = false
+  customAmount.value = ''
+  selectedAmount.value = amount
+}
+
+const onCustomAmountInput = () => {
+  if (customAmount.value) {
+    const val = parseInt(customAmount.value)
+    if (!isNaN(val) && val > 0) {
+      selectedAmount.value = val
+      isCustomAmount.value = true
+    }
+  } else {
+    isCustomAmount.value = false
+    selectedAmount.value = 200
+  }
+}
 const settingsVisible = ref(false)
 const tempTarget = ref(2000)
 const historyVisible = ref(false)
@@ -836,7 +869,7 @@ const deleteHistoryRecord = async (recordId) => {
     display: flex;
     flex-wrap: wrap;
     gap: 16rpx;
-    margin-bottom: 30rpx;
+    margin-bottom: 20rpx;
 
     .quick-btn {
       display: flex;
@@ -864,6 +897,24 @@ const deleteHistoryRecord = async (recordId) => {
         text {
           color: #5B8FF9;
         }
+      }
+    }
+  }
+
+  .custom-input-row {
+    margin-bottom: 20rpx;
+    
+    .custom-amount-input {
+      width: 100%;
+      height: 80rpx;
+      background: #f5f6fa;
+      border-radius: 20rpx;
+      padding: 0 30rpx;
+      font-size: 28rpx;
+      border: 2rpx solid #e0e0e0;
+      
+      &:focus {
+        border-color: #5B8FF9;
       }
     }
   }
