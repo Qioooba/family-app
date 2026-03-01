@@ -320,13 +320,15 @@ const timeRange = ref([
 const timeIndex = ref([9, 0])
 
 onMounted(() => {
+  // 从页面参数获取 taskId
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
-  taskId.value = currentPage.options.id
-  // 加载任务详情
-  if (taskId.value) {
-    loadTaskDetail(taskId.value)
-    loadReminders(taskId.value)
+  const id = currentPage?.options?.id || null
+  
+  if (id) {
+    taskId.value = id
+    loadTaskDetail(id)
+    loadReminders(id)
   }
 })
 
