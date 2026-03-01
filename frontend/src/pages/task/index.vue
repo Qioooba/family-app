@@ -269,9 +269,19 @@ const categories = ref([
 ])
 
 // 计算各分类数量
-const updateCategoryCounts = () => {
-  categories.value[0].count = tasks.value.filter(t => t.status === 0).length
-  categories.value[1].count = tasks.value.filter(t => t.status === 2).length
+const updateCategoryCounts = async () => {
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    // 分别查询待办和已完成的任务数量
+    const [todoRes, doneRes] = await Promise.all([
+      taskApi.getList(familyId, 0),
+      taskApi.getList(familyId, 2)
+    ])
+    categories.value[0].count = (todoRes || []).length
+    categories.value[1].count = (doneRes || []).length
+  } catch (e) {
+    console.error('更新分类数量失败', e)
+  }
 }
 
 const priorities = ['普通', '重要', '紧急']
@@ -323,14 +333,17 @@ const loadTasks = async (force = false) => {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     // 先加载家庭成员
     await loadFamilyMembers()
-    const res = await taskApi.getList(familyId)
+    // 获取当前分类的状态
+    const status = categories[currentCategory.value]?.status
+    // 根据状态查询任务
+    const res = await taskApi.getList(familyId, status)
     // 把 assigneeId 转换为 assigneeName
     tasks.value = (res || []).map(task => ({
       ...task,
       assigneeName: getMemberName(task.assigneeId) || '未指派'
     }))
-    // 更新分类数量
-    updateCategoryCounts()
+    // 更新分类数量（需要分别查询待办和已完成的数量）
+    await updateCategoryCounts()
   } catch (e) {
     console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
@@ -471,8 +484,10 @@ const filteredTasks = computed(() => {
   }
 })
 
-const switchCategory = (index) => {
+const switchCategory = async (index) => {
   currentCategory.value = index
+  // 切换分类时重新加载对应状态的任务
+  await loadTasks(true)
 }
 
 const priorityText = (p) => priorities[p] || '普通'

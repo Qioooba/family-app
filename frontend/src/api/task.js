@@ -12,7 +12,10 @@ export const taskApi = {
    * @param {object} params - 可选参数: categoryId, status
    * @returns {Promise<Array>} 任务列表
    */
-  getList: (familyId, params = {}) => request.get('/api/task/list', { familyId, ...params }),
+  getList: (familyId, status = null) => {
+    const params = status !== null ? { familyId, status } : { familyId }
+    return request.get('/api/task/list', params)
+  },
   
   /**
    * 创建任务

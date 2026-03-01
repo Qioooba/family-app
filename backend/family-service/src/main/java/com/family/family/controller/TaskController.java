@@ -55,7 +55,7 @@ public class TaskController {
     }
 
     @GetMapping("/list")
-    public Map<String, Object> list(@RequestParam Long familyId) {
+    public Map<String, Object> list(@RequestParam Long familyId, @RequestParam(required = false) Integer status) {
         Map<String, Object> result = new HashMap<>();
         Long userId = getCurrentUserId();
 
@@ -73,11 +73,17 @@ public class TaskController {
         }
 
         try {
-            // 按家庭ID过滤查询
+            // 按家庭ID和状态过滤查询
             LambdaQueryWrapper<Task> query = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
-                .eq(Task::getIsDeleted, 0)
-                .orderByDesc(Task::getCreateTime);
+                .eq(Task::getIsDeleted, 0);
+            
+            // 如果传了 status 参数，则按状态过滤
+            if (status != null) {
+                query.eq(Task::getStatus, status);
+            }
+            
+            query.orderByDesc(Task::getCreateTime);
 
             List<Task> tasks = taskMapper.selectList(query);
 
