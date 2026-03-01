@@ -383,7 +383,8 @@ const toggleTask = async (task) => {
 }
 
 const goTaskDetail = (task) => {
-  uni.navigateTo({ url: `/pages/task/detail?id=${task.id}` })
+  // 跳转到待办事项页面并显示详情弹窗
+  uni.navigateTo({ url: `/pages/task/index?id=${task.id}` })
 }
 
 const goToProfile = () => {
