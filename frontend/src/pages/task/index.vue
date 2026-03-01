@@ -422,27 +422,22 @@ onMounted(() => {
 
 // 页面显示时自动刷新数据
 onShow(() => {
-  loadTasks(true)
-  
-  // 检查是否有传入的任务ID（优先从本地存储读取）
-  let taskId = uni.getStorageSync('pendingTaskDetailId')
-  uni.removeStorageSync('pendingTaskDetailId')
-  
-  // 同时也检查页面参数
-  const pages = uni.getCurrentPages()
-  const currentPage = pages[pages.length - 1]
-  const options = currentPage?.options || {}
-  if (!taskId && options.id) {
-    taskId = options.id
-  }
-  
-  if (taskId) {
-    const task = tasks.value.find(t => t.id === parseInt(taskId))
-    if (task) {
-      selectedTask.value = task
-      showDetailModal.value = true
-    }
-  }
+  loadTasks(true).then(() => {
+    // 延迟一点执行，确保任务加载完成
+    setTimeout(() => {
+      // 检查是否有传入的任务ID（优先从本地存储读取）
+      let taskId = uni.getStorageSync('pendingTaskDetailId')
+      uni.removeStorageSync('pendingTaskDetailId')
+      
+      if (taskId) {
+        const task = tasks.value.find(t => t.id === parseInt(taskId))
+        if (task) {
+          selectedTask.value = task
+          showDetailModal.value = true
+        }
+      }
+    }, 100)
+  })
 })
 
 // 获取成员名称
