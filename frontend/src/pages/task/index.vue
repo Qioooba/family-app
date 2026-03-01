@@ -92,10 +92,51 @@
         </view>
         
         <view v-if="selectedTask" class="task-detail">
+          <!-- 状态标签 -->
+          <view class="detail-status" :class="selectedTask.status === 2 ? 'completed' : 'pending'">
+            {{ selectedTask.status === 2 ? '✅ 已完成' : '📋 待处理' }}
+          </view>
+          
+          <!-- 任务标题 -->
           <view class="detail-title">{{ selectedTask.title }}</view>
-          <view class="detail-info">
-            <text>⏰ {{ selectedTask.dueTime }}</text>
-            <text>👤 {{ selectedTask.assigneeName || '未指派' }}</text>
+          
+          <!-- 任务信息卡片 -->
+          <view class="detail-cards">
+            <view class="info-card">
+              <text class="card-icon">⏰</text>
+              <view class="card-content">
+                <text class="card-label">截止时间</text>
+                <text class="card-value">{{ selectedTask.dueTime || '未设置' }}</text>
+              </view>
+            </view>
+            
+            <view class="info-card">
+              <text class="card-icon">👤</text>
+              <view class="card-content">
+                <text class="card-label">指派人</text>
+                <text class="card-value">{{ selectedTask.assigneeName || '未指派' }}</text>
+              </view>
+            </view>
+            
+            <view class="info-card">
+              <text class="card-icon">⚡</text>
+              <view class="card-content">
+                <text class="card-label">优先级</text>
+                <text class="card-value priority-text" :class="'priority-' + selectedTask.priority">
+                  {{ ['普通', '重要', '紧急'][selectedTask.priority] || '普通' }}
+                </text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 操作按钮 -->
+          <view class="detail-actions">
+            <view class="action-btn complete-btn" @click="toggleTask(selectedTask)">
+              {{ selectedTask.status === 2 ? '🔄 恢复任务' : '✅ 完成任务' }}
+            </view>
+            <view class="action-btn delete-btn" @click="deleteTask(selectedTask)">
+              🗑️ 删除
+            </view>
           </view>
           
           <!-- 子任务管理 -->
@@ -552,6 +593,26 @@ const deleteSubtask = (task, sub, index) => {
       if (res.confirm) {
         task.subtasks.splice(index, 1)
         uni.showToast({ title: '已删除', icon: 'success' })
+      }
+    }
+  })
+}
+
+const deleteTask = async (task) => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除这个任务吗？',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await taskApi.delete(task.id)
+          tasks.value = tasks.value.filter(t => t.id !== task.id)
+          updateCategoryCounts()
+          closeDetailModal()
+          uni.showToast({ title: '已删除', icon: 'success' })
+        } catch (e) {
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
       }
     }
   })
@@ -1112,18 +1173,103 @@ const addTask = async () => {
 }
 
 .task-detail {
-  .detail-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 10px;
+  .detail-status {
+    display: inline-block;
+    padding: 6rpx 20rpx;
+    border-radius: 20rpx;
+    font-size: 24rpx;
+    font-weight: 500;
+    margin-bottom: 20rpx;
+    
+    &.pending {
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      color: #F57C00;
+    }
+    
+    &.completed {
+      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+      color: #388E3C;
+    }
   }
   
-  .detail-info {
+  .detail-title {
+    font-size: 36rpx;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 30rpx;
+    line-height: 1.4;
+  }
+  
+  .detail-cards {
     display: flex;
-    gap: 15px;
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 20px;
+    flex-direction: column;
+    gap: 20rpx;
+    margin-bottom: 30rpx;
+  }
+  
+  .info-card {
+    display: flex;
+    align-items: center;
+    gap: 20rpx;
+    padding: 24rpx;
+    background: #F8FAF8;
+    border-radius: 16rpx;
+    
+    .card-icon {
+      font-size: 40rpx;
+    }
+    
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      
+      .card-label {
+        font-size: 24rpx;
+        color: #999;
+        margin-bottom: 4rpx;
+      }
+      
+      .card-value {
+        font-size: 28rpx;
+        color: #333;
+        font-weight: 500;
+        
+        &.priority-text {
+          &.priority-0 { color: #666; }
+          &.priority-1 { color: #F57C00; }
+          &.priority-2 { color: #E53935; }
+        }
+      }
+    }
+  }
+  
+  .detail-actions {
+    display: flex;
+    gap: 20rpx;
+    margin-bottom: 30rpx;
+    
+    .action-btn {
+      flex: 1;
+      height: 80rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 40rpx;
+      font-size: 28rpx;
+      font-weight: 500;
+      
+      &.complete-btn {
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: #fff;
+        box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.3);
+      }
+      
+      &.delete-btn {
+        background: #FFF5F5;
+        color: #E53935;
+        border: 2rpx solid #FFCDD2;
+      }
+    }
   }
 }
 
