@@ -32,7 +32,11 @@
         @click="viewTask(task)"
       >
         <view class="task-header">
-          <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></view>
+          <view 
+            class="checkbox" 
+            :class="{ checked: task.status === 2 }" 
+            @tap.stop="toggleTask(task)"
+          ></view>
           <view class="task-title">{{ task.title }}</view>
           <view class="task-priority" :class="'priority-' + task.priority">{{ priorityText(task.priority) }}</view>
         </view>
@@ -131,7 +135,7 @@
           
           <!-- 操作按钮 -->
           <view class="detail-actions">
-            <view class="action-btn complete-btn" @click="toggleTask(selectedTask)">
+            <view class="action-btn complete-btn" @tap="toggleTask(selectedTask)">
               {{ selectedTask.status === 2 ? '🔄 恢复任务' : '✅ 完成任务' }}
             </view>
             <view class="action-btn delete-btn" @click="deleteTask(selectedTask)">
