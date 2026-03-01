@@ -298,7 +298,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { onShow, onLoad, getCurrentPages } from '@dcloudio/uni-app'
+import { onShow, onLoad } from '@dcloudio/uni-app'
 import { taskApi, familyApi } from '../../api/index.js'
 
 // 页面加载时检查是否需要打开添加弹窗
@@ -425,7 +425,7 @@ onShow(() => {
   loadTasks(true)
   
   // 检查是否有传入的任务ID，如果有则显示详情弹窗
-  const pages = getCurrentPages()
+  const pages = uni.getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = currentPage?.options || {}
   if (options.id) {
