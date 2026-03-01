@@ -489,13 +489,11 @@ const filteredTasks = computed(() => {
     if (!tasks.value || !Array.isArray(tasks.value)) {
       return []
     }
-    const status = categories[currentCategory.value]?.status
-    let result = tasks.value
-    if (status !== undefined) {
-      result = result.filter(t => t.status === status)
-    }
+    // 只显示待办任务（status = 0）
+    let result = tasks.value.filter(t => t.status === 0)
+    
     // 按截止时间由近及远排序（没有截止时间的排最后）
-    return result.slice().sort(function(a, b) {
+    return result.sort((a, b) => {
       if (!a.dueTime && !b.dueTime) return 0
       if (!a.dueTime) return 1
       if (!b.dueTime) return -1
