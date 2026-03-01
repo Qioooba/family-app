@@ -18,6 +18,7 @@
         @click="switchCategory(index)"
       >
         <text>{{ cat.name }}</text>
+        <text v-if="cat.count > 0" class="tab-badge">{{ cat.count }}</text>
       </view>
     </scroll-view>
     
@@ -274,10 +275,16 @@ const getTodayString = () => {
   return `${year}-${month}-${day}`
 }
 
-const categories = [
-  { name: '待办', id: 1, status: 0 },
-  { name: '完成', id: 3, status: 2 }
-]
+const categories = ref([
+  { name: '待办', id: 1, status: 0, count: 0 },
+  { name: '完成', id: 3, status: 2, count: 0 }
+])
+
+// 计算各分类数量
+const updateCategoryCounts = () => {
+  categories.value[0].count = tasks.value.filter(t => t.status === 0).length
+  categories.value[1].count = tasks.value.filter(t => t.status === 2).length
+}
 
 const priorities = ['普通', '重要', '紧急']
 
@@ -334,6 +341,8 @@ const loadTasks = async (force = false) => {
       ...task,
       assigneeName: getMemberName(task.assigneeId) || '未指派'
     }))
+    // 更新分类数量
+    updateCategoryCounts()
   } catch (e) {
     console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
@@ -683,12 +692,27 @@ const addTask = async () => {
     font-size: 14px;
     color: #8B9A8B;
     transition: all 0.3s ease;
+    position: relative;
     
     &.active {
       background: linear-gradient(135deg, #81C784, #4CAF50);
       color: #fff;
       box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
     }
+  }
+  
+  .tab-badge {
+    display: inline-block;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+    padding: 0 5px;
+    margin-left: 6px;
+    background: #FF6B6B;
+    color: #fff;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 600;
   }
 }
 
