@@ -596,10 +596,10 @@ const addTask = async () => {
     const userInfo = uni.getStorageSync('userInfo') || {}
     const currentUserId = userInfo.id || userInfo.userId
     
-    // 组合日期和时间
+    // 组合日期和时间 (ISO格式: YYYY-MM-DDTHH:mm:ss)
     let dueTimeValue = null
     if (newTask.value.dueDate && newTask.value.dueTime) {
-      dueTimeValue = newTask.value.dueDate + ' ' + newTask.value.dueTime
+      dueTimeValue = newTask.value.dueDate + 'T' + newTask.value.dueTime + ':00'
     }
     
     // 处理分配人员：如果没有选择 assigneeId 或者选择的是"自己"
