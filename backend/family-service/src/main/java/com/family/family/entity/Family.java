@@ -16,7 +16,7 @@ public class Family implements Serializable {
     private Long id;
     private String name;
     private String avatar;
-    @TableField("owner_id")
+    @TableField("creator_id")
     private Long creatorId;
     private String inviteCode;
     private Integer memberCount;

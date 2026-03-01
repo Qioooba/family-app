@@ -163,8 +163,9 @@ public class FamilyController {
             result.put("message", "success");
             result.put("data", data);
         } catch (Exception e) {
+            e.printStackTrace();
             result.put("code", 500);
-            result.put("message", "系统繁忙，请稍后重试");
+            result.put("message", "系统繁忙: " + e.getMessage());
         }
 
         return result;
