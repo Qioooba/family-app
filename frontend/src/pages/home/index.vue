@@ -350,7 +350,7 @@ const overviewData = ref({
 
 const navigateTo = (path) => {
   // tabBar 页面使用 switchTab
-  if (path === '/pages/task/index' || path === '/pages/task/') {
+  if (path && path.startsWith('/pages/task')) {
     uni.switchTab({ url: '/pages/task/index' })
   } else {
     uni.navigateTo({ url: path })
