@@ -514,6 +514,7 @@ const priorityText = (p) => priorities[p] || '普通'
 const toggleTask = async (task) => {
   const newStatus = task.status === 2 ? 0 : 2
   try {
+    console.log('toggleTask:', task.id, newStatus)
     if (newStatus === 2) {
       await taskApi.complete(task.id)
     }
@@ -522,7 +523,7 @@ const toggleTask = async (task) => {
     uni.showToast({ title: newStatus === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
   } catch (e) {
     console.error('更新任务状态失败', e)
-    uni.showToast({ title: '操作失败', icon: 'none' })
+    uni.showToast({ title: '操作失败: ' + e.message, icon: 'none' })
   }
 }
 
