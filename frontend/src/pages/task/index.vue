@@ -451,16 +451,15 @@ const filteredTasks = computed(() => {
     const status = categories[currentCategory.value]?.status
     let result = tasks.value
     if (status !== undefined) {
-      result = result.filter(function(t) { return t.status === status })
+      result = result.filter(t => t.status === status)
     }
-    if (result.length > 1) {
-      return result.slice().sort(function(a, b) {
-        const dateA = a.dueTime ? new Date(a.dueTime).getTime() : 0
-        const dateB = b.dueTime ? new Date(b.dueTime).getTime() : 0
-        return dateA - dateB
-      })
-    }
-    return result
+    // 按截止时间由近及远排序（没有截止时间的排最后）
+    return result.slice().sort(function(a, b) {
+      if (!a.dueTime && !b.dueTime) return 0
+      if (!a.dueTime) return 1
+      if (!b.dueTime) return -1
+      return new Date(a.dueTime).getTime() - new Date(b.dueTime).getTime()
+    })
   } catch(e) {
     console.error('filteredTasks error:', e)
     return []
