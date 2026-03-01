@@ -82,7 +82,8 @@ public class TaskController {
                 query.eq(Task::getStatus, status);
             }
             
-            query.orderByDesc(Task::getCreateTime);
+            // 按截止时间排序，没有截止时间的排最后
+            query.orderByAsc(Task::getDueTime);
             List<Task> tasks = taskMapper.selectList(query);
             
             // 查询待办数量
