@@ -702,16 +702,17 @@ const addTask = async () => {
   
   .tab-badge {
     display: inline-block;
-    min-width: 18px;
-    height: 18px;
-    line-height: 18px;
-    padding: 0 5px;
+    min-width: 20px;
+    height: 20px;
+    line-height: 20px;
+    padding: 0 6px;
     margin-left: 6px;
-    background: #FF6B6B;
+    background: linear-gradient(135deg, #FF6B6B, #FF8E53);
     color: #fff;
-    border-radius: 9px;
-    font-size: 11px;
+    border-radius: 10px;
+    font-size: 12px;
     font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
   }
 }
 
