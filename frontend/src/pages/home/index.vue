@@ -383,8 +383,9 @@ const toggleTask = async (task) => {
 }
 
 const goTaskDetail = (task) => {
-  // 跳转到待办事项页面并显示详情弹窗
-  uni.navigateTo({ url: `/pages/task/index?id=${task.id}` })
+  // 先存储任务ID到本地，跳转到待办页面后再读取显示详情
+  uni.setStorageSync('pendingTaskDetailId', task.id)
+  uni.switchTab({ url: '/pages/task/index' })
 }
 
 const goToProfile = () => {

@@ -424,12 +424,20 @@ onMounted(() => {
 onShow(() => {
   loadTasks(true)
   
-  // 检查是否有传入的任务ID，如果有则显示详情弹窗
+  // 检查是否有传入的任务ID（优先从本地存储读取）
+  let taskId = uni.getStorageSync('pendingTaskDetailId')
+  uni.removeStorageSync('pendingTaskDetailId')
+  
+  // 同时也检查页面参数
   const pages = uni.getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const options = currentPage?.options || {}
-  if (options.id) {
-    const task = tasks.value.find(t => t.id === parseInt(options.id))
+  if (!taskId && options.id) {
+    taskId = options.id
+  }
+  
+  if (taskId) {
+    const task = tasks.value.find(t => t.id === parseInt(taskId))
     if (task) {
       selectedTask.value = task
       showDetailModal.value = true
