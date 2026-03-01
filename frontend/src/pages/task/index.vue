@@ -518,6 +518,7 @@ const toggleTask = async (task) => {
       await taskApi.complete(task.id)
     }
     task.status = newStatus
+    updateCategoryCounts()
     uni.showToast({ title: newStatus === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
   } catch (e) {
     console.error('更新任务状态失败', e)
