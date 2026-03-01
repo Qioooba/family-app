@@ -508,8 +508,12 @@ const filteredTasks = computed(() => {
     if (!tasks.value || !Array.isArray(tasks.value)) {
       return []
     }
-    // 只显示待办任务（status = 0）
-    let result = tasks.value.filter(t => t.status === 0)
+    // 根据当前分类过滤任务
+    const status = categories[currentCategory.value]?.status
+    let result = tasks.value
+    if (status !== undefined) {
+      result = result.filter(t => t.status === status)
+    }
     
     // 按截止时间由近及远排序（没有截止时间的排最后）
     return result.sort((a, b) => {
