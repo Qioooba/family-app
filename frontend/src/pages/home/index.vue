@@ -510,9 +510,9 @@ onMounted(async () => {
         return task.dueDate === todayStr
       })
       
-      // 格式化并显示前3条
+      // 格式化并显示所有今日待办
       if (todayTodoTasks.length > 0) {
-        todayTasks.value = todayTodoTasks.slice(0, 3).map(task => ({
+        todayTasks.value = todayTodoTasks.map(task => ({
           ...task,
           assigneeName: getMemberName(task.assigneeId) || '家人',
           time: task.dueTime ? '今天 ' + task.dueTime.substring(0, 5) : '今天'
