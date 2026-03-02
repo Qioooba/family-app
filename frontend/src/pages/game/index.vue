@@ -43,7 +43,7 @@
         <view class="wheel-btn" :class="{ spinning: isSpinning }" @click="spin"
         >
           <text v-if="!isSpinning">开始</text>
-          <text v-else">转动中...</text>
+          <text v-else>转动中...</text>
         </view>
       </view>
       
@@ -93,7 +93,7 @@
         >
           <view class="rank-number">
             <text v-if="index < 3" class="rank-medal">{{ ['🥇', '🥈', '🥉'][index] }}</text>
-            <text v-else">{{ index + 1 }}</text>
+            <text v-else>{{ index + 1 }}</text>
           </view>
           
           <image class="rank-avatar" :src="user.avatar" mode="aspectFill" />
