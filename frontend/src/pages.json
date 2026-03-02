@@ -108,7 +108,7 @@
   ],
   "subPackages": [
     {
-      "root": "pages/task",
+      "root": "pages/task-sub",
       "pages": [
         {
           "path": "schedule",
@@ -239,7 +239,7 @@
       ]
     },
     {
-      "root": "pages/wish",
+      "root": "pages/wish-sub",
       "pages": [
         {
           "path": "create",
@@ -353,7 +353,7 @@
       ]
     },
     {
-      "root": "pages/family",
+      "root": "pages/family-sub",
       "pages": [
         {
           "path": "switch",
