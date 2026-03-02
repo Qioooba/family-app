@@ -42,9 +42,25 @@
       
       <!-- 基本信息（所有用户都需要） -->
       <view class="form-item">
-        <text class="input-label">用户名</text>
+        <text class="input-label">真实姓名 <text class="required">*</text></text>
         <view class="input-wrapper">
           <text class="input-icon">👤</text>
+          <input
+            v-model="form.realName"
+            class="register-input"
+            placeholder="请输入真实姓名"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+            type="text"
+          />
+        </view>
+        <view class="input-hint">建议填写真实姓名，方便家人识别</view>
+      </view>
+      
+      <view class="form-item">
+        <text class="input-label">用户名</text>
+        <view class="input-wrapper">
+          <text class="input-icon">🆔</text>
           <input
             v-model="form.username"
             class="register-input"
@@ -63,12 +79,13 @@
           <input
             v-model="form.nickname"
             class="register-input"
-            placeholder="请输入昵称"
+            placeholder="如：爸爸、妈妈、小明"
             placeholder-class="input-placeholder"
             maxlength="20"
             type="text"
           />
         </view>
+        <view class="input-hint">选填，用于家庭成员间的称呼</view>
       </view>
       
       <view class="form-item">
@@ -202,6 +219,7 @@ const agreed = ref(false)
 const registerType = ref('') // 'create' | 'join'
 
 const form = reactive({
+  realName: '',
   username: '',
   nickname: '',
   phone: '',
@@ -219,6 +237,14 @@ const selectRegisterType = (type) => {
 
 // 表单验证
 const validateForm = () => {
+  if (!form.realName.trim()) {
+    uni.showToast({ title: '请输入真实姓名', icon: 'none' })
+    return false
+  }
+  if (form.realName.trim().length < 2) {
+    uni.showToast({ title: '真实姓名至少2个字符', icon: 'none' })
+    return false
+  }
   if (!form.username.trim()) {
     uni.showToast({ title: '请输入用户名', icon: 'none' })
     return false
@@ -271,8 +297,9 @@ const handleRegister = async () => {
   try {
     // 第一步：注册用户
     const registerData = {
+      realName: form.realName,
       username: form.username,
-      nickname: form.nickname,
+      nickname: form.nickname || form.realName,
       phone: form.phone,
       code: form.code,
       password: form.password
@@ -483,6 +510,11 @@ button::after {
   color: #333;
   margin-bottom: 8rpx;
   font-weight: 500;
+  
+  .required {
+    color: #ff4d4f;
+    margin-left: 4rpx;
+  }
 }
 
 .input-wrapper {

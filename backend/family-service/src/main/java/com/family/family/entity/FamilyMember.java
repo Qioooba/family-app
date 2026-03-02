@@ -16,6 +16,7 @@ public class FamilyMember implements Serializable {
     private Long familyId;
     private Long userId;
     private String role;
+    private String realName;
     private String nickname;
     private LocalDateTime joinTime;
     
@@ -49,6 +50,14 @@ public class FamilyMember implements Serializable {
     
     public void setRole(String role) {
         this.role = role;
+    }
+    
+    public String getRealName() {
+        return realName;
+    }
+    
+    public void setRealName(String realName) {
+        this.realName = realName;
     }
     
     public String getNickname() {

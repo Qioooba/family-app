@@ -401,6 +401,7 @@ public class FamilyController {
                 memberInfo.put("familyId", member.getFamilyId());
                 memberInfo.put("userId", member.getUserId());
                 memberInfo.put("role", member.getRole());
+                memberInfo.put("realName", member.getRealName());
                 memberInfo.put("nickname", member.getNickname());
                 memberInfo.put("joinTime", member.getJoinTime());
                 
@@ -409,6 +410,10 @@ public class FamilyController {
                 if (user != null) {
                     memberInfo.put("avatar", user.getAvatar());
                     memberInfo.put("username", user.getUsername());
+                    // 如果family_member没有realName，使用用户的realName
+                    if (member.getRealName() == null || member.getRealName().isEmpty()) {
+                        memberInfo.put("realName", user.getRealName());
+                    }
                 }
                 
                 memberList.add(memberInfo);

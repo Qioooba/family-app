@@ -5,13 +5,16 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.family.family.entity.FamilyMember;
 import com.family.family.entity.Task;
+import com.family.family.entity.User;
 import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.mapper.TaskMapper;
+import com.family.family.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +32,9 @@ public class TaskController {
 
     @Autowired
     private FamilyMemberMapper familyMemberMapper;
+    
+    @Autowired
+    private UserMapper userMapper;
 
     /**
      * 获取当前登录用户ID
@@ -101,7 +107,49 @@ public class TaskController {
             Long doneCount = taskMapper.selectCount(doneQuery);
 
             Map<String, Object> data = new HashMap<>();
-            data.put("list", tasks);
+            
+            // 为每个任务添加assigneeRealName
+            List<Map<String, Object>> taskList = new ArrayList<>();
+            for (Task task : tasks) {
+                Map<String, Object> taskMap = new HashMap<>();
+                taskMap.put("id", task.getId());
+                taskMap.put("familyId", task.getFamilyId());
+                taskMap.put("categoryId", task.getCategoryId());
+                taskMap.put("title", task.getTitle());
+                taskMap.put("content", task.getContent());
+                taskMap.put("priority", task.getPriority());
+                taskMap.put("status", task.getStatus());
+                taskMap.put("assigneeId", task.getAssigneeId());
+                taskMap.put("creatorId", task.getCreatorId());
+                taskMap.put("dueTime", task.getDueTime());
+                taskMap.put("remindTime", task.getRemindTime());
+                taskMap.put("repeatType", task.getRepeatType());
+                taskMap.put("repeatRule", task.getRepeatRule());
+                taskMap.put("location", task.getLocation());
+                taskMap.put("parentId", task.getParentId());
+                taskMap.put("attachments", task.getAttachments());
+                taskMap.put("finishTime", task.getFinishTime());
+                taskMap.put("createTime", task.getCreateTime());
+                taskMap.put("updateTime", task.getUpdateTime());
+                taskMap.put("isArchived", task.getIsArchived());
+                taskMap.put("archiveTime", task.getArchiveTime());
+                taskMap.put("isDeleted", task.getIsDeleted());
+                taskMap.put("deleteTime", task.getDeleteTime());
+                taskMap.put("sortOrder", task.getSortOrder());
+                
+                // 获取指派人的真实姓名
+                if (task.getAssigneeId() != null) {
+                    User assignee = userMapper.selectById(task.getAssigneeId());
+                    if (assignee != null) {
+                        taskMap.put("assigneeRealName", assignee.getRealName());
+                        taskMap.put("assigneeNickname", assignee.getNickname());
+                    }
+                }
+                
+                taskList.add(taskMap);
+            }
+            
+            data.put("list", taskList);
             data.put("todoCount", todoCount);
             data.put("doneCount", doneCount);
             
