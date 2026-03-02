@@ -180,7 +180,7 @@
               <view v-for="hour in 24" :key="hour-1" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
             </picker-view-column>
             <picker-view-column>
-              <view v-for="minute in 60" :key="minute-1" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
+              <view v-for="minute in minutes" :key="minute" class="picker-item">{{ String(minute).padStart(2, '0') }}分</view>
             </picker-view-column>
           </picker-view>
         </view>
@@ -314,10 +314,21 @@ const yearRange = computed(() => {
   }
   return years
 })
+
+// 计算每月天数
 const daysInMonth = computed(() => {
   const year = yearRange.value[pickerValue.value[0]] || currentYear
   const month = (pickerValue.value[1] || 0) + 1
   return new Date(year, month, 0).getDate()
+})
+
+// 分钟选项（5分钟步长）
+const minutes = computed(() => {
+  const mins = []
+  for (let i = 0; i < 60; i += 5) {
+    mins.push(i)
+  }
+  return mins
 })
 
 // 加载任务列表
@@ -421,18 +432,18 @@ const newTask = ref({
   assigneeId: null
 })
 
-// 日期时间选择器
+// 日期时间选择器 - 打开 picker 并初始化为当前时间
 const showDateTimePicker = () => {
-  // 使用简单的提示，实际可以扩展
-  uni.showActionSheet({
-    itemList: ['今天 15:00', '今天 18:00', '今天 21:00', '明天 09:00'],
-    success: (res) => {
-      const times = ['15:00', '18:00', '21:00', '09:00']
-      const today = getTodayString()
-      newTask.value.dueDate = today
-      newTask.value.dueTime = times[res.tapIndex]
-    }
-  })
+  const now = new Date()
+  const yearIndex = yearRange.value.indexOf(now.getFullYear())
+  const monthIndex = now.getMonth()
+  const dayIndex = now.getDate() - 1
+  const hourIndex = now.getHours()
+  // 找到最近的5分钟刻度
+  const minuteIndex = Math.floor(now.getMinutes() / 5)
+  
+  pickerValue.value = [yearIndex >= 0 ? yearIndex : 1, monthIndex, dayIndex, hourIndex, minuteIndex]
+  showTimePicker.value = true
 }
 
 const closePicker = () => {
@@ -448,7 +459,7 @@ const confirmPicker = () => {
   const month = String(pickerValue.value[1] + 1).padStart(2, '0')
   const day = String(pickerValue.value[2] + 1).padStart(2, '0')
   const hour = String(pickerValue.value[3]).padStart(2, '0')
-  const minute = String(pickerValue.value[4]).padStart(2, '0')
+  const minute = String(minutes.value[pickerValue.value[4]]).padStart(2, '0')
   newTask.value.dueDate = `${year}-${month}-${day}`
   newTask.value.dueTime = `${hour}:${minute}`
   closePicker()
@@ -480,12 +491,26 @@ const filteredTasks = computed(() => {
       result = result.filter(t => t.status === status)
     }
     
-    // 按截止时间由近及远排序（没有截止时间的排最后）
+    // 按距离现在的时间由近及远排序（没有截止时间的排最后）
     return result.sort((a, b) => {
-      if (!a.dueTime && !b.dueTime) return 0
-      if (!a.dueTime) return 1
-      if (!b.dueTime) return -1
-      return new Date(a.dueTime).getTime() - new Date(b.dueTime).getTime()
+      // 都没有时间，保持原顺序
+      if (!a.dueDate && !b.dueDate) return 0
+      // a没有时间，排后面
+      if (!a.dueDate) return 1
+      // b没有时间，排后面
+      if (!b.dueDate) return -1
+      
+      // 构建完整时间字符串
+      const dateTimeA = `${a.dueDate} ${a.dueTime || '00:00'}`
+      const dateTimeB = `${b.dueDate} ${b.dueTime || '00:00'}`
+      
+      // 计算与当前时间的距离（毫秒）
+      const now = new Date().getTime()
+      const timeA = new Date(dateTimeA).getTime()
+      const timeB = new Date(dateTimeB).getTime()
+      
+      // 距离现在越近的排在越前面
+      return Math.abs(timeA - now) - Math.abs(timeB - now)
     })
   } catch(e) {
     console.error('filteredTasks error:', e)
@@ -1516,12 +1541,12 @@ const addTask = async () => {
   }
   
   .picker-view {
-    height: 240px;
+    height: 480rpx;
     
     .picker-item {
-      line-height: 48px;
+      line-height: 80rpx;
       text-align: center;
-      font-size: 16px;
+      font-size: 32rpx;
       color: #3D5A4D;
     }
   }

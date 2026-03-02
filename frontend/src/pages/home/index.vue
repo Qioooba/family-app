@@ -277,6 +277,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../stores/user'
 import { waterApi } from '../../api/water'
 import { taskApi } from '../../api/task'
+import { familyApi } from '../../api/family'
 import { anniversaryApi } from '../../api/anniversary'
 import LazyImage from '@/components/common/LazyImage.vue'
 import Skeleton from '@/components/common/Skeleton.vue'
@@ -322,6 +323,9 @@ const quickActions = [
 
 // 今日任务
 const todayTasks = ref([])
+
+// 家庭成员列表（用于显示指派人名称）
+const familyMembers = ref([])
 
 // 纪念日
 const upcomingAnniversaries = ref([])
@@ -391,6 +395,11 @@ const goTaskDetail = (task) => {
 const goAddTask = () => {
   // 设置标记，告诉任务页面要打开添加弹窗
   uni.setStorageSync('taskOpenAddModal', true)
+  uni.switchTab({ url: '/pages/task/index' })
+}
+
+const goTaskList = () => {
+  // 跳转到待办列表页面
   uni.switchTab({ url: '/pages/task/index' })
 }
 
@@ -485,20 +494,61 @@ onMounted(async () => {
     console.error('加载喝水数据失败', e)
   }
   
-  // 加载今日待办数据
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    const taskData = await taskApi.getTodayTasks(familyId)
-    if (taskData && taskData.length > 0) {
-      todayTasks.value = taskData.slice(0, 3).map(task => ({
-        ...task,
-        assigneeName: task.assigneeName || '家人',
-        time: task.dueTime ? '今天 ' + task.dueTime.substring(11, 16) : '今天'
-      }))
+  // 加载今日待办数据 - 使用与待办列表页相同的API，只筛选今日待办
+  const loadTodayTasks = async () => {
+    try {
+      const familyId = uni.getStorageSync('currentFamilyId') || 1
+      
+      // 先加载家庭成员（用于显示指派人名称）
+      try {
+        const membersRes = await familyApi.getMembers(familyId)
+        familyMembers.value = membersRes || []
+      } catch (e) {
+        console.error('加载家庭成员失败', e)
+        familyMembers.value = []
+      }
+      
+      // 使用与待办列表页相同的API，获取所有待办任务（status=0）
+      const res = await taskApi.getList(familyId, 0)
+      const allTodoTasks = res.list || []
+      
+      // 获取今天的日期字符串
+      const today = new Date()
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      
+      // 筛选今日待办任务（dueDate 是今天）
+      const todayTodoTasks = allTodoTasks.filter(task => {
+        // 如果任务没有截止日期，默认也算今天
+        if (!task.dueDate) return true
+        return task.dueDate === todayStr
+      })
+      
+      // 格式化并显示前3条
+      if (todayTodoTasks.length > 0) {
+        todayTasks.value = todayTodoTasks.slice(0, 3).map(task => ({
+          ...task,
+          assigneeName: getMemberName(task.assigneeId) || '家人',
+          time: task.dueTime ? '今天 ' + task.dueTime.substring(0, 5) : '今天'
+        }))
+      } else {
+        todayTasks.value = []
+      }
+    } catch (e) {
+      console.error('加载待办数据失败', e)
+      todayTasks.value = []
     }
-  } catch (e) {
-    console.error('加载待办数据失败', e)
   }
+  
+  // 获取成员名称函数
+  const getMemberName = (userId) => {
+    if (!userId) return '未指派'
+    if (!familyMembers.value || !Array.isArray(familyMembers.value)) return '家人'
+    const member = familyMembers.value.find(m => m.userId === userId)
+    return member?.nickname || member?.name || '家人'
+  }
+  
+  // 调用加载今日待办
+  await loadTodayTasks()
   
   // 加载近期纪念日数据
   try {
@@ -1033,6 +1083,10 @@ const getAnniversaryIcon = (type) => {
       .task-meta {
         font-size: 24rpx;
         color: #8b9aad;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4rpx 0;
+        line-height: 1.4;
         
         .assignee {
           color: #6B8DD6;

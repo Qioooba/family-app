@@ -204,12 +204,10 @@
         <!-- 日期选择器 -->
         <view class="date-picker-section">
           <text class="picker-label">选择日期：</text>
-          <picker mode="date" :value="historyDate" :end="today" @change="onHistoryDateChange">
-            <view class="date-picker-btn">
-              <text>{{ formatDateDisplay(historyDate) }}</text>
-              <u-icon name="arrow-down" size="28" color="#666"></u-icon>
-            </view>
-          </picker>
+          <view class="date-picker-btn" @click="openDatePicker">
+            <text>{{ formatDateDisplay(historyDate) }}</text>
+            <u-icon name="arrow-down" size="28" color="#666"></u-icon>
+          </view>
         </view>
 
         <!-- 历史统计数据 -->
@@ -258,6 +256,28 @@
         </scroll-view>
       </view>
     </view>
+
+    <!-- 自定义日期选择器弹窗 -->
+    <view v-if="showDatePicker" class="date-picker-overlay" @click="closeDatePicker">
+      <view class="date-picker-modal" @click.stop>
+        <view class="picker-header">
+          <text class="cancel" @click="closeDatePicker">取消</text>
+          <text class="title">选择日期</text>
+          <text class="confirm" @click="confirmDatePicker">确定</text>
+        </view>
+        <picker-view class="picker-view" :value="pickerDateValue" @change="onPickerDateChange">
+          <picker-view-column>
+            <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
+          </picker-view-column>
+          <picker-view-column>
+            <view v-for="month in 12" :key="month" class="picker-item">{{ month }}月</view>
+          </picker-view-column>
+          <picker-view-column>
+            <view v-for="day in daysInSelectedMonth" :key="day" class="picker-item">{{ day }}日</view>
+          </picker-view-column>
+        </picker-view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -296,6 +316,66 @@ const historyVisible = ref(false)
 const historyDate = ref('')
 const historyData = ref({})
 const today = ref(new Date().toISOString().split('T')[0])
+
+// 日期选择器相关
+const showDatePicker = ref(false)
+const pickerDateValue = ref([0, 0, 0])
+
+// 年份范围（当前年-2 到 当前年）
+const yearRange = computed(() => {
+  const currentYear = new Date().getFullYear()
+  const years = []
+  for (let i = currentYear - 2; i <= currentYear; i++) {
+    years.push(i)
+  }
+  return years
+})
+
+// 当前选择月份的天数
+const daysInSelectedMonth = computed(() => {
+  const year = yearRange.value[pickerDateValue.value[0]]
+  const month = pickerDateValue.value[1] + 1
+  return new Date(year, month, 0).getDate()
+})
+
+// 打开日期选择器
+const openDatePicker = () => {
+  // 初始化当前选中的日期
+  const currentDate = new Date(historyDate.value || new Date())
+  const yearIndex = yearRange.value.indexOf(currentDate.getFullYear())
+  const monthIndex = currentDate.getMonth()
+  const dayIndex = currentDate.getDate() - 1
+  pickerDateValue.value = [Math.max(0, yearIndex), monthIndex, Math.min(dayIndex, daysInSelectedMonth.value - 1)]
+  showDatePicker.value = true
+}
+
+// 关闭日期选择器
+const closeDatePicker = () => {
+  showDatePicker.value = false
+}
+
+// 选择器变化
+const onPickerDateChange = (e) => {
+  pickerDateValue.value = e.detail.value
+}
+
+// 确认选择
+const confirmDatePicker = () => {
+  const year = yearRange.value[pickerDateValue.value[0]]
+  const month = String(pickerDateValue.value[1] + 1).padStart(2, '0')
+  const day = String(pickerDateValue.value[2] + 1).padStart(2, '0')
+  
+  // 检查选择的日期是否超过今天
+  const selectedDate = `${year}-${month}-${day}`
+  if (selectedDate > today.value) {
+    uni.showToast({ title: '不能选择未来的日期', icon: 'none' })
+    return
+  }
+  
+  historyDate.value = selectedDate
+  loadHistoryData()
+  closeDatePicker()
+}
 
 const quickAmounts = [100, 150, 200, 250, 350, 500]
 const targetOptions = [1500, 2000, 2500, 3000, 3500]
@@ -1247,8 +1327,6 @@ const deleteHistoryRecord = async (recordId) => {
     display: flex;
     align-items: center;
     margin-bottom: 30rpx;
-    position: relative;
-    z-index: 1001;
 
     .picker-label {
       font-size: 28rpx;
@@ -1262,8 +1340,6 @@ const deleteHistoryRecord = async (recordId) => {
       padding: 12rpx 24rpx;
       background: #f5f6fa;
       border-radius: 12rpx;
-      position: relative;
-      z-index: 1002;
       margin-left: 16rpx;
 
       text {
@@ -1384,6 +1460,63 @@ const deleteHistoryRecord = async (recordId) => {
           }
         }
       }
+    }
+  }
+}
+
+// 自定义日期选择器弹窗样式
+.date-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.date-picker-modal {
+  width: 100%;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 32rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  
+  .picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32rpx;
+    
+    .cancel {
+      font-size: 28rpx;
+      color: #999;
+    }
+    
+    .title {
+      font-size: 32rpx;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .confirm {
+      font-size: 28rpx;
+      color: #5B8FF9;
+      font-weight: 500;
+    }
+  }
+  
+  .picker-view {
+    height: 400rpx;
+    
+    .picker-item {
+      line-height: 80rpx;
+      text-align: center;
+      font-size: 32rpx;
+      color: #333;
     }
   }
 }
