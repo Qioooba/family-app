@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/family")
+@RequestMapping(value = "/api/family", produces = "application/json;charset=UTF-8")
 @SaCheckLogin
 public class FamilyController {
 
@@ -369,7 +369,7 @@ public class FamilyController {
     /**
      * 获取家庭成员列表
      */
-    @GetMapping(value = "/{familyId}/members", produces = "application/json;charset=UTF-8")
+    @GetMapping("/{familyId}/members")
     public Map<String, Object> getMembers(@PathVariable Long familyId) {
         Map<String, Object> result = new HashMap<>();
         Long userId = getCurrentUserId();
