@@ -144,11 +144,11 @@
             <text class="task-title" :class="{ completed: task.status === 2 }">
               {{ task.title }}
             </text>
-            <text class="task-meta">
+            <view class="task-meta">
               <text class="assignee">{{ task.assigneeName }}</text>
               <text class="divider">·</text>
               <text class="time">{{ task.time }}</text>
-            </text>
+            </view>
           </view>
           
           <view 
@@ -1015,7 +1015,7 @@ const getAnniversaryIcon = (type) => {
 .task-list {
   .task-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     padding: 24rpx 0;
     border-bottom: 2rpx solid #f1f5f9;
     transition: all 0.2s ease;
@@ -1042,6 +1042,8 @@ const getAnniversaryIcon = (type) => {
     
     .task-checkbox {
       margin-right: 24rpx;
+      flex-shrink: 0;
+      margin-top: 4rpx;
       
       .unchecked {
         width: 44rpx;
@@ -1065,6 +1067,8 @@ const getAnniversaryIcon = (type) => {
     
     .task-info {
       flex: 1;
+      min-width: 0;
+      overflow: visible;
       
       .task-title {
         font-size: 30rpx;
@@ -1073,6 +1077,9 @@ const getAnniversaryIcon = (type) => {
         margin-bottom: 10rpx;
         font-weight: 500;
         transition: all 0.2s ease;
+        overflow-wrap: break-word;
+        word-break: break-all;
+        white-space: normal;
         
         &.completed {
           text-decoration: line-through;
@@ -1083,10 +1090,17 @@ const getAnniversaryIcon = (type) => {
       .task-meta {
         font-size: 24rpx;
         color: #8b9aad;
+        overflow-wrap: break-word;
+        word-break: break-all;
+        white-space: normal;
+        line-height: 1.6;
         display: flex;
         flex-wrap: wrap;
-        gap: 4rpx 0;
-        line-height: 1.4;
+        gap: 4rpx 8rpx;
+        
+        text {
+          display: inline;
+        }
         
         .assignee {
           color: #6B8DD6;
@@ -1094,8 +1108,11 @@ const getAnniversaryIcon = (type) => {
         }
         
         .divider {
-          margin: 0 8rpx;
           opacity: 0.5;
+        }
+        
+        .time {
+          display: inline;
         }
       }
     }
@@ -1105,6 +1122,9 @@ const getAnniversaryIcon = (type) => {
       border-radius: 24rpx;
       font-size: 22rpx;
       font-weight: 500;
+      flex-shrink: 0;
+      margin-left: 16rpx;
+      margin-top: 4rpx;
       
       &.high {
         background: rgba(252, 129, 129, 0.12);

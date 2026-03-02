@@ -1,6 +1,11 @@
 server:
   port: 8081
   address: 0.0.0.0
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 spring:
   main:
@@ -13,6 +18,7 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
     serialization:
       write-dates-as-timestamps: false
     deserialization:

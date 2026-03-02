@@ -369,7 +369,7 @@ public class FamilyController {
     /**
      * 获取家庭成员列表
      */
-    @GetMapping("/{familyId}/members")
+    @GetMapping(value = "/{familyId}/members", produces = "application/json;charset=UTF-8")
     public Map<String, Object> getMembers(@PathVariable Long familyId) {
         Map<String, Object> result = new HashMap<>();
         Long userId = getCurrentUserId();
