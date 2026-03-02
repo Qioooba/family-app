@@ -213,8 +213,8 @@
                 :src="member.avatar || '/static/avatar-default.png'" 
                 mode="aspectFill" 
               />
-              <!-- 优先显示真实姓名 -->
-              <text class="member-name">{{ member.realName || member.nickname || member.name || '家人' }}</text>
+              <!-- 优先显示昵称 -->
+              <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
             </view>
           </view>
         </view>
@@ -349,10 +349,10 @@ const loadTasks = async (force = false) => {
     const status = categories.value[currentCategory.value]?.status
     // 根据状态查询任务
     const res = await taskApi.getList(familyId, status)
-    // 把 assigneeId 转换为 assigneeName - 优先使用服务器返回的realName
+    // 把 assigneeId 转换为 assigneeName - 使用服务器返回的nickname
     tasks.value = (res.list || []).map(task => ({
       ...task,
-      assigneeName: task.assigneeRealName || getMemberName(task.assigneeId) || '未指派'
+      assigneeName: task.assigneeNickname || getMemberName(task.assigneeId) || '未指派'
     }))
     // 更新分类数量
     categories.value[0].count = res.todoCount || 0
@@ -417,13 +417,12 @@ onShow(() => {
   })
 })
 
-// 获取成员名称 - 优先显示真实姓名
+// 获取成员名称 - 显示昵称
 const getMemberName = (userId) => {
   if (!userId) return '未指派'
   if (!familyMembers.value || !Array.isArray(familyMembers.value)) return '家人'
   const member = familyMembers.value.find(m => m.userId === userId)
-  // 优先使用真实姓名
-  return member?.realName || member?.nickname || member?.name || '家人'
+  return member?.nickname || member?.name || '家人'
 }
 
 const newTask = ref({

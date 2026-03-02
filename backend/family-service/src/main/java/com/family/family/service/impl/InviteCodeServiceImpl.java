@@ -100,11 +100,21 @@ public class InviteCodeServiceImpl extends ServiceImpl<InviteCodeMapper, InviteC
             throw new RuntimeException("您已经是家庭成员");
         }
         
+        // 检查用户是否已有家庭（单家庭限制）
+        LambdaQueryWrapper<FamilyMember> userFamiliesWrapper = new LambdaQueryWrapper<>();
+        userFamiliesWrapper.eq(FamilyMember::getUserId, userId);
+        Long familyCount = familyMemberMapper.selectCount(userFamiliesWrapper);
+        
+        if (familyCount != null && familyCount > 0) {
+            throw new RuntimeException("您已属于一个家庭，无法加入其他家庭");
+        }
+        
         // 添加家庭成员
         FamilyMember member = new FamilyMember();
         member.setFamilyId(family.getId());
         member.setUserId(userId);
         member.setRole("member");
+        member.setNickname("家人");
         member.setJoinTime(LocalDateTime.now());
         familyMemberMapper.insert(member);
         

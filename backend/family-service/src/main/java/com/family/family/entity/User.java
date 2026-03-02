@@ -17,7 +17,6 @@ public class User {
     
     private String username;
     private String password;
-    private String realName;
     private String nickname;
     private String avatar;
     private String phone;
@@ -38,9 +37,6 @@ public class User {
     
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-    
-    public String getRealName() { return realName; }
-    public void setRealName(String realName) { this.realName = realName; }
     
     public String getNickname() { return nickname; }
     public void setNickname(String nickname) { this.nickname = nickname; }

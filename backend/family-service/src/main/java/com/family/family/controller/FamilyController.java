@@ -401,7 +401,6 @@ public class FamilyController {
                 memberInfo.put("familyId", member.getFamilyId());
                 memberInfo.put("userId", member.getUserId());
                 memberInfo.put("role", member.getRole());
-                memberInfo.put("realName", member.getRealName());
                 memberInfo.put("nickname", member.getNickname());
                 memberInfo.put("joinTime", member.getJoinTime());
                 
@@ -410,10 +409,6 @@ public class FamilyController {
                 if (user != null) {
                     memberInfo.put("avatar", user.getAvatar());
                     memberInfo.put("username", user.getUsername());
-                    // 如果family_member没有realName，使用用户的realName
-                    if (member.getRealName() == null || member.getRealName().isEmpty()) {
-                        memberInfo.put("realName", user.getRealName());
-                    }
                 }
                 
                 memberList.add(memberInfo);
@@ -507,28 +502,13 @@ public class FamilyController {
     }
 
     /**
-     * 切换当前家庭
+     * 切换当前家庭（已不支持）
      */
     @PostMapping("/switch/{familyId}")
     public Map<String, Object> switchFamily(@PathVariable Long familyId) {
         Map<String, Object> result = new HashMap<>();
-        Long userId = getCurrentUserId();
-
-        if (userId == null) {
-            result.put("code", 401);
-            result.put("message", "请先登录");
-            return result;
-        }
-
-        // 检查是否为家庭成员
-        if (!isFamilyMember(familyId, userId)) {
-            result.put("code", 403);
-            result.put("message", "您不是该家庭的成员");
-            return result;
-        }
-
-        result.put("code", 200);
-        result.put("message", "success");
+        result.put("code", 400);
+        result.put("message", "不支持切换家庭");
         return result;
     }
 

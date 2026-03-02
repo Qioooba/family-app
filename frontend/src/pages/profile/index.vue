@@ -8,11 +8,8 @@
         </view>
         <view class="user-detail">
           <view class="user-name" @click="editNickname">
-            {{ userInfo.realName || userInfo.nickname || userInfo.username || '未设置昵称' }}
+            {{ userInfo.nickname || userInfo.username || '未设置昵称' }}
             <text class="edit-icon">✏️</text>
-          </view>
-          <view class="user-id" v-if="userInfo.realName && userInfo.nickname && userInfo.realName !== userInfo.nickname">
-            ({{ userInfo.nickname }})
           </view>
           <view class="user-id">ID: {{ userInfo.phone || userInfo.id }}</view>
         </view>
@@ -170,37 +167,17 @@ const loadUserData = async () => {
 
 // 编辑昵称
 const editNickname = () => {
-  uni.showActionSheet({
-    itemList: ['修改真实姓名', '修改昵称'],
-    success: (res) => {
-      if (res.tapIndex === 0) {
-        // 修改真实姓名
-        editRealName()
-      } else if (res.tapIndex === 1) {
-        // 修改昵称
-        editUsername()
-      }
-    }
-  })
-}
-
-// 编辑真实姓名
-const editRealName = () => {
   uni.showModal({
-    title: '修改真实姓名',
-    placeholderText: '请输入真实姓名',
+    title: '修改昵称',
+    placeholderText: '请输入新昵称',
     editable: true,
-    defaultText: userInfo.value?.realName || '',
+    defaultText: userInfo.value?.nickname || '',
     success: async (res) => {
       if (res.confirm && res.content && res.content.trim()) {
-        if (res.content.trim().length < 2) {
-          uni.showToast({ title: '真实姓名至少2个字符', icon: 'none' })
-          return
-        }
         try {
           uni.showLoading({ title: '保存中...' })
           await userStore.updateUserInfo({
-            realName: res.content.trim()
+            nickname: res.content.trim()
           })
           uni.showToast({
             title: '修改成功',
@@ -218,9 +195,6 @@ const editRealName = () => {
     }
   })
 }
-
-// 编辑用户名（昵称）
-const editUsername = () => {
   uni.showModal({
     title: '修改昵称',
     placeholderText: '请输入新昵称',

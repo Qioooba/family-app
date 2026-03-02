@@ -73,7 +73,6 @@ public class UserController {
             data.put("id", user.getId());
             data.put("userId", user.getId());
             data.put("username", user.getUsername());
-            data.put("realName", user.getRealName());
             data.put("nickname", user.getNickname());
             data.put("phone", user.getPhone());
             data.put("avatar", user.getAvatar());
@@ -103,9 +102,6 @@ public class UserController {
             }
             
             // 更新可选字段
-            if (params.containsKey("realName")) {
-                user.setRealName((String) params.get("realName"));
-            }
             if (params.containsKey("nickname")) {
                 user.setNickname((String) params.get("nickname"));
             }
@@ -117,15 +113,6 @@ public class UserController {
             }
             
             userMapper.updateById(user);
-            
-            // 同步更新family_member表中的realName
-            if (params.containsKey("realName")) {
-                FamilyMember familyMember = familyMemberMapper.selectByUserIdAndFamilyId(userId, user.getCurrentFamilyId());
-                if (familyMember != null) {
-                    familyMember.setRealName((String) params.get("realName"));
-                    familyMemberMapper.updateById(familyMember);
-                }
-            }
             
             result.put("code", 200);
             result.put("message", "success");
@@ -266,7 +253,6 @@ public class UserController {
             String phone = (String) params.get("phone");
             String username = (String) params.get("username");
             String password = (String) params.get("password");
-            String realName = (String) params.get("realName");
             String nickname = (String) params.get("nickname");
 
             // 校验手机号或用户名
@@ -276,10 +262,10 @@ public class UserController {
                 return result;
             }
 
-            // 校验真实姓名（必填）
-            if (realName == null || realName.trim().isEmpty()) {
+            // 校验昵称（必填）
+            if (nickname == null || nickname.trim().isEmpty()) {
                 result.put("code", 400);
-                result.put("message", "请填写真实姓名");
+                result.put("message", "请填写昵称");
                 return result;
             }
 
@@ -318,8 +304,7 @@ public class UserController {
             User user = new User();
             user.setPhone(phone);
             user.setUsername(username != null ? username : phone);
-            user.setRealName(realName);
-            user.setNickname(nickname != null ? nickname : realName);
+            user.setNickname(nickname);
             user.setPassword(passwordEncoder.encode(password));
             user.setStatus(1); // 正常状态
             user.setCurrentFamilyId(DEFAULT_FAMILY_ID); // 设置默认家庭
@@ -333,8 +318,7 @@ public class UserController {
             familyMember.setFamilyId(DEFAULT_FAMILY_ID);
             familyMember.setUserId(user.getId());
             familyMember.setRole("member");
-            familyMember.setRealName(realName);
-            familyMember.setNickname(nickname != null ? nickname : realName);
+            familyMember.setNickname(nickname);
             familyMember.setJoinTime(LocalDateTime.now());
             familyMemberMapper.insert(familyMember);
 
@@ -344,7 +328,6 @@ public class UserController {
             data.put("id", user.getId());
             data.put("phone", user.getPhone());
             data.put("username", user.getUsername());
-            data.put("realName", user.getRealName());
             data.put("nickname", user.getNickname());
             data.put("currentFamilyId", user.getCurrentFamilyId());
             result.put("data", data);

@@ -41,15 +41,6 @@
             </view>
           </view>
         </view>
-        
-        <view class="header-right">
-          <view class="family-selector" @click="selectFamily">
-            <text class="family-name">{{ currentFamily?.name || '幸福小家' }}</text>
-            <view class="selector-arrow">
-              <text class="arrow-icon">▼</text>
-            </view>
-          </view>
-        </view>
       </view>
     </view>
     
@@ -359,10 +350,6 @@ const navigateTo = (path) => {
   } else {
     uni.navigateTo({ url: path })
   }
-}
-
-const selectFamily = () => {
-  uni.navigateTo({ url: '/pages/family/switch' })
 }
 
 const toggleTask = async (task) => {

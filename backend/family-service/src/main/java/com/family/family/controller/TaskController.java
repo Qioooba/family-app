@@ -137,11 +137,10 @@ public class TaskController {
                 taskMap.put("deleteTime", task.getDeleteTime());
                 taskMap.put("sortOrder", task.getSortOrder());
                 
-                // 获取指派人的真实姓名
+                // 获取指派人的昵称
                 if (task.getAssigneeId() != null) {
                     User assignee = userMapper.selectById(task.getAssigneeId());
                     if (assignee != null) {
-                        taskMap.put("assigneeRealName", assignee.getRealName());
                         taskMap.put("assigneeNickname", assignee.getNickname());
                     }
                 }
