@@ -195,33 +195,6 @@ const editNickname = () => {
     }
   })
 }
-  uni.showModal({
-    title: '修改昵称',
-    placeholderText: '请输入新昵称',
-    editable: true,
-    success: async (res) => {
-      if (res.confirm && res.content && res.content.trim()) {
-        try {
-          uni.showLoading({ title: '保存中...' })
-          await userStore.updateUserInfo({
-            nickname: res.content.trim()
-          })
-          uni.showToast({
-            title: '修改成功',
-            icon: 'success'
-          })
-        } catch (e) {
-          uni.showToast({
-            title: '修改失败',
-            icon: 'none'
-          })
-        } finally {
-          uni.hideLoading()
-        }
-      }
-    }
-  })
-}
 
 // 编辑头像
 const editAvatar = () => {
