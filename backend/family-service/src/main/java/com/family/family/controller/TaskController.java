@@ -401,4 +401,50 @@ public class TaskController {
         }
         return result;
     }
+
+    
+    /**
+     * 恢复任务（从已完成状态恢复为待办）
+     */
+    @PostMapping("/restore/{id}")
+    public Map<String, Object> restore(@PathVariable Long id) {
+        Map<String, Object> result = new HashMap<>();
+        Long userId = getCurrentUserId();
+
+        if (userId == null) {
+            result.put("code", 401);
+            result.put("message", "请先登录");
+            return result;
+        }
+
+        try {
+            Task task = taskMapper.selectById(id);
+            if (task == null || task.getIsDeleted() == 1) {
+                result.put("code", 404);
+                result.put("message", "任务不存在");
+                return result;
+            }
+
+            // 验证用户是否属于该家庭
+            if (!isFamilyMember(task.getFamilyId(), userId)) {
+                result.put("code", 403);
+                result.put("message", "您无权操作此任务");
+                return result;
+            }
+
+            // 恢复任务：将状态从已完成(2)改为待办(0)
+            task.setStatus(0);
+            task.setFinishTime(null);
+            task.setUpdateTime(LocalDateTime.now());
+            taskMapper.updateById(task);
+
+            result.put("code", 200);
+            result.put("message", "success");
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", "操作失败：" + e.getMessage());
+        }
+        return result;
+    }
+
 }

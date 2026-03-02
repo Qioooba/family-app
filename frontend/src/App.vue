@@ -76,3 +76,17 @@ const onTabChange = (index) => {
   background: #f5f6fa;
 }
 </style>
+
+<style>
+/* 全局修复 picker 弹窗层级 */
+.uni-picker-container,
+.uni-picker-view-wrapper,
+.uni-picker-header,
+.uni-picker-action,
+.uni-picker-menu,
+.uni-picker-content,
+.uni-picker-mask {
+  z-index: 9999999 !important;
+  position: fixed !important;
+}
+</style>

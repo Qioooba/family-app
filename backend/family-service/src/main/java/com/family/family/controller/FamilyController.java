@@ -116,6 +116,75 @@ public class FamilyController {
 
         return result;
     }
+    
+    /**
+     * 确保用户有家庭（如果没有则加入默认家庭）
+     */
+    @GetMapping("/ensure")
+    public Map<String, Object> ensureFamily() {
+        Map<String, Object> result = new HashMap<>();
+        Long userId = getCurrentUserId();
+        
+        if (userId == null) {
+            result.put("code", 401);
+            result.put("message", "请先登录");
+            return result;
+        }
+        
+        try {
+            // 查询用户加入的家庭
+            List<FamilyMember> memberships = familyMemberMapper.selectList(
+                new LambdaQueryWrapper<FamilyMember>()
+                    .eq(FamilyMember::getUserId, userId)
+            );
+            
+            if (memberships.isEmpty()) {
+                // 没有家庭，加入默认家庭
+                Long defaultFamilyId = 1L;
+                
+                // 检查默认家庭是否存在
+                Family defaultFamily = familyMapper.selectById(defaultFamilyId);
+                if (defaultFamily == null) {
+                    // 创建默认家庭
+                    defaultFamily = new Family();
+                    defaultFamily.setName("幸福小家");
+                    defaultFamily.setInviteCode(java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+                    defaultFamily.setMemberCount(0);
+                    familyMapper.insert(defaultFamily);
+                    defaultFamilyId = defaultFamily.getId();
+                }
+                
+                // 添加用户到家庭
+                FamilyMember member = new FamilyMember();
+                member.setFamilyId(defaultFamilyId);
+                member.setUserId(userId);
+                member.setRole("owner");
+                member.setNickname("我");
+                member.setJoinTime(LocalDateTime.now());
+                familyMemberMapper.insert(member);
+                
+                // 更新用户默认家庭
+                User user = userMapper.selectById(userId);
+                if (user != null) {
+                    user.setCurrentFamilyId(defaultFamilyId);
+                    userMapper.updateById(user);
+                }
+                
+                // 更新家庭成员数
+                defaultFamily = familyMapper.selectById(defaultFamilyId);
+                defaultFamily.setMemberCount(defaultFamily.getMemberCount() + 1);
+                familyMapper.updateById(defaultFamily);
+            }
+            
+            result.put("code", 200);
+            result.put("message", "success");
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", "系统繁忙: " + e.getMessage());
+        }
+        
+        return result;
+    }
 
     /**
      * 获取家庭信息

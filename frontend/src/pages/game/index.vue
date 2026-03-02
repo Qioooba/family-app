@@ -43,7 +43,7 @@
         <view class="wheel-btn" :class="{ spinning: isSpinning }" @click="spin"
         >
           <text v-if="!isSpinning">开始</text>
-          <text v-else>转动中...</text>
+          <text v-else>🎲</text>
         </view>
       </view>
       
@@ -236,9 +236,12 @@ const calculateResult = (totalDegrees) => {
   const normalizedDegrees = totalDegrees % 360
   // 每个扇形的角度
   const sectorAngle = 360 / currentWheelItems.value.length
-  // 计算结果索引 (逆时针,指针在上方,所以要反算)
-  const resultIndex = Math.floor(((360 - normalizedDegrees + 180) % 360) / sectorAngle)
-  return resultIndex % currentWheelItems.value.length
+  // 计算结果索引
+  // 指针在顶部(12点方向)，顺时针旋转时，需要反向计算
+  // 当转盘旋转到0度时，第0项在顶部
+  // 当转盘顺时针旋转60度时，第5项到顶部(因为第0项转到了右边)
+  const resultIndex = Math.floor((360 - normalizedDegrees) / sectorAngle) % currentWheelItems.value.length
+  return resultIndex
 }
 
 const rankTabs = ref(['积分', '任务', '活跃'])
@@ -289,6 +292,8 @@ const spin = () => {
     // 根据转动角度计算结果
     const resultIndex = calculateResult(totalRotation.value)
     const result = currentWheelItems.value[resultIndex]
+    
+    console.log('[转盘] rotation:', totalRotation.value, 'resultIndex:', resultIndex, 'result:', result)
     
     uni.showModal({
       title: '🎉 恭喜',

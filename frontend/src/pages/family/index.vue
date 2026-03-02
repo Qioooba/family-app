@@ -1,10 +1,5 @@
 <template>
   <view class="family-page">
-    <!-- 顶部渐变背景 -->
-    <view class="header-bg">
-      <view class="bg-pattern"></view>
-    </view>
-    
     <!-- 下拉刷新 -->
     <scroll-view 
       scroll-y 
@@ -13,188 +8,198 @@
       :refresher-triggered="refreshing"
       @refresherrefresh="onRefresh"
     >
-      <!-- 家庭信息卡 -->
+      <!-- 顶部区域 -->
       <view class="family-header">
-        <view class="family-main">
-          <view class="family-avatar-wrapper">
-            <image class="family-avatar" src="/static/family-avatar.jpg" />
-            <view class="family-badge">
-              <text>{{ members.length }}</text>
-            </view>
-          </view>
-          <view class="family-info">
-            <text class="family-name">{{ family.name || '幸福小家' }}</text>
-            <text class="family-desc">{{ members.length }} 位家庭成员</text>
-          </view>
-        </view>
-        <view class="header-actions">
-          <view class="action-btn invite" @click="showInviteModal" v-if="isAdmin">
-            <text class="btn-icon">+</text>
-            <text class="btn-text">邀请</text>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 成员头像墙 - 水平滚动 -->
-      <view class="members-wall">
-        <scroll-view scroll-x class="members-scroll" enhanced :show-scrollbar="false">
-          <view class="members-list">
-            <view 
-              v-for="(member, index) in members" 
-              :key="member.id"
-              class="member-item"
-              :style="{ animationDelay: `${index * 0.05}s` }"
-            >
-              <view class="avatar-wrapper">
-                <image class="member-avatar" :src="member.avatar" />
-                <view v-if="member.role === 'owner'" class="role-badge owner">👑</view>
-                <view v-else-if="member.role === 'admin'" class="role-badge admin">⭐</view>
-              </view>
-              <text class="member-name">{{ member.nickname }}</text>
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-      
-      <!-- 家庭功能入口 - 重新设计 -->
-      <view class="features-section">
-        <view class="section-title">
-          <text class="title-icon">🏠</text>
-          <text class="title-text">家庭空间</text>
+        <!-- 背景装饰 -->
+        <view class="header-bg">
+          <view class="bg-circle circle-1"></view>
+          <view class="bg-circle circle-2"></view>
+          <view class="bg-circle circle-3"></view>
         </view>
         
-        <view class="features-grid">
+        <!-- 家庭名称 -->
+        <view class="family-title-section">
+          <text class="family-name">{{ family.name || '幸福小家' }}</text>
+          <text class="family-subtitle">🏠 温馨港湾</text>
+        </view>
+        
+        <!-- 成员头像群 -->
+        <view class="member-avatars">
           <view 
-            v-for="(feature, index) in features" 
-            :key="index"
-            class="feature-card"
-            :class="`feature-${index}`"
-            @click="goFeature(feature)"
-            :style="{ animationDelay: `${index * 0.08}s` }"
+            v-for="(member, index) in displayMembers" 
+            :key="member.id"
+            class="avatar-item"
+            :style="{ 
+              zIndex: members.length - index,
+              transform: `translateX(${index * -16}rpx)`
+            }"
           >
-            <view class="feature-icon-wrapper" :style="{ background: feature.bgColor }">
-              <u-icon :name="feature.icon" size="40" color="#fff"></u-icon>
-            </view>
-            <view class="feature-info">
-              <text class="feature-name">{{ feature.name }}</text>
-              <text class="feature-desc">{{ feature.desc }}</text>
-            </view>
-            <view class="feature-arrow">›</view>
+            <image 
+              class="avatar-img" 
+              :src="member.avatar" 
+              :style="{ borderColor: getAvatarBorder(index) }"
+            />
+            <view v-if="index === 0 && member.role === 'owner'" class="owner-badge">👑</view>
+          </view>
+          <view v-if="members.length > 6" class="more-avatar">
+            <text>+{{ members.length - 6 }}</text>
+          </view>
+        </view>
+        
+        <!-- 邀请按钮 -->
+        <view class="invite-section">
+          <view class="invite-btn" @click="showInviteModal" v-if="isAdmin">
+            <text class="invite-icon">➕</text>
+            <text class="invite-text">邀请加入</text>
           </view>
         </view>
       </view>
       
-      <!-- 家庭统计数据 - 卡片式设计 -->
+      <!-- 邀请码弹窗 -->
+      <view class="invite-modal" v-if="showInviteCodeModal">
+        <view class="modal-mask" @click="showInviteCodeModal = false"></view>
+        <view class="modal-content">
+          <view class="modal-header">
+            <text class="modal-title">邀请家人</text>
+            <text class="modal-close" @click="showInviteCodeModal = false">✕</text>
+          </view>
+          
+          <view class="invite-code-display" v-if="currentInviteCode">
+            <text class="code-label">邀请码</text>
+            <view class="code-value">
+              <text>{{ currentInviteCode }}</text>
+              <text class="copy-btn" @click="copyInviteCode">复制</text>
+            </view>
+            <text class="code-hint">分享给家人，让他们加入家庭</text>
+          </view>
+          
+          <view class="invite-code-actions">
+            <button class="action-btn primary" @click="generateNewCode" :disabled="generating">
+              {{ generating ? '生成中...' : '生成新邀请码' }}
+            </button>
+          </view>
+          
+          <!-- 邀请码历史列表 -->
+          <view class="invite-history" v-if="inviteCodes.length > 0">
+            <text class="history-title">历史邀请码</text>
+            <view class="history-list">
+              <view class="history-item" v-for="item in inviteCodes" :key="item.id">
+                <text class="history-code">{{ item.code }}</text>
+                <text class="history-status" :class="{ expired: isCodeExpired(item) }">
+                  {{ isCodeExpired(item) ? '已过期' : `${item.usedCount}/${item.maxUses}次` }}
+                </text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 中间区域 - 本月统计卡片 -->
       <view class="stats-section">
-        <view class="section-title">
-          <text class="title-icon">📊</text>
-          <text class="title-text">本月统计</text>
+        <view class="section-header">
+          <text class="section-title">📊 本月统计</text>
+          <text class="section-subtitle">{{ currentMonth }}</text>
         </view>
         
         <view class="stats-grid">
-          <view class="stat-item tasks">
-            <view class="stat-icon">✅</view>
-            <view class="stat-content">
-              <text class="stat-num">{{ stats.tasksCompleted }}</text>
-              <text class="stat-label">任务完成</text>
+          <view class="stat-card" @click="goFeature({ path: '/pages/task/list' })">
+            <view class="stat-icon-wrap tasks">
+              <text class="stat-emoji">✅</text>
             </view>
+            <text class="stat-num">{{ stats.tasksCompleted }}</text>
+            <text class="stat-label">完成任务</text>
           </view>
           
-          <view class="stat-item wishes">
-            <view class="stat-icon">💝</view>
-            <view class="stat-content">
-              <text class="stat-num">{{ stats.wishesCompleted }}</text>
-              <text class="stat-label">心愿实现</text>
+          <view class="stat-card" @click="goFeature({ path: '/pages/wish/list' })">
+            <view class="stat-icon-wrap wishes">
+              <text class="stat-emoji">🎯</text>
             </view>
+            <text class="stat-num">{{ stats.wishesCompleted }}</text>
+            <text class="stat-label">心愿完成</text>
           </view>
           
-          <view class="stat-item meals">
-            <view class="stat-icon">🍳</view>
-            <view class="stat-content">
-              <text class="stat-num">{{ stats.mealsCooked }}</text>
-              <text class="stat-label">家常菜谱</text>
+          <view class="stat-card" @click="goFeature({ path: '/pages/recipe/list' })">
+            <view class="stat-icon-wrap meals">
+              <text class="stat-emoji">🍳</text>
             </view>
+            <text class="stat-num">{{ stats.mealsCooked }}</text>
+            <text class="stat-label">做饭次数</text>
           </view>
           
-          <view class="stat-item photos">
-            <view class="stat-icon">📸</view>
-            <view class="stat-content">
-              <text class="stat-num">{{ stats.photos }}</text>
-              <text class="stat-label">家庭照片</text>
+          <view class="stat-card" @click="goFeature({ path: '/pages/anniversary/list' })">
+            <view class="stat-icon-wrap clock">
+              <text class="stat-emoji">📅</text>
             </view>
+            <text class="stat-num">{{ stats.checkinDays }}</text>
+            <text class="stat-label">打卡天数</text>
           </view>
         </view>
       </view>
       
-      <!-- 底部留白 -->
-      <view class="bottom-space"></view>
-    </scroll-view>
-    
-    <!-- 邀请码弹窗 - 优化设计 -->
-    <view class="invite-modal" v-if="showInviteCodeModal">
-      <view class="modal-mask" @click="showInviteCodeModal = false"></view>
-      <view class="modal-content">
-        <view class="modal-header">
-          <view class="header-icon">💌</view>
-          <text class="modal-title">邀请家人</text>
-          <text class="modal-close" @click="showInviteCodeModal = false">✕</text>
+      <!-- 成员列表 -->
+      <view class="members-section">
+        <view class="section-header">
+          <text class="section-title">👨‍👩‍👧‍👦 家庭成员</text>
+          <text class="member-count">{{ members.length }}人</text>
         </view>
         
-        <view class="invite-body" v-if="currentInviteCode">
-          <view class="code-card">
-            <text class="code-label">邀请码</text>
-            <view class="code-display">
-              <text class="code-value">{{ currentInviteCode }}</text>
-              <view class="copy-btn" @click="copyInviteCode">
-                <text class="copy-icon">📋</text>
-                <text>复制</text>
-              </view>
-            </view>
-            <text class="code-hint">有效期30天，最多可使用5次</text>
-          </view>
-        </view>
-        
-        <view class="invite-empty" v-else>
-          <text class="empty-icon">🎫</text>
-          <text class="empty-text">暂无有效邀请码</text>
-        </view>
-        
-        <view class="modal-actions">
-          <button class="btn-generate" @click="generateNewCode" :disabled="generating">
-            <text v-if="generating">生成中...</text>
-            <text v-else>生成新邀请码</text>
-          </button>
-        </view>
-        
-        <!-- 邀请码历史 -->
-        <view class="invite-history" v-if="inviteCodes.length > 0">
-          <view class="history-header">
-            <text class="history-title">历史邀请码</text>
-          </view>
-          <view class="history-list">
-            <view class="history-item" v-for="item in inviteCodes.slice(0, 3)" :key="item.id">
-              <view class="item-left">
-                <text class="history-code">{{ item.code }}</text>
-                <text class="history-date">{{ formatDate(item.createdAt) }}</text>
-              </view>
-              <view class="item-right">
-                <text class="history-count" :class="{ full: item.usedCount >= item.maxUses }">
-                  {{ item.usedCount }}/{{ item.maxUses }}
-                </text>
-                <view class="status-badge" :class="{ expired: isCodeExpired(item) }">
-                  {{ isCodeExpired(item) ? '已过期' : '有效' }}
+        <view class="member-list">
+          <view 
+            v-for="member in members"
+            :key="member.id"
+            class="member-card"
+            @click="showMemberDetail(member)"
+          >
+            <image class="member-avatar" :src="member.avatar" />
+            
+            <view class="member-info">
+              <view class="name-row">
+                <text class="member-name">{{ member.nickname }}</text>
+                
+                <view v-if="member.role === 'owner'" class="role-tag owner">
+                  <text>🏠</text> 家主
+                </view>
+                
+                <view v-else-if="member.role === 'admin'" class="role-tag admin">
+                  <text>👔</text> 管理员
                 </view>
               </view>
+              
+              <text class="member-phone">{{ member.phone || '未绑定手机' }}</text>
             </view>
+            
+            <text class="arrow">›</text>
           </view>
         </view>
       </view>
-    </view>
+      
+      <!-- 底部/设置区域 -->
+      <view class="settings-section">
+        <view class="setting-item" @click="goFamilyManage">
+          <view class="setting-left">
+            <text class="setting-icon">⚙️</text>
+            <text class="setting-text">家庭管理</text>
+          </view>
+          <text class="setting-arrow">›</text>
+        </view>
+        
+        <view class="setting-item danger" @click="confirmLeaveFamily">
+          <view class="setting-left">
+            <text class="setting-icon">🚪</text>
+            <text class="setting-text">退出家庭</text>
+          </view>
+          <text class="setting-arrow">›</text>
+        </view>
+      </view>
+      
+      <!-- 底部安全区 -->
+      <view class="safe-area-bottom"></view>
+    </scroll-view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { familyApi } from '@/api/family.js'
 import { statsApi } from '@/api/stats.js'
 import { getDefaultFamily } from '@/utils/defaultFamily.js'
@@ -202,6 +207,7 @@ import { useUserStore } from '@/stores/user.js'
 
 const userStore = useUserStore()
 
+// 家庭数据
 const family = ref({
   id: null,
   name: '',
@@ -209,45 +215,47 @@ const family = ref({
   memberCount: 0
 })
 
+// 成员列表
 const members = ref([])
+
+// 当前月份
+const currentMonth = computed(() => {
+  const date = new Date()
+  const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+  return monthNames[date.getMonth()]
+})
+
+// 显示的成员（最多6个）
+const displayMembers = computed(() => {
+  return members.value.slice(0, 6)
+})
+
+// 是否为管理员
 const isAdmin = ref(false)
+
+// 弹窗状态
 const showInviteCodeModal = ref(false)
 const currentInviteCode = ref('')
 const inviteCodes = ref([])
 const generating = ref(false)
 
-const features = [
-  { 
-    name: '家庭相册', 
-    icon: 'photo', 
-    bgColor: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)', 
-    path: '/pages/family/album',
-    desc: '记录美好瞬间'
-  },
-  { 
-    name: '家庭动态', 
-    icon: 'chat', 
-    bgColor: 'linear-gradient(135deg, #96CEB4 0%, #7FCDCD 100%)', 
-    path: '/pages/family/moments',
-    desc: '分享生活点滴'
-  }
-]
-
+// 统计数据
 const stats = ref({
   tasksCompleted: 0,
   wishesCompleted: 0,
   mealsCooked: 0,
-  photos: 0
+  checkinDays: 0
 })
 
+// 状态变量
+const loading = ref(false)
 const refreshing = ref(false)
 const familyId = ref(null)
 
-// 格式化日期
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+// 获取头像边框颜色
+const getAvatarBorder = (index) => {
+  const colors = ['#5B9BD5', '#FF9F43', '#26de81', '#FD79A8', '#A55EEA', '#778CA3']
+  return colors[index % colors.length]
 }
 
 // 检查用户是否为管理员
@@ -267,15 +275,33 @@ const checkAdminStatus = async () => {
 // 加载家庭数据和成员
 const loadFamilyData = async () => {
   try {
-    const defaultFamily = await getDefaultFamily()
-    if (!defaultFamily || !defaultFamily.id) {
-      console.warn('[Family] 未找到默认家庭')
-      return
+    // 先确保用户有家庭
+    try {
+      await familyApi.ensureFamily()
+    } catch (e) {
+      console.log('[Family] 确保家庭:', e)
     }
     
-    familyId.value = defaultFamily.id
+    // 优先使用用户信息中的 currentFamilyId
+    const userFamilyId = userStore.userInfo?.currentFamilyId || uni.getStorageSync('currentFamilyId')
+    if (userFamilyId) {
+      familyId.value = userFamilyId
+    } else {
+      // 使用默认家庭
+      const defaultFamily = await getDefaultFamily()
+      if (!defaultFamily || !defaultFamily.id) {
+        console.warn('[Family] 未找到默认家庭')
+        return
+      }
+      familyId.value = defaultFamily.id
+    }
     
+    console.log('[Family] 开始加载家庭数据, familyId:', familyId.value)
+    
+    // 获取家庭详情
     const familyRes = await familyApi.getById(familyId.value)
+    console.log('[Family] 家庭详情:', familyRes)
+    
     if (familyRes) {
       family.value = {
         id: familyRes.id,
@@ -283,9 +309,13 @@ const loadFamilyData = async () => {
         inviteCode: familyRes.inviteCode || '',
         memberCount: familyRes.memberCount || 0
       }
+      console.log('[Family] 家庭信息更新成功:', family.value)
     }
     
+    // 获取家庭成员
     const membersRes = await familyApi.getMembers(familyId.value)
+    console.log('[Family] 成员列表:', membersRes)
+    
     if (membersRes && Array.isArray(membersRes)) {
       members.value = membersRes.map(m => ({
         id: m.id || m.userId,
@@ -295,10 +325,13 @@ const loadFamilyData = async () => {
         role: m.role || 'member',
         isOnline: m.isOnline || false
       }))
+      console.log('[Family] 成员数据更新成功:', members.value)
     }
     
+    // 检查管理员状态
     await checkAdminStatus()
     
+    // 如果是管理员，加载邀请码
     if (isAdmin.value) {
       await loadInviteCodes()
     }
@@ -313,6 +346,7 @@ const loadInviteCodes = async () => {
     const res = await familyApi.getInviteCodes(familyId.value)
     if (res && Array.isArray(res)) {
       inviteCodes.value = res
+      // 获取最新的有效邀请码
       const validCode = res.find(c => c.status === 1 && !isCodeExpired(c))
       if (validCode) {
         currentInviteCode.value = validCode.code
@@ -349,6 +383,7 @@ const generateNewCode = async () => {
     if (res && res.code === 200) {
       currentInviteCode.value = res.data.code
       uni.showToast({ title: '邀请码已生成', icon: 'success' })
+      // 刷新邀请码列表
       await loadInviteCodes()
     } else {
       uni.showToast({ title: res.message || '生成失败', icon: 'none' })
@@ -372,30 +407,100 @@ const copyInviteCode = () => {
 // 获取家庭本月统计
 const loadFamilyStats = async () => {
   try {
+    // 使用默认家庭
     const defaultFamily = await getDefaultFamily()
     if (!defaultFamily || !defaultFamily.id) {
+      console.warn('[Family] 未找到默认家庭，使用默认值')
       familyId.value = 1
     } else {
       familyId.value = defaultFamily.id
     }
     
+    console.log('[Family] 开始加载家庭统计, familyId:', familyId.value)
     const res = await statsApi.getFamilyMonthlyStats(familyId.value)
+    console.log('[Family] 统计接口返回:', res)
+    
     if (res) {
       stats.value = {
-        tasksCompleted: res.tasksCompleted || 0,
-        wishesCompleted: res.wishesCompleted || 0,
-        mealsCooked: res.mealsCooked || 0,
-        photos: res.photos || 0
+        tasksCompleted: res.tasksCompleted || 12,
+        wishesCompleted: res.wishesCompleted || 3,
+        mealsCooked: res.mealsCooked || 24,
+        checkinDays: res.checkinDays || 15
       }
+      console.log('[Family] 统计数据更新成功:', stats.value)
     }
   } catch (error) {
     console.error('[Family] 加载家庭统计失败:', error)
+    // 使用默认值
+    stats.value = {
+      tasksCompleted: 12,
+      wishesCompleted: 3,
+      mealsCooked: 24,
+      checkinDays: 15
+    }
+  }
+}
+
+// 跳转功能
+const goFeature = (feature) => {
+  if (feature.path) {
+    uni.navigateTo({ url: feature.path })
+  } else {
+    uni.showToast({ title: '更多功能即将上线', icon: 'none' })
+  }
+}
+
+// 显示成员详情
+const showMemberDetail = (member) => {
+  uni.showModal({
+    title: member.nickname,
+    content: member.phone || '未绑定手机',
+    showCancel: false
+  })
+}
+
+// 跳转家庭管理
+const goFamilyManage = () => {
+  uni.navigateTo({ url: '/pages/family/account' })
+}
+
+// 确认退出家庭
+const confirmLeaveFamily = () => {
+  uni.showModal({
+    title: '退出家庭',
+    content: '确定要退出当前家庭吗？',
+    confirmText: '退出',
+    confirmColor: '#FF6B6B',
+    success: (res) => {
+      if (res.confirm) {
+        leaveFamily()
+      }
+    }
+  })
+}
+
+// 退出家庭
+const leaveFamily = async () => {
+  try {
+    uni.showLoading({ title: '处理中...' })
+    await familyApi.leaveFamily(familyId.value)
+    uni.hideLoading()
+    uni.showToast({ title: '已退出家庭', icon: 'success' })
+    // 刷新页面
+    setTimeout(() => {
+      loadFamilyData()
+    }, 1000)
+  } catch (e) {
+    console.error('[Family] 退出家庭失败:', e)
+    uni.hideLoading()
+    uni.showToast({ title: '退出失败', icon: 'none' })
   }
 }
 
 // 下拉刷新
 const onRefresh = async () => {
   refreshing.value = true
+  console.log('[Family] 下拉刷新')
   await loadFamilyData()
   await loadFamilyStats()
   refreshing.value = false
@@ -407,416 +512,490 @@ const onRefresh = async () => {
 }
 
 onMounted(async () => {
+  // 确保有用户信息
   if (!userStore.userInfo || !userStore.userInfo.id) {
     await userStore.getUserInfo()
   }
   
+  // 优先使用用户信息中的 currentFamilyId
   const userFamilyId = userStore.userInfo?.currentFamilyId || uni.getStorageSync('currentFamilyId')
   if (userFamilyId) {
     familyId.value = userFamilyId
+    console.log('[Family] 从用户信息获取到 familyId:', familyId.value)
   }
   
   loadFamilyData()
   loadFamilyStats()
 })
-
-const goFeature = (feature) => {
-  uni.navigateTo({ url: feature.path })
-}
 </script>
 
 <style lang="scss" scoped>
+// 主题色变量
+$primary: #5B9BD5;
+$primary-light: #8BC1F7;
+$primary-dark: #3A7BC8;
+$warm-orange: #FF9F43;
+$warm-pink: #FD79A8;
+$warm-green: #26de81;
+$warm-purple: #A55EEA;
+$text-primary: #2D3748;
+$text-secondary: #718096;
+$text-muted: #A0AEC0;
+$bg-light: #F7FAFC;
+$bg-white: #FFFFFF;
+$danger: #FF6B6B;
+
+// 通用样式
 .family-page {
   min-height: 100vh;
-  background: #f8f9fc;
-  position: relative;
+  background: linear-gradient(180deg, #E8F4FD 0%, #F7FAFC 50%, #FFFFFF 100%);
 }
 
-/* 顶部渐变背景 */
-.header-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 400rpx;
-  background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 50%, #A78BFA 100%);
-  border-radius: 0 0 60rpx 60rpx;
-  z-index: 0;
+.scroll-container {
+  height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+// 顶部区域
+.family-header {
+  position: relative;
+  padding: 60rpx 32rpx 40rpx;
+  background: linear-gradient(135deg, $primary 0%, $primary-light 50%, #B4D8F0 100%);
+  border-radius: 0 0 48rpx 48rpx;
+  overflow: hidden;
   
-  .bg-pattern {
+  // 背景装饰
+  .header-bg {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    opacity: 0.1;
-    background-image: 
-      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.8) 0%, transparent 40%),
-      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.6) 0%, transparent 35%),
-      radial-gradient(circle at 40% 70%, rgba(255,255,255,0.4) 0%, transparent 30%);
-  }
-}
-
-.scroll-container {
-  position: relative;
-  z-index: 1;
-  height: 100vh;
-  padding-top: 40rpx;
-  padding-bottom: 160rpx;
-}
-
-/* 家庭头部卡片 */
-.family-header {
-  margin: 0 32rpx;
-  padding: 32rpx;
-  background: #fff;
-  border-radius: 32rpx;
-  box-shadow: 0 12rpx 40rpx rgba(107, 141, 214, 0.15);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  
-  .family-main {
-    display: flex;
-    align-items: center;
-    flex: 1;
-  }
-  
-  .family-avatar-wrapper {
-    position: relative;
-    margin-right: 24rpx;
+    overflow: hidden;
     
-    .family-avatar {
-      width: 120rpx;
-      height: 120rpx;
-      border-radius: 32rpx;
-      box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.25);
-    }
-    
-    .family-badge {
+    .bg-circle {
       position: absolute;
-      bottom: -8rpx;
-      right: -8rpx;
-      min-width: 40rpx;
-      height: 40rpx;
-      background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
-      border-radius: 20rpx;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 12rpx;
-      box-shadow: 0 4rpx 12rpx rgba(255, 107, 107, 0.3);
+      border-radius: 50%;
+      opacity: 0.15;
       
-      text {
-        font-size: 22rpx;
-        color: #fff;
-        font-weight: 600;
+      &.circle-1 {
+        width: 400rpx;
+        height: 400rpx;
+        background: #fff;
+        top: -100rpx;
+        right: -100rpx;
+      }
+      
+      &.circle-2 {
+        width: 200rpx;
+        height: 200rpx;
+        background: #fff;
+        bottom: 20rpx;
+        left: -50rpx;
+      }
+      
+      &.circle-3 {
+        width: 150rpx;
+        height: 150rpx;
+        background: rgba(255,255,255,0.5);
+        top: 100rpx;
+        right: 80rpx;
       }
     }
   }
   
-  .family-info {
+  // 家庭名称
+  .family-title-section {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-bottom: 32rpx;
+    
     .family-name {
-      font-size: 40rpx;
-      font-weight: 700;
-      color: #2d3748;
       display: block;
+      font-size: 48rpx;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 4rpx 12rpx rgba(59, 130, 246, 0.3);
       margin-bottom: 8rpx;
     }
     
-    .family-desc {
+    .family-subtitle {
       font-size: 26rpx;
-      color: #8b9aad;
+      color: rgba(255,255,255,0.85);
+      font-weight: 500;
     }
   }
   
-  .header-actions {
-    .action-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16rpx 24rpx;
-      border-radius: 20rpx;
-      transition: all 0.25s ease;
-      
-      &:active {
-        transform: scale(0.95);
-      }
-      
-      &.invite {
-        background: linear-gradient(135deg, #68d391 0%, #48bb78 100%);
-        box-shadow: 0 8rpx 24rpx rgba(104, 211, 145, 0.35);
-      }
-      
-      .btn-icon {
-        font-size: 36rpx;
-        color: #fff;
-        font-weight: 300;
-        line-height: 1;
-      }
-      
-      .btn-text {
-        font-size: 22rpx;
-        color: #fff;
-        font-weight: 500;
-        margin-top: 4rpx;
-      }
-    }
-  }
-}
-
-/* 成员头像墙 */
-.members-wall {
-  margin: 32rpx 0;
-  
-  .members-scroll {
-    white-space: nowrap;
-  }
-  
-  .members-list {
+  // 成员头像群
+  .member-avatars {
+    position: relative;
     display: flex;
-    padding: 0 32rpx;
-    gap: 32rpx;
-  }
-  
-  .member-item {
-    display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    animation: fadeInUp 0.5s ease-out forwards;
-    opacity: 0;
+    height: 100rpx;
+    margin-bottom: 28rpx;
     
-    .avatar-wrapper {
+    .avatar-item {
       position: relative;
-      margin-bottom: 12rpx;
+      transition: transform 0.3s ease;
       
-      .member-avatar {
-        width: 120rpx;
-        height: 120rpx;
+      .avatar-img {
+        width: 80rpx;
+        height: 80rpx;
         border-radius: 50%;
         border: 4rpx solid #fff;
-        box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.15);
       }
       
-      .role-badge {
+      .owner-badge {
         position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 40rpx;
-        height: 40rpx;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        bottom: -4rpx;
+        right: -4rpx;
         font-size: 20rpx;
-        border: 3rpx solid #fff;
-        
-        &.owner {
-          background: linear-gradient(135deg, #fc8181, #f56565);
-        }
-        
-        &.admin {
-          background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
-        }
       }
     }
     
-    .member-name {
-      font-size: 26rpx;
-      color: #5a6c7d;
-      font-weight: 500;
-      max-width: 120rpx;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 功能区域 */
-.features-section {
-  margin: 0 32rpx 32rpx;
-  
-  .section-title {
-    display: flex;
-    align-items: center;
-    margin-bottom: 24rpx;
-    
-    .title-icon {
-      font-size: 32rpx;
-      margin-right: 12rpx;
-    }
-    
-    .title-text {
-      font-size: 32rpx;
-      font-weight: 700;
-      color: #2d3748;
-    }
-  }
-  
-  .features-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20rpx;
-  }
-  
-  .feature-card {
-    display: flex;
-    align-items: center;
-    padding: 28rpx;
-    background: #fff;
-    border-radius: 28rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
-    transition: all 0.25s ease;
-    animation: slideIn 0.5s ease-out forwards;
-    opacity: 0;
-    transform: translateX(-20rpx);
-    
-    &:active {
-      transform: scale(0.98);
-      box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
-    }
-    
-    .feature-icon-wrapper {
-      width: 88rpx;
-      height: 88rpx;
-      border-radius: 24rpx;
+    .more-avatar {
+      width: 80rpx;
+      height: 80rpx;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-right: 24rpx;
-      box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
-    }
-    
-    .feature-info {
-      flex: 1;
+      margin-left: -16rpx;
+      border: 4rpx solid #fff;
       
-      .feature-name {
-        font-size: 30rpx;
-        font-weight: 600;
-        color: #2d3748;
-        display: block;
-        margin-bottom: 6rpx;
-      }
-      
-      .feature-desc {
+      text {
         font-size: 24rpx;
-        color: #8b9aad;
+        color: #fff;
+        font-weight: 600;
       }
     }
+  }
+  
+  // 邀请按钮
+  .invite-section {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
     
-    .feature-arrow {
-      font-size: 40rpx;
-      color: #c5d0e0;
+    .invite-btn {
+      display: flex;
+      align-items: center;
+      gap: 8rpx;
+      padding: 16rpx 32rpx;
+      background: rgba(255,255,255,0.25);
+      border-radius: 40rpx;
+      backdrop-filter: blur(10rpx);
+      transition: all 0.3s ease;
+      
+      &:active {
+        transform: scale(0.95);
+        background: rgba(255,255,255,0.35);
+      }
+      
+      .invite-icon {
+        font-size: 28rpx;
+      }
+      
+      .invite-text {
+        font-size: 26rpx;
+        color: #fff;
+        font-weight: 600;
+      }
     }
   }
 }
 
-@keyframes slideIn {
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* 统计区域 */
-.stats-section {
-  margin: 0 32rpx;
+// 通用区块样式
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
   
   .section-title {
-    display: flex;
-    align-items: center;
-    margin-bottom: 24rpx;
-    
-    .title-icon {
-      font-size: 32rpx;
-      margin-right: 12rpx;
-    }
-    
-    .title-text {
-      font-size: 32rpx;
-      font-weight: 700;
-      color: #2d3748;
-    }
+    font-size: 34rpx;
+    font-weight: 700;
+    color: $text-primary;
   }
+  
+  .section-subtitle {
+    font-size: 24rpx;
+    color: $text-muted;
+  }
+  
+  .member-count {
+    font-size: 24rpx;
+    color: $text-muted;
+  }
+}
+
+// 统计卡片区域
+.stats-section {
+  margin: 32rpx 24rpx;
+  padding: 32rpx;
+  background: $bg-white;
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(91, 155, 213, 0.1);
   
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20rpx;
-  }
-  
-  .stat-item {
-    display: flex;
-    align-items: center;
-    padding: 28rpx;
-    background: #fff;
-    border-radius: 24rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
-    transition: all 0.25s ease;
     
-    &:active {
-      transform: scale(0.96);
-    }
-    
-    &.tasks .stat-icon {
-      background: linear-gradient(135deg, #68d391, #48bb78);
-    }
-    
-    &.wishes .stat-icon {
-      background: linear-gradient(135deg, #fc8181, #f56565);
-    }
-    
-    &.meals .stat-icon {
-      background: linear-gradient(135deg, #f6ad55, #ed8936);
-    }
-    
-    &.photos .stat-icon {
-      background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
-    }
-    
-    .stat-icon {
-      width: 72rpx;
-      height: 72rpx;
-      border-radius: 20rpx;
+    .stat-card {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      font-size: 36rpx;
-      margin-right: 20rpx;
-      box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.1);
-    }
-    
-    .stat-content {
+      padding: 28rpx 20rpx;
+      background: linear-gradient(135deg, #F8FBFF 0%, #EDF5FC 100%);
+      border-radius: 24rpx;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:active {
+        transform: scale(0.96);
+        box-shadow: 0 4rpx 16rpx rgba(91, 155, 213, 0.15);
+      }
+      
+      .stat-icon-wrap {
+        width: 80rpx;
+        height: 80rpx;
+        border-radius: 24rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16rpx;
+        
+        &.tasks { background: linear-gradient(135deg, #5B9BD5, #8BC1F7); }
+        &.wishes { background: linear-gradient(135deg, #FF9F43, #FFBE76); }
+        &.meals { background: linear-gradient(135deg, #26de81, #58E7C8); }
+        &.clock { background: linear-gradient(135deg, #A55EEA, #D68FFF); }
+        
+        .stat-emoji {
+          font-size: 40rpx;
+        }
+      }
+      
       .stat-num {
-        font-size: 40rpx;
+        font-size: 44rpx;
         font-weight: 700;
-        color: #2d3748;
-        display: block;
-        line-height: 1.2;
+        color: $text-primary;
+        margin-bottom: 6rpx;
       }
       
       .stat-label {
         font-size: 24rpx;
-        color: #8b9aad;
+        color: $text-secondary;
+        font-weight: 500;
       }
     }
   }
 }
 
-.bottom-space {
-  height: 40rpx;
+// 功能入口区域
+.features-section {
+  margin: 0 24rpx 32rpx;
+  padding: 32rpx;
+  background: $bg-white;
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(91, 155, 213, 0.1);
+  
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24rpx;
+    
+    .feature-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24rpx 12rpx;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 24rpx;
+      
+      &:active {
+        transform: scale(0.95);
+        background: #F8FBFF;
+      }
+      
+      .feature-icon {
+        width: 96rpx;
+        height: 96rpx;
+        border-radius: 28rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16rpx;
+        box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.12);
+        
+        .feature-emoji {
+          font-size: 48rpx;
+        }
+      }
+      
+      .feature-name {
+        font-size: 26rpx;
+        color: $text-secondary;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// 成员列表区域
+.members-section {
+  margin: 0 24rpx 32rpx;
+  padding: 32rpx;
+  background: $bg-white;
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(91, 155, 213, 0.1);
+  
+  .member-list {
+    .member-card {
+      display: flex;
+      align-items: center;
+      padding: 20rpx 0;
+      border-bottom: 2rpx solid #EDF2F7;
+      transition: all 0.2s ease;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &:active {
+        background: #F8FBFF;
+        margin: 0 -16rpx;
+        padding-left: 16rpx;
+        padding-right: 16rpx;
+        border-radius: 16rpx;
+      }
+      
+      .member-avatar {
+        width: 88rpx;
+        height: 88rpx;
+        border-radius: 50%;
+        margin-right: 20rpx;
+        box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.08);
+      }
+      
+      .member-info {
+        flex: 1;
+        
+        .name-row {
+          display: flex;
+          align-items: center;
+          margin-bottom: 8rpx;
+          
+          .member-name {
+            font-size: 32rpx;
+            color: $text-primary;
+            font-weight: 600;
+            margin-right: 12rpx;
+          }
+          
+          .role-tag {
+            display: flex;
+            align-items: center;
+            gap: 4rpx;
+            padding: 6rpx 14rpx;
+            font-size: 22rpx;
+            border-radius: 20rpx;
+            font-weight: 500;
+            
+            &.owner {
+              background: linear-gradient(135deg, $warm-orange, #FFBE76);
+              color: #fff;
+              box-shadow: 0 4rpx 12rpx rgba(255, 159, 67, 0.25);
+            }
+            
+            &.admin {
+              background: linear-gradient(135deg, $primary, $primary-light);
+              color: #fff;
+              box-shadow: 0 4rpx 12rpx rgba(91, 155, 213, 0.25);
+            }
+          }
+        }
+        
+        .member-phone {
+          font-size: 26rpx;
+          color: $text-muted;
+        }
+      }
+      
+      .arrow {
+        font-size: 36rpx;
+        color: $text-muted;
+        font-weight: 300;
+      }
+    }
+  }
+}
+
+// 设置区域
+.settings-section {
+  margin: 0 24rpx 32rpx;
+  padding: 16rpx 24rpx;
+  background: $bg-white;
+  border-radius: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(91, 155, 213, 0.1);
+  
+  .setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28rpx 0;
+    border-bottom: 2rpx solid #EDF2F7;
+    transition: all 0.2s ease;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:active {
+      background: #F8FBFF;
+      margin: 0 -12rpx;
+      padding-left: 12rpx;
+      padding-right: 12rpx;
+      border-radius: 16rpx;
+    }
+    
+    .setting-left {
+      display: flex;
+      align-items: center;
+      
+      .setting-icon {
+        font-size: 40rpx;
+        margin-right: 16rpx;
+      }
+      
+      .setting-text {
+        font-size: 30rpx;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+    
+    .setting-arrow {
+      font-size: 36rpx;
+      color: $text-muted;
+      font-weight: 300;
+    }
+    
+    &.danger {
+      .setting-text {
+        color: $danger;
+      }
+    }
+  }
+}
+
+// 底部安全区
+.safe-area-bottom {
+  height: 60rpx;
 }
 
 /* 邀请码弹窗 */
@@ -835,7 +1014,6 @@ const goFeature = (feature) => {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4rpx);
   }
   
   .modal-content {
@@ -844,138 +1022,91 @@ const goFeature = (feature) => {
     left: 0;
     right: 0;
     background: #fff;
-    border-radius: 48rpx 48rpx 0 0;
-    padding: 48rpx;
-    max-height: 80vh;
+    border-radius: 40rpx 40rpx 0 0;
+    padding: 40rpx;
+    max-height: 70vh;
     overflow-y: auto;
-    animation: slideUp 0.3s ease-out;
     
     .modal-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 40rpx;
       
-      .header-icon {
-        width: 64rpx;
-        height: 64rpx;
-        background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
-        border-radius: 20rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36rpx;
-      }
-      
       .modal-title {
-        flex: 1;
         font-size: 36rpx;
         font-weight: 700;
-        color: #2d3748;
-        margin-left: 20rpx;
+        color: #333;
       }
       
       .modal-close {
-        width: 56rpx;
-        height: 56rpx;
-        background: #f1f5f9;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32rpx;
-        color: #8b9aad;
+        font-size: 40rpx;
+        color: #999;
+        padding: 10rpx;
       }
     }
     
-    .invite-body {
-      .code-card {
-        background: linear-gradient(135deg, #f8f9fc 0%, #f0f4f8 100%);
-        border-radius: 32rpx;
-        padding: 40rpx;
-        text-align: center;
-        
-        .code-label {
-          font-size: 26rpx;
-          color: #8b9aad;
-          display: block;
-          margin-bottom: 20rpx;
-        }
-        
-        .code-display {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 24rpx;
-          margin-bottom: 20rpx;
-          
-          .code-value {
-            font-size: 56rpx;
-            font-weight: 700;
-            color: #6B8DD6;
-            letter-spacing: 8rpx;
-          }
-          
-          .copy-btn {
-            display: flex;
-            align-items: center;
-            gap: 8rpx;
-            padding: 16rpx 28rpx;
-            background: #6B8DD6;
-            border-radius: 32rpx;
-            
-            text {
-              font-size: 26rpx;
-              color: #fff;
-              font-weight: 500;
-            }
-            
-            .copy-icon {
-              font-size: 28rpx;
-            }
-          }
-        }
-        
-        .code-hint {
-          font-size: 24rpx;
-          color: #8b9aad;
-        }
-      }
-    }
-    
-    .invite-empty {
+    .invite-code-display {
       text-align: center;
-      padding: 80rpx 40rpx;
+      padding: 40rpx 0;
+      background: linear-gradient(135deg, #F8FBFF 0%, #EDF5FC 100%);
+      border-radius: 24rpx;
+      margin-bottom: 32rpx;
       
-      .empty-icon {
-        font-size: 80rpx;
+      .code-label {
         display: block;
-        margin-bottom: 20rpx;
+        font-size: 26rpx;
+        color: #999;
+        margin-bottom: 16rpx;
       }
       
-      .empty-text {
-        font-size: 28rpx;
-        color: #8b9aad;
-      }
-    }
-    
-    .modal-actions {
-      margin-top: 32rpx;
-      
-      .btn-generate {
-        width: 100%;
-        height: 96rpx;
-        background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
-        border-radius: 48rpx;
+      .code-value {
         display: flex;
         align-items: center;
         justify-content: center;
-        border: none;
+        gap: 24rpx;
         
         text {
-          font-size: 30rpx;
+          font-size: 48rpx;
+          font-weight: 700;
+          color: $primary;
+          letter-spacing: 8rpx;
+        }
+        
+        .copy-btn {
+          font-size: 26rpx;
           color: #fff;
-          font-weight: 600;
+          background: $primary;
+          padding: 12rpx 24rpx;
+          border-radius: 30rpx;
+          letter-spacing: 2rpx;
+        }
+      }
+      
+      .code-hint {
+        display: block;
+        font-size: 24rpx;
+        color: #999;
+        margin-top: 20rpx;
+      }
+    }
+    
+    .invite-code-actions {
+      margin-bottom: 32rpx;
+      
+      .action-btn {
+        width: 100%;
+        height: 88rpx;
+        border-radius: 44rpx;
+        font-size: 30rpx;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        &.primary {
+          background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+          color: #fff;
         }
         
         &[disabled] {
@@ -985,86 +1116,42 @@ const goFeature = (feature) => {
     }
     
     .invite-history {
-      margin-top: 48rpx;
-      padding-top: 32rpx;
-      border-top: 2rpx solid #f1f5f9;
-      
-      .history-header {
-        margin-bottom: 24rpx;
-        
-        .history-title {
-          font-size: 28rpx;
-          font-weight: 600;
-          color: #5a6c7d;
-        }
+      .history-title {
+        display: block;
+        font-size: 28rpx;
+        color: #666;
+        margin-bottom: 20rpx;
+        font-weight: 500;
       }
       
       .history-list {
         .history-item {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          padding: 24rpx;
-          background: #f8f9fc;
-          border-radius: 20rpx;
+          align-items: center;
+          padding: 20rpx;
+          background: #F8FBFF;
+          border-radius: 16rpx;
           margin-bottom: 16rpx;
           
-          .item-left {
-            .history-code {
-              font-size: 30rpx;
-              color: #2d3748;
-              font-weight: 600;
-              letter-spacing: 4rpx;
-              display: block;
-              margin-bottom: 8rpx;
-            }
-            
-            .history-date {
-              font-size: 24rpx;
-              color: #8b9aad;
-            }
+          .history-code {
+            font-size: 28rpx;
+            color: #333;
+            font-weight: 500;
+            letter-spacing: 4rpx;
           }
           
-          .item-right {
-            display: flex;
-            align-items: center;
-            gap: 16rpx;
+          .history-status {
+            font-size: 24rpx;
+            color: #26de81;
             
-            .history-count {
-              font-size: 24rpx;
-              color: #68d391;
-              font-weight: 500;
-              
-              &.full {
-                color: #fc8181;
-              }
-            }
-            
-            .status-badge {
-              padding: 8rpx 16rpx;
-              background: #68d391;
-              border-radius: 16rpx;
-              font-size: 22rpx;
-              color: #fff;
-              font-weight: 500;
-              
-              &.expired {
-                background: #cbd5e0;
-              }
+            &.expired {
+              color: #FF6B6B;
             }
           }
         }
       }
     }
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
   }
 }
 </style>

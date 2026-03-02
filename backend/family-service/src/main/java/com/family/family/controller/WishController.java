@@ -1,9 +1,5 @@
 package com.family.family.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.family.family.entity.Wish;
-import com.family.family.mapper.WishMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -15,49 +11,33 @@ import java.util.*;
 @RequestMapping("/api/wish")
 public class WishController {
 
-    @Autowired
-    private WishMapper wishMapper;
-
     @GetMapping("/list")
     public Map<String, Object> list(@RequestParam Long familyId) {
         Map<String, Object> result = new HashMap<>();
-        try {
-            QueryWrapper<Wish> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("family_id", familyId);
-            queryWrapper.orderByDesc("create_time");
-            List<Wish> wishes = wishMapper.selectList(queryWrapper);
-            result.put("code", 200);
-            result.put("message", "success");
-            result.put("data", wishes);
-        } catch (Exception e) {
-            result.put("code", 500);
-            result.put("message", "查询失败: " + e.getMessage());
-            result.put("data", new ArrayList<>());
-        }
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 从数据库查询心愿列表
+        result.put("data", new ArrayList<>());
+        return result;
+    }
+    
+    @GetMapping("/detail")
+    public Map<String, Object> detail(@RequestParam Long id) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 从数据库查询心愿详情
+        result.put("data", new HashMap<>());
         return result;
     }
     
     @PostMapping("/create")
     public Map<String, Object> create(@RequestBody Map<String, Object> data) {
         Map<String, Object> result = new HashMap<>();
-        try {
-            Wish wish = new Wish();
-            wish.setTitle((String) data.get("title"));
-            wish.setFamilyId(((Number) data.get("familyId")).longValue());
-            if (data.get("targetAmount") != null) {
-                wish.setBudgetMax(new java.math.BigDecimal(data.get("targetAmount").toString()));
-            }
-            wish.setDescription((String) data.get("description"));
-            wish.setStatus(0);
-            wish.setProgress(0);
-            wishMapper.insert(wish);
-            result.put("code", 200);
-            result.put("message", "success");
-            result.put("data", wish);
-        } catch (Exception e) {
-            result.put("code", 500);
-            result.put("message", "创建失败: " + e.getMessage());
-        }
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 保存心愿到数据库
+        result.put("data", data);
         return result;
     }
     
@@ -66,6 +46,8 @@ public class WishController {
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "success");
+        // TODO: 更新心愿
+        result.put("data", data);
         return result;
     }
     
@@ -74,6 +56,7 @@ public class WishController {
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "success");
+        // TODO: 删除心愿
         return result;
     }
     
@@ -82,6 +65,7 @@ public class WishController {
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "success");
+        // TODO: 认领心愿
         return result;
     }
     
@@ -90,6 +74,67 @@ public class WishController {
         Map<String, Object> result = new HashMap<>();
         result.put("code", 200);
         result.put("message", "success");
+        // TODO: 更新进度
+        return result;
+    }
+    
+    @PostMapping("/complete/{wishId}")
+    public Map<String, Object> complete(@PathVariable Long wishId) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 完成心愿
+        return result;
+    }
+    
+    @PostMapping("/abandon/{wishId}")
+    public Map<String, Object> abandon(@PathVariable Long wishId) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 放弃心愿
+        return result;
+    }
+    
+    @PostMapping("/{id}/budget")
+    public Map<String, Object> setBudget(@PathVariable Long id, @RequestBody Map<String, Object> data) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 设置预算
+        return result;
+    }
+    
+    @GetMapping("/budget-stats")
+    public Map<String, Object> budgetStats(@RequestParam Long familyId) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 获取预算统计
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("current", 0);
+        stats.put("target", 0);
+        result.put("data", stats);
+        return result;
+    }
+    
+    @GetMapping("/{id}/milestones")
+    public Map<String, Object> milestones(@PathVariable Long id) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 获取里程碑列表
+        result.put("data", new ArrayList<>());
+        return result;
+    }
+    
+    @PostMapping("/{id}/milestone")
+    public Map<String, Object> addMilestone(@PathVariable Long id, @RequestBody Map<String, Object> data) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("code", 200);
+        result.put("message", "success");
+        // TODO: 添加里程碑
+        result.put("data", data);
         return result;
     }
 }

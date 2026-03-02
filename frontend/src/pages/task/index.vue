@@ -18,7 +18,7 @@
         @click="switchCategory(index)"
       >
         <text>{{ cat.name }}</text>
-        <text v-if="cat.count > 0" class="tab-badge">{{ cat.count }}</text>
+        <text class="category-count">({{ categoryCounts[index] || 0 }})</text>
       </view>
     </scroll-view>
     
@@ -32,11 +32,7 @@
         @click="viewTask(task)"
       >
         <view class="task-header">
-          <view 
-            class="checkbox" 
-            :class="{ checked: task.status === 2 }" 
-            @tap.stop="toggleTask(task)"
-          ></view>
+          <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></view>
           <view class="task-title">{{ task.title }}</view>
           <view class="task-priority" :class="'priority-' + task.priority">{{ priorityText(task.priority) }}</view>
         </view>
@@ -44,6 +40,40 @@
         <view class="task-info">
           <text class="task-time">⏰ {{ task.dueTime }}</text>
           <text class="task-assignee">👤 {{ task.assigneeName || '未指派' }}</text>
+        </view>
+        
+        <!-- 子任务进度 -->
+        <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
+          <view class="progress-bar">
+            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
+          </view>
+          <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
+        </view>
+        
+        <!-- 展开的子任务列表 -->
+        <view v-if="task.showSubtasks && task.subtasks" class="subtask-list">
+          <view 
+            v-for="(sub, sidx) in task.subtasks" 
+            :key="sub.id || sidx"
+            class="subtask-item"
+            @click.stop="toggleSubtask(task, sub)"
+          >
+            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
+            <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
+          </view>
+          <view class="add-subtask" @click.stop="addSubtask(task)">
+            <text>+ 添加子任务</text>
+          </view>
+        </view>
+        
+        <view class="task-footer">
+          <view class="task-tags">
+            <view class="task-tag">{{ task.categoryName }}</view>
+          </view>
+          <!-- 展开按钮 -->
+          <view v-if="task.subtasks && task.subtasks.length > 0" class="expand-btn" @click.stop="task.showSubtasks = !task.showSubtasks">
+            <text>{{ task.showSubtasks ? '收起' : '展开' }}</text>
+          </view>
         </view>
       </view>
       
@@ -62,50 +92,32 @@
         </view>
         
         <view v-if="selectedTask" class="task-detail">
-          <!-- 状态标签 -->
-          <view class="detail-status" :class="selectedTask.status === 2 ? 'completed' : 'pending'">
-            {{ selectedTask.status === 2 ? '✅ 已完成' : '📋 待处理' }}
-          </view>
-          
-          <!-- 任务标题 -->
           <view class="detail-title">{{ selectedTask.title }}</view>
-          
-          <!-- 任务信息卡片 -->
-          <view class="detail-cards">
-            <view class="info-card">
-              <text class="card-icon">⏰</text>
-              <view class="card-content">
-                <text class="card-label">截止时间</text>
-                <text class="card-value">{{ selectedTask.dueTime || '未设置' }}</text>
-              </view>
-            </view>
-            
-            <view class="info-card">
-              <text class="card-icon">👤</text>
-              <view class="card-content">
-                <text class="card-label">指派人</text>
-                <text class="card-value">{{ selectedTask.assigneeName || '未指派' }}</text>
-              </view>
-            </view>
-            
-            <view class="info-card">
-              <text class="card-icon">⚡</text>
-              <view class="card-content">
-                <text class="card-label">优先级</text>
-                <text class="card-value priority-text" :class="'priority-' + selectedTask.priority">
-                  {{ ['普通', '重要', '紧急'][selectedTask.priority] || '普通' }}
-                </text>
-              </view>
-            </view>
+          <view class="detail-info">
+            <text>⏰ {{ selectedTask.dueTime }}</text>
+            <text>👤 {{ selectedTask.assigneeName || '未指派' }}</text>
           </view>
           
-          <!-- 操作按钮 -->
-          <view class="detail-actions">
-            <view class="action-btn complete-btn" @tap="toggleTask(selectedTask)">
-              {{ selectedTask.status === 2 ? '🔄 恢复任务' : '✅ 完成任务' }}
+          <!-- 子任务管理 -->
+          <view class="subtask-section">
+            <view class="section-header">
+              <text>子任务 ({{ subtaskCompleted(selectedTask) }}/{{ selectedTask.subtasks?.length || 0 }})</text>
+              <text class="add-btn" @click="addSubtask(selectedTask)">+ 添加</text>
             </view>
-            <view class="action-btn delete-btn" @click="deleteTask(selectedTask)">
-              🗑️ 删除
+            
+            <view v-if="selectedTask.subtasks && selectedTask.subtasks.length > 0" class="subtask-list-detail">
+              <view 
+                v-for="(sub, idx) in selectedTask.subtasks" 
+                :key="sub.id || idx"
+                class="subtask-item-detail"
+              >
+                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></view>
+                <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
+                <text class="delete-btn" @click="deleteSubtask(selectedTask, sub, idx)">🗑️</text>
+              </view>
+            </view>
+            <view v-else class="no-subtask">
+              <text>暂无子任务，点击添加</text>
             </view>
           </view>
         </view>
@@ -180,7 +192,7 @@
               <view v-for="hour in 24" :key="hour-1" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
             </picker-view-column>
             <picker-view-column>
-              <view v-for="minute in minutes" :key="minute" class="picker-item">{{ String(minute).padStart(2, '0') }}分</view>
+              <view v-for="minute in 60" :key="minute-1" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
             </picker-view-column>
           </picker-view>
         </view>
@@ -213,7 +225,6 @@
                 :src="member.avatar || '/static/avatar-default.png'" 
                 mode="aspectFill" 
               />
-              <!-- 优先显示昵称 -->
               <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
             </view>
           </view>
@@ -265,25 +276,16 @@ const getTodayString = () => {
 }
 
 const categories = ref([
-  { name: '待办', id: 1, status: 0, count: 0 },
-  { name: '完成', id: 3, status: 2, count: 0 }
+  { name: '待办', id: 1, status: 0 },
+  { name: '完成', id: 3, status: 2 }
 ])
 
 // 计算各分类数量
-const updateCategoryCounts = async () => {
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    // 分别查询待办和已完成的任务数量
-    const [todoRes, doneRes] = await Promise.all([
-      taskApi.getList(familyId, 0),
-      taskApi.getList(familyId, 2)
-    ])
-    categories.value[0].count = (todoRes || []).length
-    categories.value[1].count = (doneRes || []).length
-  } catch (e) {
-    console.error('更新分类数量失败', e)
-  }
-}
+const categoryCounts = computed(() => {
+  const todoCount = tasks.value.filter(t => t.status === 0 || t.status === 1).length
+  const doneCount = tasks.value.filter(t => t.status === 2).length
+  return [todoCount, doneCount]
+})
 
 const priorities = ['普通', '重要', '紧急']
 
@@ -315,21 +317,10 @@ const yearRange = computed(() => {
   }
   return years
 })
-
-// 计算每月天数
 const daysInMonth = computed(() => {
   const year = yearRange.value[pickerValue.value[0]] || currentYear
   const month = (pickerValue.value[1] || 0) + 1
   return new Date(year, month, 0).getDate()
-})
-
-// 分钟选项（5分钟步长）
-const minutes = computed(() => {
-  const mins = []
-  for (let i = 0; i < 60; i += 5) {
-    mins.push(i)
-  }
-  return mins
 })
 
 // 加载任务列表
@@ -345,18 +336,12 @@ const loadTasks = async (force = false) => {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     // 先加载家庭成员
     await loadFamilyMembers()
-    // 获取当前分类的状态
-    const status = categories.value[currentCategory.value]?.status
-    // 根据状态查询任务
-    const res = await taskApi.getList(familyId, status)
-    // 把 assigneeId 转换为 assigneeName - 使用服务器返回的nickname
-    tasks.value = (res.list || []).map(task => ({
+    const res = await taskApi.getList(familyId)
+    // 把 assigneeId 转换为 assigneeName
+    tasks.value = (res || []).map(task => ({
       ...task,
-      assigneeName: task.assigneeNickname || getMemberName(task.assigneeId) || '未指派'
+      assigneeName: getMemberName(task.assigneeId) || '未指派'
     }))
-    // 更新分类数量
-    categories.value[0].count = res.todoCount || 0
-    categories.value[1].count = res.doneCount || 0
   } catch (e) {
     console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
@@ -391,33 +376,10 @@ onMounted(() => {
 
 // 页面显示时自动刷新数据
 onShow(() => {
-  loadTasks(true).then(() => {
-    // 延迟一点执行，确保任务加载完成
-    setTimeout(() => {
-      // 检查是否需要打开添加弹窗（从首页跳转过来）
-      const openAddModal = uni.getStorageSync('taskOpenAddModal')
-      if (openAddModal) {
-        uni.removeStorageSync('taskOpenAddModal')
-        showAddModal()
-        return
-      }
-      
-      // 检查是否有传入的任务ID（优先从本地存储读取）
-      let taskId = uni.getStorageSync('pendingTaskDetailId')
-      uni.removeStorageSync('pendingTaskDetailId')
-      
-      if (taskId) {
-        const task = tasks.value.find(t => t.id === parseInt(taskId))
-        if (task) {
-          selectedTask.value = task
-          showDetailModal.value = true
-        }
-      }
-    }, 100)
-  })
+  loadTasks(true)
 })
 
-// 获取成员名称 - 显示昵称
+// 获取成员名称
 const getMemberName = (userId) => {
   if (!userId) return '未指派'
   if (!familyMembers.value || !Array.isArray(familyMembers.value)) return '家人'
@@ -433,18 +395,18 @@ const newTask = ref({
   assigneeId: null
 })
 
-// 日期时间选择器 - 打开 picker 并初始化为当前时间
+// 日期时间选择器
 const showDateTimePicker = () => {
-  const now = new Date()
-  const yearIndex = yearRange.value.indexOf(now.getFullYear())
-  const monthIndex = now.getMonth()
-  const dayIndex = now.getDate() - 1
-  const hourIndex = now.getHours()
-  // 找到最近的5分钟刻度
-  const minuteIndex = Math.floor(now.getMinutes() / 5)
-  
-  pickerValue.value = [yearIndex >= 0 ? yearIndex : 1, monthIndex, dayIndex, hourIndex, minuteIndex]
-  showTimePicker.value = true
+  // 使用简单的提示，实际可以扩展
+  uni.showActionSheet({
+    itemList: ['今天 15:00', '今天 18:00', '今天 21:00', '明天 09:00'],
+    success: (res) => {
+      const times = ['15:00', '18:00', '21:00', '09:00']
+      const today = getTodayString()
+      newTask.value.dueDate = today
+      newTask.value.dueTime = times[res.tapIndex]
+    }
+  })
 }
 
 const closePicker = () => {
@@ -460,7 +422,7 @@ const confirmPicker = () => {
   const month = String(pickerValue.value[1] + 1).padStart(2, '0')
   const day = String(pickerValue.value[2] + 1).padStart(2, '0')
   const hour = String(pickerValue.value[3]).padStart(2, '0')
-  const minute = String(minutes.value[pickerValue.value[4]]).padStart(2, '0')
+  const minute = String(pickerValue.value[4]).padStart(2, '0')
   newTask.value.dueDate = `${year}-${month}-${day}`
   newTask.value.dueTime = `${hour}:${minute}`
   closePicker()
@@ -485,44 +447,27 @@ const filteredTasks = computed(() => {
     if (!tasks.value || !Array.isArray(tasks.value)) {
       return []
     }
-    // 根据当前分类过滤任务
-    const status = categories.value[currentCategory.value]?.status
+    const status = categories[currentCategory.value]?.status
     let result = tasks.value
     if (status !== undefined) {
-      result = result.filter(t => t.status === status)
+      result = result.filter(function(t) { return t.status === status })
     }
-    
-    // 按距离现在的时间由近及远排序（没有截止时间的排最后）
-    return result.sort((a, b) => {
-      // 都没有时间，保持原顺序
-      if (!a.dueDate && !b.dueDate) return 0
-      // a没有时间，排后面
-      if (!a.dueDate) return 1
-      // b没有时间，排后面
-      if (!b.dueDate) return -1
-      
-      // 构建完整时间字符串
-      const dateTimeA = `${a.dueDate} ${a.dueTime || '00:00'}`
-      const dateTimeB = `${b.dueDate} ${b.dueTime || '00:00'}`
-      
-      // 计算与当前时间的距离（毫秒）
-      const now = new Date().getTime()
-      const timeA = new Date(dateTimeA).getTime()
-      const timeB = new Date(dateTimeB).getTime()
-      
-      // 距离现在越近的排在越前面
-      return Math.abs(timeA - now) - Math.abs(timeB - now)
-    })
+    if (result.length > 1) {
+      return result.slice().sort(function(a, b) {
+        const dateA = a.dueTime ? new Date(a.dueTime).getTime() : 0
+        const dateB = b.dueTime ? new Date(b.dueTime).getTime() : 0
+        return dateA - dateB
+      })
+    }
+    return result
   } catch(e) {
     console.error('filteredTasks error:', e)
     return []
   }
 })
 
-const switchCategory = async (index) => {
+const switchCategory = (index) => {
   currentCategory.value = index
-  // 切换分类时重新加载对应状态的任务
-  await loadTasks(true)
 }
 
 const priorityText = (p) => priorities[p] || '普通'
@@ -530,15 +475,16 @@ const priorityText = (p) => priorities[p] || '普通'
 const toggleTask = async (task) => {
   const newStatus = task.status === 2 ? 0 : 2
   try {
-    console.log('toggleTask:', task.id, newStatus)
     if (newStatus === 2) {
       await taskApi.complete(task.id)
+    } else {
+      await taskApi.restore(task.id)
     }
     task.status = newStatus
     uni.showToast({ title: newStatus === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
   } catch (e) {
     console.error('更新任务状态失败', e)
-    uni.showToast({ title: '操作失败: ' + e.message, icon: 'none' })
+    uni.showToast({ title: '操作失败', icon: 'none' })
   }
 }
 
@@ -608,26 +554,6 @@ const deleteSubtask = (task, sub, index) => {
       if (res.confirm) {
         task.subtasks.splice(index, 1)
         uni.showToast({ title: '已删除', icon: 'success' })
-      }
-    }
-  })
-}
-
-const deleteTask = async (task) => {
-  uni.showModal({
-    title: '确认删除',
-    content: '确定要删除这个任务吗？',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await taskApi.delete(task.id)
-          tasks.value = tasks.value.filter(t => t.id !== task.id)
-          updateCategoryCounts()
-          closeDetailModal()
-          uni.showToast({ title: '已删除', icon: 'success' })
-        } catch (e) {
-          uni.showToast({ title: '删除失败', icon: 'none' })
-        }
       }
     }
   })
@@ -767,28 +693,17 @@ const addTask = async () => {
     font-size: 14px;
     color: #8B9A8B;
     transition: all 0.3s ease;
-    position: relative;
+    
+    .category-count {
+      margin-left: 4px;
+      font-size: 12px;
+    }
     
     &.active {
       background: linear-gradient(135deg, #81C784, #4CAF50);
       color: #fff;
       box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
     }
-  }
-  
-  .tab-badge {
-    display: inline-block;
-    min-width: 20px;
-    height: 20px;
-    line-height: 20px;
-    padding: 0 6px;
-    margin-left: 6px;
-    background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-    color: #fff;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
   }
 }
 
@@ -1188,103 +1103,18 @@ const addTask = async () => {
 }
 
 .task-detail {
-  .detail-status {
-    display: inline-block;
-    padding: 6rpx 20rpx;
-    border-radius: 20rpx;
-    font-size: 24rpx;
-    font-weight: 500;
-    margin-bottom: 20rpx;
-    
-    &.pending {
-      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
-      color: #F57C00;
-    }
-    
-    &.completed {
-      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
-      color: #388E3C;
-    }
-  }
-  
   .detail-title {
-    font-size: 36rpx;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 30rpx;
-    line-height: 1.4;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
   }
   
-  .detail-cards {
+  .detail-info {
     display: flex;
-    flex-direction: column;
-    gap: 20rpx;
-    margin-bottom: 30rpx;
-  }
-  
-  .info-card {
-    display: flex;
-    align-items: center;
-    gap: 20rpx;
-    padding: 24rpx;
-    background: #F8FAF8;
-    border-radius: 16rpx;
-    
-    .card-icon {
-      font-size: 40rpx;
-    }
-    
-    .card-content {
-      display: flex;
-      flex-direction: column;
-      
-      .card-label {
-        font-size: 24rpx;
-        color: #999;
-        margin-bottom: 4rpx;
-      }
-      
-      .card-value {
-        font-size: 28rpx;
-        color: #333;
-        font-weight: 500;
-        
-        &.priority-text {
-          &.priority-0 { color: #666; }
-          &.priority-1 { color: #F57C00; }
-          &.priority-2 { color: #E53935; }
-        }
-      }
-    }
-  }
-  
-  .detail-actions {
-    display: flex;
-    gap: 20rpx;
-    margin-bottom: 30rpx;
-    
-    .action-btn {
-      flex: 1;
-      height: 80rpx;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 40rpx;
-      font-size: 28rpx;
-      font-weight: 500;
-      
-      &.complete-btn {
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: #fff;
-        box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.3);
-      }
-      
-      &.delete-btn {
-        background: #FFF5F5;
-        color: #E53935;
-        border: 2rpx solid #FFCDD2;
-      }
-    }
+    gap: 15px;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
   }
 }
 
@@ -1542,12 +1372,12 @@ const addTask = async () => {
   }
   
   .picker-view {
-    height: 480rpx;
+    height: 240px;
     
     .picker-item {
-      line-height: 80rpx;
+      line-height: 48px;
       text-align: center;
-      font-size: 32rpx;
+      font-size: 16px;
       color: #3D5A4D;
     }
   }

@@ -137,7 +137,14 @@ export const taskApi = {
    * @param {number} reminderId - 提醒ID
    * @returns {Promise<void>}
    */
-  deleteReminder: (reminderId) => request.delete(`/api/task/reminder/${reminderId}`)
+  deleteReminder: (reminderId) => request.delete(`/api/task/reminder/${reminderId}`),
+  
+  /**
+   * 恢复已归档任务
+   * @param {number} id - 任务ID
+   * @returns {Promise<void>}
+   */
+  restore: (id) => request.post(`/api/task/restore/${id}`),
 }
 
 export default taskApi

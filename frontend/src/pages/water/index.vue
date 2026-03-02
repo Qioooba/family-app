@@ -70,22 +70,34 @@
             <view class="water-icon">💧</view>
             <text>{{ amount }}ml</text>
           </view>
+          <!-- 自定义按钮 -->
+          <view
+            class="quick-btn custom-btn"
+            :class="{ 'active': isCustomAmount }"
+            @click="toggleCustomAmount"
+          >
+            <view class="water-icon">✏️</view>
+            <text>自定义</text>
+          </view>
         </view>
         
-        <!-- 自定义输入 -->
-        <view class="custom-input-row">
-          <input 
-            type="number" 
-            v-model="customAmount" 
-            placeholder="自定义数值(ml)" 
-            class="custom-amount-input"
-            @input="onCustomAmountInput"
-          />
+        <!-- 自定义输入框 -->
+        <view v-if="isCustomAmount" class="custom-amount-section">
+          <view class="custom-input-wrapper">
+            <input
+              type="number"
+              v-model="customAmountInput"
+              placeholder="输入毫升数"
+              class="custom-amount-input"
+              @focus="selectedAmount = 0"
+            />
+            <text class="custom-unit">ml</text>
+          </view>
+          <text class="custom-hint-tip">输入后点击"记录喝水"即可</text>
         </view>
-        
         <button class="add-btn" @click="recordWater">
           <view class="btn-icon">💧</view>
-          <text>记录喝水 {{ selectedAmount > 0 ? selectedAmount + 'ml' : '' }}</text>
+          <text>记录喝水</text>
         </button>
       </view>
 
@@ -204,10 +216,12 @@
         <!-- 日期选择器 -->
         <view class="date-picker-section">
           <text class="picker-label">选择日期：</text>
-          <view class="date-picker-btn" @click="openDatePicker">
-            <text>{{ formatDateDisplay(historyDate) }}</text>
-            <u-icon name="arrow-down" size="28" color="#666"></u-icon>
-          </view>
+          <picker mode="date" :value="historyDate" :end="today" @change="onHistoryDateChange">
+            <view class="date-picker-btn">
+              <text>{{ formatDateDisplay(historyDate) }}</text>
+              <u-icon name="arrow-down" size="28" color="#666"></u-icon>
+            </view>
+          </picker>
         </view>
 
         <!-- 历史统计数据 -->
@@ -256,28 +270,6 @@
         </scroll-view>
       </view>
     </view>
-
-    <!-- 自定义日期选择器弹窗 -->
-    <view v-if="showDatePicker" class="date-picker-overlay" @click="closeDatePicker">
-      <view class="date-picker-modal" @click.stop>
-        <view class="picker-header">
-          <text class="cancel" @click="closeDatePicker">取消</text>
-          <text class="title">选择日期</text>
-          <text class="confirm" @click="confirmDatePicker">确定</text>
-        </view>
-        <picker-view class="picker-view" :value="pickerDateValue" @change="onPickerDateChange">
-          <picker-view-column>
-            <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
-          </picker-view-column>
-          <picker-view-column>
-            <view v-for="month in 12" :key="month" class="picker-item">{{ month }}月</view>
-          </picker-view-column>
-          <picker-view-column>
-            <view v-for="day in daysInSelectedMonth" :key="day" class="picker-item">{{ day }}日</view>
-          </picker-view-column>
-        </picker-view>
-      </view>
-    </view>
   </view>
 </template>
 
@@ -289,27 +281,6 @@ const todayAmount = ref(0)
 const targetAmount = ref(2000)
 const records = ref([])
 const selectedAmount = ref(200)
-const customAmount = ref('')
-const isCustomAmount = ref(false)
-
-const selectQuickAmount = (amount) => {
-  isCustomAmount.value = false
-  customAmount.value = ''
-  selectedAmount.value = amount
-}
-
-const onCustomAmountInput = () => {
-  if (customAmount.value) {
-    const val = parseInt(customAmount.value)
-    if (!isNaN(val) && val > 0) {
-      selectedAmount.value = val
-      isCustomAmount.value = true
-    }
-  } else {
-    isCustomAmount.value = false
-    selectedAmount.value = 200
-  }
-}
 const settingsVisible = ref(false)
 const tempTarget = ref(2000)
 const historyVisible = ref(false)
@@ -317,70 +288,34 @@ const historyDate = ref('')
 const historyData = ref({})
 const today = ref(new Date().toISOString().split('T')[0])
 
-// 日期选择器相关
-const showDatePicker = ref(false)
-const pickerDateValue = ref([0, 0, 0])
-
-// 年份范围（当前年-2 到 当前年）
-const yearRange = computed(() => {
-  const currentYear = new Date().getFullYear()
-  const years = []
-  for (let i = currentYear - 2; i <= currentYear; i++) {
-    years.push(i)
-  }
-  return years
-})
-
-// 当前选择月份的天数
-const daysInSelectedMonth = computed(() => {
-  const year = yearRange.value[pickerDateValue.value[0]]
-  const month = pickerDateValue.value[1] + 1
-  return new Date(year, month, 0).getDate()
-})
-
-// 打开日期选择器
-const openDatePicker = () => {
-  // 初始化当前选中的日期
-  const currentDate = new Date(historyDate.value || new Date())
-  const yearIndex = yearRange.value.indexOf(currentDate.getFullYear())
-  const monthIndex = currentDate.getMonth()
-  const dayIndex = currentDate.getDate() - 1
-  pickerDateValue.value = [Math.max(0, yearIndex), monthIndex, Math.min(dayIndex, daysInSelectedMonth.value - 1)]
-  showDatePicker.value = true
-}
-
-// 关闭日期选择器
-const closeDatePicker = () => {
-  showDatePicker.value = false
-}
-
-// 选择器变化
-const onPickerDateChange = (e) => {
-  pickerDateValue.value = e.detail.value
-}
-
-// 确认选择
-const confirmDatePicker = () => {
-  const year = yearRange.value[pickerDateValue.value[0]]
-  const month = String(pickerDateValue.value[1] + 1).padStart(2, '0')
-  const day = String(pickerDateValue.value[2] + 1).padStart(2, '0')
-  
-  // 检查选择的日期是否超过今天
-  const selectedDate = `${year}-${month}-${day}`
-  if (selectedDate > today.value) {
-    uni.showToast({ title: '不能选择未来的日期', icon: 'none' })
-    return
-  }
-  
-  historyDate.value = selectedDate
-  loadHistoryData()
-  closeDatePicker()
-}
-
 const quickAmounts = [100, 150, 200, 250, 350, 500]
 const targetOptions = [1500, 2000, 2500, 3000, 3500]
 const isCustomTarget = ref(false)
 const customTargetInput = ref('')
+
+// 自定义喝水量相关
+const isCustomAmount = ref(false)
+const customAmountInput = ref('')
+
+// 选择快捷金额
+const selectQuickAmount = (amount) => {
+  isCustomAmount.value = false
+  customAmountInput.value = ''
+  selectedAmount.value = amount
+}
+
+// 切换自定义输入显示
+const toggleCustomAmount = () => {
+  isCustomAmount.value = !isCustomAmount.value
+  if (!isCustomAmount.value) {
+    customAmountInput.value = ''
+    // 恢复默认选中200ml
+    selectedAmount.value = 200
+  } else {
+    customAmountInput.value = ''
+    selectedAmount.value = 0
+  }
+}
 
 const healthTips = [
   '早起一杯水，有助于唤醒身体代谢',
@@ -460,6 +395,27 @@ const loadTodayData = async () => {
 }
 
 const recordWater = async () => {
+  // 处理自定义输入
+  let amountToRecord = selectedAmount.value
+  
+  if (isCustomAmount.value && customAmountInput.value) {
+    const customValue = parseInt(customAmountInput.value)
+    if (isNaN(customValue) || customValue <= 0) {
+      uni.showToast({ title: '请输入有效的毫升数', icon: 'none' })
+      return
+    }
+    if (customValue > 5000) {
+      uni.showToast({ title: '单次记录不能超过5000ml', icon: 'none' })
+      return
+    }
+    amountToRecord = customValue
+  }
+  
+  if (amountToRecord <= 0) {
+    uni.showToast({ title: '请选择或输入喝水量', icon: 'none' })
+    return
+  }
+  
   try {
     const userInfo = uni.getStorageSync('userInfo')
     const userId = userInfo?.id || 1
@@ -469,7 +425,7 @@ const recordWater = async () => {
     console.log('=== 记录喝水调试信息 ===')
     console.log('Token:', token ? '存在' : '不存在')
     console.log('UserId:', userId)
-    console.log('SelectedAmount:', selectedAmount.value)
+    console.log('SelectedAmount:', amountToRecord)
 
     // 格式化时间为 HH:mm:ss 格式
     const now = new Date()
@@ -480,7 +436,7 @@ const recordWater = async () => {
     
     const requestData = {
       userId: userId,
-      amount: selectedAmount.value,
+      amount: amountToRecord,
       recordTime: timeString
     }
     console.log('请求参数:', JSON.stringify(requestData))
@@ -489,6 +445,12 @@ const recordWater = async () => {
     console.log('API响应:', result)
 
     uni.showToast({ title: '打卡成功', icon: 'success' })
+    
+    // 重置自定义输入状态
+    isCustomAmount.value = false
+    customAmountInput.value = ''
+    selectedAmount.value = 200 // 恢复默认值
+    
     await loadTodayData()
   } catch (e) {
     console.error('=== 记录喝水失败详情 ===')
@@ -978,24 +940,56 @@ const deleteHistoryRecord = async (recordId) => {
           color: #5B8FF9;
         }
       }
+      
+      &.custom-btn {
+        background: #FFF7E6;
+        
+        &.active {
+          background: #FFF7E6;
+          border-color: #FA8C16;
+          
+          text {
+            color: #FA8C16;
+          }
+        }
+      }
     }
   }
-
-  .custom-input-row {
+  
+  .custom-amount-section {
     margin-bottom: 20rpx;
+    padding: 20rpx;
+    background: #FFF7E6;
+    border-radius: 16rpx;
     
-    .custom-amount-input {
-      width: 100%;
-      height: 80rpx;
-      background: #f5f6fa;
-      border-radius: 20rpx;
-      padding: 0 30rpx;
-      font-size: 28rpx;
-      border: 2rpx solid #e0e0e0;
+    .custom-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
       
-      &:focus {
-        border-color: #5B8FF9;
+      .custom-amount-input {
+        flex: 1;
+        height: 72rpx;
+        background: #fff;
+        border-radius: 36rpx;
+        padding: 0 30rpx;
+        font-size: 30rpx;
+        border: 2rpx solid #FA8C16;
       }
+      
+      .custom-unit {
+        font-size: 28rpx;
+        color: #FA8C16;
+        font-weight: 500;
+      }
+    }
+    
+    .custom-hint-tip {
+      display: block;
+      font-size: 22rpx;
+      color: #FA8C16;
+      margin-top: 10rpx;
+      text-align: center;
     }
   }
 
@@ -1202,7 +1196,7 @@ const deleteHistoryRecord = async (recordId) => {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  z-index: 1000;
+  z-index: 99999;
 }
 
 .modal-content {
@@ -1327,6 +1321,8 @@ const deleteHistoryRecord = async (recordId) => {
     display: flex;
     align-items: center;
     margin-bottom: 30rpx;
+    position: relative;
+    z-index: 100001;
 
     .picker-label {
       font-size: 28rpx;
@@ -1340,6 +1336,8 @@ const deleteHistoryRecord = async (recordId) => {
       padding: 12rpx 24rpx;
       background: #f5f6fa;
       border-radius: 12rpx;
+      position: relative;
+      z-index: 100002;
       margin-left: 16rpx;
 
       text {
@@ -1348,6 +1346,36 @@ const deleteHistoryRecord = async (recordId) => {
         font-weight: 500;
       }
     }
+  }
+
+  // picker 组件样式覆盖，确保日期选择器弹窗在最上层
+  ::v-deep .uni-picker-container {
+    z-index: 999999 !important;
+  }
+  
+  ::v-deep .uni-picker-view-wrapper {
+    z-index: 999999 !important;
+  }
+  
+  ::v-deep .uni-picker-header {
+    z-index: 999999 !important;
+  }
+  
+  ::v-deep .uni-picker-action uni-view {
+    z-index: 999999 !important;
+  }
+  
+  ::v-deep .uni-picker-menu {
+    z-index: 999999 !important;
+  }
+  
+  ::v-deep .uni-picker-content {
+    z-index: 999999 !important;
+  }
+  
+  // 确保 mask 也在上层
+  ::v-deep .uni-picker-mask {
+    z-index: 999998 !important;
   }
 
   .history-stats {
@@ -1460,63 +1488,6 @@ const deleteHistoryRecord = async (recordId) => {
           }
         }
       }
-    }
-  }
-}
-
-// 自定义日期选择器弹窗样式
-.date-picker-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 2000;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.date-picker-modal {
-  width: 100%;
-  background: #fff;
-  border-radius: 32rpx 32rpx 0 0;
-  padding: 32rpx;
-  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
-  
-  .picker-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32rpx;
-    
-    .cancel {
-      font-size: 28rpx;
-      color: #999;
-    }
-    
-    .title {
-      font-size: 32rpx;
-      font-weight: 600;
-      color: #333;
-    }
-    
-    .confirm {
-      font-size: 28rpx;
-      color: #5B8FF9;
-      font-weight: 500;
-    }
-  }
-  
-  .picker-view {
-    height: 400rpx;
-    
-    .picker-item {
-      line-height: 80rpx;
-      text-align: center;
-      font-size: 32rpx;
-      color: #333;
     }
   }
 }

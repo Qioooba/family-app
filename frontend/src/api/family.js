@@ -70,6 +70,11 @@ export const familyApi = {
   getById: (id) => request.get(`/api/family/info?familyId=${id}`),
   
   /**
+   * 确保用户有家庭（自动加入默认家庭）
+   */
+  ensureFamily: () => request.get('/api/family/ensure'),
+  
+  /**
    * 获取家庭成员
    * @param {number} id - 家庭ID
    * @returns {Promise<Array>} 成员列表
