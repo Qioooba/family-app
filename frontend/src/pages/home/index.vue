@@ -515,7 +515,7 @@ onMounted(async () => {
         todayTasks.value = todayTodoTasks.map(task => ({
           ...task,
           assigneeName: getMemberName(task.assigneeId) || '家人',
-          time: task.dueTime ? '今天 ' + task.dueTime.substring(0, 5) : '今天'
+          time: formatTaskTime(task.dueTime)
         }))
       } else {
         todayTasks.value = []
@@ -532,6 +532,15 @@ onMounted(async () => {
     if (!familyMembers.value || !Array.isArray(familyMembers.value)) return '家人'
     const member = familyMembers.value.find(m => m.userId === userId)
     return member?.nickname || member?.name || '家人'
+  }
+  
+  // 格式化任务时间
+  const formatTaskTime = (dueTime) => {
+    if (!dueTime) return '今天'
+    // 如果包含空格，提取时间部分（HH:mm:ss -> HH:mm）
+    const timePart = dueTime.includes(' ') ? dueTime.split(' ')[1] : dueTime
+    // 只显示小时和分钟
+    return '今天 ' + timePart.substring(0, 5)
   }
   
   // 调用加载今日待办
