@@ -213,8 +213,9 @@ const validateForm = () => {
     uni.showToast({ title: '昵称至少2个字符', icon: 'none' })
     return false
   }
-  if (!form.username.trim()) {
-    uni.showToast({ title: '请输入用户名', icon: 'none' })
+  // 使用手机号作为用户名
+  if (!form.phone.trim()) {
+    uni.showToast({ title: '请输入手机号', icon: 'none' })
     return false
   }
   if (!form.phone || form.phone.length !== 11) {
@@ -262,7 +263,7 @@ const handleRegister = async () => {
     // 第一步：注册用户
     const registerData = {
       nickname: form.nickname,
-      username: form.username,
+      username: form.phone,
       phone: form.phone,
       code: form.code,
       password: form.password
@@ -296,7 +297,7 @@ const handleRegister = async () => {
     setTimeout(async () => {
       try {
         await userStore.login({
-          username: form.username,
+          username: form.phone,
           password: form.password
         })
         uni.switchTab({ url: '/pages/home/index' })
