@@ -701,32 +701,32 @@
       {
         "pagePath": "pages/home/index",
         "text": "首页",
-        "iconPath": "static/tabbar/home.svg",
-        "selectedIconPath": "static/tabbar/home-active.svg"
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
       },
       {
         "pagePath": "pages/task/index",
         "text": "待办",
-        "iconPath": "static/tabbar/task.svg",
-        "selectedIconPath": "static/tabbar/task-active.svg"
+        "iconPath": "static/tabbar/task.png",
+        "selectedIconPath": "static/tabbar/task-active.png"
       },
       {
         "pagePath": "pages/wish/index",
         "text": "心愿",
-        "iconPath": "static/tabbar/wish.svg",
-        "selectedIconPath": "static/tabbar/wish-active.svg"
+        "iconPath": "static/tabbar/wish.png",
+        "selectedIconPath": "static/tabbar/wish-active.png"
       },
       {
         "pagePath": "pages/family/index",
         "text": "家庭",
-        "iconPath": "static/tabbar/family.svg",
-        "selectedIconPath": "static/tabbar/family-active.svg"
+        "iconPath": "static/tabbar/family.png",
+        "selectedIconPath": "static/tabbar/family-active.png"
       },
       {
         "pagePath": "pages/profile/index",
         "text": "我的",
-        "iconPath": "static/tabbar/profile.svg",
-        "selectedIconPath": "static/tabbar/profile-active.svg"
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png"
       }
     ]
   },
