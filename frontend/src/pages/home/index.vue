@@ -537,8 +537,16 @@ onMounted(async () => {
   // 格式化任务时间
   const formatTaskTime = (dueTime) => {
     if (!dueTime) return '今天'
-    // 如果包含空格，提取时间部分（HH:mm:ss -> HH:mm）
-    const timePart = dueTime.includes(' ') ? dueTime.split(' ')[1] : dueTime
+    
+    // 如果是数组格式 [year, month, day, hour, minute]，转换为时间字符串
+    let timeStr = dueTime
+    if (Array.isArray(dueTime)) {
+      const [year, month, day, hour, minute] = dueTime
+      timeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')}`
+    }
+    
+    // 如果包含空格，提取时间部分
+    const timePart = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr
     // 只显示小时和分钟
     return '今天 ' + timePart.substring(0, 5)
   }
