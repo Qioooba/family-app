@@ -6,6 +6,13 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+  # SSL/HTTPS 配置（自签名证书）
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: family123
+    key-store-type: PKCS12
+    key-alias: family-app
 
 spring:
   main:
