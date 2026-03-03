@@ -64,6 +64,11 @@ file:
     path: ./uploads
     base-url: http://qioba.cn:8081
 
+# 微信小程序配置（请修改为你的实际配置）
+weixin:
+  appId: wxyourappid
+  appSecret: yourappsecret
+
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

@@ -1,0 +1,97 @@
+package com.family.family.utils;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+/**
+ * 微信数据解密工具类
+ */
+@Slf4j
+@Component
+public class WxDecryptUtil {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    /**
+     * 通过 code 获取 openid 和 session_key
+     */
+    public static String getOpenidAndSessionKey(String appId, String appSecret, String code) {
+        try {
+            String url = "https://api.weixin.qq.com/sns/jscode2session" +
+                    "?appid=" + appId +
+                    "&secret=" + appSecret +
+                    "&js_code=" + code +
+                    "&grant_type=authorization_code";
+            
+            java.net.URL urlObj = new java.net.URL(url);
+            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) urlObj.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+            
+            java.io.BufferedReader reader = new java.io.BufferedReader(
+                new java.io.InputStreamReader(connection.getInputStream()));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            connection.disconnect();
+            
+            String resp = response.toString();
+            log.info("微信登录响应: {}", resp);
+            
+            JsonNode json = objectMapper.readTree(resp);
+            
+            if (json.has("openid")) {
+                String openid = json.get("openid").asText();
+                String sessionKey = json.get("session_key").asText();
+                return openid + "," + sessionKey;
+            } else if (json.has("errcode")) {
+                log.error("微信登录失败: errcode={}, errmsg={}", 
+                    json.get("errcode").asInt(), json.get("errmsg").asText());
+            }
+            
+            return null;
+            
+        } catch (Exception e) {
+            log.error("获取微信 openid 失败", e);
+            return null;
+        }
+    }
+
+    /**
+     * 解密手机号
+     */
+    public static String decryptPhoneNumber(String encryptedData, String sessionKey, String iv) {
+        try {
+            byte[] dataByte = Base64.getDecoder().decode(encryptedData);
+            byte[] sessionKeyByte = Base64.getDecoder().decode(sessionKey);
+            byte[] ivByte = Base64.getDecoder().decode(iv);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            SecretKeySpec skeySpec = new SecretKeySpec(sessionKeyByte, "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(ivByte);
+            cipher.init(Cipher.DECRYPT_MODE, skeySpec, ivSpec);
+            byte[] result = cipher.doFinal(dataByte);
+
+            if (null != result && result.length > 0) {
+                String resultStr = new String(result, StandardCharsets.UTF_8);
+                JsonNode json = objectMapper.readTree(resultStr);
+                return json.get("phoneNumber").asText();
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("解密手机号失败", e);
+            return null;
+        }
+    }
+}

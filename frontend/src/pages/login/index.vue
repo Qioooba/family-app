@@ -143,12 +143,29 @@
         </view>
         
         <view class="login-icons">
+          <!-- 微信登录按钮 - 获取手机号 -->
+          <!-- #ifdef MP-WEIXIN -->
+          <button 
+            class="icon-item wechat-btn" 
+            open-type="getPhoneNumber" 
+            @getphonenumber="wxLogin"
+            :disabled="loading"
+          >
+            <view class="icon wechat">
+              <u-icon name="weixin-fill" size="44" color="#fff"></u-icon>
+            </view>
+            <text class="icon-text">微信手机号一键登录</text>
+          </button>
+          <!-- #endif -->
+          
+          <!-- #ifndef MP-WEIXIN -->
           <view class="icon-item" @click="wxLogin">
             <view class="icon wechat">
               <u-icon name="weixin-fill" size="44" color="#fff"></u-icon>
             </view>
             <text class="icon-text">微信</text>
           </view>
+          <!-- #endif -->
         </view>
       </view>
     </view>
@@ -159,37 +176,18 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { userApi } from '../../api/index'
+import { getWxLoginCode, getWxPhoneNumber, isWeixinEnvironment } from '../../utils/wxLogin.js'
 
 const userStore = useUserStore()
 const loginType = ref('password')
 const loading = ref(false)
 const codeCountdown = ref(0)
 const passwordVisible = ref(false)
-
-// 加载保存的账号密码
-const loadSavedCredentials = () => {
-  const savedUsername = uni.getStorageSync('savedUsername')
-  const savedPhone = uni.getStorageSync('savedPhone')
-  if (savedUsername) {
-    form.username = savedUsername
-  }
-  if (savedPhone) {
-    form.phone = savedPhone
-  }
-}
-
-// 保存账号密码
-const saveCredentials = () => {
-  if (form.username) {
-    uni.setStorageSync('savedUsername', form.username)
-  }
-  if (form.phone) {
-    uni.setStorageSync('savedPhone', form.phone)
-  }
-}
+const isWxEnv = ref(false)
 
 onMounted(() => {
   loadSavedCredentials()
+  isWxEnv.value = isWeixinEnvironment()
 })
 
 const togglePasswordVisible = () => {
@@ -269,8 +267,59 @@ const forgotPassword = () => {
   uni.navigateTo({ url: '/pages/forgot-password/index' })
 }
 
-const wxLogin = () => {
-  uni.showToast({ title: '微信登录开发中', icon: 'none' })
+// 微信登录 - 获取手机号按钮回调
+const wxLogin = async (e) => {
+  // #ifndef MP-WEIXIN
+  uni.showToast({ title: '请在微信小程序中使用', icon: 'none' })
+  return
+  // #endif
+  
+  // #ifdef MP-WEIXIN
+  try {
+    // 检查用户是否授权获取手机号
+    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+      uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
+      return
+    }
+    
+    loading.value = true
+    uni.showLoading({ title: '登录中...' })
+    
+    // 获取微信登录凭证
+    const wxCode = await getWxLoginCode()
+    
+    // 获取手机号信息
+    const { encryptedData, iv } = e.detail
+    
+    // 调用后端微信登录接口
+    const loginData = {
+      wxCode,
+      encryptedData,
+      iv,
+      loginType: 'weixin'
+    }
+    
+    const res = await userStore.wxLogin(loginData)
+    
+    uni.hideLoading()
+    uni.showToast({ title: '登录成功', icon: 'success' })
+    
+    // 跳转到首页
+    setTimeout(() => {
+      uni.reLaunch({ url: '/pages/home/index' })
+    }, 500)
+  } catch (error) {
+    uni.hideLoading()
+    console.error('微信登录失败:', error)
+    uni.showToast({ 
+      title: error.message || '微信登录失败，请重试', 
+      icon: 'none',
+      duration: 2500
+    })
+  } finally {
+    loading.value = false
+  }
+  // #endif
 }
 </script>
 

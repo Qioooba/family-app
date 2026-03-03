@@ -54,6 +54,19 @@ export const useUserStore = defineStore('user', () => {
     return res
   }
   
+  // 微信登录
+  const wxLogin = async (wxLoginData) => {
+    const res = await request.post('/api/user/wx-login', wxLoginData)
+    setToken(res)
+    // 保存 currentFamilyId
+    const familyId = res?.currentFamilyId
+    if (familyId) {
+      uni.setStorageSync('currentFamilyId', familyId)
+    }
+    await getUserInfo()
+    return res
+  }
+  
   const getUserInfo = async () => {
     try {
       const res = await request.get('/api/user/info')
