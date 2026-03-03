@@ -8,8 +8,9 @@ import { cacheManager } from './cache.js'
 // 动态获取后端地址
 const getBackendUrl = () => {
   // #ifdef MP-WEIXIN
-  // 微信小程序使用公网服务器地址（请修改为你的服务器地址）
-  return 'https://your-server-domain.com:8081'
+  // 微信小程序使用公网服务器地址
+  // 注意：真机调试/体验版需要HTTPS，或登录微信公众平台配置request合法域名
+  return 'http://qioba.cn:8081'
   // #endif
   
   if (typeof window === 'undefined') return 'http://localhost:8081'
