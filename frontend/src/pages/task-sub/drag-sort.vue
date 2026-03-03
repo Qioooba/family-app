@@ -131,9 +131,17 @@ onMounted(() => {
 
 // 计算列表高度
 const calculateListHeight = () => {
-  const systemInfo = uni.getSystemInfoSync()
-  // 减去导航栏、提示栏和底部操作栏的高度
-  listHeight.value = systemInfo.windowHeight - 180 - 100 - 120
+  // 使用异步 API 替代废弃的 getSystemInfoSync
+  uni.getSystemInfo({
+    success: (res) => {
+      // 减去导航栏、提示栏和底部操作栏的高度
+      listHeight.value = res.windowHeight - 180 - 100 - 120
+    },
+    fail: () => {
+      // 默认高度
+      listHeight.value = 500
+    }
+  })
 }
 
 // 加载任务列表
