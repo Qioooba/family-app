@@ -1,18 +1,18 @@
 server:
-  port: 8081
+  port: 8443
   address: 0.0.0.0
   servlet:
     encoding:
       charset: UTF-8
       enabled: true
       force: true
-  # SSL/HTTPS 配置（自签名证书）
+  # SSL/HTTPS 配置（正式证书）
   ssl:
     enabled: true
-    key-store: classpath:keystore.p12
-    key-store-password: family123
+    key-store: classpath:qioba.cn.p12
+    key-store-password: qioba123
     key-store-type: PKCS12
-    key-alias: family-app
+    key-alias: qioba
 
 spring:
   main:

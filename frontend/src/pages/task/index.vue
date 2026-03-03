@@ -38,7 +38,7 @@
         </view>
         
         <view class="task-info">
-          <text class="task-time">⏰ {{ task.dueTime }}</text>
+          <text class="task-time">⏰ {{ formatTime(task.dueTime) }}</text>
           <text class="task-assignee">👤 {{ task.assigneeName || '未指派' }}</text>
         </view>
         
@@ -94,7 +94,7 @@
         <view v-if="selectedTask" class="task-detail">
           <view class="detail-title">{{ selectedTask.title }}</view>
           <view class="detail-info">
-            <text>⏰ {{ selectedTask.dueTime }}</text>
+            <text>⏰ {{ formatTime(selectedTask.dueTime) }}</text>
             <text>👤 {{ selectedTask.assigneeName || '未指派' }}</text>
           </view>
           
@@ -275,6 +275,18 @@ const getTodayString = () => {
   return `${year}-${month}-${day}`
 }
 
+// 格式化时间显示（处理数组格式 [2026,3,3,15,0]）
+const formatTime = (timeValue) => {
+  if (!timeValue) return ''
+  // 如果是数组格式 [year, month, day, hour, minute]
+  if (Array.isArray(timeValue)) {
+    const [year, month, day, hour, minute] = timeValue
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+  }
+  // 如果已经是字符串，直接返回
+  return timeValue
+}
+
 const categories = ref([
   { name: '待办', id: 1, status: 0 },
   { name: '完成', id: 3, status: 2 }
@@ -337,8 +349,10 @@ const loadTasks = async (force = false) => {
     // 先加载家庭成员
     await loadFamilyMembers()
     const res = await taskApi.getList(familyId)
+    // 兼容新旧接口格式
+    const taskList = res.list || res || []
     // 把 assigneeId 转换为 assigneeName
-    tasks.value = (res || []).map(task => ({
+    tasks.value = taskList.map(task => ({
       ...task,
       assigneeName: getMemberName(task.assigneeId) || '未指派'
     }))

@@ -179,8 +179,10 @@ public class FamilyController {
             result.put("code", 200);
             result.put("message", "success");
         } catch (Exception e) {
+            e.printStackTrace(); // 打印详细错误
             result.put("code", 500);
             result.put("message", "系统繁忙: " + e.getMessage());
+            result.put("error", e.getClass().getName());
         }
         
         return result;

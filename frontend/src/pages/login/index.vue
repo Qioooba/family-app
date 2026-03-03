@@ -200,8 +200,17 @@ const form = reactive({
 })
 
 const handleLogin = async () => {
+  console.log('[Login Debug] 当前登录类型:', loginType.value)
+  console.log('[Login Debug] form 数据:', JSON.stringify(form))
+  
   if (loginType.value === 'password') {
-    if (!form.username || !form.password) {
+    // 确保字段不为空（去除空白）
+    const username = form.username?.trim()
+    const password = form.password?.trim()
+    
+    console.log('[Login Debug] username:', username, 'password:', password ? '有密码' : '空')
+    
+    if (!username || !password) {
       uni.showToast({ title: '请填写完整信息', icon: 'none' })
       return
     }

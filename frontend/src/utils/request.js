@@ -88,11 +88,15 @@ const getToken = () => {
     // 优先从 storage 读取
     let token = uni.getStorageSync('token')
     
-    // 如果 storage 没有，尝试从 window 全局获取
+    // 如果 storage 没有，尝试从 window 全局获取（H5环境）
     if (!token && typeof window !== 'undefined' && window.__APP_TOKEN__) {
-      token = window.__APP_TOKEN__
-      // 同步到 storage
-      uni.setStorageSync('token', token)
+      try {
+        token = window.__APP_TOKEN__
+        // 同步到 storage
+        uni.setStorageSync('token', token)
+      } catch (e) {
+        // window.__APP_TOKEN__ 可能不存在，忽略错误
+      }
     }
     
     console.log('[Token] 读取token:', token ? token.substring(0, 20) + '...' : '空')
