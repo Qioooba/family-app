@@ -1,0 +1,13 @@
+server:
+  port: 8081
+  address: 0.0.0.0
+  ssl:
+    enabled: true
+    key-store: classpath:qioba.cn.p12
+    key-store-password: your-password
+    key-store-type: PKCS12
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
