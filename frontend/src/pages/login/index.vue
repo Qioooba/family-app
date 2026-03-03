@@ -276,6 +276,8 @@ const forgotPassword = () => {
 
 // 微信登录 - 获取手机号按钮回调
 const wxLogin = async (e) => {
+  console.log('[WxLogin] 点击微信登录按钮', e)
+  
   // #ifndef MP-WEIXIN
   uni.showToast({ title: '请在微信小程序中使用', icon: 'none' })
   return
@@ -283,8 +285,11 @@ const wxLogin = async (e) => {
   
   // #ifdef MP-WEIXIN
   try {
+    console.log('[WxLogin] detail:', e.detail)
+    
     // 检查用户是否授权获取手机号
     if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+      console.log('[WxLogin] 用户拒绝授权:', e.detail.errMsg)
       uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
       return
     }

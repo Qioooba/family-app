@@ -33,6 +33,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + absolutePath + "/");
+        
+        // 配置 /static/** 路径映射
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("file:" + absolutePath + "/static/");
     }
 
     /**
