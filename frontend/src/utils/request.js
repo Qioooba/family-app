@@ -5,24 +5,10 @@
 
 import { cacheManager } from './cache.js'
 
-// 动态获取后端地址
+// 后端地址配置 - 强制使用 HTTPS 和 8443 端口
 const getBackendUrl = () => {
-  // #ifdef MP-WEIXIN
-  // 微信小程序使用 HTTP 地址（开发测试用）
-  return 'http://qioba.cn:8081'
-  // #endif
-  
-  if (typeof window === 'undefined') return 'http://localhost:8081'
-  
-  const hostname = window.location.hostname
-  
-  // 如果是 localhost 开发，返回 localhost
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:8081'
-  }
-  
-  // 如果是局域网 IP 或域名，使用当前主机名 + 8081 端口
-  return `http://${hostname}:8081`
+  // 微信小程序使用 HTTPS 地址
+  return 'https://qioba.cn:8443'
 }
 
 // 基础配置
