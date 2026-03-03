@@ -1,0 +1,22 @@
+# Caddy 配置文件
+# 自动申请 Let's Encrypt 证书并反向代理到本地 8081
+
+qioba.cn {
+    # 自动 HTTPS（申请证书）
+    tls internal
+    
+    # 反向代理到后端服务
+    reverse_proxy localhost:8081
+    
+    # 允许跨域（小程序需要）
+    header {
+        Access-Control-Allow-Origin "*"
+        Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization, X-Request-Id"
+    }
+}
+
+# HTTP 自动重定向到 HTTPS
+http://qioba.cn {
+    redir https://{host}{uri}
+}
