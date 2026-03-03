@@ -142,31 +142,29 @@
           <view class="line"></view>
         </view>
         
-        <view class="login-icons">
-          <!-- 微信登录按钮 - 获取手机号 -->
-          <!-- #ifdef MP-WEIXIN -->
-          <button 
-            class="icon-item wechat-btn" 
-            open-type="getPhoneNumber" 
-            @getphonenumber="wxLogin"
-            :disabled="loading"
-          >
-            <view class="icon wechat">
-              <u-icon name="weixin-fill" size="44" color="#fff"></u-icon>
-            </view>
-            <text class="icon-text">微信手机号一键登录</text>
-          </button>
-          <!-- #endif -->
-          
-          <!-- #ifndef MP-WEIXIN -->
-          <view class="icon-item" @click="wxLogin">
-            <view class="icon wechat">
-              <u-icon name="weixin-fill" size="44" color="#fff"></u-icon>
-            </view>
-            <text class="icon-text">微信</text>
+        <!-- 微信登录按钮 - 新设计 -->
+        <!-- #ifdef MP-WEIXIN -->
+        <button 
+          class="wx-login-btn" 
+          open-type="getPhoneNumber" 
+          @getphonenumber="wxLogin"
+          :disabled="loading"
+        >
+          <view class="wx-icon-wrapper">
+            <u-icon name="weixin-fill" size="40" color="#fff"></u-icon>
           </view>
-          <!-- #endif -->
+          <text class="wx-btn-text">微信一键登录</text>
+        </button>
+        <!-- #endif -->
+        
+        <!-- #ifndef MP-WEIXIN -->
+        <view class="wx-login-btn" @click="wxLogin">
+          <view class="wx-icon-wrapper">
+            <u-icon name="weixin-fill" size="40" color="#fff"></u-icon>
+          </view>
+          <text class="wx-btn-text">微信登录</text>
         </view>
+        <!-- #endif -->
       </view>
     </view>
   </view>
@@ -750,6 +748,52 @@ button::after {
       color: #fff;
       font-weight: 500;
     }
+  }
+}
+
+/* 微信登录按钮 - 新样式 */
+.wx-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100rpx;
+  background: linear-gradient(135deg, #07c160 0%, #05a350 100%);
+  border-radius: 50rpx;
+  border: none;
+  margin-top: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.3);
+  transition: all 0.3s ease;
+  
+  &::after {
+    border: none;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.2);
+  }
+  
+  &[disabled] {
+    opacity: 0.6;
+  }
+  
+  .wx-icon-wrapper {
+    width: 56rpx;
+    height: 56rpx;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20rpx;
+  }
+  
+  .wx-btn-text {
+    font-size: 32rpx;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 2rpx;
   }
 }
 
