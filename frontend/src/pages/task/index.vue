@@ -467,10 +467,12 @@ const filteredTasks = computed(() => {
       result = result.filter(function(t) { return t.status === status })
     }
     if (result.length > 1) {
+      const now = Date.now()
       return result.slice().sort(function(a, b) {
         const dateA = a.dueTime ? new Date(a.dueTime).getTime() : 0
         const dateB = b.dueTime ? new Date(b.dueTime).getTime() : 0
-        return dateA - dateB
+        // 按距离当前时间最近的排在最上面
+        return Math.abs(dateA - now) - Math.abs(dateB - now)
       })
     }
     return result
@@ -683,6 +685,7 @@ const addTask = async () => {
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    margin-right: 90px; // 避免与小程序胶囊按钮重叠
     
     .icon {
       font-size: 28px;
