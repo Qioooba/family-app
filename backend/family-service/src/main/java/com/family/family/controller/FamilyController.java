@@ -475,11 +475,12 @@ public class FamilyController {
                 memberInfo.put("nickname", member.getNickname());
                 memberInfo.put("joinTime", member.getJoinTime());
                 
-                // 获取用户头像
+                // 获取用户头像和手机号
                 User user = userMapper.selectById(member.getUserId());
                 if (user != null) {
                     memberInfo.put("avatar", user.getAvatar());
                     memberInfo.put("username", user.getUsername());
+                    memberInfo.put("phone", user.getPhone());
                 }
                 
                 memberList.add(memberInfo);
