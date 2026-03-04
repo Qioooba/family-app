@@ -7,6 +7,13 @@ import { request } from '../utils/request'
  */
 export const userApi = {
   /**
+   * 微信用户绑定手机号
+   * @param {object} data - {openid, phone, code}
+   * @returns {Promise<object>}
+   */
+  wxBindPhone: (data) => request.post('/api/user/wx-bind-phone', data),
+  
+  /**
    * 切换当前家庭
    * @param {number} familyId - 家庭ID
    * @returns {Promise<object>}

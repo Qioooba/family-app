@@ -359,10 +359,10 @@ const bindPhone = async () => {
   
   loading.value = true
   try {
-    const res = await request.post('/api/user/wx-bind-phone', {
+    const res = await userApi.wxBindPhone({
       openid: pendingOpenid.value,
       phone: bindForm.phone,
-      code: '111222'  // 固定邀请码
+      code: '111222'
     })
     
     // 绑定成功后登录
