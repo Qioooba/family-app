@@ -183,7 +183,6 @@ const passwordVisible = ref(false)
 const isWxEnv = ref(false)
 
 onMounted(() => {
-  loadSavedCredentials()
   isWxEnv.value = isWeixinEnvironment()
 })
 
