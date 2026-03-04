@@ -17,7 +17,11 @@ export const useUserStore = defineStore('user', () => {
     token.value = tokenValue
     // H5 兼容：同时设置 window 全局变量
     if (typeof window !== 'undefined') {
-      window.__APP_TOKEN__ = tokenValue
+      try {
+        window.__APP_TOKEN__ = tokenValue
+      } catch (e) {
+        console.log('[Store] window.__APP_TOKEN__ 设置失败:', e)
+      }
     }
     uni.setStorageSync('token', tokenValue)
     // 确保同步完成

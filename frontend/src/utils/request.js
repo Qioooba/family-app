@@ -89,13 +89,18 @@ const getToken = () => {
     let token = uni.getStorageSync('token')
     
     // 如果 storage 没有，尝试从 window 全局获取（H5环境）
-    if (!token && typeof window !== 'undefined' && window.__APP_TOKEN__) {
+    if (!token && typeof window !== 'undefined') {
       try {
-        token = window.__APP_TOKEN__
-        // 同步到 storage
-        uni.setStorageSync('token', token)
+        // 使用 try-catch 包裹，防止任何 window 访问错误
+        const globalToken = window.__APP_TOKEN__
+        if (globalToken) {
+          token = globalToken
+          // 同步到 storage
+          uni.setStorageSync('token', token)
+        }
       } catch (e) {
-        // window.__APP_TOKEN__ 可能不存在，忽略错误
+        // window.__APP_TOKEN__ 访问失败，忽略错误
+        console.log('[Token] window.__APP_TOKEN__ 访问失败:', e)
       }
     }
     
