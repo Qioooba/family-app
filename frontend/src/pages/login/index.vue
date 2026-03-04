@@ -128,10 +128,6 @@
           <text v-if="!loading" class="btn-text">登 录</text>
           <text v-else class="btn-text">登录中...</text>
         </button>
-
-        <view class="tips-text">
-          <text>请使用家人分享的邀请码登录</text>
-        </view>
       </view>
 
       <!-- 微信登录 -->
@@ -166,46 +162,6 @@
         <!-- #endif -->
       </view>
     </view>
-
-    <!-- 绑定手机号弹窗 -->
-    <view v-if="showBindModal" class="bind-modal-overlay" @click="showBindModal = false">
-      <view class="bind-modal" @click.stop>
-        <view class="bind-modal-header">
-          <text class="bind-modal-title">绑定手机号</text>
-          <text class="bind-modal-close" @click="showBindModal = false">✕</text>
-        </view>
-        <view class="bind-modal-body">
-          <text class="bind-modal-tip">首次登录需要绑定手机号</text>
-          <view class="bind-form-item">
-            <input
-              v-model="bindForm.phone"
-              class="bind-input"
-              placeholder="请输入手机号"
-              maxlength="11"
-              type="number"
-            />
-          </view>
-          <view class="bind-form-item code-row">
-            <input
-              v-model="bindForm.code"
-              class="bind-input code-input"
-              placeholder="请输入邀请码"
-              maxlength="6"
-            />
-            <button
-              class="bind-code-btn"
-              disabled
-            >
-              邀请码
-            </button>
-          </view>
-          <text class="bind-modal-hint">邀请码: 111222</text>
-          <button class="bind-submit-btn" :disabled="loading" @click="bindPhone">
-            {{ loading ? '绑定中...' : '绑定并登录' }}
-          </button>
-        </view>
-      </view>
-    </view>
   </view>
 </template>
 
@@ -213,7 +169,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { userApi } from '../../api/index'
-import { getWxLoginCode, getWxPhoneNumber, isWeixinEnvironment } from '../../utils/wxLogin.js'
+import { getWxLoginCode, isWeixinEnvironment } from '../../utils/wxLogin.js'
 
 const userStore = useUserStore()
 const loginType = ref('password')
@@ -310,79 +266,6 @@ const sendCode = async () => {
 
 const forgotPassword = () => {
   uni.navigateTo({ url: '/pages/forgot-password/index' })
-}
-
-// 绑定手机号相关
-const showBindModal = ref(false)
-const pendingOpenid = ref('')
-const bindForm = reactive({
-  phone: '',
-  code: ''
-})
-const bindCodeCountdown = ref(0)
-
-// 发送绑定验证码
-const sendBindCode = async () => {
-  if (bindCodeCountdown.value > 0) return
-  if (!bindForm.phone || bindForm.phone.length !== 11) {
-    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
-    return
-  }
-
-  try {
-    await userApi.sendSmsCode(bindForm.phone)
-    uni.showToast({ title: '验证码已发送', icon: 'success' })
-
-    bindCodeCountdown.value = 60
-    const timer = setInterval(() => {
-      bindCodeCountdown.value--
-      if (bindCodeCountdown.value <= 0) {
-        clearInterval(timer)
-      }
-    }, 1000)
-  } catch (e) {
-    uni.showToast({ title: e.message || '发送失败', icon: 'none' })
-  }
-}
-
-// 绑定手机号并登录
-const bindPhone = async () => {
-  if (!bindForm.phone || bindForm.phone.length !== 11) {
-    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
-    return
-  }
-  // 验证邀请码
-  if (bindForm.code !== '111222') {
-    uni.showToast({ title: '邀请码错误', icon: 'none' })
-    return
-  }
-
-  loading.value = true
-  try {
-    const res = await userApi.wxBindPhone({
-      openid: pendingOpenid.value,
-      phone: bindForm.phone,
-      code: '111222'
-    })
-
-    // 绑定成功后登录
-    userStore.setToken(res)
-    uni.setStorageSync('currentFamilyId', res?.currentFamilyId)
-
-    showBindModal.value = false
-    uni.showToast({ title: '绑定成功', icon: 'success' })
-
-    setTimeout(() => {
-      uni.reLaunch({ url: '/pages/home/index' })
-    }, 500)
-  } catch (error) {
-    uni.showToast({
-      title: error.message || '绑定失败',
-      icon: 'none'
-    })
-  } finally {
-    loading.value = false
-  }
 }
 
 // 微信登录 - 获取手机号按钮回调
@@ -984,120 +867,5 @@ button::after {
     max-width: 560rpx;
     width: 100%;
   }
-}
-
-/* 绑定手机号弹窗 */
-.bind-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.bind-modal {
-  width: 600rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  overflow: hidden;
-}
-
-.bind-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 32rpx;
-  border-bottom: 1rpx solid #eee;
-}
-
-.bind-modal-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #333;
-}
-
-.bind-modal-close {
-  font-size: 36rpx;
-  color: #999;
-  padding: 8rpx;
-}
-
-.bind-modal-body {
-  padding: 32rpx;
-}
-
-.bind-modal-tip {
-  font-size: 28rpx;
-  color: #666;
-  margin-bottom: 32rpx;
-  display: block;
-  text-align: center;
-}
-
-.bind-form-item {
-  margin-bottom: 24rpx;
-}
-
-.bind-input {
-  width: 100%;
-  height: 90rpx;
-  background: #f5f5f5;
-  border-radius: 12rpx;
-  padding: 0 24rpx;
-  font-size: 30rpx;
-  box-sizing: border-box;
-}
-
-.code-row {
-  display: flex;
-  gap: 16rpx;
-}
-
-.code-input {
-  flex: 1;
-}
-
-.bind-code-btn {
-  width: 200rpx;
-  height: 90rpx;
-  background: #6B8DD6;
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 26rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &[disabled] {
-    background: #ccc;
-  }
-}
-
-.bind-submit-btn {
-  width: 100%;
-  height: 90rpx;
-  background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 32rpx;
-  font-weight: 600;
-  margin-top: 16rpx;
-
-  &[disabled] {
-    opacity: 0.7;
-  }
-}
-
-.bind-modal-hint {
-  font-size: 26rpx;
-  color: #999;
-  text-align: center;
-  margin-top: -12rpx;
-  margin-bottom: 16rpx;
 }
 </style>
