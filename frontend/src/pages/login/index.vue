@@ -146,8 +146,7 @@
         <!-- #ifdef MP-WEIXIN -->
         <button 
           class="wx-login-btn" 
-          open-type="getUserInfo" 
-          @getuserinfo="wxLogin"
+          @click="wxLogin"
           :disabled="loading"
         >
           <view class="wx-icon-wrapper">
@@ -275,8 +274,8 @@ const forgotPassword = () => {
 }
 
 // 微信登录 - 获取手机号按钮回调
-const wxLogin = async (e) => {
-  console.log('[WxLogin] 点击微信登录按钮', e)
+const wxLogin = async () => {
+  console.log('[WxLogin] 开始微信静默登录')
   
   // #ifndef MP-WEIXIN
   uni.showToast({ title: '请在微信小程序中使用', icon: 'none' })
@@ -285,33 +284,16 @@ const wxLogin = async (e) => {
   
   // #ifdef MP-WEIXIN
   try {
-    console.log('[WxLogin] detail:', e.detail)
-    
-    // 检查用户是否授权
-    if (e.detail.errMsg && e.detail.errMsg.includes('fail')) {
-      console.log('[WxLogin] 用户拒绝授权:', e.detail.errMsg)
-      uni.showToast({ title: '需要授权才能登录', icon: 'none' })
-      return
-    }
-    
     loading.value = true
     uni.showLoading({ title: '登录中...' })
     
     // 获取微信登录凭证
     const wxCode = await getWxLoginCode()
-    
-    // 获取用户信息
-    const { userInfo, encryptedData, iv } = e.detail
-    
-    console.log('[WxLogin] 用户信息:', userInfo)
+    console.log('[WxLogin] 获取到 code:', wxCode ? '成功' : '失败')
     
     // 调用后端微信登录接口
     const loginData = {
       wxCode,
-      encryptedData,
-      iv,
-      avatarUrl: userInfo?.avatarUrl,
-      nickName: userInfo?.nickName,
       loginType: 'weixin'
     }
     
