@@ -227,7 +227,7 @@ const handleLogin = async () => {
       : { phone: form.phone, code: form.code, loginType: 'sms' }
     
     await userStore.login(loginData)
-    saveCredentials()
+    // 登录成功，跳转到首页
     uni.showToast({ title: '登录成功', icon: 'success' })
 
     // 延迟一点跳转，让 storage 同步完成
