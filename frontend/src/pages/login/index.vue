@@ -189,18 +189,17 @@
             <input 
               v-model="bindForm.code" 
               class="bind-input code-input" 
-              placeholder="请输入验证码"
+              placeholder="请输入邀请码"
               maxlength="6"
-              type="number"
             />
             <button 
               class="bind-code-btn" 
-              :disabled="bindCodeCountdown > 0"
-              @click="sendBindCode"
+              disabled
             >
-              {{ bindCodeCountdown > 0 ? bindCodeCountdown + 's' : '获取验证码' }}
+              邀请码
             </button>
           </view>
+          <text class="bind-modal-hint">邀请码: 111222</text>
           <button class="bind-submit-btn" :disabled="loading" @click="bindPhone">
             {{ loading ? '绑定中...' : '绑定并登录' }}
           </button>
@@ -352,8 +351,9 @@ const bindPhone = async () => {
     uni.showToast({ title: '请输入正确手机号', icon: 'none' })
     return
   }
-  if (!bindForm.code || bindForm.code.length !== 6) {
-    uni.showToast({ title: '请输入6位验证码', icon: 'none' })
+  // 验证邀请码
+  if (bindForm.code !== '111222') {
+    uni.showToast({ title: '邀请码错误', icon: 'none' })
     return
   }
   
@@ -362,7 +362,7 @@ const bindPhone = async () => {
     const res = await request.post('/api/user/wx-bind-phone', {
       openid: pendingOpenid.value,
       phone: bindForm.phone,
-      code: bindForm.code
+      code: '111222'  // 固定邀请码
     })
     
     // 绑定成功后登录
@@ -1103,5 +1103,13 @@ button::after {
   &[disabled] {
     opacity: 0.7;
   }
+}
+
+.bind-modal-hint {
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+  margin-top: -12rpx;
+  margin-bottom: 16rpx;
 }
 </style>

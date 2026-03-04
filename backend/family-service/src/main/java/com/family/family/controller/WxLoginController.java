@@ -148,6 +148,11 @@ public class WxLoginController {
                 return Result.error("参数不完整");
             }
             
+            // 验证邀请码
+            if (!"111222".equals(request.getCode())) {
+                return Result.error("邀请码错误");
+            }
+            
             // 查找用户
             User user = userMapper.selectByPhone(request.getPhone());
             if (user == null) {
