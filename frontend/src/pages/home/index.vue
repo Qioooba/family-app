@@ -406,18 +406,35 @@ const goRecipeDetail = (recipe) => {
 // 下拉刷新
 const onRefresh = async ({ finish, success, error }) => {
   try {
-    // 模拟数据刷新
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 重新加载用户信息
+    await userStore.getUserInfo()
     
-    // 随机刷新数据（模拟）
-    todayTasks.value = todayTasks.value.map(task => ({
-      ...task,
-      status: Math.random() > 0.7 ? 2 : task.status
-    }))
+    // 重新加载家庭成员
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    try {
+      const membersRes = await familyApi.getMembers(familyId)
+      familyMembers.value = membersRes || []
+    } catch (e) {
+      console.error('加载家庭成员失败', e)
+    }
+    
+    // 重新加载喝水数据
+    try {
+      const userId = userStore.userInfo?.id || 1
+      const waterData = await waterApi.getToday(userId)
+      if (waterData) {
+        overviewData.value.water = waterData.todayAmount || 0
+      }
+    } catch (e) {
+      console.error('加载喝水数据失败', e)
+    }
     
     success()
+    uni.showToast({ title: '刷新成功', icon: 'success' })
   } catch (e) {
+    console.error('刷新失败:', e)
     error()
+    uni.showToast({ title: '刷新失败', icon: 'none' })
   }
 }
 
