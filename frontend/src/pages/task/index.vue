@@ -390,6 +390,24 @@ onMounted(() => {
 
 // 页面显示时自动刷新数据
 onShow(() => {
+  // 检查是否有从其他页面传来的 filter
+  const taskFilter = uni.getStorageSync('taskFilter')
+  if (taskFilter) {
+    // 根据 filter 设置当前分类
+    switch (taskFilter) {
+      case 'today':
+        currentCategory.value = 0 // 待办
+        break
+      case 'completed':
+        currentCategory.value = 1 // 已完成
+        break
+      case 'overdue':
+        currentCategory.value = 0 // 待办（逾期任务在待办中显示）
+        break
+    }
+    // 清除 filter，避免重复应用
+    uni.removeStorageSync('taskFilter')
+  }
   loadTasks(true)
 })
 

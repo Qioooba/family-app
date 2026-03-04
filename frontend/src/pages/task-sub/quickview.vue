@@ -380,15 +380,18 @@ const handleAction = (action) => {
 }
 
 const goToTodayTasks = () => {
-  uni.navigateTo({ url: '/pages/task/index?filter=today' })
+  uni.setStorageSync('taskFilter', 'today')
+  uni.switchTab({ url: '/pages/task/index' })
 }
 
 const goToCompleted = () => {
-  uni.navigateTo({ url: '/pages/task/index?filter=completed' })
+  uni.setStorageSync('taskFilter', 'completed')
+  uni.switchTab({ url: '/pages/task/index' })
 }
 
 const goToOverdue = () => {
-  uni.navigateTo({ url: '/pages/task/index?filter=overdue' })
+  uni.setStorageSync('taskFilter', 'overdue')
+  uni.switchTab({ url: '/pages/task/index' })
 }
 
 const goToStats = () => {
@@ -396,7 +399,8 @@ const goToStats = () => {
 }
 
 const viewAllTasks = () => {
-  uni.navigateTo({ url: '/pages/task/index' })
+  uni.removeStorageSync('taskFilter')
+  uni.switchTab({ url: '/pages/task/index' })
 }
 
 const goToTask = (task) => {
