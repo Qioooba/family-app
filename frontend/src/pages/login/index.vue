@@ -166,6 +166,47 @@
         <!-- #endif -->
       </view>
     </view>
+    
+    <!-- 绑定手机号弹窗 -->
+    <view v-if="showBindModal" class="bind-modal-overlay" @click="showBindModal = false">
+      <view class="bind-modal" @click.stop>
+        <view class="bind-modal-header">
+          <text class="bind-modal-title">绑定手机号</text>
+          <text class="bind-modal-close" @click="showBindModal = false">✕</text>
+        </view>
+        <view class="bind-modal-body">
+          <text class="bind-modal-tip">首次登录需要绑定手机号</text>
+          <view class="bind-form-item">
+            <input 
+              v-model="bindForm.phone" 
+              class="bind-input" 
+              placeholder="请输入手机号"
+              maxlength="11"
+              type="number"
+            />
+          </view>
+          <view class="bind-form-item code-row">
+            <input 
+              v-model="bindForm.code" 
+              class="bind-input code-input" 
+              placeholder="请输入验证码"
+              maxlength="6"
+              type="number"
+            />
+            <button 
+              class="bind-code-btn" 
+              :disabled="bindCodeCountdown > 0"
+              @click="sendBindCode"
+            >
+              {{ bindCodeCountdown > 0 ? bindCodeCountdown + 's' : '获取验证码' }}
+            </button>
+          </view>
+          <button class="bind-submit-btn" :disabled="loading" @click="bindPhone">
+            {{ loading ? '绑定中...' : '绑定并登录' }}
+          </button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -272,6 +313,78 @@ const forgotPassword = () => {
   uni.navigateTo({ url: '/pages/forgot-password/index' })
 }
 
+// 绑定手机号相关
+const showBindModal = ref(false)
+const pendingOpenid = ref('')
+const bindForm = reactive({
+  phone: '',
+  code: ''
+})
+const bindCodeCountdown = ref(0)
+
+// 发送绑定验证码
+const sendBindCode = async () => {
+  if (bindCodeCountdown.value > 0) return
+  if (!bindForm.phone || bindForm.phone.length !== 11) {
+    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
+    return
+  }
+  
+  try {
+    await userApi.sendSmsCode(bindForm.phone)
+    uni.showToast({ title: '验证码已发送', icon: 'success' })
+    
+    bindCodeCountdown.value = 60
+    const timer = setInterval(() => {
+      bindCodeCountdown.value--
+      if (bindCodeCountdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (e) {
+    uni.showToast({ title: e.message || '发送失败', icon: 'none' })
+  }
+}
+
+// 绑定手机号并登录
+const bindPhone = async () => {
+  if (!bindForm.phone || bindForm.phone.length !== 11) {
+    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
+    return
+  }
+  if (!bindForm.code || bindForm.code.length !== 6) {
+    uni.showToast({ title: '请输入6位验证码', icon: 'none' })
+    return
+  }
+  
+  loading.value = true
+  try {
+    const res = await request.post('/api/user/wx-bind-phone', {
+      openid: pendingOpenid.value,
+      phone: bindForm.phone,
+      code: bindForm.code
+    })
+    
+    // 绑定成功后登录
+    userStore.setToken(res)
+    uni.setStorageSync('currentFamilyId', res?.currentFamilyId)
+    
+    showBindModal.value = false
+    uni.showToast({ title: '绑定成功', icon: 'success' })
+    
+    setTimeout(() => {
+      uni.reLaunch({ url: '/pages/home/index' })
+    }, 500)
+  } catch (error) {
+    uni.showToast({ 
+      title: error.message || '绑定失败', 
+      icon: 'none' 
+    })
+  } finally {
+    loading.value = false
+  }
+}
+
 // 微信登录 - 获取手机号按钮回调
 const wxLogin = async () => {
   console.log('[WxLogin] 开始微信静默登录')
@@ -297,6 +410,19 @@ const wxLogin = async () => {
     }
     
     const res = await userStore.wxLogin(loginData)
+    console.log('[WxLogin] 登录响应:', JSON.stringify(res))
+    
+    // 检查是否需要绑定手机号
+    if (res && res.needBindPhone) {
+      uni.hideLoading()
+      loading.value = false
+      // 保存 openid 用于绑定
+      pendingOpenid.value = res.openid
+      // 显示绑定手机号弹窗
+      showBindModal.value = true
+      uni.showToast({ title: '请先绑定手机号', icon: 'none' })
+      return
+    }
     
     uni.hideLoading()
     uni.showToast({ title: '登录成功', icon: 'success' })
@@ -869,6 +995,113 @@ button::after {
   .other-login {
     max-width: 560rpx;
     width: 100%;
+  }
+}
+
+/* 绑定手机号弹窗 */
+.bind-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.bind-modal {
+  width: 600rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.bind-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.bind-modal-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.bind-modal-close {
+  font-size: 36rpx;
+  color: #999;
+  padding: 8rpx;
+}
+
+.bind-modal-body {
+  padding: 32rpx;
+}
+
+.bind-modal-tip {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 32rpx;
+  display: block;
+  text-align: center;
+}
+
+.bind-form-item {
+  margin-bottom: 24rpx;
+}
+
+.bind-input {
+  width: 100%;
+  height: 90rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 30rpx;
+  box-sizing: border-box;
+}
+
+.code-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.code-input {
+  flex: 1;
+}
+
+.bind-code-btn {
+  width: 200rpx;
+  height: 90rpx;
+  background: #6B8DD6;
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &[disabled] {
+    background: #ccc;
+  }
+}
+
+.bind-submit-btn {
+  width: 100%;
+  height: 90rpx;
+  background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-top: 16rpx;
+  
+  &[disabled] {
+    opacity: 0.7;
   }
 }
 </style>
