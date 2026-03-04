@@ -73,23 +73,26 @@ export const dietApi = {
 export const userApi = {
   // 注册
   register: (data) => request.post('/api/user/register', data),
-  
+
   // 登录
   login: (data) => request.post('/api/user/login', data),
-  
+
   // 获取当前用户信息
   getCurrentUser: () => request.get('/api/user/info'),
-  
+
   // 获取用户信息
   getUserById: (id) => request.get(`/api/user/${id}`),
-  
+
   // 更新用户信息
   updateUser: (data) => request.put('/api/user/info', data),
-  
+
   // 修改密码
-  changePassword: (oldPassword, newPassword) => 
+  changePassword: (oldPassword, newPassword) =>
     request.post('/api/user/password', { oldPassword, newPassword }),
-  
+
   // 发送验证码
-  sendSmsCode: (phone) => request.post('/api/user/sms-code', { phone })
+  sendSmsCode: (phone) => request.post('/api/user/sms-code', { phone }),
+
+  // 微信用户绑定手机号
+  wxBindPhone: (data) => request.post('/api/user/wx-bind-phone', data)
 }
