@@ -406,29 +406,7 @@ const goRecipeDetail = (recipe) => {
 // 下拉刷新
 const onRefresh = async ({ finish, success, error }) => {
   try {
-    // 重新加载用户信息
-    await userStore.getUserInfo()
-    
-    // 重新加载家庭成员
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    try {
-      const membersRes = await familyApi.getMembers(familyId)
-      familyMembers.value = membersRes || []
-    } catch (e) {
-      console.error('加载家庭成员失败', e)
-    }
-    
-    // 重新加载喝水数据
-    try {
-      const userId = userStore.userInfo?.id || 1
-      const waterData = await waterApi.getToday(userId)
-      if (waterData) {
-        overviewData.value.water = waterData.todayAmount || 0
-      }
-    } catch (e) {
-      console.error('加载喝水数据失败', e)
-    }
-    
+    await refreshHomeData()
     success()
     uni.showToast({ title: '刷新成功', icon: 'success' })
   } catch (e) {
@@ -441,29 +419,49 @@ const onRefresh = async ({ finish, success, error }) => {
 // 防止重复加载的标志
 let isUserInfoLoaded = false
 
-// 每次页面显示时都加载用户信息
+// 刷新首页数据
+const refreshHomeData = async () => {
+  // 加载用户信息
+  try {
+    await userStore.getUserInfo()
+  } catch (e) {
+    console.log('获取用户信息失败', e)
+  }
+  
+  // 重新加载家庭成员
+  const familyId = uni.getStorageSync('currentFamilyId') || 1
+  try {
+    const membersRes = await familyApi.getMembers(familyId)
+    familyMembers.value = membersRes || []
+  } catch (e) {
+    console.error('加载家庭成员失败', e)
+  }
+  
+  // 重新加载喝水数据
+  try {
+    const userId = userStore.userInfo?.id || 1
+    const waterData = await waterApi.getToday(userId)
+    if (waterData) {
+      overviewData.value.water = waterData.todayAmount || 0
+    }
+  } catch (e) {
+    console.error('加载喝水数据失败', e)
+  }
+}
+
+// 每次页面显示时都刷新数据
 onShow(async () => {
   // H5 兼容：强制从 storage 同步 token
   const storedToken = uni.getStorageSync('token')
   console.log('[Home onShow] storage token:', storedToken ? storedToken.substring(0, 20) + '...' : '空')
   console.log('[Home onShow] store token:', userStore.token ? userStore.token.substring(0, 20) + '...' : '空')
-  console.log('[Home onShow] window token:', window.__APP_TOKEN__ ? window.__APP_TOKEN__.substring(0, 20) + '...' : '空')
   
   if (storedToken && storedToken !== userStore.token) {
     userStore.setToken(storedToken)
   }
   
-  // 如果刚进入页面（onMounted还没执行），跳过onShow的加载
-  // 避免onShow和onMounted重复调用
-  if (isUserInfoLoaded) {
-    try {
-      // 首页忽略 401 错误（可能是后端 /api/user/info 问题，其他接口都正常）
-      await userStore.getUserInfo()
-    } catch (e) {
-      console.log('获取用户信息失败', e)
-      // 401 错误时跳转登录页
-    }
-  }
+  // 每次显示页面都刷新数据
+  await refreshHomeData()
 })
 
 onMounted(async () => {
