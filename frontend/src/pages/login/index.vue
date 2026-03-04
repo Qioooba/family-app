@@ -146,8 +146,8 @@
         <!-- #ifdef MP-WEIXIN -->
         <button 
           class="wx-login-btn" 
-          open-type="getPhoneNumber" 
-          @getphonenumber="wxLogin"
+          open-type="getUserInfo" 
+          @getuserinfo="wxLogin"
           :disabled="loading"
         >
           <view class="wx-icon-wrapper">
@@ -287,10 +287,10 @@ const wxLogin = async (e) => {
   try {
     console.log('[WxLogin] detail:', e.detail)
     
-    // 检查用户是否授权获取手机号
-    if (e.detail.errMsg !== 'getPhoneNumber:ok') {
+    // 检查用户是否授权
+    if (e.detail.errMsg && e.detail.errMsg.includes('fail')) {
       console.log('[WxLogin] 用户拒绝授权:', e.detail.errMsg)
-      uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
+      uni.showToast({ title: '需要授权才能登录', icon: 'none' })
       return
     }
     
@@ -300,14 +300,18 @@ const wxLogin = async (e) => {
     // 获取微信登录凭证
     const wxCode = await getWxLoginCode()
     
-    // 获取手机号信息
-    const { encryptedData, iv } = e.detail
+    // 获取用户信息
+    const { userInfo, encryptedData, iv } = e.detail
+    
+    console.log('[WxLogin] 用户信息:', userInfo)
     
     // 调用后端微信登录接口
     const loginData = {
       wxCode,
       encryptedData,
       iv,
+      avatarUrl: userInfo?.avatarUrl,
+      nickName: userInfo?.nickName,
       loginType: 'weixin'
     }
     
