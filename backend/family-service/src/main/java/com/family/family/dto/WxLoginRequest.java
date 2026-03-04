@@ -36,4 +36,9 @@ public class WxLoginRequest {
      * openid（用于绑定）
      */
     private String openid;
+    
+    /**
+     * 邀请码（用于绑定验证）
+     */
+    private String code;
 }
