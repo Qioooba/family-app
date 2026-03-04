@@ -64,10 +64,10 @@ file:
     path: ./uploads
     base-url: http://qioba.cn:8081
 
-# 微信小程序配置（请修改为你的实际配置）
+# 微信小程序配置（使用环境变量传入）
 weixin:
-  appId: wxyourappid
-  appSecret: yourappsecret
+  appId: ${WEIXIN_APPID:wxbdc70536c5e52b82}
+  appSecret: ${WEIXIN_APPSECRET:}
 
 mybatis-plus:
   configuration:
