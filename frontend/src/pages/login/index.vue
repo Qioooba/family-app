@@ -5,7 +5,7 @@
       <view class="bg-circle circle-2"></view>
       <view class="bg-circle circle-3"></view>
     </view>
-    
+
     <view class="login-content">
       <view class="login-header">
         <view class="logo-wrapper">
@@ -23,20 +23,20 @@
         <view class="title">欢迎回家</view>
         <view class="subtitle">记录美好生活的每一天</view>
       </view>
-      
+
       <view class="login-form glass">
         <!-- 登录方式切换 -->
         <view class="login-tabs">
-          <view 
-            class="tab-item" 
+          <view
+            class="tab-item"
             :class="{ active: loginType === 'password' }"
             @click="loginType = 'password'"
           >
             <text>密码登录</text>
             <view class="tab-indicator" v-if="loginType === 'password'"></view>
           </view>
-          <view 
-            class="tab-item" 
+          <view
+            class="tab-item"
             :class="{ active: loginType === 'sms' }"
             @click="loginType = 'sms'"
           >
@@ -44,7 +44,7 @@
             <view class="tab-indicator" v-if="loginType === 'sms'"></view>
           </view>
         </view>
-        
+
         <!-- 密码登录 -->
         <template v-if="loginType === 'password'">
           <view class="form-item">
@@ -59,7 +59,7 @@
               />
             </view>
           </view>
-          
+
           <view class="form-item">
             <view class="input-wrapper password-wrapper">
               <text class="input-icon">🔒</text>
@@ -76,7 +76,7 @@
             </view>
           </view>
         </template>
-        
+
         <!-- 验证码登录 -->
         <template v-else>
           <view class="form-item">
@@ -92,7 +92,7 @@
               />
             </view>
           </view>
-          
+
           <view class="form-item code-item">
             <view class="input-wrapper code-wrapper">
               <text class="input-icon">🔢</text>
@@ -105,8 +105,8 @@
                 type="number"
               />
             </view>
-            <view 
-              class="code-btn" 
+            <view
+              class="code-btn"
               :class="{ disabled: codeCountdown > 0 }"
               @click="sendCode"
             >
@@ -114,13 +114,13 @@
             </view>
           </view>
         </template>
-        
+
         <view class="form-options">
           <text class="forgot" @click="forgotPassword">忘记密码？</text>
         </view>
-        
-        <button 
-          class="login-btn" 
+
+        <button
+          class="login-btn"
           :loading="loading"
           :disabled="loading"
           @click="handleLogin"
@@ -128,12 +128,12 @@
           <text v-if="!loading" class="btn-text">登 录</text>
           <text v-else class="btn-text">登录中...</text>
         </button>
-        
+
         <view class="tips-text">
           <text>请使用家人分享的邀请码登录</text>
         </view>
       </view>
-      
+
       <!-- 微信登录 -->
       <view class="other-login">
         <view class="divider">
@@ -141,11 +141,11 @@
           <text class="divider-text">其他登录方式</text>
           <view class="line"></view>
         </view>
-        
+
         <!-- 微信登录按钮 - 新设计 -->
         <!-- #ifdef MP-WEIXIN -->
-        <button 
-          class="wx-login-btn" 
+        <button
+          class="wx-login-btn"
           @click="wxLogin"
           :disabled="loading"
         >
@@ -155,7 +155,7 @@
           <text class="wx-btn-text">微信一键登录</text>
         </button>
         <!-- #endif -->
-        
+
         <!-- #ifndef MP-WEIXIN -->
         <view class="wx-login-btn" @click="wxLogin">
           <view class="wx-icon-wrapper">
@@ -166,7 +166,7 @@
         <!-- #endif -->
       </view>
     </view>
-    
+
     <!-- 绑定手机号弹窗 -->
     <view v-if="showBindModal" class="bind-modal-overlay" @click="showBindModal = false">
       <view class="bind-modal" @click.stop>
@@ -177,23 +177,23 @@
         <view class="bind-modal-body">
           <text class="bind-modal-tip">首次登录需要绑定手机号</text>
           <view class="bind-form-item">
-            <input 
-              v-model="bindForm.phone" 
-              class="bind-input" 
+            <input
+              v-model="bindForm.phone"
+              class="bind-input"
               placeholder="请输入手机号"
               maxlength="11"
               type="number"
             />
           </view>
           <view class="bind-form-item code-row">
-            <input 
-              v-model="bindForm.code" 
-              class="bind-input code-input" 
+            <input
+              v-model="bindForm.code"
+              class="bind-input code-input"
               placeholder="请输入邀请码"
               maxlength="6"
             />
-            <button 
-              class="bind-code-btn" 
+            <button
+              class="bind-code-btn"
               disabled
             >
               邀请码
@@ -240,14 +240,14 @@ const form = reactive({
 const handleLogin = async () => {
   console.log('[Login Debug] 当前登录类型:', loginType.value)
   console.log('[Login Debug] form 数据:', JSON.stringify(form))
-  
+
   if (loginType.value === 'password') {
     // 确保字段不为空（去除空白）
     const username = form.username?.trim()
     const password = form.password?.trim()
-    
+
     console.log('[Login Debug] username:', username, 'password:', password ? '有密码' : '空')
-    
+
     if (!username || !password) {
       uni.showToast({ title: '请填写完整信息', icon: 'none' })
       return
@@ -258,13 +258,13 @@ const handleLogin = async () => {
       return
     }
   }
-  
+
   loading.value = true
   try {
-    const loginData = loginType.value === 'password' 
+    const loginData = loginType.value === 'password'
       ? { username: form.username, password: form.password, loginType: 'password' }
       : { phone: form.phone, code: form.code, loginType: 'sms' }
-    
+
     await userStore.login(loginData)
     // 登录成功，跳转到首页
     uni.showToast({ title: '登录成功', icon: 'success' })
@@ -275,8 +275,8 @@ const handleLogin = async () => {
     }, 500)
   } catch (e) {
     console.error('登录失败:', e)
-    uni.showToast({ 
-      title: e.message || '登录失败，请检查网络或账号密码', 
+    uni.showToast({
+      title: e.message || '登录失败，请检查网络或账号密码',
       icon: 'none',
       duration: 2500
     })
@@ -291,11 +291,11 @@ const sendCode = async () => {
     uni.showToast({ title: '请输入正确手机号', icon: 'none' })
     return
   }
-  
+
   try {
     await userApi.sendSmsCode(form.phone)
     uni.showToast({ title: '验证码已发送', icon: 'success' })
-    
+
     codeCountdown.value = 60
     const timer = setInterval(() => {
       codeCountdown.value--
@@ -328,11 +328,11 @@ const sendBindCode = async () => {
     uni.showToast({ title: '请输入正确手机号', icon: 'none' })
     return
   }
-  
+
   try {
     await userApi.sendSmsCode(bindForm.phone)
     uni.showToast({ title: '验证码已发送', icon: 'success' })
-    
+
     bindCodeCountdown.value = 60
     const timer = setInterval(() => {
       bindCodeCountdown.value--
@@ -356,7 +356,7 @@ const bindPhone = async () => {
     uni.showToast({ title: '邀请码错误', icon: 'none' })
     return
   }
-  
+
   loading.value = true
   try {
     const res = await userApi.wxBindPhone({
@@ -364,21 +364,21 @@ const bindPhone = async () => {
       phone: bindForm.phone,
       code: '111222'
     })
-    
+
     // 绑定成功后登录
     userStore.setToken(res)
     uni.setStorageSync('currentFamilyId', res?.currentFamilyId)
-    
+
     showBindModal.value = false
     uni.showToast({ title: '绑定成功', icon: 'success' })
-    
+
     setTimeout(() => {
       uni.reLaunch({ url: '/pages/home/index' })
     }, 500)
   } catch (error) {
-    uni.showToast({ 
-      title: error.message || '绑定失败', 
-      icon: 'none' 
+    uni.showToast({
+      title: error.message || '绑定失败',
+      icon: 'none'
     })
   } finally {
     loading.value = false
@@ -387,46 +387,34 @@ const bindPhone = async () => {
 
 // 微信登录 - 获取手机号按钮回调
 const wxLogin = async () => {
-  console.log('[WxLogin] 开始微信静默登录')
-  
+  console.log('[WxLogin] 开始微信一键登录')
+
   // #ifndef MP-WEIXIN
   uni.showToast({ title: '请在微信小程序中使用', icon: 'none' })
   return
   // #endif
-  
+
   // #ifdef MP-WEIXIN
   try {
     loading.value = true
     uni.showLoading({ title: '登录中...' })
-    
+
     // 获取微信登录凭证
     const wxCode = await getWxLoginCode()
     console.log('[WxLogin] 获取到 code:', wxCode ? '成功' : '失败')
-    
+
     // 调用后端微信登录接口
     const loginData = {
       wxCode,
       loginType: 'weixin'
     }
-    
+
     const res = await userStore.wxLogin(loginData)
-    console.log('[WxLogin] 登录响应:', JSON.stringify(res))
-    
-    // 检查是否需要绑定手机号
-    if (res && res.needBindPhone) {
-      uni.hideLoading()
-      loading.value = false
-      // 保存 openid 用于绑定
-      pendingOpenid.value = res.openid
-      // 显示绑定手机号弹窗
-      showBindModal.value = true
-      uni.showToast({ title: '请先绑定手机号', icon: 'none' })
-      return
-    }
-    
+    console.log('[WxLogin] 登录成功:', res)
+
     uni.hideLoading()
     uni.showToast({ title: '登录成功', icon: 'success' })
-    
+
     // 跳转到首页
     setTimeout(() => {
       uni.reLaunch({ url: '/pages/home/index' })
@@ -434,8 +422,8 @@ const wxLogin = async () => {
   } catch (error) {
     uni.hideLoading()
     console.error('微信登录失败:', error)
-    uni.showToast({ 
-      title: error.message || '微信登录失败，请重试', 
+    uni.showToast({
+      title: error.message || '微信登录失败，请重试',
       icon: 'none',
       duration: 2500
     })
@@ -481,13 +469,13 @@ button::after {
   right: 0;
   bottom: 0;
   overflow: hidden;
-  
+
   .bg-circle {
     position: absolute;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.08);
     animation: float 8s ease-in-out infinite;
-    
+
     &.circle-1 {
       width: 600rpx;
       height: 600rpx;
@@ -495,7 +483,7 @@ button::after {
       right: -150rpx;
       animation-delay: 0s;
     }
-    
+
     &.circle-2 {
       width: 400rpx;
       height: 400rpx;
@@ -503,7 +491,7 @@ button::after {
       left: -100rpx;
       animation-delay: 2s;
     }
-    
+
     &.circle-3 {
       width: 300rpx;
       height: 300rpx;
@@ -537,7 +525,7 @@ button::after {
   text-align: center;
   margin-bottom: 50rpx;
   flex-shrink: 0;
-  
+
   .logo-wrapper {
     display: inline-block;
     background: rgba(255, 255, 255, 0.95);
@@ -546,14 +534,14 @@ button::after {
     margin-bottom: 30rpx;
     box-shadow: 0 16rpx 40rpx rgba(0, 0, 0, 0.15);
     animation: scaleIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    
+
     .logo-svg {
       width: 140rpx;
       height: 140rpx;
       display: block;
     }
   }
-  
+
   .title {
     font-size: 48rpx;
     font-weight: 700;
@@ -563,7 +551,7 @@ button::after {
     text-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
     animation: fadeIn 0.8s ease-out;
   }
-  
+
   .subtitle {
     font-size: 28rpx;
     color: rgba(255, 255, 255, 0.9);
@@ -620,7 +608,7 @@ button::after {
   display: flex;
   margin-bottom: 40rpx;
   position: relative;
-  
+
   .tab-item {
     flex: 1;
     text-align: center;
@@ -630,16 +618,16 @@ button::after {
     position: relative;
     transition: all 0.3s ease;
     font-weight: 500;
-    
+
     &.active {
       color: #6B8DD6;
       font-weight: 600;
-      
+
       .tab-indicator {
         transform: scaleX(1);
       }
     }
-    
+
     .tab-indicator {
       position: absolute;
       bottom: 0;
@@ -667,36 +655,36 @@ button::after {
   height: 100rpx;
   border: 2rpx solid transparent;
   transition: all 0.25s ease;
-  
+
   &:focus-within {
     background: #fff;
     border-color: #6B8DD6;
     box-shadow: 0 0 0 6rpx rgba(107, 141, 214, 0.1);
   }
-  
+
   .input-icon {
     font-size: 32rpx;
     margin-right: 20rpx;
     opacity: 0.7;
   }
-  
+
   .login-input {
     flex: 1;
     height: 100%;
     font-size: 30rpx;
     color: #2d3748;
     background: transparent;
-    
+
     /* #ifdef H5 */
     line-height: normal;
     /* #endif */
   }
-  
+
   .input-placeholder {
     color: #a0aec0;
     font-size: 28rpx;
   }
-  
+
   .password-toggle {
     padding: 16rpx;
     margin-right: -8rpx;
@@ -705,7 +693,7 @@ button::after {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    
+
     &:active {
       background: rgba(0, 0, 0, 0.05);
     }
@@ -716,7 +704,7 @@ button::after {
   display: flex;
   align-items: center;
   gap: 20rpx;
-  
+
   .code-wrapper {
     flex: 1;
   }
@@ -737,13 +725,13 @@ button::after {
   font-weight: 600;
   box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.35);
   transition: all 0.25s ease;
-  
+
   &.disabled {
     background: #cbd5e0;
     box-shadow: none;
     opacity: 0.7;
   }
-  
+
   &:active:not(.disabled) {
     transform: scale(0.96);
     box-shadow: 0 4rpx 12rpx rgba(107, 141, 214, 0.25);
@@ -754,14 +742,14 @@ button::after {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 36rpx;
-  
+
   .forgot {
     font-size: 26rpx;
     color: #6B8DD6;
     padding: 8rpx 0;
     font-weight: 500;
     transition: all 0.2s ease;
-    
+
     &:active {
       opacity: 0.7;
     }
@@ -784,18 +772,18 @@ button::after {
   margin: 0;
   padding: 0;
   border: none;
-  
+
   .btn-text {
     color: #fff;
     font-size: 34rpx;
     font-weight: 600;
   }
-  
+
   &:active {
     transform: translateY(2rpx) scale(0.98);
     box-shadow: 0 6rpx 20rpx rgba(107, 141, 214, 0.3);
   }
-  
+
   &[disabled] {
     opacity: 0.7;
   }
@@ -805,7 +793,7 @@ button::after {
   text-align: center;
   margin-top: 32rpx;
   padding: 16rpx 0;
-  
+
   text {
     font-size: 24rpx;
     color: #999;
@@ -817,18 +805,18 @@ button::after {
   margin-top: auto;
   padding-bottom: 20rpx;
   animation: fadeIn 1.2s ease-out;
-  
+
   .divider {
     display: flex;
     align-items: center;
     margin-bottom: 32rpx;
-    
+
     .line {
       flex: 1;
       height: 2rpx;
       background: rgba(255, 255, 255, 0.3);
     }
-    
+
     .divider-text {
       padding: 0 24rpx;
       font-size: 24rpx;
@@ -840,18 +828,18 @@ button::after {
 .login-icons {
   display: flex;
   justify-content: center;
-  
+
   .icon-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 16rpx;
     transition: all 0.25s ease;
-    
+
     &:active {
       transform: scale(0.92);
     }
-    
+
     .icon {
       width: 100rpx;
       height: 100rpx;
@@ -862,12 +850,12 @@ button::after {
       margin-bottom: 16rpx;
       box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
       transition: all 0.3s ease;
-      
+
       &.wechat {
         background: linear-gradient(135deg, #07c160 0%, #05a350 100%);
       }
     }
-    
+
     .icon-text {
       font-size: 24rpx;
       color: #fff;
@@ -889,20 +877,20 @@ button::after {
   margin-top: 20rpx;
   box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.3);
   transition: all 0.3s ease;
-  
+
   &::after {
     border: none;
   }
-  
+
   &:active {
     transform: scale(0.98);
     box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.2);
   }
-  
+
   &[disabled] {
     opacity: 0.6;
   }
-  
+
   .wx-icon-wrapper {
     width: 56rpx;
     height: 56rpx;
@@ -913,7 +901,7 @@ button::after {
     justify-content: center;
     margin-right: 20rpx;
   }
-  
+
   .wx-btn-text {
     font-size: 32rpx;
     color: #fff;
@@ -926,48 +914,48 @@ button::after {
 @media screen and (max-height: 700px) {
   .login-header {
     margin-bottom: 30rpx;
-    
+
     .logo-wrapper {
       padding: 16rpx;
       margin-bottom: 20rpx;
-      
+
       .logo-svg {
         width: 120rpx;
         height: 120rpx;
       }
     }
-    
+
     .title {
       font-size: 42rpx;
     }
-    
+
     .subtitle {
       font-size: 26rpx;
     }
   }
-  
+
   .login-form {
     padding: 32rpx 28rpx;
     border-radius: 32rpx;
   }
-  
+
   .login-tabs {
     margin-bottom: 28rpx;
-    
+
     .tab-item {
       padding: 20rpx 0;
       font-size: 28rpx;
     }
   }
-  
+
   .input-wrapper {
     height: 90rpx;
   }
-  
+
   .code-btn {
     height: 90rpx;
   }
-  
+
   .login-btn {
     height: 92rpx;
   }
@@ -980,18 +968,18 @@ button::after {
     align-items: center;
     justify-content: center;
   }
-  
+
   .login-form {
     max-width: 560rpx;
     width: 100%;
     padding: 48rpx 44rpx;
   }
-  
+
   .login-header {
     max-width: 560rpx;
     width: 100%;
   }
-  
+
   .other-login {
     max-width: 560rpx;
     width: 100%;
@@ -1084,7 +1072,7 @@ button::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   &[disabled] {
     background: #ccc;
   }
@@ -1099,7 +1087,7 @@ button::after {
   font-size: 32rpx;
   font-weight: 600;
   margin-top: 16rpx;
-  
+
   &[disabled] {
     opacity: 0.7;
   }

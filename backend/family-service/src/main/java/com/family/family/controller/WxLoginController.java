@@ -71,31 +71,15 @@ public class WxLoginController {
                 log.info("解密手机号: {}", phoneNumber);
             }
             
-            // 3. 根据手机号查找用户
-            User user = null;
-            if (phoneNumber != null && !phoneNumber.isEmpty()) {
-                user = userMapper.selectByPhone(phoneNumber);
-            }
+            // 3. 根据 openid 查找用户
+            User user = userMapper.selectByWxOpenid(openid);
             
-            // 4. 如果用户不存在但有openid，尝试通过openid查找
+            // 4. 如果用户不存在，自动创建新用户
             if (user == null) {
-                user = userMapper.selectByWxOpenid(openid);
-            }
-            
-            // 5. 如果用户仍不存在，需要绑定手机号
-            if (user == null) {
-                if (phoneNumber == null || phoneNumber.isEmpty()) {
-                    // 需要用户先绑定手机号
-                    Map<String, Object> result = new HashMap<>();
-                    result.put("needBindPhone", true);
-                    result.put("openid", openid);
-                    return Result.success("需要绑定手机号", result);
-                }
-                
                 // 创建新用户
                 user = new User();
-                user.setUsername(phoneNumber);
-                user.setPhone(phoneNumber);
+                user.setUsername("wx_" + openid.substring(0, 8));
+                user.setPhone("");  // 空手机号
                 user.setNickname("微信用户");
                 user.setWxOpenid(openid);
                 user.setStatus(1);
@@ -104,17 +88,10 @@ public class WxLoginController {
                 user.setPassword(""); // 微信用户初始密码为空
                 
                 userMapper.insert(user);
-                log.info("微信登录创建新用户: id={}, phone={}", user.getId(), phoneNumber);
-            } else {
-                // 更新用户的 openid（如果之前没有绑定）
-                if (user.getWxOpenid() == null || user.getWxOpenid().isEmpty()) {
-                    user.setWxOpenid(openid);
-                    user.setUpdateTime(LocalDateTime.now());
-                    userMapper.updateById(user);
-                }
+                log.info("微信登录自动创建新用户: id={}, openid={}", user.getId(), openid);
             }
             
-            // 6. 登录返回 token
+            // 5. 登录返回 token
             StpUtil.login(user.getId());
             String token = StpUtil.getTokenValue();
             

@@ -173,6 +173,31 @@
         </view>
       </view>
       
+      <!-- 编辑昵称弹窗 -->
+      <view class="edit-modal" v-if="showEditNicknameModal">
+        <view class="modal-mask" @click="showEditNicknameModal = false"></view>
+        <view class="modal-content">
+          <view class="modal-header">
+            <text class="modal-title">编辑昵称</text>
+            <text class="modal-close" @click="showEditNicknameModal = false">✕</text>
+          </view>
+          
+          <view class="modal-body">
+            <input 
+              v-model="newNickname" 
+              class="nickname-input" 
+              placeholder="请输入昵称"
+              maxlength="20"
+            />
+          </view>
+          
+          <view class="modal-footer">
+            <button class="btn-cancel" @click="showEditNicknameModal = false">取消</button>
+            <button class="btn-confirm" @click="saveNickname">保存</button>
+          </view>
+        </view>
+      </view>
+      
       <!-- 底部/设置区域 -->
       <view class="settings-section">
         <view class="setting-item" @click="goFamilyManage">
@@ -238,6 +263,11 @@ const showInviteCodeModal = ref(false)
 const currentInviteCode = ref('')
 const inviteCodes = ref([])
 const generating = ref(false)
+
+// 编辑昵称弹窗状态
+const showEditNicknameModal = ref(false)
+const editingMember = ref(null)
+const newNickname = ref('')
 
 // 统计数据
 const stats = ref({
@@ -452,11 +482,60 @@ const goFeature = (feature) => {
 
 // 显示成员详情
 const showMemberDetail = (member) => {
-  uni.showModal({
-    title: member.nickname,
-    content: member.phone || '未绑定手机',
-    showCancel: false
-  })
+  const currentUserId = userStore.userInfo?.id
+  const isSelf = member.userId === currentUserId || member.id === currentUserId
+  
+  if (isSelf) {
+    // 是自己的信息，显示编辑选项
+    uni.showActionSheet({
+      itemList: ['编辑昵称', '查看详情'],
+      success: (res) => {
+        if (res.tapIndex === 0) {
+          // 编辑昵称
+          editingMember.value = member
+          newNickname.value = member.nickname || ''
+          showEditNicknameModal.value = true
+        } else {
+          // 查看详情
+          uni.showModal({
+            title: member.nickname,
+            content: `手机号: ${member.phone || '未绑定'}\n角色: ${member.role || '成员'}`,
+            showCancel: false
+          })
+        }
+      }
+    })
+  } else {
+    // 是其他成员，只显示详情
+    uni.showModal({
+      title: member.nickname,
+      content: `手机号: ${member.phone || '未绑定'}\n角色: ${member.role || '成员'}`,
+      showCancel: false
+    })
+  }
+}
+
+// 保存昵称
+const saveNickname = async () => {
+  if (!newNickname.value.trim()) {
+    uni.showToast({ title: '昵称不能为空', icon: 'none' })
+    return
+  }
+  
+  try {
+    uni.showLoading({ title: '保存中...' })
+    await userStore.updateUserInfo({ nickname: newNickname.value.trim() })
+    uni.hideLoading()
+    
+    showEditNicknameModal.value = false
+    uni.showToast({ title: '保存成功', icon: 'success' })
+    
+    // 刷新成员列表
+    loadFamilyData()
+  } catch (e) {
+    uni.hideLoading()
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
 }
 
 // 跳转家庭管理
@@ -1151,6 +1230,98 @@ $danger: #FF6B6B;
           }
         }
       }
+    }
+  }
+}
+
+// 编辑昵称弹窗
+.edit-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  .modal-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  .modal-content {
+    width: 560rpx;
+    background: #fff;
+    border-radius: 24rpx;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32rpx;
+    border-bottom: 1rpx solid #f0f0f0;
+    
+    .modal-title {
+      font-size: 34rpx;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .modal-close {
+      font-size: 36rpx;
+      color: #999;
+      padding: 8rpx;
+    }
+  }
+  
+  .modal-body {
+    padding: 40rpx 32rpx;
+    
+    .nickname-input {
+      width: 100%;
+      height: 90rpx;
+      background: #f5f5f5;
+      border-radius: 12rpx;
+      padding: 0 24rpx;
+      font-size: 30rpx;
+      box-sizing: border-box;
+    }
+  }
+  
+  .modal-footer {
+    display: flex;
+    padding: 24rpx 32rpx 40rpx;
+    gap: 20rpx;
+    
+    .btn-cancel, .btn-confirm {
+      flex: 1;
+      height: 80rpx;
+      border-radius: 12rpx;
+      font-size: 30rpx;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+    }
+    
+    .btn-confirm {
+      background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
+      color: #fff;
+      font-weight: 600;
     }
   }
 }
