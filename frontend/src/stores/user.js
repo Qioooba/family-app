@@ -123,6 +123,7 @@ export const useUserStore = defineStore('user', () => {
     setToken,
     setUserInfo,
     login,
+    wxLogin,
     register,
     getUserInfo,
     updateUserInfo,
