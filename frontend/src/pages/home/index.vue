@@ -380,9 +380,8 @@ const goTaskDetail = (task) => {
 }
 
 const goAddTask = () => {
-  // 设置标记，告诉任务页面要打开添加弹窗
-  uni.setStorageSync('taskOpenAddModal', true)
-  uni.switchTab({ url: '/pages/task/index' })
+  // 跳转到创建待办页面
+  uni.navigateTo({ url: '/pages/task/create' })
 }
 
 const goTaskList = () => {
