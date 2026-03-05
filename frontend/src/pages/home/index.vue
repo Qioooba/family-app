@@ -319,16 +319,16 @@
               <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
             </picker-view-column>
             <picker-view-column>
-              <view v-for="month in 12" :key="month" class="picker-item">{{ month }}月</view>
+              <view v-for="month in 12" :key="'m'+month" class="picker-item">{{ month }}月</view>
             </picker-view-column>
             <picker-view-column>
-              <view v-for="day in daysInMonth" :key="day" class="picker-item">{{ day }}日</view>
+              <view v-for="day in daysInMonth" :key="'d'+day" class="picker-item">{{ day }}日</view>
             </picker-view-column>
             <picker-view-column>
-              <view v-for="hour in 24" :key="hour-1" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
+              <view v-for="hour in 24" :key="'h'+hour" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
             </picker-view-column>
             <picker-view-column>
-              <view v-for="minute in 60" :key="minute-1" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
+              <view v-for="minute in 60" :key="'min'+minute" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
             </picker-view-column>
           </picker-view>
         </view>
