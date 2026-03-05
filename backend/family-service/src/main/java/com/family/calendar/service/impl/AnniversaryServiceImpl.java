@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -81,7 +82,7 @@ public class AnniversaryServiceImpl extends ServiceImpl<AnniversaryMapper, Anniv
         // 过滤只返回有权限查看的纪念日
         if (currentMemberId == null) {
             // 未登录用户返回空列表
-            return List.of();
+            return new ArrayList<>();
         }
         
         return allAnniversaries.stream()
@@ -103,7 +104,7 @@ public class AnniversaryServiceImpl extends ServiceImpl<AnniversaryMapper, Anniv
         
         // 过滤只返回有权限查看的纪念日
         if (currentMemberId == null) {
-            return List.of();
+            return new ArrayList<>();
         }
         
         return allAnniversaries.stream()
@@ -132,7 +133,7 @@ public class AnniversaryServiceImpl extends ServiceImpl<AnniversaryMapper, Anniv
         
         // 过滤只返回有权限查看的纪念日
         if (currentMemberId == null) {
-            return List.of();
+            return new ArrayList<>();
         }
         
         return allAnniversaries.stream()

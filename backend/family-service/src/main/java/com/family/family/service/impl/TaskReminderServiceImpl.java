@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -190,7 +191,7 @@ public class TaskReminderServiceImpl implements TaskReminderService {
         );
         
         if (userTasks.isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
         
         List<Long> taskIds = userTasks.stream().map(Task::getId).collect(Collectors.toList());

@@ -1,5 +1,7 @@
 package com.family.recipe.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import com.family.common.core.Result;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -9,49 +11,34 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/recipe")
+@SaCheckLogin
 public class RecipeController {
 
     @GetMapping("/search")
-    public Map<String, Object> search(
+    public Result<List<Map<String, Object>>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long familyId) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("message", "success");
-        result.put("data", new ArrayList<>());
-        return result;
+        return Result.success(new ArrayList<>());
     }
     
     @PostMapping("/create")
-    public Map<String, Object> create(@RequestBody Map<String, Object> recipe) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("message", "success");
-        result.put("data", recipe);
-        return result;
+    public Result<Map<String, Object>> create(@RequestBody Map<String, Object> recipe) {
+        return Result.success(recipe);
     }
     
     @GetMapping("/{id}")
-    public Map<String, Object> getById(@PathVariable Long id) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("message", "success");
+    public Result<Map<String, Object>> getById(@PathVariable Long id) {
         Map<String, Object> data = new HashMap<>();
         data.put("id", id);
         data.put("name", "示例菜谱");
-        result.put("data", data);
-        return result;
+        return Result.success(data);
     }
     
     @GetMapping("/categories")
-    public Map<String, Object> categories() {
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("message", "success");
+    public Result<List<String>> categories() {
         List<String> cats = new ArrayList<>();
         cats.add("中餐");
         cats.add("西餐");
-        result.put("data", cats);
-        return result;
+        return Result.success(cats);
     }
 }
