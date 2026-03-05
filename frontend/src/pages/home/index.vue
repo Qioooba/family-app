@@ -467,6 +467,79 @@ const getMemberName = (userId) => {
   return member ? (member.nickname || member.name || '家人') : '自己'
 }
 
+// 格式化任务时间
+const formatTaskTime = (dueTime) => {
+  if (!dueTime) return '今天'
+  
+  // 如果是数组格式 [year, month, day, hour, minute]，转换为时间字符串
+  let timeStr = dueTime
+  if (Array.isArray(dueTime)) {
+    const [year, month, day, hour, minute] = dueTime
+    timeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')}`
+  }
+  
+  // 如果包含空格，提取时间部分
+  const timePart = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr
+  // 只显示小时和分钟
+  return '今天 ' + timePart.substring(0, 5)
+}
+
+// 加载今日待办数据
+const loadTodayTasks = async () => {
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    
+    // 先加载家庭成员（用于显示指派人名称）
+    try {
+      const membersRes = await familyApi.getMembers(familyId)
+      familyMembers.value = membersRes || []
+    } catch (e) {
+      console.error('加载家庭成员失败', e)
+      familyMembers.value = []
+    }
+    
+    // 使用与待办列表页相同的API，获取所有待办任务（status=0）
+    const res = await taskApi.getList(familyId, 0)
+    const allTodoTasks = res.list || []
+    
+    // 获取今天的日期字符串
+    const today = new Date()
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const todayStrShort = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
+    
+    // 筛选今日待办任务（dueDate 是今天）
+    const todayTodoTasks = allTodoTasks.filter(task => {
+      // 如果任务没有截止日期，默认也算今天
+      if (!task.dueDate) return true
+      
+      // 处理日期格式：可能是字符串 "2026-03-03" 或数组 [2026,3,3]
+      let taskDateStr = ''
+      if (Array.isArray(task.dueDate)) {
+        const [y, m, d] = task.dueDate
+        taskDateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      } else if (typeof task.dueDate === 'string') {
+        taskDateStr = task.dueDate
+      }
+      
+      return taskDateStr === todayStr || taskDateStr === todayStrShort
+    })
+    
+    // 格式化并显示所有今日待办
+    if (todayTodoTasks.length > 0) {
+      todayTasks.value = todayTodoTasks.map(task => ({
+        ...task,
+        assigneeName: getMemberName(task.assigneeId) || '家人',
+        time: formatTaskTime(task.dueTime)
+      }))
+    } else {
+      todayTasks.value = []
+    }
+  } catch (e) {
+    console.error('加载待办数据失败', e)
+    todayTasks.value = []
+  }
+}
+
 // 显示日期时间选择器
 const showDateTimePicker = () => {
   const now = new Date()
@@ -696,143 +769,6 @@ onShow(async () => {
   
   // 每次显示页面都刷新数据
   await refreshHomeData()
-})
-
-onMounted(async () => {
-  // 加载用户信息
-  try {
-    await userStore.getUserInfo()
-    isUserInfoLoaded = true
-  } catch (e) {
-    console.log('获取用户信息失败', e)
-  }
-  
-  // 加载首页数据
-  // 模拟数据加载完成，隐藏骨架屏
-  setTimeout(() => {
-    hideSkeleton()
-  }, 800)
-  
-  // 加载喝水数据
-  try {
-    const userId = userStore.userInfo?.id || uni.getStorageSync('userInfo')?.id || 1
-    // 获取今日喝水量
-    const waterData = await waterApi.getToday(userId)
-    if (waterData) {
-      overviewData.value.water = waterData.todayAmount || 0
-    }
-    // 获取喝水目标
-    const targetData = await waterApi.getTarget(userId)
-    if (targetData) {
-      overviewData.value.waterTarget = targetData.targetAmount || 2000
-    }
-  } catch (e) {
-    console.error('加载喝水数据失败', e)
-  }
-  
-  // 加载今日待办数据 - 使用与待办列表页相同的API，只筛选今日待办
-  const loadTodayTasks = async () => {
-    try {
-      const familyId = uni.getStorageSync('currentFamilyId') || 1
-      
-      // 先加载家庭成员（用于显示指派人名称）
-      try {
-        const membersRes = await familyApi.getMembers(familyId)
-        familyMembers.value = membersRes || []
-      } catch (e) {
-        console.error('加载家庭成员失败', e)
-        familyMembers.value = []
-      }
-      
-      // 使用与待办列表页相同的API，获取所有待办任务（status=0）
-      const res = await taskApi.getList(familyId, 0)
-      const allTodoTasks = res.list || []
-      
-      // 获取今天的日期字符串
-      const today = new Date()
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-      const todayStrShort = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
-      
-      // 筛选今日待办任务（dueDate 是今天）
-      const todayTodoTasks = allTodoTasks.filter(task => {
-        // 如果任务没有截止日期，默认也算今天
-        if (!task.dueDate) return true
-        
-        // 处理日期格式：可能是字符串 "2026-03-03" 或数组 [2026,3,3]
-        let taskDateStr = ''
-        if (Array.isArray(task.dueDate)) {
-          const [y, m, d] = task.dueDate
-          taskDateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-        } else if (typeof task.dueDate === 'string') {
-          taskDateStr = task.dueDate
-        }
-        
-        return taskDateStr === todayStr || taskDateStr === todayStrShort
-      })
-      
-      // 格式化并显示所有今日待办
-      if (todayTodoTasks.length > 0) {
-        todayTasks.value = todayTodoTasks.map(task => ({
-          ...task,
-          assigneeName: getMemberName(task.assigneeId) || '家人',
-          time: formatTaskTime(task.dueTime)
-        }))
-      } else {
-        todayTasks.value = []
-      }
-    } catch (e) {
-      console.error('加载待办数据失败', e)
-      todayTasks.value = []
-    }
-  }
-  
-  // 获取成员名称函数
-  const getMemberName = (userId) => {
-    if (!userId) return '未指派'
-    if (!familyMembers.value || !Array.isArray(familyMembers.value)) return '家人'
-    const member = familyMembers.value.find(m => m.userId === userId)
-    return member?.nickname || member?.name || '家人'
-  }
-  
-  // 格式化任务时间
-  const formatTaskTime = (dueTime) => {
-    if (!dueTime) return '今天'
-    
-    // 如果是数组格式 [year, month, day, hour, minute]，转换为时间字符串
-    let timeStr = dueTime
-    if (Array.isArray(dueTime)) {
-      const [year, month, day, hour, minute] = dueTime
-      timeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')}`
-    }
-    
-    // 如果包含空格，提取时间部分
-    const timePart = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr
-    // 只显示小时和分钟
-    return '今天 ' + timePart.substring(0, 5)
-  }
-  
-  // 调用加载今日待办
-  await loadTodayTasks()
-  
-  // 加载近期纪念日数据
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    const anniData = await anniversaryApi.getUpcoming(familyId, 30)
-    if (anniData && anniData.length > 0) {
-      upcomingAnniversaries.value = anniData.slice(0, 3).map(item => ({
-        id: item.id,
-        title: item.title,
-        date: item.anniversaryDate ? item.anniversaryDate.substring(5) : item.date,
-        days: item.daysUntil || item.days || 0,
-        icon: getAnniversaryIcon(item.type || item.category)
-      }))
-    } else {
-      upcomingAnniversaries.value = []
-    }
-  } catch (e) {
-    console.error('加载纪念日数据失败', e)
-    upcomingAnniversaries.value = []
-  }
 })
 
 // 获取纪念日图标
