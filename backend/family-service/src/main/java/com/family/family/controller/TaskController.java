@@ -92,8 +92,8 @@ public class TaskController {
                 query.eq(Task::getStatus, status);
             }
             
-            // 按截止时间排序，没有截止时间的排最后
-            query.orderByAsc(Task::getDueTime);
+            // 按创建时间排序（避免null值问题）
+            query.orderByDesc(Task::getCreateTime);
             List<Task> tasks = taskMapper.selectList(query);
             
             // 查询待办数量
@@ -165,8 +165,10 @@ public class TaskController {
             result.put("message", "success");
             result.put("data", data);
         } catch (Exception e) {
+            e.printStackTrace();
             result.put("code", 500);
             result.put("message", "查询失败：" + e.getMessage());
+            result.put("errorType", e.getClass().getName());
         }
         return result;
     }
