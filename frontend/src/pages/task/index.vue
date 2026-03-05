@@ -547,18 +547,31 @@ const filteredTasks = computed(() => {
     if (!tasks.value || !Array.isArray(tasks.value)) {
       return []
     }
-    const status = categories[currentCategory.value]?.status
+    const status = categories.value[currentCategory.value]?.status
     let result = tasks.value
+    
+    // 严格按状态过滤
     if (status !== undefined) {
-      result = result.filter(function(t) { return t.status === status })
+      result = result.filter(t => t.status === status)
     }
+    
+    // 按截止时间排序：先显示未来快到期的，已过期的排最后
     if (result.length > 1) {
       const now = Date.now()
-      return result.slice().sort(function(a, b) {
-        const dateA = a.dueTime ? new Date(a.dueTime).getTime() : 0
-        const dateB = b.dueTime ? new Date(b.dueTime).getTime() : 0
-        // 按距离当前时间最近的排在最上面
-        return Math.abs(dateA - now) - Math.abs(dateB - now)
+      result = result.slice().sort((a, b) => {
+        const dateA = a.dueTime ? new Date(a.dueTime).getTime() : Infinity
+        const dateB = b.dueTime ? new Date(b.dueTime).getTime() : Infinity
+        
+        // 如果都过期了，按过期时间近的排前面
+        if (dateA < now && dateB < now) {
+          return dateB - dateA  // 过期时间近的在前
+        }
+        // 如果都没过期，按到期时间近的排前面
+        if (dateA >= now && dateB >= now) {
+          return dateA - dateB  // 到期时间近的在前
+        }
+        // 一个过期一个没过期，没过期的在前
+        return dateA >= now ? -1 : 1
       })
     }
     return result
