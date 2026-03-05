@@ -7,20 +7,23 @@ import { request } from '../utils/request'
  */
 export const taskApi = {
   /**
-   * 获取任务列表
-   * @param {number} familyId - 家庭ID
-   * @param {object} params - 可选参数: categoryId, status
-   * @returns {Promise<Array>} 任务列表
+   * 获取任务列表（分页）
+   * @param {object} params - 参数: familyId, status, page, size
+   * @returns {Promise<object>} 任务列表和分页信息
    */
-  getList: (familyId, status = null) => {
-    const params = status !== null ? { familyId, status } : { familyId }
-    return request.get('/api/task/list', params).then(res => {
+  getList: (params = {}) => {
+    const { familyId, status, page = 1, size = 20 } = params
+    const queryParams = { familyId, page, size }
+    if (status !== null && status !== undefined) {
+      queryParams.status = status
+    }
+    return request.get('/api/task/list', queryParams).then(res => {
       // 兼容新旧接口格式
-      if (res && res.list) {
+      if (res && (res.list || res.data)) {
         return res
       }
       // 旧格式直接返回
-      return { list: res, todoCount: 0, doneCount: 0 }
+      return { list: res, total: res?.length || 0, pages: 1, current: 1, size: 20 }
     })
   },
   

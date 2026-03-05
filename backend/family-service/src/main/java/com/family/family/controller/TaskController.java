@@ -3,6 +3,8 @@ package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.family.family.entity.FamilyMember;
 import com.family.family.entity.Task;
 import com.family.family.entity.User;
@@ -61,7 +63,11 @@ public class TaskController {
     }
 
     @GetMapping("/list")
-    public Map<String, Object> list(@RequestParam Long familyId, @RequestParam(required = false) Integer status) {
+    public Map<String, Object> list(
+            @RequestParam Long familyId,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
         Map<String, Object> result = new HashMap<>();
         Long userId = getCurrentUserId();
 
@@ -79,6 +85,9 @@ public class TaskController {
         }
 
         try {
+            // 创建分页对象
+            Page<Task> pageParam = new Page<>(page, size);
+            
             // 查询当前状态的任务列表
             LambdaQueryWrapper<Task> query = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
@@ -90,7 +99,7 @@ public class TaskController {
             
             // 按截止时间排序，没有截止时间的排最后
             query.orderByAsc(Task::getDueTime);
-            List<Task> tasks = taskMapper.selectList(query);
+            IPage<Task> pageResult = taskMapper.selectPage(pageParam, query);
             
             // 查询待办数量
             LambdaQueryWrapper<Task> todoQuery = new LambdaQueryWrapper<Task>()
@@ -98,6 +107,23 @@ public class TaskController {
                 .eq(Task::getIsDeleted, 0)
                 .eq(Task::getStatus, 0);
             Long todoCount = taskMapper.selectCount(todoQuery);
+
+            result.put("code", 200);
+            result.put("message", "success");
+            result.put("data", pageResult.getRecords());
+            result.put("total", pageResult.getTotal());
+            result.put("pages", pageResult.getPages());
+            result.put("current", pageResult.getCurrent());
+            result.put("size", pageResult.getSize());
+            result.put("todoCount", todoCount);
+            
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", "获取任务列表失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
             
             // 查询已完成数量
             LambdaQueryWrapper<Task> doneQuery = new LambdaQueryWrapper<Task>()

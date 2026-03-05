@@ -23,7 +23,12 @@
     </scroll-view>
     
     <!-- 任务列表 -->
-    <scroll-view class="task-list" scroll-y>
+    <scroll-view 
+      class="task-list" 
+      scroll-y
+      @scrolltolower="loadMoreTasks"
+      :lower-threshold="100"
+    >
       <view 
         v-for="(task, index) in filteredTasks" 
         :key="task.id || index"
@@ -80,6 +85,13 @@
       <view v-if="filteredTasks.length === 0" class="empty-state">
         <text class="empty-icon">📝</text>
         <text class="empty-text">暂无任务，点击右上角添加</text>
+      </view>
+      
+      <!-- 加载更多提示 -->
+      <view v-if="filteredTasks.length > 0" class="load-more">
+        <text v-if="isLoadingMore" class="load-more-text">加载中...</text>
+        <text v-else-if="!hasMore" class="load-more-text">没有更多了</text>
+        <text v-else class="load-more-text">上拉加载更多</text>
       </view>
     </scroll-view>
     
@@ -310,7 +322,14 @@ const currentSubtaskTask = ref(null)
 const newSubtaskTitle = ref('')
 const tasks = ref([])
 const loading = ref(false)
-const isRefreshing = ref(false) // 防重复加载标志
+const isRefreshing = ref(false)
+
+// 分页相关
+const page = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
+const hasMore = ref(true)
+const isLoadingMore = ref(false) // 防重复加载标志
 
 // 家庭成员列表
 const familyMembers = ref([
@@ -336,33 +355,82 @@ const daysInMonth = computed(() => {
 })
 
 // 加载任务列表
-const loadTasks = async (force = false) => {
+const loadTasks = async (force = false, loadMore = false) => {
   // 防重复：如果正在加载且不是强制刷新，则跳过
-  if (!force && isRefreshing.value) {
+  if (!force && isRefreshing.value && !loadMore) {
     return
   }
-  isRefreshing.value = true
-  loading.value = true
+  
+  // 如果是刷新，重置分页
+  if (force && !loadMore) {
+    page.value = 1
+    hasMore.value = true
+  }
+  
+  // 如果没有更多了，不加载
+  if (loadMore && !hasMore.value) return
+  
+  if (loadMore) {
+    isLoadingMore.value = true
+  } else {
+    isRefreshing.value = true
+    loading.value = true
+  }
+  
   try {
     // 从本地存储获取家庭ID
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     // 先加载家庭成员
     await loadFamilyMembers()
-    const res = await taskApi.getList(familyId)
+    
+    // 获取当前分类对应的状态
+    const status = categories[currentCategory.value]?.status
+    
+    // 调用分页接口
+    const res = await taskApi.getList({
+      familyId,
+      status,
+      page: page.value,
+      size: pageSize.value
+    })
+    
     // 兼容新旧接口格式
-    const taskList = res.list || res || []
+    const taskList = res.list || res.data || res || []
+    
     // 把 assigneeId 转换为 assigneeName
-    tasks.value = taskList.map(task => ({
+    const formattedTasks = taskList.map(task => ({
       ...task,
       assigneeName: getMemberName(task.assigneeId) || '未指派'
     }))
+    
+    if (loadMore) {
+      // 加载更多，追加数据
+      tasks.value = [...tasks.value, ...formattedTasks]
+    } else {
+      // 刷新或首次加载，替换数据
+      tasks.value = formattedTasks
+    }
+    
+    // 更新分页信息
+    total.value = res.total || 0
+    const pages = res.pages || Math.ceil((res.total || 0) / pageSize.value) || 1
+    hasMore.value = page.value < pages
+    
   } catch (e) {
     console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
   } finally {
     loading.value = false
     isRefreshing.value = false
+    isLoadingMore.value = false
   }
+}
+
+// 加载更多
+const loadMoreTasks = () => {
+  if (!hasMore.value || isLoadingMore.value) return
+  page.value++
+  loadTasks(false, true)
 }
 
 // 加载家庭成员
