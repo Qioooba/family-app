@@ -1,113 +1,120 @@
 import { request } from '../utils/request'
 
 /**
- * 心愿相关API
- * 对应后端: WishController.java
- * BasePath: /api/wish
+ * 心愿墙相关API
  */
 export const wishApi = {
   /**
    * 获取心愿列表
    * @param {number} familyId - 家庭ID
-   * @param {object} params - 可选参数: type, status
-   * @returns {Promise<Array>} 心愿列表
+   * @returns {Promise<Array>}
    */
-  getList: (familyId, params = {}) => request.get('/api/wish/list', { familyId, ...params }),
+  getList: (familyId) => {
+    return request.get('/api/wish/list', { familyId }).then(res => {
+      if (res && Array.isArray(res)) {
+        return res
+      }
+      return res?.data || []
+    })
+  },
+  
+  /**
+   * 获取我的心愿
+   * @param {number} familyId - 家庭ID
+   * @returns {Promise<Array>}
+   */
+  getMyList: (familyId) => {
+    return request.get('/api/wish/my', { familyId }).then(res => {
+      if (res && Array.isArray(res)) {
+        return res
+      }
+      return res?.data || []
+    })
+  },
+  
+  /**
+   * 获取心愿详情
+   * @param {number} id - 心愿ID
+   * @returns {Promise<Object>}
+   */
+  getDetail: (id) => {
+    return request.get('/api/wish/detail', { id }).then(res => {
+      return res?.data || res
+    })
+  },
   
   /**
    * 创建心愿
-   * @param {object} data - 心愿数据
-   * @returns {Promise<object>} 创建的心愿
+   * @param {Object} data - 心愿数据
+   * @returns {Promise<Object>}
    */
-  create: (data) => request.post('/api/wish/create', data),
+  create: (data) => {
+    return request.post('/api/wish/create', data)
+  },
   
   /**
    * 更新心愿
-   * @param {object} data - 心愿数据(需包含id)
-   * @returns {Promise<object>} 更新后的心愿
+   * @param {Object} data - 心愿数据
+   * @returns {Promise<Object>}
    */
-  update: (data) => request.put('/api/wish/update', data),
-  
-  /**
-   * 认领心愿
-   * @param {number} wishId - 心愿ID
-   * @param {number} userId - 认领用户ID
-   * @returns {Promise<void>}
-   */
-  claim: (wishId, userId) => request.post(`/api/wish/claim/${wishId}`, { userId }),
-  
-  /**
-   * 更新进度
-   * @param {number} wishId - 心愿ID
-   * @param {number} progress - 进度(0-100)
-   * @returns {Promise<void>}
-   */
-  updateProgress: (wishId, progress) => request.post(`/api/wish/progress/${wishId}`, { progress }),
-  
-  /**
-   * 完成心愿
-   * @param {number} wishId - 心愿ID
-   * @returns {Promise<void>}
-   */
-  complete: (wishId) => request.post(`/api/wish/complete/${wishId}`),
-  
-  /**
-   * 放弃心愿
-   * @param {number} wishId - 心愿ID
-   * @returns {Promise<void>}
-   */
-  abandon: (wishId) => request.post(`/api/wish/abandon/${wishId}`),
+  update: (data) => {
+    return request.put('/api/wish/update', data)
+  },
   
   /**
    * 删除心愿
    * @param {number} id - 心愿ID
-   * @returns {Promise<void>}
+   * @returns {Promise}
    */
-  delete: (id) => request.delete(`/api/wish/${id}`),
-
+  delete: (id) => {
+    return request.delete(`/api/wish/${id}`)
+  },
+  
   /**
-   * 设置心愿预算
-   * @param {number} id - 心愿ID
-   * @param {object} data - {targetAmount, currentAmount, currency}
-   * @returns {Promise<void>}
+   * 认领心愿
+   * @param {number} wishId - 心愿ID
+   * @returns {Promise<Object>}
    */
-  setBudget: (id, data) => request.post(`/api/wish/${id}/budget`, data),
-
+  claim: (wishId) => {
+    return request.post(`/api/wish/claim/${wishId}`, {})
+  },
+  
   /**
-   * 获取预算统计
-   * @param {number} familyId - 家庭ID
-   * @returns {Promise<object>} 预算统计
+   * 取消认领
+   * @param {number} wishId - 心愿ID
+   * @returns {Promise<Object>}
    */
-  getBudgetStats: (familyId) => request.get('/api/wish/budget-stats', { familyId }),
-
+  cancelClaim: (wishId) => {
+    return request.post(`/api/wish/cancel/${wishId}`, {})
+  },
+  
   /**
-   * 获取里程碑列表
-   * @param {number} id - 心愿ID
-   * @returns {Promise<Array>} 里程碑列表
+   * 更新进度
+   * @param {number} wishId - 心愿ID
+   * @param {Object} data - 进度数据 { progress }
+   * @returns {Promise<Object>}
    */
-  getMilestones: (id) => request.get(`/api/wish/${id}/milestones`),
-
+  updateProgress: (wishId, data) => {
+    return request.post(`/api/wish/progress/${wishId}`, data)
+  },
+  
   /**
-   * 添加里程碑
-   * @param {number} id - 心愿ID
-   * @param {object} data - {title, targetDate, description}
-   * @returns {Promise<object>} 创建的里程碑
+   * 完成心愿
+   * @param {number} wishId - 心愿ID
+   * @returns {Promise<Object>}
    */
-  addMilestone: (id, data) => request.post(`/api/wish/${id}/milestone`, data),
-
+  complete: (wishId) => {
+    return request.post(`/api/wish/complete/${wishId}`)
+  },
+  
   /**
-   * 完成里程碑
-   * @param {number} milestoneId - 里程碑ID
-   * @returns {Promise<void>}
+   * 放弃心愿
+   * @param {number} wishId - 心愿ID
+   * @returns {Promise<Object>}
    */
-  completeMilestone: (milestoneId) => request.put(`/api/milestone/${milestoneId}/complete`),
-
-  /**
-   * 删除里程碑
-   * @param {number} milestoneId - 里程碑ID
-   * @returns {Promise<void>}
-   */
-  deleteMilestone: (milestoneId) => request.delete(`/api/milestone/${milestoneId}`)
+  abandon: (wishId) => {
+    return request.post(`/api/wish/abandon/${wishId}`)
+  }
 }
 
 export default wishApi
