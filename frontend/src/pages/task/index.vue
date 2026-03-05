@@ -542,11 +542,23 @@ const subtaskProgress = (task) => {
   return Math.round((subtaskCompleted(task) / task.subtasks.length) * 100)
 }
 
-const toggleSubtask = (task, sub) => {
+const toggleSubtask = async (task, sub) => {
+  // 先更新本地状态
   sub.status = sub.status === 0 ? 1 : 0
-  // 检查是否全部完成
-  if (subtaskProgress(task) === 100) {
-    uni.showToast({ title: '所有子任务完成！', icon: 'success' })
+  
+  // 同步到后端
+  try {
+    await taskApi.toggleSubtask(sub.id)
+    
+    // 检查是否全部完成
+    if (subtaskProgress(task) === 100) {
+      uni.showToast({ title: '所有子任务完成！', icon: 'success' })
+    }
+  } catch (e) {
+    // 如果后端失败，恢复本地状态
+    sub.status = sub.status === 0 ? 1 : 0
+    uni.showToast({ title: '更新失败', icon: 'none' })
+    console.error('子任务状态更新失败:', e)
   }
 }
 

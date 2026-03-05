@@ -25,8 +25,9 @@ export const useUserStore = defineStore('user', () => {
     }
     uni.setStorageSync('token', tokenValue)
     // 确保同步完成
-    console.log('[Store] setToken:', tokenValue ? tokenValue.substring(0, 20) + '...' : '空')
-    console.log('[Store] verify token:', uni.getStorageSync('token') ? 'OK' : 'FAIL')
+    // 简化日志
+    // console.log('[Store] setToken:', tokenValue ? '已设置' : '空')
+    // console.log('[Store] verify token:', uni.getStorageSync('token') ? 'OK' : 'FAIL')
   }
   
   const setUserInfo = (val) => {

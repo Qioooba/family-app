@@ -104,7 +104,8 @@ const getToken = () => {
       }
     }
     
-    console.log('[Token] 读取token:', token ? token.substring(0, 20) + '...' : '空')
+    // 简化 token 日志（生产环境只显示是否存在，不显示内容）
+    console.log('[Token] 读取token:', token ? '存在' : '空')
     return token || ''
   } catch (e) {
     console.log('[Token] 读取token失败:', e)
@@ -119,19 +120,8 @@ const baseRequest = async (options, retryCount = 0) => {
   const token = getToken()
   const baseUrl = getBaseUrl(options.url)
   
-  // 详细的token调试日志
-  console.log(`[Request Debug] ${options.method || 'GET'} ${options.url}`)
-  console.log(`[Request Debug] token原始值:`, token)
-  console.log(`[Request Debug] token类型:`, typeof token)
-  console.log(`[Request Debug] token长度:`, token ? token.length : 0)
-  console.log(`[Request Debug] token存在:`, !!token)
-  
-  // 检查token格式
-  if (token) {
-    console.log(`[Request Debug] token前缀:`, token.substring(0, 20) + '...')
-    console.log(`[Request Debug] token是否包含空格:`, token.includes(' '))
-    console.log(`[Request Debug] token是否包含Bearer:`, token.toLowerCase().includes('bearer'))
-  }
+  // 简化的请求日志（不打印敏感信息）
+  console.log(`[Request] ${options.method || 'GET'} ${options.url}`)
   
   return new Promise((resolve, reject) => {
     const requestHeaders = {
@@ -141,7 +131,8 @@ const baseRequest = async (options, retryCount = 0) => {
       ...(options.headers || {})
     }
     
-    console.log(`[Request Debug] 请求头:`, JSON.stringify(requestHeaders, null, 2))
+    // 简化请求头日志
+    // console.log(`[Request] 请求头:`, Object.keys(requestHeaders))
     
     const requestTask = uni.request({
       url: baseUrl + options.url,

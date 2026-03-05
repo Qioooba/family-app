@@ -166,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '../../stores/user'
 import { userApi } from '../../api/index'
 import { getWxLoginCode, isWeixinEnvironment } from '../../utils/wxLogin.js'
@@ -177,6 +177,17 @@ const loading = ref(false)
 const codeCountdown = ref(0)
 const passwordVisible = ref(false)
 const isWxEnv = ref(false)
+
+// 验证码倒计时定时器
+let countdownTimer = null
+
+// 页面卸载时清理定时器
+onUnmounted(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+    countdownTimer = null
+  }
+})
 
 onMounted(() => {
   isWxEnv.value = isWeixinEnvironment()
@@ -253,10 +264,15 @@ const sendCode = async () => {
     uni.showToast({ title: '验证码已发送', icon: 'success' })
 
     codeCountdown.value = 60
-    const timer = setInterval(() => {
+    // 清理之前的定时器
+    if (countdownTimer) {
+      clearInterval(countdownTimer)
+    }
+    countdownTimer = setInterval(() => {
       codeCountdown.value--
       if (codeCountdown.value <= 0) {
-        clearInterval(timer)
+        clearInterval(countdownTimer)
+        countdownTimer = null
       }
     }, 1000)
   } catch (e) {

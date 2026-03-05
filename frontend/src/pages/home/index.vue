@@ -452,8 +452,9 @@ const refreshHomeData = async () => {
 onShow(async () => {
   // H5 兼容：强制从 storage 同步 token
   const storedToken = uni.getStorageSync('token')
-  console.log('[Home onShow] storage token:', storedToken ? storedToken.substring(0, 20) + '...' : '空')
-  console.log('[Home onShow] store token:', userStore.token ? userStore.token.substring(0, 20) + '...' : '空')
+  // 简化日志
+  // console.log('[Home onShow] storage token:', storedToken ? '存在' : '空')
+  // console.log('[Home onShow] store token:', userStore.token ? '存在' : '空')
   
   if (storedToken && storedToken !== userStore.token) {
     userStore.setToken(storedToken)
