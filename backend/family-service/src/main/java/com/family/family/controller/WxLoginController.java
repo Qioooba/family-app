@@ -3,8 +3,10 @@ package com.family.family.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
 import com.family.family.dto.WxLoginRequest;
+import com.family.family.entity.InviteCode;
 import com.family.family.entity.User;
 import com.family.family.mapper.UserMapper;
+import com.family.family.service.InviteCodeService;
 import com.family.family.utils.WxDecryptUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +31,9 @@ public class WxLoginController {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private InviteCodeService inviteCodeService;
 
     @Value("${weixin.appId:wxyourappid}")
     private String appId;
@@ -125,9 +130,10 @@ public class WxLoginController {
                 return Result.error("参数不完整");
             }
             
-            // 验证邀请码
-            if (!"111222".equals(request.getCode())) {
-                return Result.error("邀请码错误");
+            // 验证邀请码（从数据库读取）
+            InviteCode inviteCode = inviteCodeService.verifyInviteCode(request.getCode());
+            if (inviteCode == null) {
+                return Result.error("邀请码无效或已过期");
             }
             
             // 查找用户
@@ -145,6 +151,10 @@ public class WxLoginController {
             user.setWxOpenid(request.getOpenid());
             user.setUpdateTime(LocalDateTime.now());
             userMapper.updateById(user);
+            
+            // 增加邀请码使用次数
+            inviteCode.setUsedCount(inviteCode.getUsedCount() + 1);
+            inviteCodeService.updateById(inviteCode);
             
             // 登录返回 token
             StpUtil.login(user.getId());

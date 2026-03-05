@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.family.common.annotation.RateLimit;
 import com.family.family.entity.User;
 import com.family.family.entity.FamilyMember;
 import com.family.family.mapper.UserMapper;
@@ -126,6 +127,7 @@ public class UserController {
 
     @PostMapping("/login")
     @SaIgnore
+    @RateLimit(qps = 5.0, message = "登录请求过于频繁，请稍后再试")
     public Map<String, Object> login(@RequestBody Map<String, Object> params) {
         Map<String, Object> result = new HashMap<>();
         try {
@@ -247,6 +249,7 @@ public class UserController {
 
     @PostMapping("/register")
     @SaIgnore
+    @RateLimit(qps = 3.0, message = "注册请求过于频繁，请稍后再试")
     public Map<String, Object> register(@RequestBody Map<String, Object> params) {
         Map<String, Object> result = new HashMap<>();
         try {

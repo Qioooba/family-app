@@ -1,8 +1,11 @@
 package com.family.family.config;
 
+import com.family.common.interceptor.RateLimitInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -16,6 +19,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Value("${file.upload.path:./uploads}")
     private String uploadPath;
+
+    @Autowired
+    private RateLimitInterceptor rateLimitInterceptor;
 
     /**
      * 配置静态资源映射
@@ -50,5 +56,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
+    }
+
+    /**
+     * 注册拦截器
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        // 注册限流拦截器
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/user/login", "/api/user/register", "/api/user/wx-login");
     }
 }
