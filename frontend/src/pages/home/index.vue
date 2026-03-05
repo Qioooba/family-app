@@ -753,6 +753,9 @@ const refreshHomeData = async () => {
   } catch (e) {
     console.error('加载喝水数据失败', e)
   }
+  
+  // 加载今日待办
+  await loadTodayTasks()
 }
 
 // 每次页面显示时都刷新数据
