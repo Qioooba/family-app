@@ -499,7 +499,7 @@ const loadTodayTasks = async () => {
     }
     
     // 使用与待办列表页相同的API，获取所有待办任务（status=0）
-    const res = await taskApi.getList(familyId, 0)
+    const res = await taskApi.getList({ familyId, status: 0 })
     const allTodoTasks = res.list || []
     
     // 获取今天的日期字符串
