@@ -1,180 +1,113 @@
 <template>
   <view class="game-page">
-    <!-- 头部 -->
-    <view class="game-header"
-    >
-      <view class="header-title">
-        <text class="title-icon">🎮</text>
-        <text>家庭游戏</text>
-      </view>
-      <view class="points-badge" @click="goPoints"
-      >
-        <text class="points-icon">💎</text>
-        <text class="points-value">{{ userPoints }}</text>
-      </view>
-    </view>
-
-    <!-- 转盘游戏 -->
-    <view class="wheel-section"
-    >
-      <view class="section-title">🎯 幸运转盘</view>
-      
-      <view class="wheel-container"
-      >
-        <view class="wheel-wrapper"
-        >
-          <view class="wheel" :style="{ transform: `rotate(${rotation}deg)` }"
-          >
-            <view 
-              v-for="(item, index) in currentWheelItems" 
-              :key="index"
-              class="wheel-item"
-              :style="{ 
-                transform: `rotate(${index * (360 / currentWheelItems.length)}deg)`,
-                background: item.color 
-              }"
-            >
-              <text class="wheel-item-text">{{ item.name }}</text>
+    <!-- 顶部背景 -->
+    <view class="header-bg"></view>
+    
+    <!-- 用户信息 -->
+    <view class="user-section">
+      <view class="user-card">
+        <view class="user-avatar">
+          <text>😎</text>
+        </view>
+        <view class="user-info">
+          <text class="user-name">我</text>
+          <view class="user-stats">
+            <view class="stat-item">
+              <text class="stat-num">{{ userPoints }}</text>
+              <text class="stat-label">积分</text>
+            </view>
+            <view class="stat-item">
+              <text class="stat-num">{{ rank }}</text>
+              <text class="stat-label">排名</text>
             </view>
           </view>
-          <view class="wheel-pointer">▲</view>
-        </view>
-        
-        <view class="wheel-btn" :class="{ spinning: isSpinning }" @click="spin"
-        >
-          <text v-if="!isSpinning">开始</text>
-          <text v-else>🎲</text>
         </view>
       </view>
-      
-      <!-- 转盘选择器 -->
-      <scroll-view class="wheel-selector" scroll-x
-      >
-        <view 
-          v-for="(wheel, index) in wheelOptions" 
-          :key="index"
-          class="wheel-option"
-          :class="{ active: currentWheel === index }"
-          @click="selectWheel(index)"
-        >
-          <text class="wheel-option-icon">{{ wheel.icon }}</text>
-          <text class="wheel-option-name">{{ wheel.name }}</text>
-        </view>
-      </scroll-view>
     </view>
-
-    <!-- 排行榜 -->
-    <view class="ranking-section"
-    >
-      <view class="section-header"
-      >
-        <text class="section-title">🏆 本周排行</text>
-        <view class="rank-tabs"
-        >
-          <text 
-            v-for="(tab, index) in rankTabs" 
-            :key="index"
-            class="rank-tab"
-            :class="{ active: currentRankTab === index }"
-            @click="currentRankTab = index"
-          >
-            {{ tab }}
-          </text>
+    
+    <!-- 游戏列表 -->
+    <view class="games-section">
+      <view class="section-title">🎮 家庭游戏</view>
+      
+      <view class="game-grid">
+        <view class="game-card" v-for="game in games" :key="game.id" @click="playGame(game)">
+          <view class="game-icon" :style="{ background: game.color }">
+            <text>{{ game.icon }}</text>
+          </view>
+          <text class="game-name">{{ game.name }}</text>
+          <text class="game-desc">{{ game.desc }}</text>
+          <view class="game-reward">
+            <text>奖励: {{ game.reward }}积分</text>
+          </view>
         </view>
       </view>
+    </view>
+    
+    <!-- 排行榜 -->
+    <view class="rank-section">
+      <view class="section-title">🏆 排行榜</view>
       
-      <view class="ranking-list"
-      >
+      <view class="rank-list">
         <view 
-          v-for="(user, index) in rankings" 
+          v-for="(item, index) in rankList" 
           :key="index"
           class="rank-item"
-          :class="{ 'top3': index < 3, 'me': user.isMe }"
+          :class="{ top3: index < 3 }"
         >
-          <view class="rank-number">
-            <text v-if="index < 3" class="rank-medal">{{ ['🥇', '🥈', '🥉'][index] }}</text>
+          <view class="rank-num">
+            <text v-if="index === 0">🥇</text>
+            <text v-else-if="index === 1">🥈</text>
+            <text v-else-if="index === 2">🥉</text>
             <text v-else>{{ index + 1 }}</text>
           </view>
-          
-          <image class="rank-avatar" :src="user.avatar" mode="aspectFill" />
-          
-          <view class="rank-info"
-          >
-            <text class="rank-name">{{ user.name }}</text>
-            <text class="rank-score">{{ user.score }} 分</text>
+          <view class="rank-avatar">
+            <text>{{ item.avatar }}</text>
           </view>
-          
-          <view class="rank-trend" :class="user.trend"
-          >
-            <text>{{ user.trend === 'up' ? '↑' : user.trend === 'down' ? '↓' : '-' }}</text>
-          </view>
+          <text class="rank-name">{{ item.name }}</text>
+          <text class="rank-points">{{ item.points }}分</text>
         </view>
       </view>
     </view>
-
-    <!-- 更多游戏 -->
-    <view class="more-games-section">
-      <view class="section-header">
-        <text class="section-title">🎮 更多游戏</text>
-      </view>
+    
+    <!-- 游戏记录 -->
+    <view class="history-section">
+      <view class="section-title">📜 游戏记录</view>
       
-      <view class="games-grid">
-        <view class="game-card" @click="goMindMatch">
-          <view class="game-card-icon">💑</view>
-          <view class="game-card-info">
-            <text class="game-card-title">默契问答</text>
-            <text class="game-card-desc">测试家庭默契度</text>
+      <view class="history-list">
+        <view v-for="record in history" :key="record.id" class="history-item">
+          <view class="history-icon">
+            <text>{{ record.gameIcon }}</text>
           </view>
-          <view class="game-card-arrow">›</view>
-        </view>
-        
-        <view class="game-card" @click="goChallenges">
-          <view class="game-card-icon">🏃</view>
-          <view class="game-card-info">
-            <text class="game-card-title">每日挑战</text>
-            <text class="game-card-desc">健康习惯养成</text>
+          <view class="history-info">
+            <text class="history-name">{{ record.gameName }}</text>
+            <text class="history-time">{{ record.time }}</text>
           </view>
-          <view class="game-card-arrow">›</view>
-        </view>
-        
-        <view class="game-card" @click="goRiddles">
-          <view class="game-card-icon">🧩</view>
-          <view class="game-card-info">
-            <text class="game-card-title">猜谜语</text>
-            <text class="game-card-desc">益智猜谜游戏</text>
+          <view class="history-reward" :class="{ positive: record.points > 0 }">
+            <text>{{ record.points > 0 ? '+' : '' }}{{ record.points }}分</text>
           </view>
-          <view class="game-card-arrow">›</view>
         </view>
       </view>
     </view>
-
-    <!-- 成就徽章 -->
-    <view class="achievements-section"
-    >
-      <view class="section-header"
-      >
-        <text class="section-title">🎖️ 成就徽章</text>
-        <text class="section-more">查看全部 ›</text>
-      </view>
+    
+    <!-- 每日任务 -->
+    <view class="tasks-section">
+      <view class="section-title">📋 每日任务</view>
       
-      <view class="achievements-grid"
-      >
-        <view 
-          v-for="(badge, index) in achievements" 
-          :key="index"
-          class="achievement-item"
-          :class="{ unlocked: badge.unlocked }"
-          @click="showBadgeDetail(badge)"
-        >
-          <view class="badge-icon">{{ badge.icon }}</view>
-          <text class="badge-name">{{ badge.name }}</text>
-          <view v-if="badge.unlocked" class="badge-glow"></view>
+      <view class="tasks-list">
+        <view v-for="task in dailyTasks" :key="task.id" class="task-item" :class="{ completed: task.completed }">
+          <view class="task-check">
+            <text v-if="task.completed">✓</text>
+          </view>
+          <view class="task-info">
+            <text class="task-name">{{ task.name }}</text>
+            <text class="task-desc">{{ task.desc }}</text>
+          </view>
+          <view class="task-reward">
+            <text>+{{ task.reward }}分</text>
+          </view>
         </view>
       </view>
     </view>
-
-    <!-- 底部装饰 -->
-    <view style="height: 40px;"></view>
   </view>
 </template>
 
@@ -182,552 +115,344 @@
 import { ref } from 'vue'
 
 const userPoints = ref(1250)
-const rotation = ref(0)
-const isSpinning = ref(false)
-const currentWheel = ref(0)
-const currentRankTab = ref(0)
+const rank = ref(2)
 
-// 当前转盘的项目
-const wheelOptions = ref([
-  { 
-    name: '家务分配', 
-    icon: '🧹', 
-    items: [
-      { name: '洗碗', color: '#3b82f6', icon: '🍽️' },
-      { name: '拖地', color: '#10b981', icon: '🧹' },
-      { name: '倒垃圾', color: '#f59e0b', icon: '🗑️' },
-      { name: '做饭', color: '#ec4899', icon: '🍳' },
-      { name: '整理', color: '#8b5cf6', icon: '📦' },
-      { name: '免做', color: '#ef4444', icon: '🎉' }
-    ] 
-  },
-  { 
-    name: '吃什么', 
-    icon: '🍽️', 
-    items: [
-      { name: '中餐', color: '#f97316', icon: '🥢' },
-      { name: '西餐', color: '#8b5cf6', icon: '🍕' },
-      { name: '日料', color: '#ec4899', icon: '🍣' },
-      { name: '火锅', color: '#ef4444', icon: '🍲' },
-      { name: '烧烤', color: '#f59e0b', icon: '🍖' },
-      { name: '随便', color: '#64748b', icon: '🤷' }
-    ] 
-  },
-  { 
-    name: '谁买单', 
-    icon: '💰', 
-    items: [
-      { name: '爸爸', color: '#3b82f6', icon: '👨' },
-      { name: '妈妈', color: '#ec4899', icon: '👩' },
-      { name: '孩子', color: '#10b981', icon: '👶' },
-      { name: 'AA制', color: '#8b5cf6', icon: '💕' },
-      { name: '猜拳', color: '#f59e0b', icon: '✊' },
-      { name: '免单', color: '#ef4444', icon: '🎉' }
-    ] 
-  }
+const games = ref([
+  { id: 1, name: '答题挑战', desc: '答对问题赢积分', icon: '🧠', color: 'linear-gradient(135deg, #667eea, #764ba2)', reward: 50 },
+  { id: 2, name: '每日签到', desc: '签到领积分', icon: '📅', color: 'linear-gradient(135deg, #11998e, #38ef7d)', reward: 10 },
+  { id: 3, name: '幸运抽奖', desc: '运气好就中奖', icon: '🎰', color: 'linear-gradient(135deg, #f093fb, #f5576c)', reward: 100 },
+  { id: 4, name: '成语接龙', desc: '展现才华', icon: '📝', color: 'linear-gradient(135deg, #4facfe, #00f2fe)', reward: 30 },
+  { id: 5, name: '猜歌名', desc: '听歌猜名', icon: '🎵', color: 'linear-gradient(135deg, #fa709a, #fee140)', reward: 40 },
+  { id: 6, name: '表情包大赛', desc: '斗图谁怕谁', icon: '😄', color: 'linear-gradient(135deg, #a18cd1, #fbc2eb)', reward: 20 }
 ])
 
-// 当前转盘的项目
-const currentWheelItems = ref([...wheelOptions.value[0].items])
-
-// 解析转盘角度计算结果
-const calculateResult = (totalDegrees) => {
-  // 规范化角度到 0-360
-  const normalizedDegrees = totalDegrees % 360
-  // 每个扇形的角度
-  const sectorAngle = 360 / currentWheelItems.value.length
-  // 计算结果索引
-  // 指针在顶部(12点方向)，顺时针旋转时，需要反向计算
-  // 当转盘旋转到0度时，第0项在顶部
-  // 当转盘顺时针旋转60度时，第5项到顶部(因为第0项转到了右边)
-  const resultIndex = Math.floor((360 - normalizedDegrees) / sectorAngle) % currentWheelItems.value.length
-  return resultIndex
-}
-
-const rankTabs = ref(['积分', '任务', '活跃'])
-
-const rankings = ref([
-  { name: '妈妈', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mom&backgroundColor=b6e3f4', score: 2580, trend: 'up', isMe: false },
-  { name: '爸爸', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dad&backgroundColor=c0aede', score: 1920, trend: 'same', isMe: false },
-  { name: '我', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=me&backgroundColor=ffdfbf', score: 1250, trend: 'up', isMe: true },
-  { name: '宝贝', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=baby&backgroundColor=d1d4f9', score: 980, trend: 'down', isMe: false }
+const rankList = ref([
+  { name: '老婆', points: 2580, avatar: '👩' },
+  { name: '我', points: 1250, avatar: '😎' },
+  { name: '老公', points: 980, avatar: '👨' },
+  { name: '宝宝', points: 450, avatar: '👶' }
 ])
 
-const achievements = ref([
-  { name: '任务达人', icon: '🏆', unlocked: true, rarity: 'legendary' },
-  { name: '家务能手', icon: '🌟', unlocked: true, rarity: 'epic' },
-  { name: '美食家', icon: '🍳', unlocked: true, rarity: 'rare' },
-  { name: '早起鸟', icon: '🌅', unlocked: false, rarity: 'rare' },
-  { name: '运动健将', icon: '💪', unlocked: false, rarity: 'common' },
-  { name: '???', icon: '🔒', unlocked: false, rarity: 'secret' }
+const history = ref([
+  { id: 1, gameName: '答题挑战', gameIcon: '🧠', time: '今天 14:30', points: 30 },
+  { id: 2, gameName: '每日签到', gameIcon: '📅', time: '今天 08:00', points: 10 },
+  { id: 3, gameName: '成语接龙', gameIcon: '📝', time: '昨天 20:15', points: -10 },
+  { id: 4, gameName: '幸运抽奖', gameIcon: '🎰', time: '昨天 19:30', points: 50 }
 ])
 
-const totalRotation = ref(0)
+const dailyTasks = ref([
+  { id: 1, name: '每日签到', desc: '签到1次', reward: 10, completed: true },
+  { id: 2, name: '答题达人', desc: '答对3道题', reward: 30, completed: true },
+  { id: 3, name: '分享游戏', desc: '分享给家人', reward: 20, completed: false },
+  { id: 4, name: '连续登录', desc: '登录3天', reward: 50, completed: false }
+])
 
-const selectWheel = (index) => {
-  currentWheel.value = index
-  currentWheelItems.value = [...wheelOptions.value[index].items]
-}
-
-const spin = () => {
-  if (isSpinning.value) return
-  
-  isSpinning.value = true
-  
-  // 计算随机转动圈数和角度
-  const spins = 5 + Math.random() * 3 // 5-8圈
-  const extraDegrees = Math.random() * 360 // 随机角度
-  
-  const newRotation = spins * 360 + extraDegrees
-  totalRotation.value += newRotation
-  
-  rotation.value = totalRotation.value
-  
-  // 动画时间根据圈数计算
-  const duration = spins * 600 + 1000
-  
-  setTimeout(() => {
-    isSpinning.value = false
-    
-    // 根据转动角度计算结果
-    const resultIndex = calculateResult(totalRotation.value)
-    const result = currentWheelItems.value[resultIndex]
-    
-    console.log('[转盘] rotation:', totalRotation.value, 'resultIndex:', resultIndex, 'result:', result)
-    
-    uni.showModal({
-      title: '🎉 恭喜',
-      content: `结果是：${result.icon} ${result.name}`,
-      showCancel: false
-    })
-  }, duration)
-}
-
-const goPoints = () => {
-  uni.navigateTo({ url: '/pages/game/points' })
-}
-
-const goMindMatch = () => {
-  uni.navigateTo({ url: '/pages/game/mindmatch' })
-}
-
-const goChallenges = () => {
-  uni.navigateTo({ url: '/pages/game/challenges' })
-}
-
-const goRiddles = () => {
-  // 跳转到猜谜游戏
-  uni.showToast({
-    title: '猜谜游戏即将上线',
-    icon: 'none'
-  })
-}
-
-const showBadgeDetail = (badge) => {
-  uni.showToast({
-    title: badge.unlocked ? badge.name : '未解锁',
-    icon: 'none'
-  })
+const playGame = (game) => {
+  uni.showToast({ title: `开始${game.name}`, icon: 'none' })
 }
 </script>
 
 <style lang="scss" scoped>
 .game-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
+  background: #f8f9fc;
+  padding-bottom: 40rpx;
 }
 
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 50px 20px 20px;
-  
-  .header-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 24px;
-    font-weight: 700;
-    color: #fff;
-    
-    .title-icon {
-      font-size: 32px;
-    }
-  }
-  
-  .points-badge {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 16px;
-    background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.1) 100%);
-    border: 1px solid rgba(245,158,11,0.3);
-    border-radius: 20px;
-    
-    .points-icon {
-      font-size: 18px;
-    }
-    
-    .points-value {
-      font-size: 16px;
-      font-weight: 700;
-      color: #fbbf24;
-    }
-  }
-}
-
-.wheel-section {
-  padding: 20px;
-  
-  .section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 20px;
-  }
-}
-
-.wheel-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.wheel-wrapper {
-  position: relative;
-  width: 280px;
-  height: 280px;
-  margin-bottom: 30px;
-}
-
-.wheel {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  position: relative;
-  overflow: hidden;
-  transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-  box-shadow: 0 0 60px rgba(99,102,241,0.3);
-}
-
-.wheel-item {
-  position: absolute;
-  width: 50%;
-  height: 50%;
-  transform-origin: right bottom;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  .wheel-item-text {
-    transform: rotate(30deg);
-    font-size: 14px;
-    font-weight: 600;
-    color: #fff;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  }
-}
-
-.wheel-pointer {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 30px;
-  color: #ef4444;
-  z-index: 10;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
-.wheel-btn {
-  width: 120px;
-  height: 48px;
+.header-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 350rpx;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  box-shadow: 0 8px 30px rgba(102,126,234,0.4);
-  
-  &.spinning {
-    opacity: 0.7;
-  }
-  
-  &:active {
-    transform: scale(0.95);
-  }
 }
 
-.wheel-selector {
-  margin-top: 20px;
-  white-space: nowrap;
+.user-section {
+  position: relative;
+  padding: 100rpx 32rpx 32rpx;
   
-  .wheel-option {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 12px 20px;
-    margin-right: 10px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.08);
-    
-    &.active {
-      background: rgba(99,102,241,0.2);
-      border-color: rgba(99,102,241,0.5);
-    }
-    
-    .wheel-option-icon {
-      font-size: 24px;
-    }
-    
-    .wheel-option-name {
-      font-size: 12px;
-      color: #e2e8f0;
-    }
-  }
-}
-
-.ranking-section {
-  padding: 0 20px;
-  margin-bottom: 20px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  
-  .section-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #fff;
-  }
-  
-  .rank-tabs {
-    display: flex;
-    gap: 8px;
-    padding: 4px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 10px;
-    
-    .rank-tab {
-      padding: 6px 14px;
-      font-size: 12px;
-      color: #64748b;
-      border-radius: 8px;
-      
-      &.active {
-        background: rgba(99,102,241,0.3);
-        color: #fff;
-      }
-    }
-  }
-}
-
-.ranking-list {
-  background: rgba(255,255,255,0.05);
-  border-radius: 20px;
-  padding: 16px;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-.rank-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 8px;
-  
-  &.top3 {
-    background: rgba(255,255,255,0.05);
-  }
-  
-  &.me {
-    background: rgba(99,102,241,0.15);
-    border: 1px solid rgba(99,102,241,0.3);
-  }
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-  
-  .rank-number {
-    width: 32px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: #64748b;
-    
-    .rank-medal {
-      font-size: 20px;
-    }
-  }
-  
-  .rank-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-  }
-  
-  .rank-info {
-    flex: 1;
-    
-    .rank-name {
-      display: block;
-      font-size: 15px;
-      font-weight: 500;
-      color: #fff;
-    }
-    
-    .rank-score {
-      font-size: 13px;
-      color: #fbbf24;
-      margin-top: 2px;
-    }
-  }
-  
-  .rank-trend {
-    font-size: 14px;
-    font-weight: 600;
-    
-    &.up { color: #22c55e; }
-    &.down { color: #ef4444; }
-    &.same { color: #64748b; }
-  }
-}
-
-.more-games-section {
-  padding: 0 20px;
-  margin-bottom: 20px;
-  
-  .games-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .game-card {
+  .user-card {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 32rpx;
+    box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.2);
     
-    &:active {
-      background: rgba(255,255,255,0.08);
-    }
-    
-    .game-card-icon {
-      width: 48px;
-      height: 48px;
+    .user-avatar {
+      width: 120rpx;
+      height: 120rpx;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%);
-      border-radius: 12px;
-      font-size: 24px;
+      font-size: 60rpx;
+      margin-right: 24rpx;
     }
     
-    .game-card-info {
+    .user-info {
       flex: 1;
       
-      .game-card-title {
-        display: block;
-        font-size: 16px;
+      .user-name {
+        font-size: 36rpx;
         font-weight: 600;
-        color: #fff;
-        margin-bottom: 4px;
+        color: #2d3748;
+        display: block;
+        margin-bottom: 16rpx;
       }
       
-      .game-card-desc {
-        font-size: 13px;
-        color: rgba(255,255,255,0.5);
+      .user-stats {
+        display: flex;
+        gap: 40rpx;
+        
+        .stat-item {
+          text-align: center;
+          
+          .stat-num {
+            font-size: 36rpx;
+            font-weight: 600;
+            color: #667eea;
+            display: block;
+          }
+          
+          .stat-label {
+            font-size: 24rpx;
+            color: #8b9aad;
+          }
+        }
       }
     }
+  }
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 32rpx 32rpx 24rpx;
+}
+
+.games-section {
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24rpx;
+    padding: 0 32rpx;
     
-    .game-card-arrow {
-      font-size: 24px;
-      color: rgba(255,255,255,0.3);
+    .game-card {
+      background: #fff;
+      border-radius: 24rpx;
+      padding: 24rpx;
+      text-align: center;
+      
+      .game-icon {
+        width: 100rpx;
+        height: 100rpx;
+        border-radius: 24rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16rpx;
+        font-size: 50rpx;
+      }
+      
+      .game-name {
+        font-size: 28rpx;
+        font-weight: 600;
+        color: #2d3748;
+        display: block;
+        margin-bottom: 8rpx;
+      }
+      
+      .game-desc {
+        font-size: 24rpx;
+        color: #8b9aad;
+        display: block;
+        margin-bottom: 16rpx;
+      }
+      
+      .game-reward {
+        display: inline-block;
+        padding: 8rpx 20rpx;
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 20rpx;
+        font-size: 22rpx;
+        color: #667eea;
+      }
     }
   }
 }
 
-.achievements-section {
-  padding: 0 20px;
-  
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
+.rank-section {
+  .rank-list {
+    margin: 0 32rpx;
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 16rpx;
     
-    .section-title {
-      font-size: 17px;
-      font-weight: 600;
-      color: #fff;
+    .rank-item {
+      display: flex;
+      align-items: center;
+      padding: 20rpx;
+      border-radius: 16rpx;
+      
+      &.top3 {
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), transparent);
+      }
+      
+      .rank-num {
+        width: 60rpx;
+        font-size: 28rpx;
+        color: #8b9aad;
+        
+        text {
+          font-size: 36rpx;
+        }
+      }
+      
+      .rank-avatar {
+        width: 64rpx;
+        height: 64rpx;
+        background: #f1f5f9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16rpx;
+        font-size: 32rpx;
+      }
+      
+      .rank-name {
+        flex: 1;
+        font-size: 28rpx;
+        color: #2d3748;
+      }
+      
+      .rank-points {
+        font-size: 28rpx;
+        font-weight: 600;
+        color: #667eea;
+      }
     }
+  }
+}
+
+.history-section {
+  .history-list {
+    margin: 0 32rpx;
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 16rpx;
     
-    .section-more {
-      font-size: 13px;
-      color: #6366f1;
+    .history-item {
+      display: flex;
+      align-items: center;
+      padding: 20rpx;
+      border-bottom: 2rpx solid #f1f5f9;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .history-icon {
+        width: 64rpx;
+        height: 64rpx;
+        background: #f8f9fc;
+        border-radius: 16rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16rpx;
+        font-size: 32rpx;
+      }
+      
+      .history-info {
+        flex: 1;
+        
+        .history-name {
+          font-size: 28rpx;
+          color: #2d3748;
+          display: block;
+          margin-bottom: 4rpx;
+        }
+        
+        .history-time {
+          font-size: 24rpx;
+          color: #8b9aad;
+        }
+      }
+      
+      .history-reward {
+        font-size: 28rpx;
+        font-weight: 500;
+        color: #8b9aad;
+        
+        &.positive {
+          color: #68d391;
+        }
+      }
     }
   }
 }
 
-.achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.achievement-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 20px 10px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.08);
-  
-  &:not(.unlocked) {
-    opacity: 0.4;
+.tasks-section {
+  .tasks-list {
+    margin: 0 32rpx;
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 16rpx;
+    
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 20rpx;
+      border-radius: 16rpx;
+      
+      &.completed {
+        opacity: 0.6;
+        
+        .task-name {
+          text-decoration: line-through;
+        }
+      }
+      
+      .task-check {
+        width: 44rpx;
+        height: 44rpx;
+        border: 3rpx solid #ddd;
+        border-radius: 50%;
+        margin-right: 16rpx;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #667eea;
+        font-size: 24rpx;
+      }
+      
+      .task-info {
+        flex: 1;
+        
+        .task-name {
+          font-size: 28rpx;
+          color: #2d3748;
+          display: block;
+          margin-bottom: 4rpx;
+        }
+        
+        .task-desc {
+          font-size: 24rpx;
+          color: #8b9aad;
+        }
+      }
+      
+      .task-reward {
+        font-size: 26rpx;
+        color: #667eea;
+        font-weight: 500;
+      }
+    }
   }
-  
-  .badge-icon {
-    font-size: 36px;
-  }
-  
-  .badge-name {
-    font-size: 12px;
-    color: #e2e8f0;
-  }
-  
-  .badge-glow {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    background: radial-gradient(circle, rgba(251,191,36,0.4) 0%, transparent 70%);
-    animation: glow 2s ease-in-out infinite;
-  }
-}
-
-@keyframes glow {
-  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
 }
 </style>
