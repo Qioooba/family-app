@@ -61,7 +61,11 @@ public class TaskController {
     }
 
     @GetMapping("/list")
-    public Map<String, Object> list(@RequestParam Long familyId, @RequestParam(required = false) Integer status) {
+    public Map<String, Object> list(
+            @RequestParam Long familyId, 
+            @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
         Map<String, Object> result = new HashMap<>();
         Long userId = getCurrentUserId();
 
@@ -151,6 +155,11 @@ public class TaskController {
             data.put("list", taskList);
             data.put("todoCount", todoCount);
             data.put("doneCount", doneCount);
+            // 添加分页信息
+            data.put("total", tasks.size());
+            data.put("pages", 1);
+            data.put("current", page);
+            data.put("size", size);
             
             result.put("code", 200);
             result.put("message", "success");
