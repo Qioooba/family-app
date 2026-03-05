@@ -39,6 +39,13 @@
       }
     },
     {
+      "path": "pages/task/create",
+      "style": {
+        "navigationBarTitleText": "创建任务",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/wish/index",
       "style": {
         "navigationBarTitleText": "心愿墙",

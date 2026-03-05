@@ -164,7 +164,7 @@ const wish = ref({
   type: 'item',
   authorId: 1,
   authorName: '妈妈',
-  authorAvatar: '/static/avatar/mom.png',
+  authorAvatar: '../../static/avatar/mom.png',
   progress: 30,
   budget: 2999,
   targetAmount: 2999,

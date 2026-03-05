@@ -350,7 +350,7 @@ const loadFamilyData = async () => {
       members.value = membersRes.map(m => ({
         id: m.id || m.userId,
         nickname: m.nickname || m.name || '未知',
-        avatar: m.avatar || '/static/avatar/default.jpg',
+        avatar: m.avatar || '../../static/avatar/default.jpg',
         phone: m.phone || '',
         role: m.role || 'member',
         isOnline: m.isOnline || false

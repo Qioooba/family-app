@@ -174,23 +174,23 @@ const selectedPhotos = ref([])
 const tags = ref(['旅行', '生日', '节日', '美食', '日常', '成长', '聚会'])
 
 const photos = ref([
-  { id: 1, url: '/static/album/photo1.jpg', date: '2024-02-20', tags: ['生日', '聚会'], width: 800, height: 600 },
-  { id: 2, url: '/static/album/photo2.jpg', date: '2024-02-20', tags: ['生日'], width: 600, height: 800 },
-  { id: 3, url: '/static/album/photo3.jpg', date: '2024-02-18', tags: ['旅行'], width: 800, height: 600 },
-  { id: 4, url: '/static/album/photo4.jpg', date: '2024-02-18', tags: ['旅行', '美食'], width: 600, height: 600 },
-  { id: 5, url: '/static/album/photo5.jpg', date: '2024-02-15', tags: ['日常'], width: 800, height: 600 },
-  { id: 6, url: '/static/album/photo6.jpg', date: '2024-02-15', tags: ['成长'], width: 600, height: 800 },
-  { id: 7, url: '/static/album/photo7.jpg', date: '2024-02-10', tags: ['节日'], width: 800, height: 600 },
-  { id: 8, url: '/static/album/photo8.jpg', date: '2024-02-10', tags: ['节日', '美食'], width: 800, height: 800 }
+  { id: 1, url: '../../static/album/photo1.jpg', date: '2024-02-20', tags: ['生日', '聚会'], width: 800, height: 600 },
+  { id: 2, url: '../../static/album/photo2.jpg', date: '2024-02-20', tags: ['生日'], width: 600, height: 800 },
+  { id: 3, url: '../../static/album/photo3.jpg', date: '2024-02-18', tags: ['旅行'], width: 800, height: 600 },
+  { id: 4, url: '../../static/album/photo4.jpg', date: '2024-02-18', tags: ['旅行', '美食'], width: 600, height: 600 },
+  { id: 5, url: '../../static/album/photo5.jpg', date: '2024-02-15', tags: ['日常'], width: 800, height: 600 },
+  { id: 6, url: '../../static/album/photo6.jpg', date: '2024-02-15', tags: ['成长'], width: 600, height: 800 },
+  { id: 7, url: '../../static/album/photo7.jpg', date: '2024-02-10', tags: ['节日'], width: 800, height: 600 },
+  { id: 8, url: '../../static/album/photo8.jpg', date: '2024-02-10', tags: ['节日', '美食'], width: 800, height: 800 }
 ])
 
 const albums = ref([
-  { id: 1, name: '2024春节', cover: '/static/album/photo7.jpg', count: 58, date: '2024-02-10' },
-  { id: 2, name: '宝贝生日', cover: '/static/album/photo1.jpg', count: 36, date: '2024-02-20' },
-  { id: 3, name: '海南之旅', cover: '/static/album/photo3.jpg', count: 128, date: '2024-02-18' },
-  { id: 4, name: '日常生活', cover: '/static/album/photo5.jpg', count: 256, date: '2024-01-01' },
-  { id: 5, name: '成长记录', cover: '/static/album/photo6.jpg', count: 89, date: '2023-12-01' },
-  { id: 6, name: '家庭聚会', cover: '/static/album/photo2.jpg', count: 45, date: '2024-01-15' }
+  { id: 1, name: '2024春节', cover: '../../static/album/photo7.jpg', count: 58, date: '2024-02-10' },
+  { id: 2, name: '宝贝生日', cover: '../../static/album/photo1.jpg', count: 36, date: '2024-02-20' },
+  { id: 3, name: '海南之旅', cover: '../../static/album/photo3.jpg', count: 128, date: '2024-02-18' },
+  { id: 4, name: '日常生活', cover: '../../static/album/photo5.jpg', count: 256, date: '2024-01-01' },
+  { id: 5, name: '成长记录', cover: '../../static/album/photo6.jpg', count: 89, date: '2023-12-01' },
+  { id: 6, name: '家庭聚会', cover: '../../static/album/photo2.jpg', count: 45, date: '2024-01-15' }
 ])
 
 // 按日期分组
@@ -288,7 +288,7 @@ const createAlbum = () => {
         albums.value.unshift({
           id: Date.now(),
           name: res.content,
-          cover: '/static/album/default.jpg',
+          cover: '../../static/album/default.jpg',
           count: 0,
           date: new Date().toISOString().split('T')[0]
         })

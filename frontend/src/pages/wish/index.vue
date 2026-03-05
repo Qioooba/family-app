@@ -78,7 +78,7 @@ const wishes = ref([
     description: '开学需要一个新的双肩包，容量大一点',
     type: 'item',
     userName: '宝贝',
-    userAvatar: '/static/avatar/baby.png',
+    userAvatar: '../../static/avatar/baby.png',
     claimerName: '爸爸',
     progress: 100,
     status: 1
@@ -89,7 +89,7 @@ const wishes = ref([
     description: '想去看大熊猫和长颈鹿',
     type: 'experience',
     userName: '宝贝',
-    userAvatar: '/static/avatar/baby.png',
+    userAvatar: '../../static/avatar/baby.png',
     claimerName: '',
     progress: 0,
     status: 0
@@ -100,7 +100,7 @@ const wishes = ref([
     description: '希望这个暑假能学会骑车',
     type: 'goal',
     userName: '宝贝',
-    userAvatar: '/static/avatar/baby.png',
+    userAvatar: '../../static/avatar/baby.png',
     claimerName: '妈妈',
     progress: 60,
     status: 1
@@ -162,7 +162,7 @@ const showAddModal = () => {
           description: '',
           type: 'custom',
           userName: '我',
-          userAvatar: '/static/avatar/me.png',
+          userAvatar: '../../static/avatar/me.png',
           claimerName: '',
           progress: 0,
           status: 0

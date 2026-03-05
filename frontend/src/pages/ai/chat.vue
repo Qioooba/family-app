@@ -136,7 +136,7 @@ import { ref, onMounted, nextTick } from 'vue'
 const inputMessage = ref('')
 const messages = ref([])
 const scrollTop = ref(0)
-const userAvatar = ref('/static/avatar/user.png')
+const userAvatar = ref('../../static/avatar/user.png')
 
 const suggestions = [
   '今晚吃什么？',

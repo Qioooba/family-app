@@ -1,0 +1,6 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+    <rect width="400" height="300" fill="#87CEEB40"/>
+    <rect x="40" y="30" width="320" height="220" rx="10" fill="white"/>
+    <text x="200" y="130" font-family="Arial, sans-serif" font-size="80" fill="#666" text-anchor="middle">🦒</text>
+    <text x="200" y="200" font-family="Arial, sans-serif" font-size="18" fill="#999" text-anchor="middle">家庭出游</text>
+  </svg>

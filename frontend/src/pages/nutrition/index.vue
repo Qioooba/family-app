@@ -40,7 +40,7 @@
         class="food-item"
         @click="showFoodDetail(food)"
       >
-        <image :src="food.image || '/static/food/default.png'" mode="aspectFill" class="food-img" />
+        <image :src="food.image || '../../static/food/default.png'" mode="aspectFill" class="food-img" />
         <view class="food-info">
           <text class="food-name">{{ food.name }}</text>
           <text class="food-calories">{{ food.calories }} 千卡/100g</text>
@@ -75,7 +75,7 @@
             class="food-card"
             @click="showFoodDetail(food)"
           >
-            <image :src="food.image || '/static/food/default.png'" mode="aspectFill" class="card-img" />
+            <image :src="food.image || '../../static/food/default.png'" mode="aspectFill" class="card-img" />
             <text class="card-name">{{ food.name }}</text>
             <text class="card-calories">{{ food.calories }}卡</text>
           </view>
@@ -106,7 +106,7 @@
       <view class="detail-modal" @click.stop>
         <view class="modal-header">
           <image
-            :src="currentFood.image || '/static/food/default.png'"
+            :src="currentFood.image || '../../static/food/default.png'"
             mode="aspectFill"
             class="detail-img"
           />

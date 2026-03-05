@@ -142,7 +142,7 @@ const loading = ref(false)
 const recipe = ref({
   id: 1,
   name: '番茄炒蛋',
-  cover: '/static/recipes/fanqie.jpg',
+  cover: '../../static/recipes/fanqie.jpg',
   time: 15,
   calories: 180,
   tags: ['家常菜', '快手菜', '低卡'],

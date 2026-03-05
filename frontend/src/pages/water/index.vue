@@ -648,8 +648,26 @@ const loadHistoryData = async () => {
     const userInfo = uni.getStorageSync('userInfo')
     const userId = userInfo?.id || 1
     const res = await waterApi.getHistory(userId, historyDate.value)
+    console.log('历史记录API返回:', res)
     if (res) {
-      historyData.value = res
+      // 处理API返回的数据结构
+      let records = []
+      if (Array.isArray(res)) {
+        records = res
+      } else if (res.data && Array.isArray(res.data)) {
+        records = res.data
+      } else if (res.records && Array.isArray(res.records)) {
+        records = res.records
+      }
+      
+      // 计算今日总量
+      const todayAmount = records.reduce((sum, r) => sum + (r.amount || 0), 0)
+      
+      historyData.value = {
+        records: records,
+        todayAmount: todayAmount,
+        percent: Math.min(Math.round((todayAmount / targetAmount.value) * 100), 100)
+      }
     }
   } catch (e) {
     console.error('加载历史数据失败', e)

@@ -264,9 +264,9 @@ const repeats = [
 ]
 
 const members = ref([
-  { id: 1, name: '爸爸', avatar: '/static/avatar/dad.png' },
-  { id: 2, name: '妈妈', avatar: '/static/avatar/mom.png' },
-  { id: 3, name: '宝贝', avatar: '/static/avatar/kid.png' }
+  { id: 1, name: '爸爸', avatar: '../../static/avatar/dad.png' },
+  { id: 2, name: '妈妈', avatar: '../../static/avatar/mom.png' },
+  { id: 3, name: '宝贝', avatar: '../../static/avatar/kid.png' }
 ])
 
 // 检查URL参数（判断是编辑还是新增模式）

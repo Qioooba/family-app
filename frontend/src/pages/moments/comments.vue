@@ -25,8 +25,8 @@ import { ref } from 'vue'
 
 const newComment = ref('')
 const comments = ref([
-  { id: 1, username: '用户1', avatar: '/static/avatar.png', content: '真不错！', time: '2分钟前' },
-  { id: 2, username: '用户2', avatar: '/static/avatar.png', content: '支持一下', time: '5分钟前' }
+  { id: 1, username: '用户1', avatar: '../../static/avatar.png', content: '真不错！', time: '2分钟前' },
+  { id: 2, username: '用户2', avatar: '../../static/avatar.png', content: '支持一下', time: '5分钟前' }
 ])
 
 const sendComment = () => {
@@ -34,7 +34,7 @@ const sendComment = () => {
   comments.value.push({
     id: Date.now(),
     username: '我',
-    avatar: '/static/avatar.png',
+    avatar: '../../static/avatar.png',
     content: newComment.value,
     time: '刚刚'
   })

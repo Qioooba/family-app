@@ -243,16 +243,16 @@ const nutritionData = ref([
 
 const foods = ref([
   [
-    { name: '牛奶', quantity: 250, unit: 'ml', calories: 150, image: '/static/food/milk.png' },
-    { name: '全麦面包', quantity: 2, unit: '片', calories: 180, image: '/static/food/bread.png' }
+    { name: '牛奶', quantity: 250, unit: 'ml', calories: 150, image: '../../static/food/milk.png' },
+    { name: '全麦面包', quantity: 2, unit: '片', calories: 180, image: '../../static/food/bread.png' }
   ],
   [
-    { name: '米饭', quantity: 1, unit: '碗', calories: 230, image: '/static/food/rice.png' },
-    { name: '番茄炒蛋', quantity: 1, unit: '份', calories: 180, image: '/static/food/egg.png' }
+    { name: '米饭', quantity: 1, unit: '碗', calories: 230, image: '../../static/food/rice.png' },
+    { name: '番茄炒蛋', quantity: 1, unit: '份', calories: 180, image: '../../static/food/egg.png' }
   ],
   [],
   [
-    { name: '苹果', quantity: 1, unit: '个', calories: 80, image: '/static/food/apple.png' }
+    { name: '苹果', quantity: 1, unit: '个', calories: 80, image: '../../static/food/apple.png' }
   ]
 ])
 
@@ -356,7 +356,7 @@ const manualInput = () => {
           quantity: 1,
           unit: '份',
           calories: 200,
-          image: '/static/food/default.png'
+          image: '../../static/food/default.png'
         })
         uni.showToast({ title: '添加成功', icon: 'success' })
       }
@@ -396,7 +396,7 @@ const aiRecognize = () => {
                 quantity: 1,
                 unit: '份',
                 calories: 180,
-                image: '/static/food/egg.png'
+                image: '../../static/food/egg.png'
               })
               uni.showToast({ title: '添加成功', icon: 'success' })
             }

@@ -352,10 +352,10 @@ const reportData = ref({
   totalTasks: 36,
   totalExpense: 2580,
   memberStats: [
-    { name: '妈妈', avatar: '/static/avatar/mom.png', score: 450, contribution: 90, color: '#FF6B6B' },
-    { name: '爸爸', avatar: '/static/avatar/dad.png', score: 380, contribution: 76, color: '#3B82F6' },
-    { name: '宝贝', avatar: '/static/avatar/baby.png', score: 320, contribution: 64, color: '#F59E0B' },
-    { name: '爷爷', avatar: '/static/avatar/grandpa.png', score: 280, contribution: 56, color: '#10B981' }
+    { name: '妈妈', avatar: '../../static/avatar/mom.png', score: 450, contribution: 90, color: '#FF6B6B' },
+    { name: '爸爸', avatar: '../../static/avatar/dad.png', score: 380, contribution: 76, color: '#3B82F6' },
+    { name: '宝贝', avatar: '../../static/avatar/baby.png', score: 320, contribution: 64, color: '#F59E0B' },
+    { name: '爷爷', avatar: '../../static/avatar/grandpa.png', score: 280, contribution: 56, color: '#10B981' }
   ],
   weeklyActivity: [
     { day: '周一', value: 85, color: '#667eea' },

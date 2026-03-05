@@ -46,7 +46,7 @@
         :class="{ 'disabled': item.stock === 0 || userPoints < item.points }"
       >
         <view class="goods-image">
-          <image :src="item.image || '/static/gift/default.png'" mode="aspectFill" />
+          <image :src="item.image || '../../static/gift/default.png'" mode="aspectFill" />
           <view v-if="item.stock === 0" class="sold-out">已兑完</view>
         </view>
         
@@ -86,7 +86,7 @@
         </view>
 
         <view v-if="selectedItem" class="exchange-confirm">
-          <image :src="selectedItem.image || '/static/gift/default.png'" class="confirm-image" mode="aspectFill" />
+          <image :src="selectedItem.image || '../../static/gift/default.png'" class="confirm-image" mode="aspectFill" />
           <text class="confirm-name">{{ selectedItem.name }}</text>
           <view class="confirm-points">
             <text>消耗积分：</text>

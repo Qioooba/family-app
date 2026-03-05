@@ -110,7 +110,7 @@ const badgeCount = ref(0)
 // 计算显示的头像：优先使用微信头像
 const displayAvatar = computed(() => {
   const info = userInfo.value
-  if (!info) return '/static/avatar-default.png'
+  if (!info) return '../../static/avatar-default.png'
   // 优先使用微信头像
   if (info.wxAvatar) return info.wxAvatar
   // 其次使用用户自定义头像
@@ -122,7 +122,7 @@ const displayAvatar = computed(() => {
     return info.avatar
   }
   // 默认头像
-  return '/static/avatar-default.png'
+  return '../../static/avatar-default.png'
 })
 
 // 每次页面显示时都加载用户信息

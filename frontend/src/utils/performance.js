@@ -160,9 +160,9 @@ export function preloadResources(resources, options = {}) {
 export function preloadCriticalResources(criticalResources = []) {
   const defaultResources = [
     // 默认的关键资源
-    { url: '/static/logo.png', type: 'image' },
-    { url: '/static/tabbar/home.png', type: 'image' },
-    { url: '/static/tabbar/home-active.png', type: 'image' }
+    { url: '../static/logo.png', type: 'image' },
+    { url: '../static/tabbar/home.png', type: 'image' },
+    { url: '../static/tabbar/home-active.png', type: 'image' }
   ]
   
   const resources = [...defaultResources, ...criticalResources]

@@ -232,7 +232,7 @@ const getAssigneeName = (id) => {
 // 获取成员头像
 const getAssigneeAvatar = (id) => {
   const member = familyMembers.value.find(m => m.id === id)
-  return member ? member.avatar : '/static/avatar/default.png'
+  return member ? member.avatar : '../../static/avatar/default.png'
 }
 
 // 按日期获取排班

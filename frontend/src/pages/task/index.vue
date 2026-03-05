@@ -234,7 +234,7 @@
             >
               <image 
                 class="member-avatar" 
-                :src="member.avatar || '/static/avatar-default.png'" 
+                :src="member.avatar || '../../static/avatar-default.png'" 
                 mode="aspectFill" 
               />
               <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>

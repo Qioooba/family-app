@@ -46,9 +46,9 @@ export const lazyLoadConfig = {
   // 预加载高度
   preloadHeight: 500,
   // 占位图
-  placeholder: '/static/placeholder.png',
+  placeholder: '../static/placeholder.png',
   // 错误图
-  errorImage: '/static/error.png'
+  errorImage: '../static/error.png'
 }
 
 // 离线支持配置

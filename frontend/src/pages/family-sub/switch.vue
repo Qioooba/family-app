@@ -10,7 +10,7 @@
     
     <view class="content">
       <view class="info-card">
-        <image :src="currentFamily?.avatar || '/static/family/default.png'" class="family-avatar" />
+        <image :src="currentFamily?.avatar || '../../static/family/default.png'" class="family-avatar" />
         
         <view class="family-info">
           <text class="family-name">{{ currentFamily?.name || '幸福小家' }}</text>

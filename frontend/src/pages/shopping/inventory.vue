@@ -31,16 +31,16 @@ const inventory = ref([
   {
     name: '食品',
     items: [
-      { id: 1, name: '大米', icon: '/static/food.png', stock: 10 },
-      { id: 2, name: '食用油', icon: '/static/food.png', stock: 3 },
-      { id: 3, name: '盐', icon: '/static/food.png', stock: 2 }
+      { id: 1, name: '大米', icon: '../../static/food.png', stock: 10 },
+      { id: 2, name: '食用油', icon: '../../static/food.png', stock: 3 },
+      { id: 3, name: '盐', icon: '../../static/food.png', stock: 2 }
     ]
   },
   {
     name: '日用品',
     items: [
-      { id: 4, name: '洗衣液', icon: '/static/daily.png', stock: 5 },
-      { id: 5, name: '纸巾', icon: '/static/daily.png', stock: 8 }
+      { id: 4, name: '洗衣液', icon: '../../static/daily.png', stock: 5 },
+      { id: 5, name: '纸巾', icon: '../../static/daily.png', stock: 8 }
     ]
   }
 ])

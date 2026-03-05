@@ -259,42 +259,42 @@ const yearlyStats = ref({
 // 照片墙数据
 const photoWall = ref([
   { 
-    url: '/static/photos/spring.jpg', 
+    url: '../../static/photos/spring.jpg', 
     date: '03-15', 
     description: '春日踏青', 
     size: 'large',
     isVideo: false
   },
   { 
-    url: '/static/photos/birthday.jpg', 
+    url: '../../static/photos/birthday.jpg', 
     date: '05-20', 
     description: '生日派对', 
     size: 'small',
     isVideo: true
   },
   { 
-    url: '/static/photos/summer.jpg', 
+    url: '../../static/photos/summer.jpg', 
     date: '07-08', 
     description: '海边度假', 
     size: 'small',
     isVideo: false
   },
   { 
-    url: '/static/photos/autumn.jpg', 
+    url: '../../static/photos/autumn.jpg', 
     date: '10-01', 
     description: '国庆出游', 
     size: 'medium',
     isVideo: false
   },
   { 
-    url: '/static/photos/winter.jpg', 
+    url: '../../static/photos/winter.jpg', 
     date: '12-25', 
     description: '圣诞聚会', 
     size: 'small',
     isVideo: false
   },
   { 
-    url: '/static/photos/family.jpg', 
+    url: '../../static/photos/family.jpg', 
     date: '02-10', 
     description: '全家福', 
     size: 'medium',
@@ -320,7 +320,7 @@ const milestones = ref([
     title: '春日家庭出游',
     description: '一起去了植物园，记录了美好的春日时光',
     color: '#FFB7C5',
-    image: '/static/photos/spring.jpg'
+    image: '../../static/photos/spring.jpg'
   },
   {
     date: '20',
@@ -329,7 +329,7 @@ const milestones = ref([
     title: '宝贝生日',
     description: '全家人一起庆祝，收到了最想要的礼物',
     color: '#FFD93D',
-    image: '/static/photos/birthday.jpg'
+    image: '../../static/photos/birthday.jpg'
   },
   {
     date: '08',
@@ -338,7 +338,7 @@ const milestones = ref([
     title: '海边度假',
     description: '一家人去海边玩了一周，留下了难忘的回忆',
     color: '#87CEEB',
-    image: '/static/photos/summer.jpg'
+    image: '../../static/photos/summer.jpg'
   },
   {
     date: '01',
@@ -347,7 +347,7 @@ const milestones = ref([
     title: '国庆旅行',
     description: '自驾游去了五个城市，收获了满满的快乐',
     color: '#F4A460',
-    image: '/static/photos/autumn.jpg'
+    image: '../../static/photos/autumn.jpg'
   },
   {
     date: '25',
@@ -470,7 +470,7 @@ const shareToWechat = () => {
     type: 0,
     title: `${currentYear.value}年度回忆`,
     summary: '查看我们家的精彩年度回顾',
-    imageUrl: '/static/logo.png',
+    imageUrl: '../../static/logo.png',
     success: () => {
       uni.showToast({ title: '分享成功', icon: 'success' })
     }
@@ -485,7 +485,7 @@ const shareToMoments = () => {
     type: 0,
     title: `${currentYear.value}年度回忆`,
     summary: '查看我们家的精彩年度回顾',
-    imageUrl: '/static/logo.png',
+    imageUrl: '../../static/logo.png',
     success: () => {
       uni.showToast({ title: '分享成功', icon: 'success' })
     }

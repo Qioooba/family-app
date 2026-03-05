@@ -59,7 +59,7 @@
         <view class="result-content">
           <!-- 商品信息 -->
           <view v-if="scanResult.type === 'product'" class="product-info">
-            <image :src="scanResult.image || '/static/default-product.png'" class="product-image" mode="aspectFit" />
+            <image :src="scanResult.image || '../../static/default-product.png'" class="product-image" mode="aspectFit" />
             
             <view class="product-details"
 >
@@ -355,7 +355,7 @@ const handleScanResult = (result) => {
     code: result,
     name,
     price,
-    image: type === 'product' ? '/static/product-' + Math.floor(Math.random() * 5) + '.png' : ''
+    image: type === 'product' ? '../../static/product-' + Math.floor(Math.random() * 5) + '.png' : ''
   }
   
   // 添加到历史

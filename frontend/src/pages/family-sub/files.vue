@@ -249,7 +249,7 @@ const files = ref([
   { id: 1, name: '旅行照片', isFolder: true, count: 128, date: '2024-02-20', type: 'folder', size: 0 },
   { id: 2, name: '家庭文档', isFolder: true, count: 36, date: '2024-02-18', type: 'folder', size: 0 },
   { id: 3, name: '宝宝视频', isFolder: true, count: 58, date: '2024-02-15', type: 'folder', size: 0 },
-  { id: 4, name: '春节聚会.jpg', isFolder: false, type: 'image', size: 3.5 * 1024 * 1024, date: '2024-02-10', thumbnail: '/static/files/photo1.jpg' },
+  { id: 4, name: '春节聚会.jpg', isFolder: false, type: 'image', size: 3.5 * 1024 * 1024, date: '2024-02-10', thumbnail: '../../static/files/photo1.jpg' },
   { id: 5, name: '家庭预算表.xlsx', isFolder: false, type: 'excel', size: 256 * 1024, date: '2024-02-08' },
   { id: 6, name: '宝贝成长记录.pdf', isFolder: false, type: 'pdf', size: 5.2 * 1024 * 1024, date: '2024-02-05' },
   { id: 7, name: '海南旅游攻略.docx', isFolder: false, type: 'word', size: 1.8 * 1024 * 1024, date: '2024-02-01' },
