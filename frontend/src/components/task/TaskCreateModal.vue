@@ -7,7 +7,7 @@
         <view class="close-btn" @click="handleClose">
           <text class="close-icon">✕</text>
         </view>
-        <text class="modal-title">添加待办</text>
+        <text class="modal-title">{{ mode === 'edit' ? '编辑待办' : '添加待办' }}</text>
         <view class="save-btn" @click="handleSave">
           <text class="save-text">保存</text>
         </view>
@@ -113,6 +113,18 @@ const props = defineProps({
   visible: {
     type: Boolean,
     default: false
+  },
+  mode: {
+    type: String,
+    default: 'create' // 'create' 或 'edit'
+  },
+  taskId: {
+    type: Number,
+    default: null
+  },
+  initialData: {
+    type: Object,
+    default: () => ({})
   }
 })
 
@@ -257,10 +269,27 @@ const handleSave = async () => {
   }
 }
 
-// 监听visible变化
+// 打开弹窗时根据模式初始化数据
 watch(() => props.visible, (newVal) => {
   if (newVal) {
     loadFamilyMembers()
+    if (props.mode === 'edit' && props.initialData) {
+      // 编辑模式：使用传入的数据初始化
+      formData.value = {
+        title: props.initialData.title || '',
+        dueDate: props.initialData.dueDate || '',
+        dueTime: props.initialData.dueTime || '',
+        assigneeId: props.initialData.assigneeId || null
+      }
+    } else {
+      // 创建模式：重置表单
+      formData.value = {
+        title: '',
+        dueDate: '',
+        dueTime: '',
+        assigneeId: null
+      }
+    }
   }
 })
 </script>
