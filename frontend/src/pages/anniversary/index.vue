@@ -186,9 +186,18 @@ const loadData = async () => {
 }
 
 // 格式化日期
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
+const formatDate = (dateValue) => {
+  if (!dateValue) return ''
+  
+  // 处理数组格式 [2026, 5, 6]
+  if (Array.isArray(dateValue)) {
+    const [year, month, day] = dateValue
+    return `${month}月${day}日`
+  }
+  
+  // 处理字符串格式
+  const date = new Date(dateValue)
+  if (isNaN(date.getTime())) return ''
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
@@ -202,11 +211,23 @@ const isPassed = (dateStr) => {
 }
 
 // 距离天数
-const getDaysUntil = (dateStr) => {
-  if (!dateStr) return 0
-  const date = new Date(dateStr)
+const getDaysUntil = (dateValue) => {
+  if (!dateValue) return 0
+  
+  let date
+  // 处理数组格式 [2026, 5, 6]
+  if (Array.isArray(dateValue)) {
+    const [year, month, day] = dateValue
+    date = new Date(year, month - 1, day)
+  } else {
+    date = new Date(dateValue)
+  }
+  
+  if (isNaN(date.getTime())) return 0
+  
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  date.setHours(0, 0, 0, 0)
   const diff = date - today
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
