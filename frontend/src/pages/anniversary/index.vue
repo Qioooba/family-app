@@ -1,578 +1,707 @@
 <template>
   <view class="anniversary-page">
-    <!-- 页面标题 -->
-    <view class="page-header">
-      <view class="header-bg">
-        <view class="bg-pattern"></view>
-      </view>
-      <view class="header-content">
-        <view class="title-wrapper">
-          <text class="page-title">💝 纪念日</text>
-          <text class="page-subtitle">记录每个重要时刻</text>
-        </view>
-        <view class="add-btn" @click="openModal()">
-          <text class="add-icon">+</text>
-        </view>
-      </view>
+    <!-- 顶部背景 -->
+    <view class="header-bg"></view>
+    
+    <!-- 顶部标题 -->
+    <view class="header-bar">
+      <text class="title">纪念日</text>
+      <text class="subtitle">记录重要时刻</text>
     </view>
-
-    <!-- 分类筛选 -->
-    <view class="filter-section">
-      <scroll-view scroll-x class="filter-scroll" show-scrollbar="false">
-        <view
-          v-for="filter in filterOptions"
-          :key="filter.value"
-          class="filter-item"
-          :class="{ active: currentFilter === filter.value }"
-          @click="currentFilter = filter.value"
-        >
-          <text class="filter-icon">{{ filter.icon }}</text>
-          <text class="filter-name">{{ filter.label }}</text>
-        </view>
-      </scroll-view>
+    
+    <!-- 添加按钮 -->
+    <view class="add-btn" @click="showAddModal = true">
+      <text>+</text>
     </view>
-
+    
     <!-- 纪念日列表 -->
-    <view class="anniversary-list" v-if="filteredList.length > 0">
-      <view
-        v-for="(item, index) in filteredList"
-        :key="item.id"
-        class="anni-card"
-        :style="{ animationDelay: `${index * 0.08}s` }"
-        @click="openEditModal(item)"
-      >
-        <view class="card-left">
-          <view class="anni-icon-wrapper" :class="{ urgent: item.daysUntil <= 3 && item.daysUntil >= 0 }">
-            <text class="anni-icon">{{ item.icon || getDefaultIcon(item.type) }}</text>
-          </view>
-        </view>
-
-        <view class="card-center">
-          <text class="anni-title">{{ item.title }}</text>
-          <view class="anni-meta">
-            <text class="anni-date">{{ formatFullDate(item.nextAnniversaryDate || item.targetDate) }}</text>
-            <view class="meta-tags">
-              <text v-if="item.isRecurring === 1" class="meta-tag recurring">每年</text>
-              <text v-if="item.dateType === 'lunar'" class="meta-tag lunar">农历</text>
+    <view class="anniversary-list">
+      <view v-if="loading" class="loading-state">
+        <text>加载中...</text>
+      </view>
+      
+      <view v-else-if="anniversaries.length === 0" class="empty-state">
+        <text class="empty-icon">📅</text>
+        <text class="empty-text">还没有纪念日</text>
+        <text class="empty-sub">点击+添加第一个纪念日</text>
+      </view>
+      
+      <view v-else class="cards">
+        <view 
+          v-for="(item, index) in anniversaries" 
+          :key="item.id"
+          class="anniversary-card"
+          :class="{ passed: isPassed(item.date) }"
+          :style="{ animationDelay: `${index * 0.05}s` }"
+          @click="showDetail(item)"
+        >
+          <!-- 卡片头部 -->
+          <view class="card-header">
+            <view class="icon-wrapper" :style="{ background: getIconBg(item.type) }">
+              <text class="card-icon">{{ getIcon(item.type) }}</text>
+            </view>
+            <view class="card-info">
+              <text class="card-title">{{ item.title }}</text>
+              <text class="card-date">{{ formatDate(item.date) }}</text>
+            </view>
+            <view class="card-days">
+              <text class="days-num">{{ getDaysUntil(item.date) }}</text>
+              <text class="days-label">天后</text>
             </view>
           </view>
-          <text v-if="item.description" class="anni-desc">{{ item.description }}</text>
-        </view>
-
-        <view class="card-right">
-          <view class="days-badge" :class="{
-            today: item.daysUntil === 0,
-            soon: item.daysUntil <= 3 && item.daysUntil > 0,
-            passed: item.daysUntil < 0
-          }">
-            <text class="days-num">{{ formatDays(item.daysUntil) }}</text>
-            <text class="days-text">{{ getDaysText(item.daysUntil) }}</text>
+          
+          <!-- 进度条 -->
+          <view v-if="item.isRepeat" class="progress-section">
+            <view class="progress-bar">
+              <view class="progress-fill" :style="{ width: getProgress(item.date) + '%' }"></view>
+            </view>
+            <text class="progress-text">第{{ getYearCount(item.date) }}年</text>
           </view>
-          <u-icon name="arrow-right" size="28" color="#ccc"></u-icon>
+          
+          <!-- 操作按钮 -->
+          <view class="card-actions" @click.stop>
+            <view class="action-btn" @click="editItem(item)">
+              <text>编辑</text>
+            </view>
+            <view class="action-btn delete" @click="deleteItem(item)">
+              <text>删除</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
-
-    <!-- 空状态 -->
-    <view class="empty-state" v-else>
-      <view class="empty-illustration">
-        <view class="empty-icon-bg">
-          <text class="empty-icon">💝</text>
-        </view>
-      </view>
-      <text class="empty-text">还没有纪念日</text>
-      <text class="empty-subtext">添加重要的日子，记录美好时刻</text>
-      <view class="empty-action" @click="openModal()">
-        <text>+ 添加第一个纪念日</text>
-      </view>
-    </view>
-
+    
     <!-- 添加/编辑弹窗 -->
-    <AnniversaryModal
-      :visible="showModal"
-      :data="editingItem"
-      @close="closeModal"
-      @confirm="loadAnniversaries"
-    />
+    <view v-if="showAddModal" class="modal-overlay" @click="closeModal">
+      <view class="modal-content" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">{{ editingItem ? '编辑纪念日' : '添加纪念日' }}</text>
+          <text class="modal-close" @click="closeModal">✕</text>
+        </view>
+        
+        <view class="modal-body">
+          <!-- 标题 -->
+          <view class="form-item">
+            <text class="form-label">标题 *</text>
+            <input class="form-input" v-model="formData.title" placeholder="如：结婚纪念日" />
+          </view>
+          
+          <!-- 日期 -->
+          <view class="form-item">
+            <text class="form-label">日期 *</text>
+            <picker mode="date" :value="formData.date" @change="onDateChange">
+              <view class="date-picker">
+                <text :class="{ placeholder: !formData.date }">{{ formData.date || '选择日期' }}</text>
+              </view>
+            </picker>
+          </view>
+          
+          <!-- 类型 -->
+          <view class="form-item">
+            <text class="form-label">类型</text>
+            <view class="type-selector">
+              <view 
+                v-for="type in types" 
+                :key="type.value"
+                class="type-option"
+                :class="{ active: formData.type === type.value }"
+                @click="formData.type = type.value"
+              >
+                <text class="type-icon">{{ type.icon }}</text>
+                <text class="type-name">{{ type.label }}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 描述 -->
+          <view class="form-item">
+            <text class="form-label">描述</text>
+            <textarea class="form-textarea" v-model="formData.description" placeholder="添加描述..." />
+          </view>
+          
+          <!-- 重复 -->
+          <view class="form-item switch-item">
+            <text class="form-label">每年重复</text>
+            <switch 
+              :checked="formData.isRepeat" 
+              @change="formData.isRepeat = !formData.isRepeat"
+              color="#8B5CF6"
+            />
+          </view>
+        </view>
+        
+        <view class="modal-footer">
+          <view class="cancel-btn" @click="closeModal">
+            <text>取消</text>
+          </view>
+          <view class="submit-btn" @click="saveItem">
+            <text>保存</text>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
-import { anniversaryApi } from '@/api/anniversary'
-import AnniversaryModal from '@/components/anniversary/AnniversaryModal.vue'
+import { ref, onMounted } from 'vue'
+import { anniversaryApi } from '../../api/anniversary'
 
-const anniversaryList = ref([])
-const currentFilter = ref('all')
-const showModal = ref(false)
+const loading = ref(true)
+const anniversaries = ref([])
+const showAddModal = ref(false)
 const editingItem = ref(null)
 
-// 筛选选项
-const filterOptions = [
-  { value: 'all', label: '全部', icon: '💝' },
+const formData = ref({
+  title: '',
+  date: '',
+  type: 'birthday',
+  description: '',
+  isRepeat: true
+})
+
+const types = [
   { value: 'birthday', label: '生日', icon: '🎂' },
   { value: 'wedding', label: '结婚', icon: '💒' },
   { value: 'love', label: '恋爱', icon: '💕' },
-  { value: 'family', label: '家庭', icon: '🏠' },
-  { value: 'traditional', label: '传统', icon: '🎊' },
-  { value: 'custom', label: '自定义', icon: '✨' }
+  { value: 'work', label: '工作', icon: '💼' },
+  { value: 'family', label: '家人', icon: '👨‍👩‍👧' },
+  { value: 'other', label: '其他', icon: '📌' }
 ]
 
-// 过滤后的列表
-const filteredList = computed(() => {
-  if (currentFilter.value === 'all') {
-    return anniversaryList.value
+// 加载数据
+const loadData = async () => {
+  loading.value = true
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const res = await anniversaryApi.getList(familyId)
+    if (res && Array.isArray(res)) {
+      anniversaries.value = res
+    }
+  } catch (e) {
+    console.error('加载失败:', e)
+  } finally {
+    loading.value = false
   }
-  return anniversaryList.value.filter(item => item.type === currentFilter.value)
-})
-
-// 获取默认图标
-const getDefaultIcon = (type) => {
-  const icons = {
-    birthday: '🎂',
-    wedding: '💒',
-    love: '💕',
-    family: '🏠',
-    traditional: '🎊',
-    custom: '✨'
-  }
-  return icons[type] || '💝'
 }
 
-// 格式化完整日期
-const formatFullDate = (dateStr) => {
+// 格式化日期
+const formatDate = (dateStr) => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  return `${year}年${month}月${day}日`
+  return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-// 格式化天数
-const formatDays = (days) => {
-  if (days === 0) return '今'
-  if (days < 0) return Math.abs(days)
-  return days
+// 是否已过
+const isPassed = (dateStr) => {
+  if (!dateStr) return false
+  const date = new Date(dateStr)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return date < today
 }
 
-// 获取天数文本
-const getDaysText = (days) => {
-  if (days === 0) return '今天'
-  if (days < 0) return '天前'
-  return '天后'
+// 距离天数
+const getDaysUntil = (dateStr) => {
+  if (!dateStr) return 0
+  const date = new Date(dateStr)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const diff = date - today
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
 }
 
-// 加载纪念日列表
-const loadAnniversaries = async () => {
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId')
-    if (!familyId) {
-      uni.showToast({ title: '请先选择家庭', icon: 'none' })
-      return
-    }
+// 进度
+const getProgress = (dateStr) => {
+  if (!dateStr) return 0
+  const days = getDaysUntil(dateStr)
+  if (days > 365) return 0
+  if (days < 0) return 100
+  return Math.round((365 - days) / 365 * 100)
+}
 
-    uni.showLoading({ title: '加载中...' })
-    const res = await anniversaryApi.getList(familyId)
-    uni.hideLoading()
+// 第几年
+const getYearCount = (dateStr) => {
+  if (!dateStr) return 1
+  const date = new Date(dateStr)
+  const today = new Date()
+  return today.getFullYear() - date.getFullYear() + 1
+}
 
-    if (res && res.data) {
-      anniversaryList.value = res.data
-    } else if (Array.isArray(res)) {
-      anniversaryList.value = res
-    } else {
-      anniversaryList.value = []
-    }
-  } catch (error) {
-    uni.hideLoading()
-    console.error('加载纪念日失败:', error)
-    uni.showToast({ title: '加载失败', icon: 'none' })
+// 获取图标
+const getIcon = (type) => {
+  const found = types.find(t => t.value === type)
+  return found ? found.icon : '📌'
+}
+
+// 获取图标背景
+const getIconBg = (type) => {
+  const colors = {
+    birthday: 'linear-gradient(135deg, #FF6B6B, #FF8E8E)',
+    wedding: 'linear-gradient(135deg, #FFB6C1, #FFC0CB)',
+    love: 'linear-gradient(135deg, #FF6B81, #FF8FAB)',
+    work: 'linear-gradient(135deg, #6B8DD6, #8B5CF6)',
+    family: 'linear-gradient(135deg, #68D391, #48BB78)',
+    other: 'linear-gradient(135deg, #F6AD55, #ED8936)'
   }
+  return colors[type] || colors.other
 }
 
-// 打开添加弹窗
-const openModal = () => {
-  editingItem.value = null
-  showModal.value = true
+// 日期选择
+const onDateChange = (e) => {
+  formData.value.date = e.detail.value
 }
 
-// 打开编辑弹窗
-const openEditModal = (item) => {
-  editingItem.value = { ...item }
-  showModal.value = true
+// 编辑
+const editItem = (item) => {
+  editingItem.value = item
+  formData.value = {
+    title: item.title || '',
+    date: item.date || '',
+    type: item.type || 'birthday',
+    description: item.description || '',
+    isRepeat: item.isRepeat || false
+  }
+  showAddModal.value = true
+}
+
+// 删除
+const deleteItem = (item) => {
+  uni.showModal({
+    title: '确认删除',
+    content: '确定要删除这个纪念日吗？',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          await anniversaryApi.delete(item.id)
+          uni.showToast({ title: '删除成功', icon: 'success' })
+          await loadData()
+        } catch (e) {
+          uni.showToast({ title: '删除失败', icon: 'none' })
+        }
+      }
+    }
+  })
+}
+
+// 保存
+const saveItem = async () => {
+  if (!formData.value.title.trim()) {
+    uni.showToast({ title: '请输入标题', icon: 'none' })
+    return
+  }
+  if (!formData.value.date) {
+    uni.showToast({ title: '请选择日期', icon: 'none' })
+    return
+  }
+  
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const data = {
+      ...formData.value,
+      familyId
+    }
+    
+    if (editingItem.value) {
+      await anniversaryApi.update({ ...data, id: editingItem.value.id })
+    } else {
+      await anniversaryApi.create(data)
+    }
+    
+    uni.showToast({ title: '保存成功', icon: 'success' })
+    closeModal()
+    await loadData()
+  } catch (e) {
+    console.error('保存失败:', e)
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
 }
 
 // 关闭弹窗
 const closeModal = () => {
-  showModal.value = false
+  showAddModal.value = false
   editingItem.value = null
+  formData.value = {
+    title: '',
+    date: '',
+    type: 'birthday',
+    description: '',
+    isRepeat: true
+  }
+}
+
+// 显示详情
+const showDetail = (item) => {
+  editItem(item)
 }
 
 onMounted(() => {
-  loadAnniversaries()
-})
-
-onShow(() => {
-  loadAnniversaries()
+  loadData()
 })
 </script>
 
 <style lang="scss" scoped>
 .anniversary-page {
   min-height: 100vh;
-  background: #FAFAFA;
-  padding-bottom: 40rpx;
-}
-
-// 页面头部
-.page-header {
+  background: #f8f9fc;
   position: relative;
-  padding: 40rpx 32rpx 60rpx;
-  padding-top: 100rpx;
-  overflow: hidden;
-
-  .header-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 360rpx;
-    background: linear-gradient(135deg, #FFD3B6 0%, #FFAAA5 50%, #A8E6CF 100%);
-    border-radius: 0 0 60rpx 60rpx;
-    box-shadow: 0 20rpx 60rpx rgba(255, 211, 182, 0.4);
-
-    .bg-pattern {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      opacity: 0.1;
-      background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.8) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.6) 0%, transparent 40%);
-    }
-  }
-
-  .header-content {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .title-wrapper {
-      .page-title {
-        display: block;
-        font-size: 48rpx;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 12rpx;
-        text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
-      }
-
-      .page-subtitle {
-        font-size: 28rpx;
-        color: rgba(255,255,255,0.9);
-      }
-    }
-
-    .add-btn {
-      width: 88rpx;
-      height: 88rpx;
-      background: rgba(255,255,255,0.3);
-      backdrop-filter: blur(10rpx);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2rpx solid rgba(255,255,255,0.3);
-      transition: all 0.3s;
-
-      &:active {
-        transform: scale(0.9);
-        background: rgba(255,255,255,0.5);
-      }
-
-      .add-icon {
-        font-size: 48rpx;
-        color: #fff;
-        font-weight: 300;
-      }
-    }
-  }
 }
 
-// 筛选区域
-.filter-section {
-  margin: -20rpx 32rpx 32rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.06);
-
-  .filter-scroll {
-    white-space: nowrap;
-
-    .filter-item {
-      display: inline-flex;
-      align-items: center;
-      padding: 16rpx 24rpx;
-      background: #f7fafc;
-      border-radius: 28rpx;
-      margin-right: 16rpx;
-      transition: all 0.2s;
-
-      &.active {
-        background: linear-gradient(135deg, #A8E6CF, #7FD8BE);
-
-        .filter-name {
-          color: #fff;
-        }
-      }
-
-      &:active {
-        transform: scale(0.95);
-      }
-
-      .filter-icon {
-        font-size: 32rpx;
-        margin-right: 8rpx;
-      }
-
-      .filter-name {
-        font-size: 26rpx;
-        color: #4a5568;
-      }
-    }
-  }
+.header-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 350rpx;
+  background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  border-radius: 0 0 60rpx 60rpx;
 }
 
-// 纪念日列表
-.anniversary-list {
-  padding: 0 32rpx;
-
-  .anni-card {
-    display: flex;
-    align-items: center;
-    padding: 28rpx;
-    background: #fff;
-    border-radius: 24rpx;
-    margin-bottom: 24rpx;
-    box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.04);
-    animation: fadeInUp 0.4s ease-out forwards;
-    opacity: 0;
-
-    &:active {
-      transform: scale(0.98);
-      box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.08);
-    }
-
-    .card-left {
-      .anni-icon-wrapper {
-        width: 96rpx;
-        height: 96rpx;
-        background: linear-gradient(135deg, #fff0f6, #ffe4e6);
-        border-radius: 24rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 48rpx;
-        margin-right: 24rpx;
-
-        &.urgent {
-          background: linear-gradient(135deg, #fc8181, #f56565);
-          box-shadow: 0 8rpx 24rpx rgba(252, 129, 129, 0.35);
-
-          .anni-icon {
-            filter: brightness(0) invert(1);
-          }
-        }
-      }
-    }
-
-    .card-center {
-      flex: 1;
-      min-width: 0;
-
-      .anni-title {
-        font-size: 32rpx;
-        color: #2d3748;
-        font-weight: 600;
-        display: block;
-        margin-bottom: 12rpx;
-      }
-
-      .anni-meta {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12rpx;
-        margin-bottom: 8rpx;
-
-        .anni-date {
-          font-size: 24rpx;
-          color: #8b9aad;
-        }
-
-        .meta-tags {
-          display: flex;
-          gap: 8rpx;
-
-          .meta-tag {
-            font-size: 20rpx;
-            padding: 4rpx 12rpx;
-            border-radius: 12rpx;
-
-            &.recurring {
-              color: #7FD8BE;
-              background: rgba(127, 216, 190, 0.15);
-            }
-
-            &.lunar {
-              color: #FFAAA5;
-              background: rgba(255, 170, 165, 0.15);
-            }
-          }
-        }
-      }
-
-      .anni-desc {
-        font-size: 24rpx;
-        color: #a0aec0;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-    }
-
-    .card-right {
-      display: flex;
-      align-items: center;
-      gap: 16rpx;
-
-      .days-badge {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 16rpx 20rpx;
-        background: rgba(168, 230, 207, 0.15);
-        border-radius: 16rpx;
-        min-width: 80rpx;
-
-        &.today {
-          background: linear-gradient(135deg, #A8E6CF, #7FD8BE);
-          box-shadow: 0 8rpx 24rpx rgba(168, 230, 207, 0.4);
-
-          .days-num, .days-text {
-            color: #fff;
-          }
-        }
-
-        &.soon {
-          background: linear-gradient(135deg, #FFD3B6, #FFAAA5);
-          box-shadow: 0 8rpx 24rpx rgba(255, 211, 182, 0.4);
-
-          .days-num, .days-text {
-            color: #fff;
-          }
-        }
-
-        &.passed {
-          background: #f1f5f9;
-
-          .days-num, .days-text {
-            color: #a0aec0;
-          }
-        }
-
-        .days-num {
-          font-size: 32rpx;
-          font-weight: 700;
-          color: #7FD8BE;
-          line-height: 1.2;
-        }
-
-        .days-text {
-          font-size: 20rpx;
-          color: #8b9aad;
-        }
-      }
-    }
-  }
-}
-
-// 空状态
-.empty-state {
-  text-align: center;
-  padding: 120rpx 60rpx;
-
-  .empty-illustration {
-    width: 200rpx;
-    height: 200rpx;
-    margin: 0 auto 40rpx;
-
-    .empty-icon-bg {
-      width: 160rpx;
-      height: 160rpx;
-      background: linear-gradient(135deg, #fff0f6, #ffe4e6);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 20rpx auto;
-      box-shadow: 0 8rpx 32rpx rgba(255, 211, 182, 0.4);
-
-      .empty-icon {
-        font-size: 80rpx;
-      }
-    }
-  }
-
-  .empty-text {
+.header-bar {
+  position: relative;
+  z-index: 1;
+  padding: 120rpx 32rpx 32rpx;
+  
+  .title {
+    font-size: 48rpx;
+    font-weight: 700;
+    color: #fff;
     display: block;
+  }
+  
+  .subtitle {
+    font-size: 26rpx;
+    color: rgba(255,255,255,0.8);
+    margin-top: 8rpx;
+  }
+}
+
+.add-btn {
+  position: fixed;
+  bottom: 60rpx;
+  right: 40rpx;
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 40rpx rgba(139, 92, 246, 0.4);
+  z-index: 100;
+  
+  text {
+    font-size: 60rpx;
+    color: #fff;
+    font-weight: 300;
+  }
+}
+
+.anniversary-list {
+  position: relative;
+  z-index: 1;
+  padding: 0 32rpx;
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 100rpx 0;
+  
+  .loading-text {
+    color: #8b9aad;
+    font-size: 28rpx;
+  }
+}
+
+.empty-state {
+  .empty-icon {
+    font-size: 120rpx;
+    display: block;
+    margin-bottom: 24rpx;
+  }
+  
+  .empty-text {
     font-size: 32rpx;
     color: #2d3748;
-    font-weight: 600;
-    margin-bottom: 12rpx;
-  }
-
-  .empty-subtext {
     display: block;
+  }
+  
+  .empty-sub {
     font-size: 26rpx;
     color: #8b9aad;
-    margin-bottom: 40rpx;
+    margin-top: 8rpx;
   }
+}
 
-  .empty-action {
-    display: inline-flex;
+.cards {
+  padding-top: 20rpx;
+}
+
+.anniversary-card {
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(139, 92, 246, 0.08);
+  animation: slideUp 0.4s ease-out forwards;
+  opacity: 0;
+  
+  &.passed {
+    opacity: 0.6;
+  }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+  
+  .icon-wrapper {
+    width: 96rpx;
+    height: 96rpx;
+    border-radius: 24rpx;
+    display: flex;
     align-items: center;
-    padding: 24rpx 48rpx;
-    background: linear-gradient(135deg, #FFD3B6, #FFAAA5);
-    border-radius: 40rpx;
-    box-shadow: 0 8rpx 24rpx rgba(255, 211, 182, 0.4);
-
-    text {
-      font-size: 28rpx;
-      color: #fff;
-      font-weight: 500;
+    justify-content: center;
+    margin-right: 24rpx;
+    
+    .card-icon {
+      font-size: 48rpx;
     }
-
-    &:active {
-      transform: scale(0.96);
+  }
+  
+  .card-info {
+    flex: 1;
+    
+    .card-title {
+      font-size: 32rpx;
+      font-weight: 600;
+      color: #2d3748;
+      display: block;
+      margin-bottom: 8rpx;
+    }
+    
+    .card-date {
+      font-size: 26rpx;
+      color: #8b9aad;
+    }
+  }
+  
+  .card-days {
+    text-align: center;
+    
+    .days-num {
+      font-size: 40rpx;
+      font-weight: 700;
+      color: #8B5CF6;
+      display: block;
+    }
+    
+    .days-label {
+      font-size: 22rpx;
+      color: #8b9aad;
     }
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30rpx);
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+  
+  .progress-bar {
+    flex: 1;
+    height: 8rpx;
+    background: #f1f5f9;
+    border-radius: 4rpx;
+    overflow: hidden;
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+      border-radius: 4rpx;
+    }
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  
+  .progress-text {
+    font-size: 24rpx;
+    color: #8b9aad;
+    white-space: nowrap;
+  }
+}
+
+.card-actions {
+  display: flex;
+  gap: 16rpx;
+  
+  .action-btn {
+    flex: 1;
+    text-align: center;
+    padding: 16rpx;
+    background: #f8f9fc;
+    border-radius: 16rpx;
+    font-size: 26rpx;
+    color: #5a6c7d;
+    
+    &.delete {
+      color: #fc8181;
+    }
+  }
+}
+
+// 弹窗样式
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 40rpx 40rpx 0 0;
+  width: 100%;
+  max-height: 85vh;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40rpx;
+  
+  .modal-title {
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #2d3748;
+  }
+  
+  .modal-close {
+    font-size: 40rpx;
+    color: #8b9aad;
+  }
+}
+
+.modal-body {
+  padding: 0 40rpx 40rpx;
+  max-height: 60vh;
+}
+
+.form-item {
+  margin-bottom: 32rpx;
+  
+  .form-label {
+    font-size: 26rpx;
+    color: #5a6c7d;
+    display: block;
+    margin-bottom: 12rpx;
+  }
+  
+  .form-input, .form-textarea {
+    width: 100%;
+    padding: 24rpx;
+    background: #f8f9fc;
+    border-radius: 20rpx;
+    font-size: 30rpx;
+    
+    &::placeholder {
+      color: #a0aec0;
+    }
+  }
+  
+  .form-textarea {
+    height: 160rpx;
+    resize: none;
+  }
+}
+
+.date-picker {
+  padding: 24rpx;
+  background: #f8f9fc;
+  border-radius: 20rpx;
+  
+  text {
+    font-size: 30rpx;
+    color: #2d3748;
+    
+    &.placeholder { color: #a0aec0; }
+  }
+}
+
+.type-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  
+  .type-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16rpx 24rpx;
+    background: #f8f9fc;
+    border-radius: 16rpx;
+    border: 2rpx solid transparent;
+    
+    &.active {
+      background: rgba(139, 92, 246, 0.1);
+      border-color: #8B5CF6;
+    }
+    
+    .type-icon {
+      font-size: 36rpx;
+      margin-bottom: 4rpx;
+    }
+    
+    .type-name {
+      font-size: 22rpx;
+      color: #5a6c7d;
+    }
+  }
+}
+
+.switch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  .form-label {
+    margin-bottom: 0;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 24rpx;
+  padding: 20rpx 40rpx 60rpx;
+  
+  .cancel-btn, .submit-btn {
+    flex: 1;
+    text-align: center;
+    padding: 28rpx;
+    border-radius: 32rpx;
+    font-size: 30rpx;
+  }
+  
+  .cancel-btn {
+    background: #f1f5f9;
+    color: #5a6c7d;
+  }
+  
+  .submit-btn {
+    background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+    color: #fff;
   }
 }
 </style>
