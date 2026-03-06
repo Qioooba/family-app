@@ -31,7 +31,7 @@
           v-for="(item, index) in anniversaries" 
           :key="item.id"
           class="anniversary-card"
-          :class="{ passed: isPassed(item.date) }"
+          :class="{ passed: isPassed(item.targetDate) }"
           :style="{ animationDelay: `${index * 0.05}s` }"
           @click="showDetail(item)"
         >
@@ -42,10 +42,10 @@
             </view>
             <view class="card-info">
               <text class="card-title">{{ item.title }}</text>
-              <text class="card-date">{{ formatDate(item.date) }}</text>
+              <text class="card-date">{{ formatDate(item.targetDate) }}</text>
             </view>
             <view class="card-days">
-              <text class="days-num">{{ getDaysUntil(item.date) }}</text>
+              <text class="days-num">{{ getDaysUntil(item.targetDate) }}</text>
               <text class="days-label">天后</text>
             </view>
           </view>
@@ -53,9 +53,9 @@
           <!-- 进度条 -->
           <view v-if="item.isRepeat" class="progress-section">
             <view class="progress-bar">
-              <view class="progress-fill" :style="{ width: getProgress(item.date) + '%' }"></view>
+              <view class="progress-fill" :style="{ width: getProgress(item.targetDate) + '%' }"></view>
             </view>
-            <text class="progress-text">第{{ getYearCount(item.date) }}年</text>
+            <text class="progress-text">第{{ getYearCount(item.targetDate) }}年</text>
           </view>
           
           <!-- 操作按钮 -->
@@ -257,7 +257,7 @@ const editItem = (item) => {
   editingItem.value = item
   formData.value = {
     title: item.title || '',
-    date: item.date || '',
+    date: item.targetDate || '',
     type: item.type || 'birthday',
     description: item.description || '',
     isRepeat: item.isRepeat || false
