@@ -20,6 +20,7 @@ public class Task {
     private Long categoryId;
     private String title;
     private String content;
+    private String remark;
     private Integer priority;
     private Integer status;
     private Long assigneeId;
@@ -80,6 +81,14 @@ public class Task {
     
     public void setContent(String content) {
         this.content = content;
+    }
+    
+    public String getRemark() {
+        return remark;
+    }
+    
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
     
     public Integer getPriority() {

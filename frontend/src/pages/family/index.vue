@@ -207,14 +207,6 @@
           </view>
           <text class="setting-arrow">›</text>
         </view>
-        
-        <view class="setting-item danger" @click="confirmLeaveFamily">
-          <view class="setting-left">
-            <text class="setting-icon">🚪</text>
-            <text class="setting-text">退出家庭</text>
-          </view>
-          <text class="setting-arrow">›</text>
-        </view>
       </view>
       
       <!-- 底部安全区 -->
@@ -541,39 +533,6 @@ const saveNickname = async () => {
 // 跳转家庭管理
 const goFamilyManage = () => {
   uni.navigateTo({ url: '/pages/family/account' })
-}
-
-// 确认退出家庭
-const confirmLeaveFamily = () => {
-  uni.showModal({
-    title: '退出家庭',
-    content: '确定要退出当前家庭吗？',
-    confirmText: '退出',
-    confirmColor: '#FF6B6B',
-    success: (res) => {
-      if (res.confirm) {
-        leaveFamily()
-      }
-    }
-  })
-}
-
-// 退出家庭
-const leaveFamily = async () => {
-  try {
-    uni.showLoading({ title: '处理中...' })
-    await familyApi.leaveFamily(familyId.value)
-    uni.hideLoading()
-    uni.showToast({ title: '已退出家庭', icon: 'success' })
-    // 刷新页面
-    setTimeout(() => {
-      loadFamilyData()
-    }, 1000)
-  } catch (e) {
-    console.error('[Family] 退出家庭失败:', e)
-    uni.hideLoading()
-    uni.showToast({ title: '退出失败', icon: 'none' })
-  }
 }
 
 // 下拉刷新

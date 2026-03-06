@@ -118,6 +118,13 @@
       "root": "pages/task-sub",
       "pages": [
         {
+          "path": "create",
+          "style": {
+            "navigationBarTitleText": "添加待办",
+            "navigationStyle": "custom"
+          }
+        },
+        {
           "path": "schedule",
           "style": {
             "navigationBarTitleText": "家务排班",

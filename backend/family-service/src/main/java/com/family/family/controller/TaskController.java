@@ -121,6 +121,7 @@ public class TaskController {
                 taskMap.put("categoryId", task.getCategoryId());
                 taskMap.put("title", task.getTitle());
                 taskMap.put("content", task.getContent());
+                taskMap.put("remark", task.getRemark());
                 taskMap.put("priority", task.getPriority());
                 taskMap.put("status", task.getStatus());
                 taskMap.put("assigneeId", task.getAssigneeId());

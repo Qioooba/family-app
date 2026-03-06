@@ -70,16 +70,9 @@
       <!-- 指派给 -->
       <view class="form-item">
         <text class="label">指派给</text>
-        <view class="member-list">
-          <view
-            v-for="(member, index) in members" :key="member.id || index"
-            class="member-item"
-            :class="{ active: form.assigneeId === member.id }"
-            @click="form.assigneeId = member.id"
-          >
-            <image :src="member.avatar" class="avatar" />
-            <text class="name">{{ member.name }}</text>
-          </view>
+        <view class="assignee-info">
+          <text class="assignee-name">{{ getAssigneeName }}</text>
+          <text class="assignee-hint">（默认指派给自己）</text>
         </view>
       </view>
 
@@ -170,6 +163,7 @@ const form = ref({
   priority: 0,
   deadline: '',
   assigneeId: null,
+  content: '',
   remark: '',
   repeatType: 'none',
   repeatEndType: 'never',
@@ -201,10 +195,11 @@ const loadTaskData = async (id) => {
       form.value.category = res.category || 'shopping'
       form.value.priority = res.priority || 0
       form.value.assigneeId = res.assigneeId || null
+      form.value.content = res.content || ''
       form.value.remark = res.remark || ''
       form.value.status = res.status || 0
       
-      // 处理截止时间
+      // 处理截止时间 - 格式：年-月-日 时:分:秒
       if (res.dueTime) {
         const date = new Date(res.dueTime)
         const year = date.getFullYear()
@@ -212,7 +207,8 @@ const loadTaskData = async (id) => {
         const day = String(date.getDate()).padStart(2, '0')
         const hours = String(date.getHours()).padStart(2, '0')
         const minutes = String(date.getMinutes()).padStart(2, '0')
-        form.value.deadline = `${year}-${month}-${day} ${hours}:${minutes}`
+        const seconds = String(date.getSeconds()).padStart(2, '0')
+        form.value.deadline = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
       }
       
       console.log('[TaskCreate] 表单数据填充完成:', form.value)
@@ -263,14 +259,51 @@ const repeats = [
   { label: '自定义', value: 'custom' }
 ]
 
-const members = ref([
-  { id: 1, name: '爸爸', avatar: '../../static/avatar/dad.png' },
-  { id: 2, name: '妈妈', avatar: '../../static/avatar/mom.png' },
-  { id: 3, name: '宝贝', avatar: '../../static/avatar/kid.png' }
-])
+const members = ref([])
+const currentUser = ref(null)
 
-// 检查URL参数（判断是编辑还是新增模式）
+// 加载家庭成员列表
+const loadFamilyMembers = async () => {
+  try {
+    // 获取当前用户信息
+    const userInfo = uni.getStorageSync('userInfo')
+    currentUser.value = userInfo
+
+    // 从 API 获取家庭成员列表
+    const familyId = uni.getStorageSync('currentFamilyId')
+    if (familyId) {
+      // 假设有 familyApi 可以获取成员列表，如果没有则使用本地存储的成员
+      const storedMembers = uni.getStorageSync('familyMembers')
+      if (storedMembers && storedMembers.length > 0) {
+        members.value = storedMembers
+      }
+    }
+
+    // 默认指定人为当前登录用户
+    if (userInfo) {
+      const userId = userInfo.id || userInfo.userId
+      form.value.assigneeId = userId
+    }
+  } catch (e) {
+    console.error('加载家庭成员失败', e)
+  }
+}
+
+// 获取成员名称（用于显示）
+const getAssigneeName = computed(() => {
+  if (!form.value.assigneeId) return '未指定'
+  const member = members.value.find(m => m.id === form.value.assigneeId)
+  if (member) return member.name
+  // 如果是当前用户但不在成员列表中
+  if (currentUser.value && (currentUser.value.id === form.value.assigneeId || currentUser.value.userId === form.value.assigneeId)) {
+    return currentUser.value.nickname || currentUser.value.name || '我'
+  }
+  return '未知用户'
+})
 onMounted(() => {
+  // 加载家庭成员和设置默认指派人
+  loadFamilyMembers()
+  
   // 获取页面传递的参数
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
@@ -375,7 +408,8 @@ const onDateChange = (e) => {
   const hour = dateRange.value[3][val[3]].replace('时', '').padStart(2, '0')
   const minute = dateRange.value[4][val[4]]
 
-  form.value.deadline = `${year}-${month}-${day} ${hour}:${minute}`
+  // 格式：年-月-日 时:分:秒
+  form.value.deadline = `${year}-${month}-${day} ${hour}:${minute}:00`
 }
 
 const goBack = () => {
@@ -408,7 +442,7 @@ const saveTask = async () => {
       // 将 '2026-02-23 14:30' 转换为 ISO 8601 格式
       dueTime = form.value.deadline.replace(' ', 'T') + ':00'
     } else {
-      // 默认今天 23:59
+      // 默认今天 23:59:00
       const today = new Date().toISOString().split('T')[0]
       dueTime = `${today}T23:59:00`
     }
@@ -417,7 +451,8 @@ const saveTask = async () => {
       title: form.value.title,
       familyId: familyId,
       categoryId: form.value.category,
-      content: form.value.remark,
+      content: form.value.content,
+      remark: form.value.remark,
       priority: form.value.priority,
       dueTime: dueTime,  // 后端期望 LocalDateTime 格式
       assigneeId: form.value.assigneeId,
@@ -715,48 +750,21 @@ const saveTask = async () => {
   }
 }
 
-.member-list {
+.assignee-info {
   display: flex;
-  gap: 30rpx;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx 0;
 
-  .member-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    opacity: 0.5;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 16rpx;
-    border-radius: 20rpx;
+  .assignee-name {
+    font-size: 32rpx;
+    color: #2d3748;
+    font-weight: 500;
+  }
 
-    &.active {
-      opacity: 1;
-      background: rgba(107, 141, 214, 0.08);
-
-      .avatar {
-        border: 4rpx solid #6B8DD6;
-        box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.35);
-      }
-    }
-    
-    &:active {
-      transform: scale(0.95);
-    }
-
-    .avatar {
-      width: 100rpx;
-      height: 100rpx;
-      border-radius: 50%;
-      margin-bottom: 12rpx;
-      border: 4rpx solid transparent;
-      transition: all 0.25s ease;
-      box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
-    }
-
-    .name {
-      font-size: 26rpx;
-      color: #2d3748;
-      font-weight: 500;
-    }
+  .assignee-hint {
+    font-size: 26rpx;
+    color: #999;
   }
 }
 

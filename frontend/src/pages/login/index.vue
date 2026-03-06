@@ -77,6 +77,18 @@
           <text v-if="!loading" class="btn-text">登 录</text>
           <text v-else class="btn-text">登录中...</text>
         </button>
+
+        <!-- 微信一键登录按钮 -->
+        <button
+          class="wx-login-btn"
+          :loading="wxLoading"
+          :disabled="wxLoading || loading"
+          @click="handleWxLogin"
+        >
+          <text class="wx-icon">🌏</text>
+          <text v-if="!wxLoading" class="btn-text">微信一键登录</text>
+          <text v-else class="btn-text">登录中...</text>
+        </button>
       </view>
 
       <!-- 注册链接 -->
@@ -93,6 +105,7 @@ import { useUserStore } from '../../stores/user'
 
 const userStore = useUserStore()
 const loading = ref(false)
+const wxLoading = ref(false)
 const passwordVisible = ref(false)
 
 const form = reactive({
@@ -144,6 +157,44 @@ const forgotPassword = () => {
 
 const goRegister = () => {
   uni.navigateTo({ url: '/pages/register/index' })
+}
+
+// 微信一键登录
+const handleWxLogin = async () => {
+  wxLoading.value = true
+  
+  try {
+    // 调用 uni.login 获取微信 code
+    const [loginErr, loginRes] = await uni.login({
+      provider: 'weixin'
+    })
+    
+    if (loginErr || !loginRes || !loginRes.code) {
+      uni.showToast({ title: '微信授权失败', icon: 'none' })
+      return
+    }
+    
+    const code = loginRes.code
+    console.log('[WxLogin] 获取 code 成功:', code)
+    
+    // 调用后端微信登录接口
+    await userStore.wxLogin({ code })
+    
+    uni.showToast({ title: '登录成功', icon: 'success' })
+    
+    setTimeout(() => {
+      uni.reLaunch({ url: '/pages/home/index' })
+    }, 500)
+  } catch (e) {
+    console.error('微信登录失败:', e)
+    uni.showToast({
+      title: e.message || '微信登录失败，请重试',
+      icon: 'none',
+      duration: 2500
+    })
+  } finally {
+    wxLoading.value = false
+  }
 }
 </script>
 
@@ -444,7 +495,7 @@ button::after {
   justify-content: center;
   box-shadow: 0 12rpx 32rpx rgba(107, 141, 214, 0.4);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  margin: 0;
+  margin: 0 0 24rpx 0;
   padding: 0;
   border: none;
 
@@ -457,6 +508,44 @@ button::after {
   &:active {
     transform: translateY(2rpx) scale(0.98);
     box-shadow: 0 6rpx 20rpx rgba(107, 141, 214, 0.3);
+  }
+
+  &[disabled] {
+    opacity: 0.7;
+  }
+}
+
+.wx-login-btn {
+  width: 100%;
+  height: 100rpx;
+  background: linear-gradient(135deg, #07C160 0%, #05A350 100%);
+  color: #fff;
+  border-radius: 50rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12rpx 32rpx rgba(7, 193, 96, 0.3);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  .wx-icon {
+    font-size: 36rpx;
+    margin-right: 12rpx;
+  }
+
+  .btn-text {
+    color: #fff;
+    font-size: 34rpx;
+    font-weight: 600;
+  }
+
+  &:active {
+    transform: translateY(2rpx) scale(0.98);
+    box-shadow: 0 6rpx 20rpx rgba(7, 193, 96, 0.2);
   }
 
   &[disabled] {

@@ -67,7 +67,7 @@
         :style="{ animationDelay: `${index * 0.05}s` }"
       >
         <view class="icon-box" :style="{ background: item.bgColor, boxShadow: item.shadow }">
-          <text class="icon-emoji">{{ item.icon }}</text>
+          <u-icon :name="item.icon" color="#fff" size="48"></u-icon>
         </view>
         <text class="action-name">{{ item.name }}</text>
       </view>
@@ -75,6 +75,21 @@
     
     <!-- 今日概览卡片 -->
     <view class="overview-cards animate-in">
+      <!-- 天气卡片 -->
+      <view class="overview-card weather-card" @click="navigateTo('/pages/weather/index')">
+        <view class="card-header">
+          <view class="card-icon-wrapper weather-icon">
+            <text class="card-icon">{{ weatherData.icon }}</text>
+          </view>
+          <text class="card-title">天气</text>
+        </view>
+        <view class="weather-info">
+          <text class="temp-value">{{ weatherData.temperature }}°</text>
+          <text class="weather-desc">{{ weatherData.description }}</text>
+        </view>
+        <text class="city-name">{{ weatherData.city }}</text>
+      </view>
+      
       <!-- 今日喝水 -->
       <view class="overview-card water-card" @click="navigateTo('/pages/water/index')">
         <view class="card-header">
@@ -388,6 +403,7 @@ import { waterApi } from '../../api/water'
 import { taskApi } from '../../api/task'
 import { familyApi } from '../../api/family'
 import { anniversaryApi } from '../../api/anniversary'
+import { weatherApi } from '../../api/weather'
 import LazyImage from '@/components/common/LazyImage.vue'
 import WaterGoalModal from '@/components/water/WaterGoalModal.vue'
 
@@ -419,14 +435,8 @@ const daysInMonth = computed(() => {
 
 // 打开添加任务弹窗
 const goAddTask = () => {
-  // 重置表单
-  newTask.value = {
-    title: '',
-    dueDate: '',
-    dueTime: '',
-    assigneeId: null
-  }
-  showAddTaskModal.value = true
+  // 跳转到统一的创建页面
+  uni.navigateTo({ url: '/pages/task-sub/create' })
 }
 
 // 关闭添加任务弹窗
@@ -480,13 +490,13 @@ const formatTaskTime = (dueTime) => {
   let timeStr = dueTime
   if (Array.isArray(dueTime)) {
     const [year, month, day, hour, minute] = dueTime
-    timeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')}`
+    timeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')}:00`
   }
   
   // 如果包含空格，提取时间部分
   const timePart = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr
-  // 只显示小时和分钟
-  return '今天 ' + timePart.substring(0, 5)
+  // 显示完整时间格式（包含秒）：时:分:秒
+  return '今天 ' + timePart
 }
 
 // 加载今日待办数据
@@ -503,31 +513,9 @@ const loadTodayTasks = async () => {
       familyMembers.value = []
     }
     
-    // 使用与待办列表页相同的API，获取所有待办任务（status=0）
-    const res = await taskApi.getList({ familyId, status: 0 })
-    const allTodoTasks = res.list || []
-    
-    // 获取今天的日期字符串
-    const today = new Date()
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-    const todayStrShort = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`
-    
-    // 筛选今日待办任务（dueDate 是今天）
-    const todayTodoTasks = allTodoTasks.filter(task => {
-      // 如果任务没有截止日期，默认也算今天
-      if (!task.dueDate) return true
-      
-      // 处理日期格式：可能是字符串 "2026-03-03" 或数组 [2026,3,3]
-      let taskDateStr = ''
-      if (Array.isArray(task.dueDate)) {
-        const [y, m, d] = task.dueDate
-        taskDateStr = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-      } else if (typeof task.dueDate === 'string') {
-        taskDateStr = task.dueDate
-      }
-      
-      return taskDateStr === todayStr || taskDateStr === todayStrShort
-    })
+    // 使用专门的今日任务API，后端已按今天日期筛选
+    const res = await taskApi.getTodayTasks(familyId)
+    const todayTodoTasks = res || []
     
     // 格式化并显示所有今日待办
     if (todayTodoTasks.length > 0) {
@@ -571,8 +559,9 @@ const confirmPicker = () => {
   const hour = String(pickerValue.value[3]).padStart(2, '0')
   const minute = String(pickerValue.value[4]).padStart(2, '0')
   
+  // 格式：年-月-日 时:分:秒
   newTask.value.dueDate = `${year}-${month}-${day}`
-  newTask.value.dueTime = `${hour}:${minute}`
+  newTask.value.dueTime = `${hour}:${minute}:00`
   showTimePicker.value = false
 }
 
@@ -628,10 +617,8 @@ const currentFamily = ref({ name: '幸福小家' })
 
 // 快捷功能 - 添加阴影
 const quickActions = [
-  { name: '纪念日', icon: '❤️', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
-  { name: '记账', icon: '💰', bgColor: '#68d391', shadow: '0 8rpx 20rpx rgba(104, 211, 145, 0.35)', path: '/pages/food/record' },
-  { name: '相册', icon: '📷', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/family-sub/album' },
-  { name: '天气', icon: '🌤️', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
+  { name: '纪念日', icon: 'heart-fill', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
+  { name: '天气', icon: 'sun-fill', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
 ]
 
 // 今日任务
@@ -661,9 +648,57 @@ const healthData = ref({
 const overviewData = ref({
   water: 500,
   waterTarget: 2000,
-  calories: 1200,
-  expense: 128
+  calories: 1200
 })
+
+// 天气数据
+const weatherData = ref({
+  city: '北京市',
+  temperature: 0,
+  description: '晴',
+  icon: '☀️',
+  tempMin: 0,
+  tempMax: 0,
+  humidity: 0,
+  isLoaded: false
+})
+
+// 获取位置和加载天气
+const loadWeatherData = async () => {
+  try {
+    // #ifdef MP-WEIXIN
+    // 微信小程序获取位置
+    const location = await new Promise((resolve, reject) => {
+      uni.getLocation({
+        type: 'gcj02',
+        success: (res) => resolve({ lat: res.latitude, lon: res.longitude }),
+        fail: () => resolve({ lat: 39.9042, lon: 116.4074 }) // 默认北京
+      })
+    })
+    // #endif
+    
+    // #ifndef MP-WEIXIN
+    const location = { lat: 39.9042, lon: 116.4074 } // 默认北京
+    // #endif
+    
+    const res = await weatherApi.getCurrentByLocation(location.lat, location.lon)
+    if (res) {
+      weatherData.value = {
+        city: res.city || '北京市',
+        temperature: Math.round(res.temperature),
+        description: res.description,
+        icon: res.icon,
+        tempMin: Math.round(res.temperature - 3),
+        tempMax: Math.round(res.temperature + 3),
+        humidity: res.humidity,
+        isLoaded: true
+      }
+    }
+  } catch (error) {
+    console.error('加载天气失败:', error)
+    weatherData.value.isLoaded = true // 标记已加载，避免一直显示加载中
+  }
+}
 
 const navigateTo = (path) => {
   // tabBar 页面使用 switchTab
@@ -773,6 +808,9 @@ onShow(async () => {
   
   // 每次显示页面都刷新数据
   await refreshHomeData()
+  
+  // 加载天气数据
+  loadWeatherData()
 })
 
 // 获取纪念日图标
@@ -1066,6 +1104,11 @@ const getAnniversaryIcon = (type) => {
           background: linear-gradient(135deg, #68d391, #48bb78);
           box-shadow: 0 6rpx 16rpx rgba(104, 211, 145, 0.35);
         }
+        
+        &.weather-icon {
+          background: linear-gradient(135deg, #4facfe, #00f2fe);
+          box-shadow: 0 6rpx 16rpx rgba(79, 172, 254, 0.35);
+        }
       }
       
       .card-title {
@@ -1109,6 +1152,30 @@ const getAnniversaryIcon = (type) => {
         color: #8b9aad;
         margin-left: 6rpx;
       }
+    }
+    
+    .weather-info {
+      display: flex;
+      align-items: baseline;
+      gap: 8rpx;
+      margin-bottom: 8rpx;
+      
+      .temp-value {
+        font-size: 44rpx;
+        font-weight: 700;
+        color: #2d3748;
+        line-height: 1;
+      }
+      
+      .weather-desc {
+        font-size: 24rpx;
+        color: #5a6c7d;
+      }
+    }
+    
+    .city-name {
+      font-size: 22rpx;
+      color: #8b9aad;
     }
   }
 }

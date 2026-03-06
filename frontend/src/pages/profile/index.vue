@@ -41,12 +41,6 @@
     
     <view class="menu-section">
       <view class="menu-group">
-        <view class="menu-item" @click="goToPage('/pages/family/index')">
-          <text class="menu-icon">👨‍👩‍👧</text>
-          <text class="menu-text">我的家庭</text>
-          <text class="menu-arrow">›</text>
-        </view>
-        
         <view class="menu-item" @click="goToPage('/pages/game/index')">
           <text class="menu-icon">🎮</text>
           <text class="menu-text">家庭游戏</text>
@@ -332,17 +326,11 @@ const goLogin = () => {
 
 const showAbout = () => {
   uni.showModal({
-    title: '🏠 幸福小家',
-    content: '━━━━━━━━━━━━━━━━━━\n\n✨ 版本：v1.0.0\n\n❤️ 用心打造的家庭管理平台\n\n👨\u200d💻 开发：Qioba\n\n让家更有爱，让生活更美好\n\n━━━━━━━━━━━━━━━━━━\n\n📋 隐私政策：本小程序尊重并保护用户隐私。\n我们仅收集必要的数据用于提供服务，\n不会对外分享或出售用户信息。\n\n💡 详细隐私政策请访问:\n点击"隐私政策"按钮查看',
-    showCancel: true,
-    confirmText: '💖 知道了',
-    cancelText: '🔒 隐私政策',
-    confirmColor: '#ff6b6b',
-    success: (res) => {
-      if (res.cancel) {
-        showPrivacyPolicy()
-      }
-    }
+    title: '家庭小程序',
+    content: '版本: 1.0.0\n\n这是一个家庭内部使用的小程序\n仅供家庭成员使用',
+    showCancel: false,
+    confirmText: '知道了',
+    confirmColor: '#333333'
   })
 }
 
@@ -357,25 +345,12 @@ const showPrivacyPolicy = () => {
 }
 
 const showUpdateHistory = () => {
-  const updates = `🏠 幸福小家 更新日志
-━━━━━━━━━━━━━━━━━━
-
-📅 2026-02-24 v1.0.0
-• 全新发布！
-• 待办任务功能
-• 心愿墙功能
-• 家庭成员管理
-• 个人资料设置
-• 家庭游戏（开发中）
-
-❤️ 感谢使用！`
-  
   uni.showModal({
-    title: '📝 更新历史',
-    content: updates,
+    title: '更新日志',
+    content: 'v1.0.0 (2026-03)\n\n- 初始版本\n- 基础功能：任务管理、纪念日、天气\n- 微信一键登录',
     showCancel: false,
-    confirmText: '💖 知道了',
-    confirmColor: '#ff6b6b'
+    confirmText: '知道了',
+    confirmColor: '#333333'
   })
 }
 

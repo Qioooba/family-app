@@ -293,9 +293,9 @@ const formatTime = (timeValue) => {
   // 如果是数组格式 [year, month, day, hour, minute]
   if (Array.isArray(timeValue)) {
     const [year, month, day, hour, minute] = timeValue
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`
   }
-  // 如果已经是字符串，直接返回
+  // 如果已经是字符串，直接返回（格式已统一为年-月-日 时:分:秒）
   return timeValue
 }
 
@@ -523,8 +523,9 @@ const confirmPicker = () => {
   const day = String(pickerValue.value[2] + 1).padStart(2, '0')
   const hour = String(pickerValue.value[3]).padStart(2, '0')
   const minute = String(pickerValue.value[4]).padStart(2, '0')
+  // 格式：年-月-日 时:分:秒
   newTask.value.dueDate = `${year}-${month}-${day}`
-  newTask.value.dueTime = `${hour}:${minute}`
+  newTask.value.dueTime = `${hour}:${minute}:00`
   closePicker()
 }
 
@@ -604,8 +605,8 @@ const toggleTask = async (task) => {
 }
 
 const viewTask = (task) => {
-  selectedTask.value = task
-  showDetailModal.value = true
+  // 跳转到编辑页面，传递任务ID
+  uni.navigateTo({ url: `/pages/task-sub/create?id=${task.id}` })
 }
 
 const closeDetailModal = () => {
@@ -695,15 +696,8 @@ const goToCalendar = () => {
 }
 
 const showAddModal = () => {
-  // 重置表单
-  newTask.value = {
-    title: '',
-    dueDate: getTodayString(),
-    dueTime: '15:00',
-    priority: 0,
-    assigneeId: null
-  }
-  showModal.value = true
+  // 跳转到统一的创建页面
+  uni.navigateTo({ url: '/pages/task-sub/create' })
 }
 
 const closeModal = () => {
@@ -788,18 +782,21 @@ const addTask = async () => {
   }
   
   .header-action {
-    width: 48px;
-    height: 48px;
+    position: fixed;
+    right: 30rpx;
+    bottom: 30rpx;
+    width: 56px;
+    height: 56px;
     background: linear-gradient(135deg, #81C784, #4CAF50);
-    border-radius: 16px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-    margin-right: 90px; // 避免与小程序胶囊按钮重叠
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    z-index: 100;
     
     .icon {
-      font-size: 28px;
+      font-size: 32px;
       color: #fff;
       font-weight: 300;
     }

@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.family.common.annotation.RateLimit;
 import com.family.family.entity.User;
+import com.family.family.service.InviteCodeService;
 import com.family.family.entity.FamilyMember;
 import com.family.family.mapper.UserMapper;
 import com.family.family.mapper.FamilyMemberMapper;
@@ -39,6 +40,9 @@ public class UserController {
 
     @Autowired
     private FamilyMemberMapper familyMemberMapper;
+    
+    @Autowired
+    private InviteCodeService inviteCodeService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
@@ -257,6 +261,22 @@ public class UserController {
             String username = (String) params.get("username");
             String password = (String) params.get("password");
             String nickname = (String) params.get("nickname");
+            String inviteCode = (String) params.get("inviteCode");
+
+            // 校验邀请码（必填）
+            if (inviteCode == null || inviteCode.trim().isEmpty()) {
+                result.put("code", 400);
+                result.put("message", "请输入邀请码");
+                return result;
+            }
+
+            // 验证邀请码是否有效
+            com.family.family.entity.InviteCode verifiedCode = inviteCodeService.verifyInviteCode(inviteCode.trim());
+            if (verifiedCode == null) {
+                result.put("code", 400);
+                result.put("message", "邀请码无效或已过期");
+                return result;
+            }
 
             // 校验手机号或用户名
             if ((phone == null || phone.isEmpty()) && (username == null || username.isEmpty())) {
@@ -310,20 +330,24 @@ public class UserController {
             user.setNickname(nickname);
             user.setPassword(passwordEncoder.encode(password));
             user.setStatus(1); // 正常状态
-            user.setCurrentFamilyId(DEFAULT_FAMILY_ID); // 设置默认家庭
+            user.setCurrentFamilyId(verifiedCode.getFamilyId()); // 设置为邀请码对应的家庭
             user.setCreateTime(LocalDateTime.now());
             user.setUpdateTime(LocalDateTime.now());
 
             userMapper.insert(user);
 
-            // 自动将用户加入默认家庭
+            // 自动将用户加入邀请码对应的家庭
             FamilyMember familyMember = new FamilyMember();
-            familyMember.setFamilyId(DEFAULT_FAMILY_ID);
+            familyMember.setFamilyId(verifiedCode.getFamilyId());
             familyMember.setUserId(user.getId());
             familyMember.setRole("member");
             familyMember.setNickname(nickname);
             familyMember.setJoinTime(LocalDateTime.now());
             familyMemberMapper.insert(familyMember);
+
+            // 更新邀请码使用次数
+            verifiedCode.setUsedCount(verifiedCode.getUsedCount() + 1);
+            inviteCodeService.updateById(verifiedCode);
 
             result.put("code", 200);
             result.put("message", "success");
