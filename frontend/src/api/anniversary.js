@@ -33,28 +33,28 @@ export const anniversaryApi = {
    * @param {object} data - 纪念日数据
    * @returns {Promise<object>} 创建的纪念日
    */
-  create: (data) => request.post('/api/anniversary/create', data),
+  create: (data) => request.post('/api/calendar/anniversary/create', data),
   
   /**
    * 更新纪念日
    * @param {object} data - 纪念日数据
    * @returns {Promise<object>} 更新的纪念日
    */
-  update: (data) => request.put('/api/anniversary/update', data),
+  update: (data) => request.put('/api/calendar/anniversary/update', data),
   
   /**
    * 删除纪念日
    * @param {number} id - 纪念日ID
    * @returns {Promise<void>}
    */
-  delete: (id) => request.delete(`/api/anniversary/delete/${id}`),
+  delete: (id) => request.delete(`/api/calendar/anniversary/${id}`),
   
   /**
    * 获取家庭成员列表
    * @param {number} familyId - 家庭ID
    * @returns {Promise<Array>} 成员列表
    */
-  getMembers: (familyId) => request.get(`/api/anniversary/members/${familyId}`)
+  getMembers: (familyId) => request.get(`/api/calendar/anniversary/members/${familyId}`)
 }
 
 export default anniversaryApi
