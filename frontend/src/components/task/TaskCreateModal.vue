@@ -21,6 +21,15 @@
           placeholder="请输入待办事项"
           focus
         />
+        
+        <!-- 备注 -->
+        <textarea 
+          class="remark-input" 
+          v-model="formData.remark" 
+          placeholder="添加备注..."
+          :auto-height="true"
+          :maxlength="500"
+        />
       </view>
       
       <!-- 底部：提醒时间和分配人员 -->
@@ -133,6 +142,7 @@ const emit = defineEmits(['close', 'success'])
 // 表单数据
 const formData = ref({
   title: '',
+  remark: '',
   dueDate: '',
   dueTime: '',
   assigneeId: null
@@ -232,6 +242,7 @@ const handleClose = () => {
   // 重置表单
   formData.value = {
     title: '',
+    remark: '',
     dueDate: '',
     dueTime: '',
     assigneeId: null
@@ -253,6 +264,7 @@ const handleSave = async () => {
     
     await taskApi.create({
       title: formData.value.title,
+      remark: formData.value.remark,
       familyId,
       assigneeId: formData.value.assigneeId,
       dueTime,
@@ -277,6 +289,7 @@ watch(() => props.visible, (newVal) => {
       // 编辑模式：使用传入的数据初始化
       formData.value = {
         title: props.initialData.title || '',
+        remark: props.initialData.remark || '',
         dueDate: props.initialData.dueDate || '',
         dueTime: props.initialData.dueTime || '',
         assigneeId: props.initialData.assigneeId || null
@@ -285,6 +298,7 @@ watch(() => props.visible, (newVal) => {
       // 创建模式：重置表单
       formData.value = {
         title: '',
+        remark: '',
         dueDate: '',
         dueTime: '',
         assigneeId: null
@@ -380,6 +394,22 @@ watch(() => props.visible, (newVal) => {
       border: none;
       border-bottom: 2rpx solid #e2e8f0;
       padding: 0;
+      
+      &::placeholder {
+        color: #a0aec0;
+      }
+    }
+    
+    .remark-input {
+      width: 100%;
+      min-height: 120rpx;
+      margin-top: 24rpx;
+      padding: 20rpx;
+      font-size: 30rpx;
+      color: #2d3748;
+      background: #f7fafc;
+      border-radius: 16rpx;
+      box-sizing: border-box;
       
       &::placeholder {
         color: #a0aec0;

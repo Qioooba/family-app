@@ -47,11 +47,11 @@
           <text class="menu-arrow">›</text>
         </view>
         
-        <view class="menu-item" @click="goToPage('/pages/dashboard/index')">
+        <!-- <view class="menu-item" @click="goToPage('/pages/dashboard/index')">
           <text class="menu-icon">📊</text>
           <text class="menu-text">数据统计</text>
           <text class="menu-arrow">›</text>
-        </view>
+        </view> -->
       </view>
       
       <view class="menu-group">

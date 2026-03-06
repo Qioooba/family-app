@@ -29,8 +29,6 @@ public class Task {
     private LocalDateTime dueTime;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Shanghai")
     private LocalDateTime remindTime;
-    private String repeatType;
-    private String repeatRule;
     private String location;
     private Long parentId;
     private String attachments;
@@ -137,22 +135,6 @@ public class Task {
     
     public void setRemindTime(LocalDateTime remindTime) {
         this.remindTime = remindTime;
-    }
-    
-    public String getRepeatType() {
-        return repeatType;
-    }
-    
-    public void setRepeatType(String repeatType) {
-        this.repeatType = repeatType;
-    }
-    
-    public String getRepeatRule() {
-        return repeatRule;
-    }
-    
-    public void setRepeatRule(String repeatRule) {
-        this.repeatRule = repeatRule;
     }
     
     public String getLocation() {

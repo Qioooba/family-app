@@ -83,31 +83,77 @@ public class TaskController {
         }
 
         try {
-            // 查询当前状态的任务列表
+            // 查询当前状态的任务列表（指派人和被指派人都能看到）
             LambdaQueryWrapper<Task> query = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
-                .eq(Task::getIsDeleted, 0);
+                .eq(Task::getIsDeleted, 0)
+                .and(q -> q.eq(Task::getAssigneeId, userId)
+                          .or()
+                          .eq(Task::getCreatorId, userId));
             
             if (status != null) {
                 query.eq(Task::getStatus, status);
             }
             
-            // 按创建时间排序（避免null值问题）
-            query.orderByDesc(Task::getCreateTime);
+            // 不在这里排序，后面会自定义排序
             List<Task> tasks = taskMapper.selectList(query);
             
-            // 查询待办数量
+            // 智能排序：
+            // 1. 已完成的待办排最后
+            // 2. 已过期待办（截止日期 < 今天且未完成）排前面，按截止日期从近到远排序
+            // 3. 今天及未来的待办（截止日期 >= 今天）排中间，按截止日期从近到远排序
+            LocalDate today = LocalDate.now();
+            tasks.sort((a, b) -> {
+                // 已完成的任务排最后
+                if (a.getStatus() == 2 && b.getStatus() != 2) return 1;
+                if (a.getStatus() != 2 && b.getStatus() == 2) return -1;
+                
+                // 都是已完成的，按完成时间排序
+                if (a.getStatus() == 2 && b.getStatus() == 2) {
+                    if (a.getFinishTime() == null && b.getFinishTime() == null) return 0;
+                    if (a.getFinishTime() == null) return 1;
+                    if (b.getFinishTime() == null) return -1;
+                    return b.getFinishTime().compareTo(a.getFinishTime());
+                }
+                
+                // 获取截止日期（处理null的情况）
+                LocalDateTime dueTimeA = a.getDueTime();
+                LocalDateTime dueTimeB = b.getDueTime();
+                if (dueTimeA == null && dueTimeB == null) return 0;
+                if (dueTimeA == null) return 1;  // null值排后面
+                if (dueTimeB == null) return -1;
+                
+                LocalDate dateA = dueTimeA.toLocalDate();
+                LocalDate dateB = dueTimeB.toLocalDate();
+                boolean isOverdueA = dateA.isBefore(today);
+                boolean isOverdueB = dateB.isBefore(today);
+                
+                // 过期任务排前面
+                if (isOverdueA && !isOverdueB) return -1;
+                if (!isOverdueA && isOverdueB) return 1;
+                
+                // 都是过期或都是非过期，按日期排序（从近到远）
+                return dateA.compareTo(dateB);
+            });
+            
+            // 查询待办数量（指派人和被指派人都能看到）
             LambdaQueryWrapper<Task> todoQuery = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
                 .eq(Task::getIsDeleted, 0)
-                .eq(Task::getStatus, 0);
+                .eq(Task::getStatus, 0)
+                .and(q -> q.eq(Task::getAssigneeId, userId)
+                          .or()
+                          .eq(Task::getCreatorId, userId));
             Long todoCount = taskMapper.selectCount(todoQuery);
             
-            // 查询已完成数量
+            // 查询已完成数量（指派人和被指派人都能看到）
             LambdaQueryWrapper<Task> doneQuery = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
                 .eq(Task::getIsDeleted, 0)
-                .eq(Task::getStatus, 2);
+                .eq(Task::getStatus, 2)
+                .and(q -> q.eq(Task::getAssigneeId, userId)
+                          .or()
+                          .eq(Task::getCreatorId, userId));
             Long doneCount = taskMapper.selectCount(doneQuery);
 
             Map<String, Object> data = new HashMap<>();
@@ -128,8 +174,6 @@ public class TaskController {
                 taskMap.put("creatorId", task.getCreatorId());
                 taskMap.put("dueTime", task.getDueTime());
                 taskMap.put("remindTime", task.getRemindTime());
-                taskMap.put("repeatType", task.getRepeatType());
-                taskMap.put("repeatRule", task.getRepeatRule());
                 taskMap.put("location", task.getLocation());
                 taskMap.put("parentId", task.getParentId());
                 taskMap.put("attachments", task.getAttachments());
@@ -200,6 +244,9 @@ public class TaskController {
             LambdaQueryWrapper<Task> query = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
                 .eq(Task::getIsDeleted, 0)
+                .and(q -> q.eq(Task::getAssigneeId, userId)
+                          .or()
+                          .eq(Task::getCreatorId, userId))
                 .ge(Task::getDueTime, startOfDay)
                 .lt(Task::getDueTime, endOfDay)
                 .orderByAsc(Task::getDueTime);

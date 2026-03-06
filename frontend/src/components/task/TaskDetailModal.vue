@@ -69,6 +69,15 @@
             <text class="info-card-value">{{ task.assigneeName || '未指派' }}</text>
           </view>
         </view>
+        
+        <!-- 指派时间 -->
+        <view class="info-card readonly">
+          <view class="info-card-icon">🕐</view>
+          <view class="info-card-content">
+            <text class="info-card-label">指派时间</text>
+            <text class="info-card-value time-value">{{ formatTime(task.createTime) }}</text>
+          </view>
+        </view>
       </view>
       
       <!-- 备注区域 -->
@@ -109,6 +118,12 @@ const formatDateTime = (date, time) => {
   if (!date && !time) return '未设置'
   if (date && time) return `${date} ${time}`
   return date || time || '未设置'
+}
+
+const formatTime = (time) => {
+  if (!time) return '-'
+  const date = new Date(time)
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`
 }
 </script>
 
@@ -260,6 +275,15 @@ const formatDateTime = (date, time) => {
     &:active {
       transform: scale(0.98);
       background: #edf2f7;
+    }
+    
+    // 只读样式 - 指派时间
+    &.readonly {
+      background: #f0f0f0;
+      
+      .info-card-value {
+        color: #999;
+      }
     }
     
     .info-card-icon {

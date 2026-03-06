@@ -1,4 +1,4 @@
-import { weatherApi } from '../../api/weather'
+import { weatherApi } from '../api/weather'
 
 /**
  * 天气工具函数

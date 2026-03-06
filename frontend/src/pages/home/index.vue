@@ -76,7 +76,7 @@
     <!-- 今日概览卡片 -->
     <view class="overview-cards animate-in">
       <!-- 天气卡片 -->
-      <view class="overview-card weather-card" @click="navigateTo('/pages/weather/index')">
+      <view class="overview-card weather-card" @click="handleWeatherClick">
         <view class="card-header">
           <view class="card-icon-wrapper weather-icon">
             <text class="card-icon">{{ weatherData.icon }}</text>
@@ -84,13 +84,14 @@
           <text class="card-title">天气</text>
         </view>
         <view class="weather-info">
-          <text class="temp-value">{{ weatherData.temperature }}°</text>
+          <text class="temp-value">{{ weatherData.temperature === '--' ? '--' : weatherData.temperature + '°' }}</text>
           <text class="weather-desc">{{ weatherData.description }}</text>
         </view>
         <text class="city-name">{{ weatherData.city }}</text>
+        <text v-if="!weatherData.isLocationAuthorized" class="location-tip">点击开启定位</text>
       </view>
       
-      <!-- 今日喝水 -->
+      <!-- 喝水卡片 -->
       <view class="overview-card water-card" @click="navigateTo('/pages/water/index')">
         <view class="card-header">
           <view class="card-icon-wrapper water-icon">
@@ -98,30 +99,19 @@
           </view>
           <text class="card-title">今日喝水</text>
         </view>
-        <view class="water-progress-section">
-          <view class="water-progress-bar">
-            <view 
-              class="water-progress-fill"
-              :style="{ width: (overviewData.water / overviewData.waterTarget * 100) + '%' }"
-            ></view>
-          </view>
-          <text class="water-text">{{ overviewData.water }}ml / {{ overviewData.waterTarget }}ml</text>
+        <view class="water-content">
+          <text class="water-amount">{{ waterData.todayAmount }}</text>
+          <text class="water-unit">ml</text>
         </view>
+        <view class="water-progress">
+          <view class="progress-bar">
+            <view class="progress-fill" :style="{ width: waterData.percent + '%' }"></view>
+          </view>
+          <text class="progress-text">{{ waterData.percent }}%</text>
+        </view>
+        <text class="water-target">目标: {{ waterData.targetAmount }}ml</text>
       </view>
       
-      <!-- 今日饮食 -->
-      <view class="overview-card diet-card" @click="navigateTo('/pages/food/record')">
-        <view class="card-header">
-          <view class="card-icon-wrapper diet-icon">
-            <text class="card-icon">🍽️</text>
-          </view>
-          <text class="card-title">今日饮食</text>
-        </view>
-        <view class="card-value">
-          <text class="value-num">{{ overviewData.calories }}</text>
-          <text class="value-unit">千卡</text>
-        </view>
-      </view>
     </view>
     
     <!-- 今日概览 -->
@@ -228,170 +218,8 @@
       </view>
     </view>
     
-    <!-- 今日菜谱推荐 -->
-    <view class="section-card recipe-section animate-in">
-      <view class="section-header">
-        <view class="title-wrapper">
-          <text class="section-icon">🍳</text>
-          <text class="section-title">今日菜谱</text>
-        </view>
-        <view class="more-btn" @click="navigateTo('/pages/recipe/index')">
-          <text>更多</text>
-          ›
-        </view>
-      </view>
-      
-      <view class="recipe-scroll">
-        <scroll-view scroll-x class="recipe-list" enhanced :show-scrollbar="false">
-          <view 
-            v-for="(recipe, index) in todayRecipes" 
-            :key="recipe.id"
-            class="recipe-card"
-            :style="{ animationDelay: `${index * 0.1}s` }"
-            @click="goRecipeDetail(recipe)"
-          >
-            <view class="recipe-image-wrapper">
-              <LazyImage 
-                :src="recipe.cover" 
-                mode="aspectFill"
-                width="280rpx"
-                height="180rpx"
-                :threshold="50"
-              />
-              <view class="recipe-overlay">
-                <text class="cook-time">⏱️ {{ recipe.time }}分</text>
-              </view>
-            </view>
-            
-            <view class="recipe-info">
-              <text class="recipe-name">{{ recipe.name }}</text>
-              <view class="recipe-meta">
-                <view class="meta-item">
-                  <text class="meta-icon">🔥</text>
-                  <text class="meta-text">{{ recipe.calories }}卡</text>
-                </view>
-              </view>
-            </view>
-          </view>
-        </scroll-view>
-      </view>
-    </view>
-
-    <!-- 设置饮水目标弹窗 -->
-    <WaterGoalModal
-      :visible="waterGoalModalVisible"
-      :current-target="overviewData.waterTarget"
-      @close="waterGoalModalVisible = false"
-      @confirm="handleSetWaterGoal"
-    />
-    
-    <!-- 添加任务弹窗 - 与待办页面一致 -->
-    <view v-if="showAddTaskModal" class="modal-overlay" @click="closeAddTaskModal">
-      <view class="modal-content task-modal" @click.stop>
-        <!-- 顶部：添加待办 -->
-        <view class="modal-top">
-          <view class="close-btn" @click="closeAddTaskModal">
-            <text class="close-icon">✕</text>
-          </view>
-          <text class="modal-title">添加待办</text>
-          <view class="save-btn" @click="saveTask">
-            <text class="save-text">保存</text>
-          </view>
-        </view>
-        
-        <!-- 中间：输入框 -->
-        <view class="modal-body">
-          <input 
-            class="task-input" 
-            v-model="newTask.title" 
-            placeholder="请输入待办事项"
-            focus
-          />
-        </view>
-        
-        <!-- 底部：提醒时间和分配人员 -->
-        <view class="modal-bottom">
-          <!-- 提醒时间 -->
-          <view class="form-row" @click="showDateTimePicker">
-            <text class="row-icon">⏰</text>
-            <text class="row-label">提醒时间</text>
-            <text class="row-value">{{ newTask.dueDate || '今天' }} {{ newTask.dueTime || '15:00' }}</text>
-          </view>
-          
-          <!-- 分配人员 -->
-          <view class="form-row" @click="openMemberPicker">
-            <text class="row-icon">👤</text>
-            <text class="row-label">分配人员</text>
-            <view class="member-select">
-              <text v-if="!newTask.assigneeId" class="select-placeholder">点击选择</text>
-              <text v-else class="select-value">{{ getMemberName(newTask.assigneeId) }}</text>
-              <text class="row-arrow">›</text>
-            </view>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 日期时间选择器 -->
-      <view v-if="showTimePicker" class="picker-overlay" @click="closePicker">
-        <view class="picker-container" @click.stop>
-          <view class="picker-header">
-            <text class="picker-cancel" @click="closePicker">取消</text>
-            <text class="picker-title">选择时间</text>
-            <text class="picker-confirm" @click="confirmPicker">确定</text>
-          </view>
-          <picker-view class="picker-view" :value="pickerValue" @change="onPickerChange">
-            <picker-view-column>
-              <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="month in 12" :key="'m'+month" class="picker-item">{{ month }}月</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="day in daysInMonth" :key="'d'+day" class="picker-item">{{ day }}日</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="hour in 24" :key="'h'+hour" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="minute in 60" :key="'min'+minute" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
-            </picker-view-column>
-          </picker-view>
-        </view>
-      </view>
-      
-      <!-- 成员选择弹窗 -->
-      <view v-if="showMemberPicker" class="picker-overlay" @click="closeMemberPicker">
-        <view class="member-picker-container" @click.stop>
-          <view class="picker-header">
-            <text class="picker-title">选择家庭成员</text>
-          </view>
-          <view class="member-list">
-            <view 
-              class="member-item" 
-              :class="{ active: !newTask.assigneeId }"
-              @click="selectMember(null)"
-            >
-              <view class="member-avatar default">自己</view>
-              <text class="member-name">自己</text>
-            </view>
-            <view 
-              v-for="member in familyMembers" 
-              :key="member.userId"
-              class="member-item"
-              :class="{ active: newTask.assigneeId === member.userId }"
-              @click="selectMember(member.userId)"
-            >
-              <image 
-                class="member-avatar" 
-                :src="member.avatar || '../../static/avatar-default.png'" 
-                mode="aspectFill" 
-              />
-              <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
+    <!-- 任务弹窗组件 -->
+    <TaskModal ref="taskModalRef" @success="onTaskSaved" />
   </view>
 </template>
 
@@ -399,104 +227,41 @@
 import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../stores/user'
-import { waterApi } from '../../api/water'
 import { taskApi } from '../../api/task'
 import { familyApi } from '../../api/family'
 import { anniversaryApi } from '../../api/anniversary'
 import { weatherApi } from '../../api/weather'
+import { waterApi } from '../../api/water'
 import LazyImage from '@/components/common/LazyImage.vue'
-import WaterGoalModal from '@/components/water/WaterGoalModal.vue'
+import TaskModal from '@/components/TaskModal.vue'
 
 const userStore = useUserStore()
-const waterGoalModalVisible = ref(false)
+const taskModalRef = ref(null)
 
-// ========== 添加任务弹窗相关 ==========
-const showAddTaskModal = ref(false)
-const showTimePicker = ref(false)
-const showMemberPicker = ref(false)
-const newTask = ref({
-  title: '',
-  dueDate: '',
-  dueTime: '',
-  assigneeId: null
-})
-
-// 年份范围
-const yearRange = ref([2024, 2025, 2026, 2027, 2028])
-// 当前选中的日期时间
-const pickerValue = ref([1, new Date().getMonth(), new Date().getDate() - 1, 15, 0])
-
-// 计算当月天数
-const daysInMonth = computed(() => {
-  const year = yearRange.value[pickerValue.value[0]]
-  const month = pickerValue.value[1] + 1
-  return new Date(year, month, 0).getDate()
-})
-
-// 打开添加任务弹窗
+// ========== 任务弹窗操作 ==========
 const goAddTask = () => {
-  // 跳转到统一的创建页面
-  uni.navigateTo({ url: '/pages/task-sub/create' })
+  // 直接打开弹窗，不跳转页面
+  taskModalRef.value?.open()
 }
 
-// 关闭添加任务弹窗
-const closeAddTaskModal = () => {
-  showAddTaskModal.value = false
-}
-
-// 保存任务
-const saveTask = async () => {
-  if (!newTask.value.title.trim()) {
-    uni.showToast({ title: '请输入待办事项', icon: 'none' })
-    return
-  }
-  
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    const dueTime = newTask.value.dueDate && newTask.value.dueTime 
-      ? `${newTask.value.dueDate} ${newTask.value.dueTime}`
-      : null
-    
-    await taskApi.create({
-      title: newTask.value.title,
-      familyId,
-      assigneeId: newTask.value.assigneeId,
-      dueTime,
-      status: 0,
-      priority: 0
-    })
-    
-    uni.showToast({ title: '添加成功', icon: 'success' })
-    showAddTaskModal.value = false
-    // 刷新任务列表
-    loadTodayTasks()
-  } catch (error) {
-    console.error('添加任务失败:', error)
-    uni.showToast({ title: '添加失败', icon: 'none' })
-  }
+const onTaskSaved = () => {
+  // 刷新今日任务列表
+  loadTodayTasks()
 }
 
 // 获取成员名称
 const getMemberName = (userId) => {
   const member = familyMembers.value.find(m => m.userId === userId)
-  return member ? (member.nickname || member.name || '家人') : '自己'
+  return member ? (member.nickname || member.name || '家人') : '未知'
 }
 
 // 格式化任务时间
 const formatTaskTime = (dueTime) => {
-  if (!dueTime) return '今天'
-  
-  // 如果是数组格式 [year, month, day, hour, minute]，转换为时间字符串
-  let timeStr = dueTime
-  if (Array.isArray(dueTime)) {
-    const [year, month, day, hour, minute] = dueTime
-    timeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute || 0).padStart(2, '0')}:00`
-  }
-  
-  // 如果包含空格，提取时间部分
-  const timePart = timeStr.includes(' ') ? timeStr.split(' ')[1] : timeStr
-  // 显示完整时间格式（包含秒）：时:分:秒
-  return '今天 ' + timePart
+  if (!dueTime) return ''
+  const date = new Date(dueTime)
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${hours}:${minutes}`
 }
 
 // 加载今日待办数据
@@ -533,58 +298,6 @@ const loadTodayTasks = async () => {
   }
 }
 
-// 显示日期时间选择器
-const showDateTimePicker = () => {
-  const now = new Date()
-  pickerValue.value = [
-    1, // 默认2025年
-    now.getMonth(),
-    now.getDate() - 1,
-    15,
-    0
-  ]
-  showTimePicker.value = true
-}
-
-// 关闭日期时间选择器
-const closePicker = () => {
-  showTimePicker.value = false
-}
-
-// 确认日期时间选择
-const confirmPicker = () => {
-  const year = yearRange.value[pickerValue.value[0]]
-  const month = String(pickerValue.value[1] + 1).padStart(2, '0')
-  const day = String(pickerValue.value[2] + 1).padStart(2, '0')
-  const hour = String(pickerValue.value[3]).padStart(2, '0')
-  const minute = String(pickerValue.value[4]).padStart(2, '0')
-  
-  // 格式：年-月-日 时:分:秒
-  newTask.value.dueDate = `${year}-${month}-${day}`
-  newTask.value.dueTime = `${hour}:${minute}:00`
-  showTimePicker.value = false
-}
-
-// 日期时间选择变化
-const onPickerChange = (e) => {
-  pickerValue.value = e.detail.value
-}
-
-// 打开成员选择器
-const openMemberPicker = () => {
-  showMemberPicker.value = true
-}
-
-// 关闭成员选择器
-const closeMemberPicker = () => {
-  showMemberPicker.value = false
-}
-
-// 选择成员
-const selectMember = (userId) => {
-  newTask.value.assigneeId = userId
-  showMemberPicker.value = false
-}
 // ========== 添加任务弹窗相关结束 ==========
 
 // 问候语
@@ -617,8 +330,9 @@ const currentFamily = ref({ name: '幸福小家' })
 
 // 快捷功能 - 添加阴影
 const quickActions = [
-  { name: '纪念日', icon: 'heart-fill', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
-  { name: '天气', icon: 'sun-fill', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
+  { name: '纪念日', icon: 'heart', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
+  { name: '心愿', icon: 'star', bgColor: '#FFD700', shadow: '0 8rpx 20rpx rgba(255, 215, 0, 0.35)', path: '/pages/wish/index' },
+  { name: '天气', icon: 'sun', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
 ]
 
 // 今日任务
@@ -630,74 +344,186 @@ const familyMembers = ref([])
 // 纪念日
 const upcomingAnniversaries = ref([])
 
-// 今日菜谱
-const todayRecipes = ref([
-  { id: 1, name: '番茄炒蛋', cover: '../../static/recipes/fanqie.jpg', time: 15, calories: 180 },
-  { id: 2, name: '红烧排骨', cover: '../../static/recipes/paigu.jpg', time: 45, calories: 320 },
-  { id: 3, name: '蒜蓉西兰花', cover: '../../static/recipes/xilanhua.jpg', time: 10, calories: 85 }
-])
-
-// 健康数据
-const healthData = ref({
-  calories: 1250,
-  target: 2000,
-  water: 5
-})
-
 // 今日概览数据
 const overviewData = ref({
-  water: 500,
-  waterTarget: 2000,
   calories: 1200
 })
 
+// 喝水数据
+const waterData = ref({
+  todayAmount: 0,
+  targetAmount: 2000,
+  percent: 0
+})
+
+// 加载喝水数据
+const loadWaterData = async () => {
+  try {
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || 1
+    const res = await waterApi.getToday(userId)
+    if (res) {
+      waterData.value.todayAmount = res.todayAmount || 0
+      waterData.value.targetAmount = res.targetAmount || 2000
+      waterData.value.percent = res.percent || 0
+    }
+  } catch (e) {
+    console.error('加载喝水数据失败', e)
+  }
+}
+
 // 天气数据
 const weatherData = ref({
-  city: '北京市',
+  city: '',
   temperature: 0,
-  description: '晴',
-  icon: '☀️',
+  description: '加载中...',
+  icon: '📍',
   tempMin: 0,
   tempMax: 0,
   humidity: 0,
-  isLoaded: false
+  isLoaded: false,
+  isLocationAuthorized: true // 位置授权状态
 })
 
 // 获取位置和加载天气
 const loadWeatherData = async () => {
   try {
-    // #ifdef MP-WEIXIN
-    // 微信小程序获取位置
-    const location = await new Promise((resolve, reject) => {
-      uni.getLocation({
-        type: 'gcj02',
-        success: (res) => resolve({ lat: res.latitude, lon: res.longitude }),
-        fail: () => resolve({ lat: 39.9042, lon: 116.4074 }) // 默认北京
-      })
-    })
-    // #endif
+    // 先检查位置授权状态
+    const locationAuth = await checkLocationAuth()
     
-    // #ifndef MP-WEIXIN
-    const location = { lat: 39.9042, lon: 116.4074 } // 默认北京
-    // #endif
+    if (!locationAuth.authorized) {
+      // 未授权，显示提示
+      weatherData.value = {
+        city: '定位未开启',
+        temperature: '--',
+        description: '点击开启定位',
+        icon: '📍',
+        tempMin: 0,
+        tempMax: 0,
+        humidity: 0,
+        isLoaded: true,
+        isLocationAuthorized: false
+      }
+      return
+    }
     
+    // 获取位置
+    const location = await getUserLocation()
+    
+    if (!location) {
+      // 获取位置失败
+      weatherData.value = {
+        city: '定位失败',
+        temperature: '--',
+        description: '点击重试',
+        icon: '📍',
+        tempMin: 0,
+        tempMax: 0,
+        humidity: 0,
+        isLoaded: true,
+        isLocationAuthorized: true
+      }
+      return
+    }
+    
+    // 调用天气API
     const res = await weatherApi.getCurrentByLocation(location.lat, location.lon)
     if (res) {
       weatherData.value = {
-        city: res.city || '北京市',
+        city: res.city || '当前位置',
         temperature: Math.round(res.temperature),
         description: res.description,
         icon: res.icon,
         tempMin: Math.round(res.temperature - 3),
         tempMax: Math.round(res.temperature + 3),
         humidity: res.humidity,
-        isLoaded: true
+        isLoaded: true,
+        isLocationAuthorized: true
       }
     }
   } catch (error) {
     console.error('加载天气失败:', error)
-    weatherData.value.isLoaded = true // 标记已加载，避免一直显示加载中
+    weatherData.value = {
+      ...weatherData.value,
+      city: '加载失败',
+      description: '点击重试',
+      isLoaded: true
+    }
   }
+}
+
+// 检查位置授权状态
+const checkLocationAuth = () => {
+  return new Promise((resolve) => {
+    // #ifdef MP-WEIXIN
+    uni.getSetting({
+      success: (res) => {
+        const authorized = res.authSetting['scope.userLocation']
+        resolve({ authorized: authorized === true })
+      },
+      fail: () => {
+        resolve({ authorized: false })
+      }
+    })
+    // #endif
+    
+    // #ifndef MP-WEIXIN
+    // H5/App 环境默认尝试获取位置
+    resolve({ authorized: true })
+    // #endif
+  })
+}
+
+// 获取用户位置
+const getUserLocation = () => {
+  return new Promise((resolve) => {
+    uni.getLocation({
+      type: 'gcj02',
+      success: (res) => {
+        resolve({ lat: res.latitude, lon: res.longitude })
+      },
+      fail: (err) => {
+        console.error('获取位置失败:', err)
+        resolve(null)
+      }
+    })
+  })
+}
+
+// 请求位置授权
+const requestLocationAuth = () => {
+  // #ifdef MP-WEIXIN
+  uni.authorize({
+    scope: 'scope.userLocation',
+    success: () => {
+      // 授权成功，重新加载天气
+      loadWeatherData()
+    },
+    fail: () => {
+      // 授权失败，提示用户去设置
+      uni.showModal({
+        title: '需要位置权限',
+        content: '获取天气需要您的位置信息，是否去设置开启？',
+        success: (res) => {
+          if (res.confirm) {
+            uni.openSetting({
+              success: (settingRes) => {
+                if (settingRes.authSetting['scope.userLocation']) {
+                  loadWeatherData()
+                }
+              }
+            })
+          }
+        }
+      })
+    }
+  })
+  // #endif
+  
+  // #ifndef MP-WEIXIN
+  // H5/App 直接尝试获取位置
+  loadWeatherData()
+  // #endif
 }
 
 const navigateTo = (path) => {
@@ -731,9 +557,8 @@ const toggleTask = async (task) => {
 }
 
 const goTaskDetail = (task) => {
-  // 先存储任务ID到本地，跳转到待办页面后再读取显示详情
-  uni.setStorageSync('pendingTaskDetailId', task.id)
-  uni.switchTab({ url: '/pages/task/index' })
+  // 直接打开编辑弹窗，不跳转页面
+  taskModalRef.value?.openEdit(task)
 }
 
 const goTaskList = () => {
@@ -749,13 +574,15 @@ const goLogin = () => {
   uni.navigateTo({ url: '/pages/login/index' })
 }
 
-const handleSetWaterGoal = (goal) => {
-  waterGoalModalVisible.value = false
-  overviewData.value.waterTarget = goal
-}
-
-const goRecipeDetail = (recipe) => {
-  uni.navigateTo({ url: `/pages/recipe/detail?id=${recipe.id}` })
+// 处理天气卡片点击
+const handleWeatherClick = () => {
+  if (!weatherData.value.isLocationAuthorized || weatherData.value.city === '定位失败' || weatherData.value.city === '加载失败') {
+    // 未授权或加载失败，请求授权
+    requestLocationAuth()
+  } else {
+    // 已授权且加载成功，跳转到天气详情页
+    uni.navigateTo({ url: '/pages/weather/index' })
+  }
 }
 
 // 防止重复加载的标志
@@ -779,19 +606,11 @@ const refreshHomeData = async () => {
     console.error('加载家庭成员失败', e)
   }
   
-  // 重新加载喝水数据
-  try {
-    const userId = userStore.userInfo?.id || 1
-    const waterData = await waterApi.getToday(userId)
-    if (waterData) {
-      overviewData.value.water = waterData.todayAmount || 0
-    }
-  } catch (e) {
-    console.error('加载喝水数据失败', e)
-  }
-  
   // 加载今日待办
   await loadTodayTasks()
+  
+  // 加载喝水数据
+  await loadWaterData()
 }
 
 // 每次页面显示时都刷新数据
@@ -986,7 +805,7 @@ const getAnniversaryIcon = (type) => {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  padding: 36rpx 48rpx;
+  padding: 36rpx 32rpx;
   margin: 0 32rpx;
   background: #fff;
   border-radius: 28rpx;
@@ -999,14 +818,10 @@ const getAnniversaryIcon = (type) => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: calc(50% - 24rpx);
-    margin-bottom: 28rpx;
+    width: calc(25% - 16rpx);
+    margin-bottom: 0;
     animation: fadeInUp 0.5s ease-out forwards;
     opacity: 0;
-    
-    &:nth-child(n+3) {
-      margin-bottom: 0;
-    }
     
     &:active {
       transform: scale(0.92);
@@ -1118,28 +933,6 @@ const getAnniversaryIcon = (type) => {
       }
     }
     
-    .water-progress-section {
-      .water-progress-bar {
-        height: 12rpx;
-        background: #e8f5f3;
-        border-radius: 6rpx;
-        overflow: hidden;
-        margin-bottom: 12rpx;
-        
-        .water-progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #4ECDC4, #44A08D);
-          border-radius: 6rpx;
-          transition: width 0.5s ease;
-        }
-      }
-      
-      .water-text {
-        font-size: 22rpx;
-        color: #8b9aad;
-      }
-    }
-    
     .card-value {
       .value-num {
         font-size: 40rpx;
@@ -1152,6 +945,55 @@ const getAnniversaryIcon = (type) => {
         color: #8b9aad;
         margin-left: 6rpx;
       }
+    }
+    
+    // 喝水卡片样式
+    .water-content {
+      display: flex;
+      align-items: baseline;
+      margin-bottom: 16rpx;
+      
+      .water-amount {
+        font-size: 44rpx;
+        font-weight: 700;
+        color: #2d3748;
+      }
+      
+      .water-unit {
+        font-size: 24rpx;
+        color: #8b9aad;
+        margin-left: 6rpx;
+      }
+    }
+    
+    .water-progress {
+      margin-bottom: 12rpx;
+      
+      .progress-bar {
+        height: 12rpx;
+        background: #e2e8f0;
+        border-radius: 6rpx;
+        overflow: hidden;
+        margin-bottom: 8rpx;
+        
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #4ECDC4, #44A08D);
+          border-radius: 6rpx;
+          transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+      }
+      
+      .progress-text {
+        font-size: 22rpx;
+        color: #4ECDC4;
+        font-weight: 600;
+      }
+    }
+    
+    .water-target {
+      font-size: 22rpx;
+      color: #8b9aad;
     }
     
     .weather-info {
@@ -1176,6 +1018,12 @@ const getAnniversaryIcon = (type) => {
     .city-name {
       font-size: 22rpx;
       color: #8b9aad;
+    }
+    
+    .location-tip {
+      font-size: 20rpx;
+      color: #6B8DD6;
+      margin-top: 8rpx;
     }
   }
 }
@@ -1546,90 +1394,6 @@ const getAnniversaryIcon = (type) => {
   }
 }
 
-// 菜谱区域
-.recipe-section {
-  .recipe-scroll {
-    margin: 0 -32rpx;
-    padding: 0 32rpx;
-  }
-  
-  .recipe-list {
-    white-space: nowrap;
-    
-    .recipe-card {
-      display: inline-block;
-      width: 300rpx;
-      margin-right: 24rpx;
-      border-radius: 24rpx;
-      overflow: hidden;
-      background: #fff;
-      box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.08);
-      transition: all 0.3s ease;
-      animation: fadeInUp 0.5s ease-out forwards;
-      opacity: 0;
-      
-      &:active {
-        transform: scale(0.96);
-      }
-      
-      &:last-child {
-        margin-right: 0;
-      }
-      
-      .recipe-image-wrapper {
-        position: relative;
-        
-        .recipe-overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          padding: 20rpx;
-          background: linear-gradient(transparent, rgba(0,0,0,0.6));
-          
-          .cook-time {
-            font-size: 24rpx;
-            color: #fff;
-            font-weight: 500;
-          }
-        }
-      }
-      
-      .recipe-info {
-        padding: 20rpx;
-        
-        .recipe-name {
-          font-size: 30rpx;
-          color: #2d3748;
-          display: block;
-          margin-bottom: 16rpx;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-weight: 500;
-        }
-        
-        .recipe-meta {
-          .meta-item {
-            display: flex;
-            align-items: center;
-            
-            .meta-icon {
-              font-size: 24rpx;
-              margin-right: 8rpx;
-            }
-            
-            .meta-text {
-              font-size: 24rpx;
-              color: #8b9aad;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 // 健康卡片
 .health-card {
   background: linear-gradient(135deg, #fff 0%, #f0fff4 100%);
@@ -1744,263 +1508,4 @@ const getAnniversaryIcon = (type) => {
   }
 }
 
-// ========== 添加任务弹窗样式 ==========
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal-content {
-  background: #fff;
-  border-radius: 32rpx 32rpx 0 0;
-  width: 100%;
-  max-height: 80vh;
-  animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-.task-modal {
-  padding: 32rpx;
-  
-  .modal-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 40rpx;
-    
-    .close-btn {
-      width: 64rpx;
-      height: 64rpx;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      
-      .close-icon {
-        font-size: 40rpx;
-        color: #8b9aad;
-      }
-    }
-    
-    .modal-title {
-      font-size: 36rpx;
-      font-weight: 600;
-      color: #2d3748;
-    }
-    
-    .save-btn {
-      padding: 16rpx 32rpx;
-      background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
-      border-radius: 32rpx;
-      
-      .save-text {
-        font-size: 28rpx;
-        color: #fff;
-        font-weight: 500;
-      }
-    }
-  }
-  
-  .modal-body {
-    margin-bottom: 40rpx;
-    
-    .task-input {
-      width: 100%;
-      height: 100rpx;
-      font-size: 36rpx;
-      color: #2d3748;
-      border: none;
-      border-bottom: 2rpx solid #e2e8f0;
-      padding: 0;
-      
-      &::placeholder {
-        color: #a0aec0;
-      }
-    }
-  }
-  
-  .modal-bottom {
-    .form-row {
-      display: flex;
-      align-items: center;
-      padding: 24rpx 0;
-      border-bottom: 2rpx solid #f1f5f9;
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .row-icon {
-        font-size: 36rpx;
-        margin-right: 20rpx;
-      }
-      
-      .row-label {
-        font-size: 30rpx;
-        color: #2d3748;
-        flex: 1;
-      }
-      
-      .row-value {
-        font-size: 28rpx;
-        color: #6B8DD6;
-      }
-      
-      .member-select {
-        display: flex;
-        align-items: center;
-        
-        .select-placeholder {
-          font-size: 28rpx;
-          color: #a0aec0;
-        }
-        
-        .select-value {
-          font-size: 28rpx;
-          color: #6B8DD6;
-        }
-        
-        .row-arrow {
-          font-size: 32rpx;
-          color: #a0aec0;
-          margin-left: 8rpx;
-        }
-      }
-    }
-  }
-}
-
-// 日期时间选择器
-.picker-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: flex-end;
-  z-index: 1001;
-}
-
-.picker-container {
-  background: #fff;
-  width: 100%;
-  border-radius: 32rpx 32rpx 0 0;
-  padding: 32rpx;
-  
-  .picker-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20rpx;
-    
-    .picker-cancel {
-      font-size: 30rpx;
-      color: #8b9aad;
-    }
-    
-    .picker-title {
-      font-size: 32rpx;
-      font-weight: 600;
-      color: #2d3748;
-    }
-    
-    .picker-confirm {
-      font-size: 30rpx;
-      color: #6B8DD6;
-      font-weight: 500;
-    }
-  }
-  
-  .picker-view {
-    height: 400rpx;
-    
-    .picker-item {
-      line-height: 80rpx;
-      text-align: center;
-      font-size: 30rpx;
-      color: #2d3748;
-    }
-  }
-}
-
-// 成员选择器
-.member-picker-container {
-  background: #fff;
-  width: 100%;
-  border-radius: 32rpx 32rpx 0 0;
-  padding: 32rpx;
-  max-height: 60vh;
-  
-  .picker-header {
-    text-align: center;
-    margin-bottom: 32rpx;
-    
-    .picker-title {
-      font-size: 32rpx;
-      font-weight: 600;
-      color: #2d3748;
-    }
-  }
-  
-  .member-list {
-    .member-item {
-      display: flex;
-      align-items: center;
-      padding: 24rpx;
-      border-radius: 16rpx;
-      margin-bottom: 16rpx;
-      transition: all 0.2s ease;
-      
-      &.active {
-        background: #f0f4ff;
-        
-        .member-name {
-          color: #6B8DD6;
-          font-weight: 500;
-        }
-      }
-      
-      .member-avatar {
-        width: 80rpx;
-        height: 80rpx;
-        border-radius: 50%;
-        margin-right: 24rpx;
-        background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 28rpx;
-        
-        &.default {
-          background: linear-gradient(135deg, #68d391, #48bb78);
-        }
-      }
-      
-      .member-name {
-        font-size: 30rpx;
-        color: #2d3748;
-      }
-    }
-  }
-}
 </style>

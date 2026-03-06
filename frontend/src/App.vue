@@ -35,21 +35,14 @@ const tabList = [
   {
     iconPath: 'calendar',
     selectedIconPath: 'calendar-fill',
-    text: '日程',
+    text: '待办',
     pagePath: '/pages/task/index'
   },
   {
-    iconPath: 'plus-circle',
-    selectedIconPath: 'plus-circle-fill',
-    text: '添加',
-    midButton: true,
-    pagePath: '/pages/quick-add/index'
-  },
-  {
-    iconPath: 'heart',
-    selectedIconPath: 'heart-fill',
-    text: '心愿',
-    pagePath: '/pages/wish/index'
+    iconPath: 'account',
+    selectedIconPath: 'account-fill',
+    text: '家庭',
+    pagePath: '/pages/family/index'
   },
   {
     iconPath: 'account',

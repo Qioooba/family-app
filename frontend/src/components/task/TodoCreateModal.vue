@@ -65,13 +65,6 @@
         <text class="label">指派给</text>
         <view class="assignee-options">
           <view 
-            class="assignee-option"
-            :class="{ active: !form.assigneeId }"
-            @click="form.assigneeId = null"
-          >
-            <text class="assignee-text">自己</text>
-          </view>
-          <view 
             v-for="(member, i) in members" 
             :key="member.id"
             class="assignee-option"

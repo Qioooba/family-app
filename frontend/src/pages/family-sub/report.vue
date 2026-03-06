@@ -302,19 +302,19 @@ const reportData = ref({
   members: [
     {
       name: '爸爸',
-      avatar: '../../static/avatar/dad.png',
+      avatar: '../../static/avatar/dad.svg',
       score: 320,
       tags: ['任务达人', '财务管家']
     },
     {
       name: '妈妈',
-      avatar: '../../static/avatar/mom.png',
+      avatar: '../../static/avatar/mom.svg',
       score: 295,
       tags: ['家务能手']
     },
     {
       name: '宝贝',
-      avatar: '../../static/avatar/kid.png',
+      avatar: '../../static/avatar/baby.svg',
       score: 180,
       tags: ['学习之星']
     }

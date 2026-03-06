@@ -236,7 +236,7 @@ public class WeatherController {
         int weatherCode = getIntValue(current, "weather_code");
         data.setWeatherCode(weatherCode);
         data.setDescription(getWeatherDescription(weatherCode));
-        data.setIcon(getWeatherIcon(weatherCode, data.isIsDay()));
+        data.setIcon(getWeatherIcon(weatherCode, data.getIsDay()));
         
         data.setUpdateTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")));
         

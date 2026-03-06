@@ -78,34 +78,6 @@ export const taskApi = {
   getById: (id) => request.get(`/api/task/${id}`),
 
   /**
-   * 获取子任务列表
-   * @param {number} taskId - 任务ID
-   * @returns {Promise<Array>} 子任务列表
-   */
-  getSubtasks: (taskId) => request.get(`/api/task/subtask/list/${taskId}`),
-
-  /**
-   * 添加子任务
-   * @param {object} data - 子任务数据 {taskId, title, sortOrder}
-   * @returns {Promise<number>} 子任务ID
-   */
-  addSubtask: (data) => request.post('/api/task/subtask/add', data),
-
-  /**
-   * 切换子任务状态
-   * @param {number} id - 子任务ID
-   * @returns {Promise<boolean>}
-   */
-  toggleSubtask: (id) => request.put(`/api/task/subtask/${id}/toggle`),
-
-  /**
-   * 删除子任务
-   * @param {number} id - 子任务ID
-   * @returns {Promise<boolean>}
-   */
-  deleteSubtask: (id) => request.delete(`/api/task/subtask/${id}`),
-
-  /**
    * 设置任务重复规则
    * @param {number} taskId - 任务ID
    * @param {object} data - {repeatType, repeatRule}

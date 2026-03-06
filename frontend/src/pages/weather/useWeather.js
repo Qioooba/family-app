@@ -234,5 +234,6 @@ export {
   onSearchInput,
   selectCity,
   refreshWeather,
-  showIndexDetail
+  showIndexDetail,
+  loadWeatherData
 }

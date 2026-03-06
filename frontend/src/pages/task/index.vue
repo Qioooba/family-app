@@ -3,7 +3,7 @@
     <!-- 头部 -->
     <view class="header">
       <view class="header-title">待办事项</view>
-      <view class="header-action" @click="showAddModal">
+      <view class="header-action" @click="openTaskModal()">
         <text class="icon">+</text>
       </view>
     </view>
@@ -33,52 +33,21 @@
         v-for="(task, index) in filteredTasks" 
         :key="task.id || index"
         class="task-card"
-        :class="{ completed: task.status === 2, expanded: task.showSubtasks }"
-        @click="viewTask(task)"
+        :class="{ completed: task.status === 2 }"
+        @click="openTaskModal(task)"
       >
         <view class="task-header">
           <view class="checkbox" :class="{ checked: task.status === 2 }" @click.stop="toggleTask(task)"></view>
           <view class="task-title">{{ task.title }}</view>
-          <view class="task-priority" :class="'priority-' + task.priority">{{ priorityText(task.priority) }}</view>
         </view>
         
         <view class="task-info">
-          <text class="task-time">⏰ {{ formatTime(task.dueTime) }}</text>
-          <text class="task-assignee">👤 {{ task.assigneeName || '未指派' }}</text>
+          <text class="task-time" v-if="task.dueTime">⏰ {{ formatTime(task.dueTime) }}</text>
+          <text class="task-assignee" v-if="task.assigneeName">👤 {{ task.assigneeName }}</text>
         </view>
         
-        <!-- 子任务进度 -->
-        <view v-if="task.subtasks && task.subtasks.length > 0" class="subtask-progress">
-          <view class="progress-bar">
-            <view class="progress-fill" :style="{ width: subtaskProgress(task) + '%' }"></view>
-          </view>
-          <text class="progress-text">{{ subtaskCompleted(task) }}/{{ task.subtasks.length }}</text>
-        </view>
-        
-        <!-- 展开的子任务列表 -->
-        <view v-if="task.showSubtasks && task.subtasks" class="subtask-list">
-          <view 
-            v-for="(sub, sidx) in task.subtasks" 
-            :key="sub.id || sidx"
-            class="subtask-item"
-            @click.stop="toggleSubtask(task, sub)"
-          >
-            <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }"></view>
-            <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
-          </view>
-          <view class="add-subtask" @click.stop="addSubtask(task)">
-            <text>+ 添加子任务</text>
-          </view>
-        </view>
-        
-        <view class="task-footer">
-          <view class="task-tags">
-            <view class="task-tag">{{ task.categoryName }}</view>
-          </view>
-          <!-- 展开按钮 -->
-          <view v-if="task.subtasks && task.subtasks.length > 0" class="expand-btn" @click.stop="task.showSubtasks = !task.showSubtasks">
-            <text>{{ task.showSubtasks ? '收起' : '展开' }}</text>
-          </view>
+        <view class="task-footer" v-if="task.remark">
+          <text class="task-remark">{{ task.remark }}</text>
         </view>
       </view>
       
@@ -95,171 +64,8 @@
       </view>
     </scroll-view>
     
-    <!-- 任务详情弹窗（含子任务） -->
-    <view v-if="showDetailModal" class="modal-overlay" @click="closeDetailModal">
-      <view class="modal-content detail-modal" @click.stop>
-        <view class="modal-header">
-          <text>任务详情</text>
-          <text class="close-btn" @click="closeDetailModal">✕</text>
-        </view>
-        
-        <view v-if="selectedTask" class="task-detail">
-          <view class="detail-title">{{ selectedTask.title }}</view>
-          <view class="detail-info">
-            <text>⏰ {{ formatTime(selectedTask.dueTime) }}</text>
-            <text>👤 {{ selectedTask.assigneeName || '未指派' }}</text>
-          </view>
-          
-          <!-- 子任务管理 -->
-          <view class="subtask-section">
-            <view class="section-header">
-              <text>子任务 ({{ subtaskCompleted(selectedTask) }}/{{ selectedTask.subtasks?.length || 0 }})</text>
-              <text class="add-btn" @click="addSubtask(selectedTask)">+ 添加</text>
-            </view>
-            
-            <view v-if="selectedTask.subtasks && selectedTask.subtasks.length > 0" class="subtask-list-detail">
-              <view 
-                v-for="(sub, idx) in selectedTask.subtasks" 
-                :key="sub.id || idx"
-                class="subtask-item-detail"
-              >
-                <view class="subtask-checkbox" :class="{ checked: sub.status === 1 }" @click="toggleSubtask(selectedTask, sub)"></view>
-                <text class="subtask-title" :class="{ completed: sub.status === 1 }">{{ sub.title }}</text>
-                <text class="delete-btn" @click="deleteSubtask(selectedTask, sub, idx)">🗑️</text>
-              </view>
-            </view>
-            <view v-else class="no-subtask">
-              <text>暂无子任务，点击添加</text>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 添加任务弹窗 - 新样式 -->
-    <view v-if="showModal" class="modal-overlay" @click="closeModal">
-      <view class="modal-content task-modal" @click.stop>
-        <!-- 顶部：添加待办 -->
-        <view class="modal-top">
-          <view class="close-btn" @click="closeModal">
-            <text class="close-icon">✕</text>
-          </view>
-          <text class="modal-title">添加待办</text>
-          <view class="save-btn" @click="addTask">
-            <text class="save-text">保存</text>
-          </view>
-        </view>
-        
-        <!-- 中间：输入框 -->
-        <view class="modal-body">
-          <input 
-            class="task-input" 
-            v-model="newTask.title" 
-            placeholder="请输入待办事项"
-            focus
-          />
-        </view>
-        
-        <!-- 底部：提醒时间和分配人员 -->
-        <view class="modal-bottom">
-          <!-- 提醒时间 -->
-          <view class="form-row" @click="showDateTimePicker">
-            <text class="row-icon">⏰</text>
-            <text class="row-label">提醒时间</text>
-            <text class="row-value">{{ newTask.dueDate || '今天' }} {{ newTask.dueTime || '15:00' }}</text>
-          </view>
-          
-          <!-- 分配人员 -->
-          <view class="form-row" @click="openMemberPicker">
-            <text class="row-icon">👤</text>
-            <text class="row-label">分配人员</text>
-            <view class="member-select">
-              <text v-if="!newTask.assigneeId" class="select-placeholder">点击选择</text>
-              <text v-else class="select-value">{{ getMemberName(newTask.assigneeId) }}</text>
-              <text class="row-arrow">›</text>
-            </view>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 日期时间选择器 -->
-      <view v-if="showTimePicker" class="picker-overlay" @click="closePicker">
-        <view class="picker-container" @click.stop>
-          <view class="picker-header">
-            <text class="picker-cancel" @click="closePicker">取消</text>
-            <text class="picker-title">选择时间</text>
-            <text class="picker-confirm" @click="confirmPicker">确定</text>
-          </view>
-          <picker-view class="picker-view" :value="pickerValue" @change="onPickerChange">
-            <picker-view-column>
-              <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="month in 12" :key="month" class="picker-item">{{ month }}月</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="day in daysInMonth" :key="day" class="picker-item">{{ day }}日</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="hour in 24" :key="'h'+hour" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
-            </picker-view-column>
-            <picker-view-column>
-              <view v-for="minute in 60" :key="'min'+minute" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
-            </picker-view-column>
-          </picker-view>
-        </view>
-      </view>
-      
-      <!-- 成员选择弹窗 -->
-      <view v-if="showMemberPicker" class="picker-overlay" @click="closeMemberPicker">
-        <view class="member-picker-container" @click.stop>
-          <view class="picker-header">
-            <text class="picker-title">选择家庭成员</text>
-          </view>
-          <view class="member-list">
-            <view 
-              class="member-item" 
-              :class="{ active: !newTask.assigneeId }"
-              @click="selectMember(null)"
-            >
-              <view class="member-avatar default">自己</view>
-              <text class="member-name">自己</text>
-            </view>
-            <view 
-              v-for="member in familyMembers" 
-              :key="member.userId"
-              class="member-item"
-              :class="{ active: newTask.assigneeId === member.userId }"
-              @click="selectMember(member.userId)"
-            >
-              <image 
-                class="member-avatar" 
-                :src="member.avatar || '../../static/avatar-default.png'" 
-                mode="aspectFill" 
-              />
-              <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-    
-    <!-- 添加子任务弹窗 -->
-    <view v-if="showSubtaskModal" class="modal-overlay" @click="closeSubtaskModal">
-      <view class="modal-content" @click.stop>
-        <view class="modal-header">
-          <text>添加子任务</text>
-          <text class="close-btn" @click="closeSubtaskModal">✕</text>
-        </view>
-        <view class="form-item">
-          <input class="input" v-model="newSubtaskTitle" placeholder="输入子任务名称" />
-        </view>
-        <view class="form-actions">
-          <button class="btn-cancel" @click="closeSubtaskModal">取消</button>
-          <button class="btn-confirm" @click="confirmAddSubtask">确认</button>
-        </view>
-      </view>
-    </view>
+    <!-- 任务弹窗组件 -->
+    <TaskModal ref="taskModalRef" @success="onTaskSaved" />
   </view>
 </template>
 
@@ -267,42 +73,26 @@
 import { ref, computed, onMounted } from 'vue'
 import { onShow, onLoad } from '@dcloudio/uni-app'
 import { taskApi, familyApi } from '../../api/index.js'
+import TaskModal from '@/components/TaskModal.vue'
 
-// 页面加载时检查是否需要打开添加弹窗
-onLoad((options) => {
-  if (options && options.action === 'add') {
-    // 延迟一点打开，确保页面渲染完成
-    setTimeout(() => {
-      showModal.value = true
-    }, 300)
-  }
-})
-
-// 获取今天的日期字符串
-const getTodayString = () => {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = String(today.getMonth() + 1).padStart(2, '0')
-  const day = String(today.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-// 格式化时间显示（处理数组格式 [2026,3,3,15,0]）
-const formatTime = (timeValue) => {
-  if (!timeValue) return ''
-  // 如果是数组格式 [year, month, day, hour, minute]
-  if (Array.isArray(timeValue)) {
-    const [year, month, day, hour, minute] = timeValue
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`
-  }
-  // 如果已经是字符串，直接返回（格式已统一为年-月-日 时:分:秒）
-  return timeValue
-}
+// ========== 页面状态 ==========
+const taskModalRef = ref(null)
 
 const categories = ref([
   { name: '待办', id: 1, status: 0 },
   { name: '完成', id: 3, status: 2 }
 ])
+
+const currentCategory = ref(0)
+const tasks = ref([])
+const loading = ref(false)
+const isLoadingMore = ref(false)
+const hasMore = ref(true)
+const page = ref(1)
+const pageSize = ref(20)
+
+// 家庭成员
+const familyMembers = ref([])
 
 // 计算各分类数量
 const categoryCounts = computed(() => {
@@ -311,267 +101,24 @@ const categoryCounts = computed(() => {
   return [todoCount, doneCount]
 })
 
-const priorities = ['普通', '重要', '紧急']
-
-const currentCategory = ref(0)
-const showModal = ref(false)
-const showDetailModal = ref(false)
-const showSubtaskModal = ref(false)
-const selectedTask = ref(null)
-const currentSubtaskTask = ref(null)
-const newSubtaskTitle = ref('')
-const tasks = ref([])
-const loading = ref(false)
-const isRefreshing = ref(false)
-
-// 分页相关
-const page = ref(1)
-const pageSize = ref(20)
-const total = ref(0)
-const hasMore = ref(true)
-const isLoadingMore = ref(false) // 防重复加载标志
-
-// 家庭成员列表
-const familyMembers = ref([
-  { userId: 1, nickname: '爸爸' },
-  { userId: 2, nickname: '妈妈' },
-  { userId: 3, nickname: '孩子' }
-])
-const showTimePicker = ref(false)
-const showMemberPicker = ref(false)
-const pickerValue = ref([0, 0, 0, 15, 0])
-const currentYear = new Date().getFullYear()
-const yearRange = computed(() => {
-  const years = []
-  for (let i = currentYear - 1; i <= currentYear + 1; i++) {
-    years.push(i)
-  }
-  return years
-})
-const daysInMonth = computed(() => {
-  const year = yearRange.value[pickerValue.value[0]] || currentYear
-  const month = (pickerValue.value[1] || 0) + 1
-  return new Date(year, month, 0).getDate()
-})
-
-// 加载任务列表
-const loadTasks = async (force = false, loadMore = false) => {
-  // 防重复：如果正在加载且不是强制刷新，则跳过
-  if (!force && isRefreshing.value && !loadMore) {
-    return
-  }
-  
-  // 如果是刷新，重置分页
-  if (force && !loadMore) {
-    page.value = 1
-    hasMore.value = true
-  }
-  
-  // 如果没有更多了，不加载
-  if (loadMore && !hasMore.value) return
-  
-  if (loadMore) {
-    isLoadingMore.value = true
-  } else {
-    isRefreshing.value = true
-    loading.value = true
-  }
-  
-  try {
-    // 从本地存储获取家庭ID
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    // 先加载家庭成员
-    await loadFamilyMembers()
-    
-    // 获取当前分类对应的状态
-    const status = categories[currentCategory.value]?.status
-    
-    // 调用分页接口
-    const res = await taskApi.getList({
-      familyId,
-      status,
-      page: page.value,
-      size: pageSize.value
-    })
-    
-    // 兼容新旧接口格式
-    const taskList = res.list || res.data || res || []
-    
-    // 把 assigneeId 转换为 assigneeName
-    const formattedTasks = taskList.map(task => ({
-      ...task,
-      assigneeName: getMemberName(task.assigneeId) || '未指派'
-    }))
-    
-    if (loadMore) {
-      // 加载更多，追加数据
-      tasks.value = [...tasks.value, ...formattedTasks]
-    } else {
-      // 刷新或首次加载，替换数据
-      tasks.value = formattedTasks
-    }
-    
-    // 更新分页信息
-    total.value = res.total || 0
-    const pages = res.pages || Math.ceil((res.total || 0) / pageSize.value) || 1
-    hasMore.value = page.value < pages
-    
-  } catch (e) {
-    console.error('加载任务失败', e)
-    uni.showToast({ title: '加载任务失败', icon: 'none' })
-  } finally {
-    loading.value = false
-    isRefreshing.value = false
-    isLoadingMore.value = false
-  }
-}
-
-// 加载更多
-const loadMoreTasks = () => {
-  if (!hasMore.value || isLoadingMore.value) return
-  page.value++
-  loadTasks(false, true)
-}
-
-// 加载家庭成员
-const loadFamilyMembers = async () => {
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    const members = await familyApi.getMembers(familyId)
-    familyMembers.value = members || []
-  } catch (e) {
-    console.error('加载家庭成员失败', e)
-    // 失败时使用默认成员
-    familyMembers.value = [
-      { userId: 1, nickname: '爸爸' },
-      { userId: 2, nickname: '妈妈' },
-      { userId: 3, nickname: '孩子' }
-    ]
-  }
-}
-
-// 页面加载时获取任务
-onMounted(() => {
-  loadTasks(true)
-  loadFamilyMembers()
-})
-
-// 页面显示时自动刷新数据
-onShow(() => {
-  // 检查是否有从其他页面传来的 filter
-  const taskFilter = uni.getStorageSync('taskFilter')
-  if (taskFilter) {
-    // 根据 filter 设置当前分类
-    switch (taskFilter) {
-      case 'today':
-        currentCategory.value = 0 // 待办
-        break
-      case 'completed':
-        currentCategory.value = 1 // 已完成
-        break
-      case 'overdue':
-        currentCategory.value = 0 // 待办（逾期任务在待办中显示）
-        break
-    }
-    // 清除 filter，避免重复应用
-    uni.removeStorageSync('taskFilter')
-  }
-  loadTasks(true)
-})
-
-// 获取成员名称
-const getMemberName = (userId) => {
-  if (!userId) return '未指派'
-  if (!familyMembers.value || !Array.isArray(familyMembers.value)) return '家人'
-  const member = familyMembers.value.find(m => m.userId === userId)
-  return member?.nickname || member?.name || '家人'
-}
-
-const newTask = ref({
-  title: '',
-  dueDate: getTodayString(),
-  dueTime: '15:00',
-  priority: 0,
-  assigneeId: null
-})
-
-// 日期时间选择器
-const showDateTimePicker = () => {
-  // 使用简单的提示，实际可以扩展
-  uni.showActionSheet({
-    itemList: ['今天 15:00', '今天 18:00', '今天 21:00', '明天 09:00'],
-    success: (res) => {
-      const times = ['15:00', '18:00', '21:00', '09:00']
-      const today = getTodayString()
-      newTask.value.dueDate = today
-      newTask.value.dueTime = times[res.tapIndex]
-    }
-  })
-}
-
-const closePicker = () => {
-  showTimePicker.value = false
-}
-
-const onPickerChange = (e) => {
-  pickerValue.value = e.detail.value
-}
-
-const confirmPicker = () => {
-  const year = yearRange.value[pickerValue.value[0]]
-  const month = String(pickerValue.value[1] + 1).padStart(2, '0')
-  const day = String(pickerValue.value[2] + 1).padStart(2, '0')
-  const hour = String(pickerValue.value[3]).padStart(2, '0')
-  const minute = String(pickerValue.value[4]).padStart(2, '0')
-  // 格式：年-月-日 时:分:秒
-  newTask.value.dueDate = `${year}-${month}-${day}`
-  newTask.value.dueTime = `${hour}:${minute}:00`
-  closePicker()
-}
-
-// 成员选择
-const openMemberPicker = () => {
-  showMemberPicker.value = true
-}
-
-const closeMemberPicker = () => {
-  showMemberPicker.value = false
-}
-
-const selectMember = (userId) => {
-  newTask.value.assigneeId = userId
-  closeMemberPicker()
-}
-
+// 过滤任务
 const filteredTasks = computed(() => {
   try {
     if (!tasks.value || !Array.isArray(tasks.value)) {
       return []
     }
     const status = categories.value[currentCategory.value]?.status
-    let result = tasks.value
+    let result = tasks.value.filter(t => t.status === status)
     
-    // 严格按状态过滤
-    if (status !== undefined) {
-      result = result.filter(t => t.status === status)
-    }
-    
-    // 按截止时间排序：先显示未来快到期的，已过期的排最后
+    // 按截止时间排序
     if (result.length > 1) {
       const now = Date.now()
       result = result.slice().sort((a, b) => {
         const dateA = a.dueTime ? new Date(a.dueTime).getTime() : Infinity
         const dateB = b.dueTime ? new Date(b.dueTime).getTime() : Infinity
         
-        // 如果都过期了，按过期时间近的排前面
-        if (dateA < now && dateB < now) {
-          return dateB - dateA  // 过期时间近的在前
-        }
-        // 如果都没过期，按到期时间近的排前面
-        if (dateA >= now && dateB >= now) {
-          return dateA - dateB  // 到期时间近的在前
-        }
-        // 一个过期一个没过期，没过期的在前
+        if (dateA < now && dateB < now) return dateB - dateA
+        if (dateA >= now && dateB >= now) return dateA - dateB
         return dateA >= now ? -1 : 1
       })
     }
@@ -582,13 +129,112 @@ const filteredTasks = computed(() => {
   }
 })
 
-const switchCategory = (index) => {
-  currentCategory.value = index
+// ========== 生命周期 ==========
+onLoad((options) => {
+  // 检查是否需要打开添加弹窗（从首页跳转）- 兼容旧代码
+  if (options && options.action === 'add') {
+    setTimeout(() => {
+      taskModalRef.value?.open()
+    }, 300)
+  }
+})
+
+onMounted(() => {
+  loadTasks(true)
+  loadFamilyMembers()
+})
+
+onShow(() => {
+  loadTasks(true)
+})
+
+// ========== 数据加载 ==========
+async function loadTasks(force = false, loadMore = false) {
+  if (!force && isLoadingMore.value && !loadMore) return
+  if (loadMore && !hasMore.value) return
+  
+  if (loadMore) {
+    isLoadingMore.value = true
+  } else {
+    loading.value = true
+    page.value = 1
+    hasMore.value = true
+  }
+  
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const status = categories.value[currentCategory.value]?.status
+    
+    const res = await taskApi.getList({
+      familyId,
+      status,
+      page: page.value,
+      size: pageSize.value
+    })
+    
+    const taskList = res.list || res.data || res || []
+    const formattedTasks = taskList.map(task => ({
+      ...task,
+      assigneeName: getMemberName(task.assigneeId)
+    }))
+    
+    if (loadMore) {
+      tasks.value = [...tasks.value, ...formattedTasks]
+    } else {
+      tasks.value = formattedTasks
+    }
+    
+    const total = res.total || 0
+    const pages = res.pages || Math.ceil(total / pageSize.value) || 1
+    hasMore.value = page.value < pages
+    
+  } catch (e) {
+    console.error('加载任务失败', e)
+    uni.showToast({ title: '加载任务失败', icon: 'none' })
+  } finally {
+    loading.value = false
+    isLoadingMore.value = false
+  }
 }
 
-const priorityText = (p) => priorities[p] || '普通'
+async function loadFamilyMembers() {
+  try {
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const members = await familyApi.getMembers(familyId)
+    familyMembers.value = members || []
+  } catch (e) {
+    console.error('加载家庭成员失败', e)
+    familyMembers.value = []
+  }
+}
 
-const toggleTask = async (task) => {
+function loadMoreTasks() {
+  if (!hasMore.value || isLoadingMore.value) return
+  page.value++
+  loadTasks(false, true)
+}
+
+// ========== 弹窗操作 ==========
+function openTaskModal(task = null) {
+  if (task && task.id) {
+    taskModalRef.value?.openEdit(task)
+  } else {
+    taskModalRef.value?.open()
+  }
+}
+
+function onTaskSaved() {
+  // 刷新任务列表
+  loadTasks(true)
+}
+
+// ========== 任务操作 ==========
+function switchCategory(index) {
+  currentCategory.value = index
+  loadTasks(true)
+}
+
+async function toggleTask(task) {
   const newStatus = task.status === 2 ? 0 : 2
   try {
     if (newStatus === 2) {
@@ -604,160 +250,14 @@ const toggleTask = async (task) => {
   }
 }
 
-const viewTask = (task) => {
-  // 跳转到编辑页面，传递任务ID
-  uni.navigateTo({ url: `/pages/task-sub/create?id=${task.id}` })
-}
-
-const closeDetailModal = () => {
-  showDetailModal.value = false
-  selectedTask.value = null
-}
-
-const subtaskCompleted = (task) => {
-  if (!task.subtasks) return 0
-  return task.subtasks.filter(s => s.status === 1).length
-}
-
-const subtaskProgress = (task) => {
-  if (!task.subtasks || task.subtasks.length === 0) return 0
-  return Math.round((subtaskCompleted(task) / task.subtasks.length) * 100)
-}
-
-const toggleSubtask = async (task, sub) => {
-  // 先更新本地状态
-  sub.status = sub.status === 0 ? 1 : 0
-  
-  // 同步到后端
-  try {
-    await taskApi.toggleSubtask(sub.id)
-    
-    // 检查是否全部完成
-    if (subtaskProgress(task) === 100) {
-      uni.showToast({ title: '所有子任务完成！', icon: 'success' })
-    }
-  } catch (e) {
-    // 如果后端失败，恢复本地状态
-    sub.status = sub.status === 0 ? 1 : 0
-    uni.showToast({ title: '更新失败', icon: 'none' })
-    console.error('子任务状态更新失败:', e)
+// ========== 工具函数 ==========
+function formatTime(timeValue) {
+  if (!timeValue) return ''
+  if (Array.isArray(timeValue)) {
+    const [year, month, day, hour, minute] = timeValue
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`
   }
-}
-
-const addSubtask = (task) => {
-  currentSubtaskTask.value = task
-  newSubtaskTitle.value = ''
-  showSubtaskModal.value = true
-}
-
-const closeSubtaskModal = () => {
-  showSubtaskModal.value = false
-  currentSubtaskTask.value = null
-}
-
-const confirmAddSubtask = () => {
-  if (!newSubtaskTitle.value.trim()) {
-    uni.showToast({ title: '请输入子任务名称', icon: 'none' })
-    return
-  }
-  
-  if (!currentSubtaskTask.value.subtasks) {
-    currentSubtaskTask.value.subtasks = []
-  }
-  
-  currentSubtaskTask.value.subtasks.push({
-    title: newSubtaskTitle.value,
-    status: 0
-  })
-  
-  uni.showToast({ title: '添加成功', icon: 'success' })
-  closeSubtaskModal()
-}
-
-const deleteSubtask = (task, sub, index) => {
-  uni.showModal({
-    title: '确认删除',
-    content: '确定要删除这个子任务吗？',
-    success: (res) => {
-      if (res.confirm) {
-        task.subtasks.splice(index, 1)
-        uni.showToast({ title: '已删除', icon: 'success' })
-      }
-    }
-  })
-}
-
-const goToSchedule = () => {
-  uni.navigateTo({ url: '/pages/task/schedule' })
-}
-
-const goToCalendar = () => {
-  uni.navigateTo({ url: '/pages/task/calendar' })
-}
-
-const showAddModal = () => {
-  // 跳转到统一的创建页面
-  uni.navigateTo({ url: '/pages/task-sub/create' })
-}
-
-const closeModal = () => {
-  showModal.value = false
-  newTask.value = { 
-    title: '', 
-    dueDate: getTodayString(), 
-    dueTime: '15:00',
-    priority: 0, 
-    assigneeId: null 
-  }
-}
-
-const onDateChange = (e) => {
-  newTask.value.dueDate = e.detail.value
-}
-
-const addTask = async () => {
-  if (!newTask.value.title) {
-    uni.showToast({ title: '请输入任务标题', icon: 'none' })
-    return
-  }
-
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    // 获取当前用户ID（用于"分配给自己"的情况）
-    const userInfo = uni.getStorageSync('userInfo') || {}
-    const currentUserId = userInfo.id || userInfo.userId
-    
-    // 组合日期和时间
-    let dueTimeValue = null
-    if (newTask.value.dueDate && newTask.value.dueTime) {
-      dueTimeValue = newTask.value.dueDate + ' ' + newTask.value.dueTime
-    }
-    
-    // 处理分配人员：如果没有选择 assigneeId 或者选择的是"自己"
-    let assigneeId = newTask.value.assigneeId
-    if (assigneeId === null || assigneeId === undefined || assigneeId === '') {
-      // 未选择时默认为当前用户（分配给自己）
-      assigneeId = currentUserId || null
-    }
-    
-    const data = {
-      title: newTask.value.title,
-      familyId: familyId,
-      priority: newTask.value.priority || 0,
-      dueTime: dueTimeValue,
-      assigneeId: assigneeId
-    }
-    console.log('创建任务数据:', data)
-    const res = await taskApi.create(data)
-    console.log('创建任务结果:', res)
-    uni.showToast({ title: '添加成功', icon: 'success' })
-    closeModal()
-    // 重新加载任务列表
-    loadTasks()
-  } catch (e) {
-    console.error('创建任务失败', e)
-    uni.showToast({ title: '创建失败: ' + (e.message || e), icon: 'none', duration: 3000 })
-  }
+  return timeValue
 }
 </script>
 
@@ -832,50 +332,6 @@ const addTask = async () => {
   }
 }
 
-.view-switcher {
-  display: flex;
-  gap: 10px;
-  margin: 10px 15px;
-  
-  .view-item {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
-    border-radius: 12px;
-    
-    &:first-child {
-      background: linear-gradient(135deg, #EDE9FE, #DDD6FE);
-    }
-    
-    .view-icon {
-      font-size: 20px;
-      margin-right: 10px;
-    }
-    
-    .view-text {
-      flex: 1;
-      font-size: 14px;
-      color: #1976D2;
-      font-weight: 500;
-    }
-    
-    &:first-child .view-text {
-      color: #7C3AED;
-    }
-    
-    .view-arrow {
-      font-size: 18px;
-      color: #1976D2;
-    }
-    
-    &:first-child .view-arrow {
-      color: #7C3AED;
-    }
-  }
-}
-
 .task-list {
   padding: 15px;
   height: calc(100vh - 220px);
@@ -902,12 +358,6 @@ const addTask = async () => {
       color: #A8D8A8;
     }
   }
-  
-  &.expanded {
-    .subtask-list {
-      display: block;
-    }
-  }
 }
 
 .task-header {
@@ -922,6 +372,7 @@ const addTask = async () => {
     border-radius: 50%;
     margin-right: 14px;
     transition: all 0.3s ease;
+    flex-shrink: 0;
     
     &.checked {
       background: linear-gradient(135deg, #81C784, #4CAF50);
@@ -936,28 +387,6 @@ const addTask = async () => {
     color: #3D5A4D;
     line-height: 1.4;
   }
-  
-  .task-priority {
-    padding: 5px 14px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 500;
-    
-    &.priority-0 {
-      background: #E8F5E9;
-      color: #4CAF50;
-    }
-    
-    &.priority-1 {
-      background: #FFF3E0;
-      color: #FF9800;
-    }
-    
-    &.priority-2 {
-      background: #FFEBEE;
-      color: #F44336;
-    }
-  }
 }
 
 .task-info {
@@ -966,98 +395,17 @@ const addTask = async () => {
   font-size: 13px;
   color: #8B9A8B;
   margin-bottom: 12px;
-}
-
-.subtask-progress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  
-  .progress-bar {
-    flex: 1;
-    height: 6px;
-    background: #E0E6ED;
-    border-radius: 3px;
-    overflow: hidden;
-    
-    .progress-fill {
-      height: 100%;
-      background: #4CAF50;
-      border-radius: 3px;
-      transition: width 0.3s;
-    }
-  }
-  
-  .progress-text {
-    font-size: 11px;
-    color: #7F8C8D;
-  }
-}
-
-.subtask-list {
-  display: none;
-  margin: 10px 0;
-  padding: 10px;
-  background: #F8F9FA;
-  border-radius: 10px;
-  
-  .subtask-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    
-    .subtask-checkbox {
-      width: 18px;
-      height: 18px;
-      border: 2px solid #DDD;
-      border-radius: 50%;
-      margin-right: 10px;
-      
-      &.checked {
-        background: #4CAF50;
-        border-color: #4CAF50;
-      }
-    }
-    
-    .subtask-title {
-      font-size: 14px;
-      color: #333;
-      
-      &.completed {
-        text-decoration: line-through;
-        color: #999;
-      }
-    }
-  }
-  
-  .add-subtask {
-    text-align: center;
-    padding: 10px;
-    color: #4CAF50;
-    font-size: 13px;
-  }
+  flex-wrap: wrap;
 }
 
 .task-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  
-  .task-tags {
-    .task-tag {
-      display: inline-block;
-      padding: 4px 10px;
-      background: #E3F2FD;
-      color: #2196F3;
-      border-radius: 8px;
-      font-size: 11px;
-    }
-  }
-  
-  .expand-btn {
-    font-size: 12px;
-    color: #4CAF50;
+  .task-remark {
+    font-size: 13px;
+    color: #A8B8A8;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
@@ -1077,434 +425,13 @@ const addTask = async () => {
   }
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(45, 90, 61, 0.3);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal-content {
-  width: 100%;
-  max-height: 85vh;
-  background: #FAFFFA;
-  border-radius: 32px 32px 0 0;
-  padding: 28px;
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
-  
-  &.detail-modal {
-    width: 100%;
-    border-radius: 32px 32px 0 0;
-  }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-.modal-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  
-  .close-btn {
-    width: 36px;
-    height: 36px;
-    background: #F5FAF5;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    .close-icon {
-      font-size: 18px;
-      color: #8B9A8B;
-    }
-  }
-  
-  .modal-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #2D5A3D;
-  }
-  
-  .save-btn {
-    padding: 10px 24px;
-    background: linear-gradient(135deg, #81C784, #4CAF50);
-    border-radius: 20px;
-    
-    .save-text {
-      color: #fff;
-      font-size: 15px;
-      font-weight: 500;
-    }
-  }
-}
-
-.modal-body {
-  margin-bottom: 20px;
-  
-  .task-input {
-    width: 100%;
-    height: 56px;
-    background: #fff;
-    border-radius: 16px;
-    padding: 0 20px;
-    font-size: 17px;
-    border: 2px solid #E8F5E9;
-    color: #3D5A4D;
-    
-    &:focus {
-      border-color: #81C784;
-    }
-  }
-}
-
-.modal-bottom {
-  .form-row {
-    display: flex;
-    align-items: center;
-    padding: 18px 20px;
-    background: #fff;
-    border-radius: 16px;
-    margin-bottom: 12px;
-    border: 1px solid #F0F5F0;
-    
-    .row-icon {
-      font-size: 22px;
-      margin-right: 14px;
-    }
-    
-    .row-label {
-      flex: 1;
-      font-size: 15px;
-      color: #3D5A4D;
-      font-weight: 500;
-    }
-    
-    .row-value {
-      font-size: 14px;
-      color: #8B9A8B;
-    }
-    
-    .member-select {
-      display: flex;
-      align-items: center;
-      
-      .select-placeholder {
-        font-size: 14px;
-        color: #C8E6C9;
-      }
-      
-      .select-value {
-        font-size: 14px;
-        color: #4CAF50;
-        font-weight: 500;
-      }
-      
-      .row-arrow {
-        font-size: 20px;
-        color: #C8E6C9;
-        margin-left: 8px;
-      }
-    }
-  }
-}
-
-.task-detail {
-  .detail-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  
-  .detail-info {
-    display: flex;
-    gap: 15px;
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 20px;
-  }
-}
-
-.subtask-section {
-  border-top: 1px solid #EEE;
-  padding-top: 15px;
-  
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    
-    .add-btn {
-      color: #4CAF50;
-      font-size: 14px;
-    }
-  }
-}
-
-.subtask-list-detail {
-  .subtask-item-detail {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #F0F0F0;
-    
-    .subtask-checkbox {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #DDD;
-      border-radius: 50%;
-      margin-right: 12px;
-      
-      &.checked {
-        background: #4CAF50;
-        border-color: #4CAF50;
-      }
-    }
-    
-    .subtask-title {
-      flex: 1;
-      font-size: 15px;
-      
-      &.completed {
-        text-decoration: line-through;
-        color: #999;
-      }
-    }
-    
-    .delete-btn {
-      font-size: 16px;
-      padding: 5px;
-    }
-  }
-}
-
-.no-subtask {
+.load-more {
   text-align: center;
-  padding: 30px;
-  color: #999;
-  font-size: 14px;
-}
-
-.form-item {
-  margin-bottom: 20px;
-  
-  .label {
-    display: block;
-    font-size: 14px;
-    color: #2C3E50;
-    margin-bottom: 8px;
-  }
-  
-  .input {
-    width: 100%;
-    height: 44px;
-    background: #F5F7FA;
-    border-radius: 10px;
-    padding: 0 15px;
-    font-size: 14px;
-  }
-  
-  .picker {
-    height: 44px;
-    line-height: 44px;
-    background: #F5F7FA;
-    border-radius: 10px;
-    padding: 0 15px;
-    font-size: 14px;
-    color: #7F8C8D;
-  }
-}
-
-.priority-options {
-  display: flex;
-  gap: 10px;
-  
-  .priority-option {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
-    background: #F5F7FA;
-    border-radius: 10px;
-    font-size: 14px;
-    
-    &.active {
-      background: #4CAF50;
-      color: #fff;
-    }
-  }
-}
-
-.form-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 30px;
-  
-  button {
-    flex: 1;
-    height: 44px;
-    border-radius: 22px;
-    font-size: 15px;
-    border: none;
-  }
-  
-  .btn-cancel {
-    background: #F5F7FA;
-    color: #7F8C8D;
-  }
-  
-  .btn-confirm {
-    background: #4CAF50;
-    color: #fff;
-  }
-}
-
-/* 成员选择器样式 */
-.member-picker-container {
-  width: 100%;
-  max-height: 60vh;
-  background: #FAFFFA;
-  border-radius: 32px 32px 0 0;
-  padding: 24px;
-  animation: slideUp 0.3s ease;
-  
-  .picker-header {
-    text-align: center;
-    margin-bottom: 20px;
-    
-    .picker-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #2D5A3D;
-    }
-  }
-  
-  .member-list {
-    max-height: 50vh;
-    overflow-y: auto;
-    
-    .member-item {
-      display: flex;
-      align-items: center;
-      padding: 16px;
-      margin-bottom: 8px;
-      background: #fff;
-      border-radius: 16px;
-      border: 2px solid transparent;
-      transition: all 0.2s ease;
-      
-      &.active {
-        border-color: #4CAF50;
-        background: #F1F8E9;
-      }
-      
-      &:active {
-        transform: scale(0.98);
-      }
-      
-      .member-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        margin-right: 16px;
-        background: #E8F5E9;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        color: #4CAF50;
-        font-weight: 500;
-        
-        &.default {
-          background: linear-gradient(135deg, #81C784, #4CAF50);
-          color: #fff;
-        }
-      }
-      
-      .member-name {
-        flex: 1;
-        font-size: 16px;
-        color: #3D5A4D;
-        font-weight: 500;
-      }
-    }
-  }
-}
-
-/* 日期时间选择器样式 */
-.picker-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(45, 90, 61, 0.3);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 1001;
-}
-
-.picker-container {
-  width: 100%;
-  background: #FAFFFA;
-  border-radius: 32px 32px 0 0;
   padding: 20px;
-  animation: slideUp 0.3s ease;
   
-  .picker-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 0 10px;
-    
-    .picker-cancel {
-      font-size: 16px;
-      color: #8B9A8B;
-    }
-    
-    .picker-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #2D5A3D;
-    }
-    
-    .picker-confirm {
-      font-size: 16px;
-      color: #4CAF50;
-      font-weight: 600;
-    }
-  }
-  
-  .picker-view {
-    height: 240px;
-    
-    .picker-item {
-      line-height: 48px;
-      text-align: center;
-      font-size: 16px;
-      color: #3D5A4D;
-    }
+  .load-more-text {
+    font-size: 13px;
+    color: #8B9A8B;
   }
 }
 </style>

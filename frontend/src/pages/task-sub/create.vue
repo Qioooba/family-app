@@ -72,7 +72,7 @@
         <text class="label">指派给</text>
         <view class="assignee-info">
           <text class="assignee-name">{{ getAssigneeName }}</text>
-          <text class="assignee-hint">（默认指派给自己）</text>
+          <text class="assignee-hint">（请选择指派对象）</text>
         </view>
       </view>
 

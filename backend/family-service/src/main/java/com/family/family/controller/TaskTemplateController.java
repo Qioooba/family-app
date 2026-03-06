@@ -115,8 +115,6 @@ public class TaskTemplateController {
         task.setContent(template.getContent());
         task.setCategoryId(template.getCategoryId());
         task.setPriority(template.getPriority());
-        task.setRepeatType(template.getRepeatType());
-        task.setRepeatRule(template.getRepeatRule());
         task.setCreatorId(userId);
         task.setStatus(0);
         task.setCreateTime(LocalDateTime.now());
@@ -152,8 +150,6 @@ public class TaskTemplateController {
         template.setContent(task.getContent());
         template.setCategoryId(task.getCategoryId());
         template.setPriority(task.getPriority());
-        template.setRepeatType(task.getRepeatType());
-        template.setRepeatRule(task.getRepeatRule());
         template.setUsageCount(0);
         template.setCreateTime(LocalDateTime.now());
         template.setUpdateTime(LocalDateTime.now());
