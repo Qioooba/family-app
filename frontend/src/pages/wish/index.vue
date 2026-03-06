@@ -440,15 +440,26 @@ const wishTypes = [
 // 加载心愿列表
 const loadWishes = async () => {
   loading.value = true
+  console.log('开始加载心愿列表...')
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
+    console.log('familyId:', familyId)
     const res = await wishApi.getList(familyId)
+    console.log('API返回:', res)
     if (res && Array.isArray(res)) {
       wishes.value = res
+      console.log('心愿列表:', wishes.value)
+    } else if (res && res.data && Array.isArray(res.data)) {
+      wishes.value = res.data
+      console.log('心愿列表(从data):', wishes.value)
+    } else {
+      console.log('返回格式不对:', res)
+      wishes.value = []
     }
   } catch (e) {
     console.error('加载心愿列表失败:', e)
     uni.showToast({ title: '加载失败', icon: 'none' })
+    wishes.value = []
   } finally {
     loading.value = false
   }
