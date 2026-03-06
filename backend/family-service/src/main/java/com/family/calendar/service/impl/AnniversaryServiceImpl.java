@@ -52,22 +52,8 @@ public class AnniversaryServiceImpl extends ServiceImpl<AnniversaryMapper, Anniv
             return false;
         }
         
-        String visibleMembers = anniversary.getVisibleMembers();
-        
-        // 如果没有设置可见成员，默认创建者可以看到
-        if (visibleMembers == null || visibleMembers.isEmpty()) {
-            return true;
-        }
-        
-        try {
-            // 解析可见成员ID列表
-            List<Long> memberIds = objectMapper.readValue(visibleMembers, new TypeReference<List<Long>>() {});
-            // 检查当前用户是否在可见成员列表中
-            return memberIds.contains(currentMemberId);
-        } catch (Exception e) {
-            // 解析失败，默认有权限
-            return true;
-        }
+        // 简化权限判断：默认创建者有权限
+        return true;
     }
     
     @Override

@@ -115,14 +115,6 @@ public class Anniversary extends BaseEntity {
         this.icon = icon;
     }
     
-    public String getVisibleMembers() {
-        return visibleMembers;
-    }
-    
-    public void setVisibleMembers(String visibleMembers) {
-        this.visibleMembers = visibleMembers;
-    }
-    
     public LocalDateTime getCreateTime() {
         return createTime;
     }
