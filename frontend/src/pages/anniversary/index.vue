@@ -299,8 +299,11 @@ const saveItem = async () => {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     const data = {
       ...formData.value,
+      targetDate: formData.value.date,  // 将date转为targetDate
       familyId
     }
+    // 删除date字段，避免重复
+    delete data.date
     
     if (editingItem.value) {
       await anniversaryApi.update({ ...data, id: editingItem.value.id })
