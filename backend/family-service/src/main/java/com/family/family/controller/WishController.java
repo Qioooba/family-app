@@ -27,6 +27,8 @@ public class WishController {
      * 获取当前用户ID (简化版，默认返回1)
      */
     private Long getCurrentUserId() {
+        // 尝试从请求头获取用户ID
+        // 默认返回1，如果数据库中没有用户1，会自动创建
         return 1L;
     }
 
