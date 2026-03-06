@@ -1,17 +1,7 @@
 <template>
   <view class="home-page">
-    <PullRefresh2
-      ref="pullRefreshRef"
-      :enabled="true"
-      :threshold="80"
-      :haptic-enabled="true"
-      @refresh="onRefresh"
-    >
-      <!-- 骨架屏 -->
-      <Skeleton v-if="pageLoading" type="card" :rows="5" show-image :list-count="3" />
-    
     <!-- 实际内容 -->
-      <!-- 顶部欢迎区 -->
+    <!-- 顶部欢迎区 -->
     <view class="header-section">
       <view class="header-bg">
         <view class="bg-pattern"></view>
@@ -249,9 +239,7 @@
         </scroll-view>
       </view>
     </view>
-    
-    </PullRefresh2>
-    
+
     <!-- 设置饮水目标弹窗 -->
     <WaterGoalModal
       :visible="waterGoalModalVisible"
@@ -379,15 +367,10 @@ import { taskApi } from '../../api/task'
 import { familyApi } from '../../api/family'
 import { anniversaryApi } from '../../api/anniversary'
 import LazyImage from '@/components/common/LazyImage.vue'
-import Skeleton from '@/components/common/Skeleton.vue'
-import PullRefresh2 from '@/components/common/PullRefresh2.vue'
 import WaterGoalModal from '@/components/water/WaterGoalModal.vue'
-import { useSkeleton } from '@/utils/performance.js'
 
 const userStore = useUserStore()
-const pullRefreshRef = ref(null)
 const waterGoalModalVisible = ref(false)
-const { loading: pageLoading, hide: hideSkeleton } = useSkeleton({ minDuration: 500 })
 
 // ========== 添加任务弹窗相关 ==========
 const showAddTaskModal = ref(false)
@@ -707,19 +690,6 @@ const handleSetWaterGoal = (goal) => {
 
 const goRecipeDetail = (recipe) => {
   uni.navigateTo({ url: `/pages/recipe/detail?id=${recipe.id}` })
-}
-
-// 下拉刷新
-const onRefresh = async ({ finish, success, error }) => {
-  try {
-    await refreshHomeData()
-    success()
-    uni.showToast({ title: '刷新成功', icon: 'success' })
-  } catch (e) {
-    console.error('刷新失败:', e)
-    error()
-    uni.showToast({ title: '刷新失败', icon: 'none' })
-  }
 }
 
 // 防止重复加载的标志
