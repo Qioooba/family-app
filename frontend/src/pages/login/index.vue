@@ -25,95 +25,44 @@
       </view>
 
       <view class="login-form glass">
-        <!-- 登录方式切换 -->
-        <view class="login-tabs">
-          <view
-            class="tab-item"
-            :class="{ active: loginType === 'password' }"
-            @click="loginType = 'password'"
-          >
-            <text>密码登录</text>
-            <view class="tab-indicator" v-if="loginType === 'password'"></view>
-          </view>
-          <view
-            class="tab-item"
-            :class="{ active: loginType === 'sms' }"
-            @click="loginType = 'sms'"
-          >
-            <text>验证码登录</text>
-            <view class="tab-indicator" v-if="loginType === 'sms'"></view>
+        <!-- 登录方式标题 -->
+        <view class="login-tabs single-tab">
+          <view class="tab-item active">
+            <text>用户名登录</text>
+            <view class="tab-indicator"></view>
           </view>
         </view>
 
-        <!-- 密码登录 -->
-        <template v-if="loginType === 'password'">
-          <view class="form-item">
-            <view class="input-wrapper">
-              <text class="input-icon">👤</text>
-              <input
-                v-model="form.username"
-                class="login-input"
-                placeholder="请输入用户名/手机号"
-                placeholder-class="input-placeholder"
-                type="text"
-              />
-            </view>
+        <!-- 用户名输入 -->
+        <view class="form-item">
+          <view class="input-wrapper">
+            <text class="input-icon">👤</text>
+            <input
+              v-model="form.username"
+              class="login-input"
+              placeholder="请输入用户名"
+              placeholder-class="input-placeholder"
+              type="text"
+            />
           </view>
+        </view>
 
-          <view class="form-item">
-            <view class="input-wrapper password-wrapper">
-              <text class="input-icon">🔒</text>
-              <input
-                v-model="form.password"
-                class="login-input password-input"
-                :type="passwordVisible ? 'text' : 'password'"
-                placeholder="请输入密码"
-                placeholder-class="input-placeholder"
-              />
-              <view class="password-toggle" @click="togglePasswordVisible">
-                <u-icon :name="passwordVisible ? 'eye-off' : 'eye'" size="20" color="#999"></u-icon>
-              </view>
+        <!-- 密码输入 -->
+        <view class="form-item">
+          <view class="input-wrapper password-wrapper">
+            <text class="input-icon">🔒</text>
+            <input
+              v-model="form.password"
+              class="login-input password-input"
+              :type="passwordVisible ? 'text' : 'password'"
+              placeholder="请输入密码"
+              placeholder-class="input-placeholder"
+            />
+            <view class="password-toggle" @click="togglePasswordVisible">
+              <u-icon :name="passwordVisible ? 'eye-off' : 'eye'" size="20" color="#999"></u-icon>
             </view>
           </view>
-        </template>
-
-        <!-- 验证码登录 -->
-        <template v-else>
-          <view class="form-item">
-            <view class="input-wrapper">
-              <text class="input-icon">📱</text>
-              <input
-                v-model="form.phone"
-                class="login-input"
-                placeholder="请输入手机号"
-                placeholder-class="input-placeholder"
-                maxlength="11"
-                type="number"
-              />
-            </view>
-          </view>
-
-          <view class="form-item code-item">
-            <view class="input-wrapper code-wrapper">
-              <text class="input-icon">🔢</text>
-              <input
-                v-model="form.code"
-                class="login-input"
-                placeholder="请输入验证码"
-                placeholder-class="input-placeholder"
-                maxlength="6"
-                type="number"
-              />
-            </view>
-            <view
-              class="code-btn"
-              :class="{ disabled: codeCountdown > 0 }"
-              @click="sendCode"
-            >
-              {{ codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码' }}
-            </view>
-          </view>
-        </template>
+        </view>
 
         <view class="form-options">
           <text class="forgot" @click="forgotPassword">忘记密码？</text>
@@ -130,113 +79,50 @@
         </button>
       </view>
 
-      <!-- 微信登录 -->
-      <view class="other-login">
-        <view class="divider">
-          <view class="line"></view>
-          <text class="divider-text">其他登录方式</text>
-          <view class="line"></view>
-        </view>
-
-        <!-- 微信登录按钮 - 新设计 -->
-        <!-- #ifdef MP-WEIXIN -->
-        <button
-          class="wx-login-btn"
-          @click="wxLogin"
-          :disabled="loading"
-        >
-          <view class="wx-icon-wrapper">
-            <u-icon name="weixin-fill" size="40" color="#fff"></u-icon>
-          </view>
-          <text class="wx-btn-text">微信一键登录</text>
-        </button>
-        <!-- #endif -->
-
-        <!-- #ifndef MP-WEIXIN -->
-        <view class="wx-login-btn" @click="wxLogin">
-          <view class="wx-icon-wrapper">
-            <u-icon name="weixin-fill" size="40" color="#fff"></u-icon>
-          </view>
-          <text class="wx-btn-text">微信登录</text>
-        </view>
-        <!-- #endif -->
+      <!-- 注册链接 -->
+      <view class="register-link">
+        <text class="link-text" @click="goRegister">还没有账号？立即注册</text>
       </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { useUserStore } from '../../stores/user'
-import { userApi } from '../../api/index'
-import { getWxLoginCode, isWeixinEnvironment } from '../../utils/wxLogin.js'
 
 const userStore = useUserStore()
-const loginType = ref('password')
 const loading = ref(false)
-const codeCountdown = ref(0)
 const passwordVisible = ref(false)
-const isWxEnv = ref(false)
 
-// 验证码倒计时定时器
-let countdownTimer = null
-
-// 页面卸载时清理定时器
-onUnmounted(() => {
-  if (countdownTimer) {
-    clearInterval(countdownTimer)
-    countdownTimer = null
-  }
-})
-
-onMounted(() => {
-  isWxEnv.value = isWeixinEnvironment()
+const form = reactive({
+  username: '',
+  password: ''
 })
 
 const togglePasswordVisible = () => {
   passwordVisible.value = !passwordVisible.value
 }
 
-const form = reactive({
-  username: '',
-  password: '',
-  phone: '',
-  code: ''
-})
-
 const handleLogin = async () => {
-  console.log('[Login Debug] 当前登录类型:', loginType.value)
-  console.log('[Login Debug] form 数据:', JSON.stringify(form))
+  const username = form.username?.trim()
+  const password = form.password?.trim()
 
-  if (loginType.value === 'password') {
-    // 确保字段不为空（去除空白）
-    const username = form.username?.trim()
-    const password = form.password?.trim()
-
-    console.log('[Login Debug] username:', username, 'password:', password ? '有密码' : '空')
-
-    if (!username || !password) {
-      uni.showToast({ title: '请填写完整信息', icon: 'none' })
-      return
-    }
-  } else {
-    if (!form.phone || !form.code) {
-      uni.showToast({ title: '请填写完整信息', icon: 'none' })
-      return
-    }
+  if (!username || !password) {
+    uni.showToast({ title: '请填写完整信息', icon: 'none' })
+    return
   }
 
   loading.value = true
   try {
-    const loginData = loginType.value === 'password'
-      ? { username: form.username, password: form.password, loginType: 'password' }
-      : { phone: form.phone, code: form.code, loginType: 'sms' }
+    const loginData = {
+      username: username,
+      password: password
+    }
 
     await userStore.login(loginData)
-    // 登录成功，跳转到首页
     uni.showToast({ title: '登录成功', icon: 'success' })
 
-    // 延迟一点跳转，让 storage 同步完成
     setTimeout(() => {
       uni.reLaunch({ url: '/pages/home/index' })
     }, 500)
@@ -252,84 +138,12 @@ const handleLogin = async () => {
   }
 }
 
-const sendCode = async () => {
-  if (codeCountdown.value > 0) return
-  if (!form.phone || form.phone.length !== 11) {
-    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
-    return
-  }
-
-  try {
-    await userApi.sendSmsCode(form.phone)
-    uni.showToast({ title: '验证码已发送', icon: 'success' })
-
-    codeCountdown.value = 60
-    // 清理之前的定时器
-    if (countdownTimer) {
-      clearInterval(countdownTimer)
-    }
-    countdownTimer = setInterval(() => {
-      codeCountdown.value--
-      if (codeCountdown.value <= 0) {
-        clearInterval(countdownTimer)
-        countdownTimer = null
-      }
-    }, 1000)
-  } catch (e) {
-    uni.showToast({ title: e.message || '发送失败', icon: 'none' })
-  }
-}
-
 const forgotPassword = () => {
   uni.navigateTo({ url: '/pages/forgot-password/index' })
 }
 
-// 微信登录 - 获取手机号按钮回调
-const wxLogin = async () => {
-  console.log('[WxLogin] 开始微信一键登录')
-
-  // #ifndef MP-WEIXIN
-  uni.showToast({ title: '请在微信小程序中使用', icon: 'none' })
-  return
-  // #endif
-
-  // #ifdef MP-WEIXIN
-  try {
-    loading.value = true
-    uni.showLoading({ title: '登录中...' })
-
-    // 获取微信登录凭证
-    const wxCode = await getWxLoginCode()
-    console.log('[WxLogin] 获取到 code:', wxCode ? '成功' : '失败')
-
-    // 调用后端微信登录接口
-    const loginData = {
-      wxCode,
-      loginType: 'weixin'
-    }
-
-    const res = await userStore.wxLogin(loginData)
-    console.log('[WxLogin] 登录成功:', res)
-
-    uni.hideLoading()
-    uni.showToast({ title: '登录成功', icon: 'success' })
-
-    // 跳转到首页
-    setTimeout(() => {
-      uni.reLaunch({ url: '/pages/home/index' })
-    }, 500)
-  } catch (error) {
-    uni.hideLoading()
-    console.error('微信登录失败:', error)
-    uni.showToast({
-      title: error.message || '微信登录失败，请重试',
-      icon: 'none',
-      duration: 2500
-    })
-  } finally {
-    loading.value = false
-  }
-  // #endif
+const goRegister = () => {
+  uni.navigateTo({ url: '/pages/register/index' })
 }
 </script>
 
@@ -599,44 +413,6 @@ button::after {
   }
 }
 
-.code-item {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-
-  .code-wrapper {
-    flex: 1;
-  }
-}
-
-.code-btn {
-  padding: 0 32rpx;
-  height: 100rpx;
-  background: linear-gradient(135deg, #6B8DD6 0%, #8B5CF6 100%);
-  color: #fff;
-  border-radius: 20rpx;
-  font-size: 26rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  flex-shrink: 0;
-  font-weight: 600;
-  box-shadow: 0 8rpx 24rpx rgba(107, 141, 214, 0.35);
-  transition: all 0.25s ease;
-
-  &.disabled {
-    background: #cbd5e0;
-    box-shadow: none;
-    opacity: 0.7;
-  }
-
-  &:active:not(.disabled) {
-    transform: scale(0.96);
-    box-shadow: 0 4rpx 12rpx rgba(107, 141, 214, 0.25);
-  }
-}
-
 .form-options {
   display: flex;
   justify-content: flex-end;
@@ -688,124 +464,15 @@ button::after {
   }
 }
 
-.tips-text {
+.register-link {
   text-align: center;
-  margin-top: 32rpx;
-  padding: 16rpx 0;
-
-  text {
-    font-size: 24rpx;
-    color: #999;
-  }
-}
-
-.other-login {
-  flex-shrink: 0;
   margin-top: auto;
-  padding-bottom: 20rpx;
-  animation: fadeIn 1.2s ease-out;
+  padding: 20rpx 0;
 
-  .divider {
-    display: flex;
-    align-items: center;
-    margin-bottom: 32rpx;
-
-    .line {
-      flex: 1;
-      height: 2rpx;
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .divider-text {
-      padding: 0 24rpx;
-      font-size: 24rpx;
-      color: rgba(255, 255, 255, 0.8);
-    }
-  }
-}
-
-.login-icons {
-  display: flex;
-  justify-content: center;
-
-  .icon-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 16rpx;
-    transition: all 0.25s ease;
-
-    &:active {
-      transform: scale(0.92);
-    }
-
-    .icon {
-      width: 100rpx;
-      height: 100rpx;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16rpx;
-      box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
-      transition: all 0.3s ease;
-
-      &.wechat {
-        background: linear-gradient(135deg, #07c160 0%, #05a350 100%);
-      }
-    }
-
-    .icon-text {
-      font-size: 24rpx;
-      color: #fff;
-      font-weight: 500;
-    }
-  }
-}
-
-/* 微信登录按钮 - 新样式 */
-.wx-login-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100rpx;
-  background: linear-gradient(135deg, #07c160 0%, #05a350 100%);
-  border-radius: 50rpx;
-  border: none;
-  margin-top: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.3);
-  transition: all 0.3s ease;
-
-  &::after {
-    border: none;
-  }
-
-  &:active {
-    transform: scale(0.98);
-    box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.2);
-  }
-
-  &[disabled] {
-    opacity: 0.6;
-  }
-
-  .wx-icon-wrapper {
-    width: 56rpx;
-    height: 56rpx;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 20rpx;
-  }
-
-  .wx-btn-text {
-    font-size: 32rpx;
-    color: #fff;
-    font-weight: 600;
-    letter-spacing: 2rpx;
+  .link-text {
+    font-size: 28rpx;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
   }
 }
 
@@ -851,10 +518,6 @@ button::after {
     height: 90rpx;
   }
 
-  .code-btn {
-    height: 90rpx;
-  }
-
   .login-btn {
     height: 92rpx;
   }
@@ -875,11 +538,6 @@ button::after {
   }
 
   .login-header {
-    max-width: 560rpx;
-    width: 100%;
-  }
-
-  .other-login {
     max-width: 560rpx;
     width: 100%;
   }

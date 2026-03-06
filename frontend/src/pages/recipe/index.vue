@@ -3,7 +3,7 @@
     <view class="header">
       <view class="header-title">智能菜谱 🍳</view>
       <view class="header-action" @click="aiRecommend">
-        <text class="icon">🤖</text>
+        <text class="icon">⭐</text>
       </view>
     </view>
     
@@ -145,14 +145,14 @@ const cookIt = (recipe) => {
 
 const aiRecommend = () => {
   uni.showModal({
-    title: '🤖 AI菜谱推荐',
+    title: '⭐ 智能菜谱推荐',
     content: '根据您的口味偏好，推荐以下菜谱：\n\n1. 番茄土豆炖牛肉\n2. 蒜蓉西兰花\n3. 可乐鸡翅',
     showCancel: true,
     confirmText: '查看详情',
     cancelText: '关闭',
     success: (res) => {
       if (res.confirm) {
-        uni.navigateTo({ url: '/pages/ai/index' })
+        uni.navigateTo({ url: '/pages/recipe/index' })
       }
     }
   })

@@ -220,6 +220,11 @@
                 </view>
               </view>
             </view>
+            <!-- 退出位置追踪选项 -->
+            <view v-if="newReminder.locationName" class="location-exit" @click="clearLocation">
+              <text>清除位置</text>
+              <text class="exit-hint">（关闭位置提醒）</text>
+            </view>
           </view>
 
           <view class="form-item">
@@ -436,6 +441,15 @@ const chooseLocation = () => {
       uni.showToast({ title: '选择位置失败', icon: 'none' })
     }
   })
+}
+
+// 清除位置（退出位置追踪）
+const clearLocation = () => {
+  newReminder.value.locationName = ''
+  newReminder.value.locationAddress = ''
+  newReminder.value.latitude = ''
+  newReminder.value.longitude = ''
+  uni.showToast({ title: '已清除位置信息', icon: 'success' })
 }
 
 // 格式化提醒显示
@@ -1246,6 +1260,28 @@ const deleteTask = async () => {
         color: #999;
         margin-top: 4rpx;
       }
+    }
+  }
+
+  .location-exit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8rpx;
+    margin-top: 20rpx;
+    padding: 16rpx;
+    background: #fff5f5;
+    border-radius: 12rpx;
+    border: 2rpx solid #ffccc7;
+
+    text {
+      font-size: 26rpx;
+      color: #ff4d4f;
+    }
+
+    .exit-hint {
+      font-size: 22rpx;
+      color: #999;
     }
   }
 }

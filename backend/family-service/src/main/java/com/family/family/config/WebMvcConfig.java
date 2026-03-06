@@ -66,6 +66,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 注册限流拦截器
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/user/login", "/api/user/register", "/api/user/wx-login");
+                .excludePathPatterns("/api/user/login", "/api/user/register");
     }
 }

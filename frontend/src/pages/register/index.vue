@@ -23,7 +23,7 @@
     
     <!-- 注册表单 -->
     <view class="register-form" v-else>
-      <!-- 邀请码输入（选择已有邀请码时显示） -->
+      <!-- 邀请码输入（选择已有邀请码时显示）-->
       <view class="form-item" v-if="registerType === 'join'">
         <text class="input-label">邀请码</text>
         <view class="input-wrapper">
@@ -40,7 +40,23 @@
         <view class="input-hint">请向家人索取邀请码</view>
       </view>
       
-      <!-- 基本信息（所有用户都需要） -->
+      <!-- 基本信息（所有用户都需要）-->
+      <view class="form-item">
+        <text class="input-label">用户名 <text class="required">*</text></text>
+        <view class="input-wrapper">
+          <text class="input-icon">👤</text>
+          <input
+            v-model="form.username"
+            class="register-input"
+            placeholder="请输入用户名，用于登录"
+            placeholder-class="input-placeholder"
+            maxlength="20"
+            type="text"
+          />
+        </view>
+        <view class="input-hint">必填，用于登录系统</view>
+      </view>
+
       <view class="form-item">
         <text class="input-label">昵称 <text class="required">*</text></text>
         <view class="input-wrapper">
@@ -55,45 +71,6 @@
           />
         </view>
         <view class="input-hint">必填，用于家庭成员间的称呼</view>
-      </view>
-      
-      <view class="form-item">
-        <text class="input-label">手机号</text>
-        <view class="input-wrapper">
-          <text class="input-icon">📱</text>
-          <input
-            v-model="form.phone"
-            class="register-input"
-            placeholder="请输入手机号"
-            placeholder-class="input-placeholder"
-            maxlength="11"
-            type="number"
-          />
-        </view>
-      </view>
-      
-      <view class="form-item code-item">
-        <view class="code-input-wrapper">
-          <text class="input-label">验证码</text>
-          <view class="input-wrapper">
-            <text class="input-icon">✉️</text>
-            <input
-              v-model="form.code"
-              class="register-input"
-              placeholder="请输入验证码"
-              placeholder-class="input-placeholder"
-              maxlength="6"
-              type="number"
-            />
-          </view>
-        </view>
-        <view 
-          class="code-btn" 
-          :class="{ disabled: codeCountdown > 0 }"
-          @click="sendCode"
-        >
-          {{ codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码' }}
-        </view>
       </view>
       
       <view class="form-item" v-if="registerType === 'create'">
@@ -113,7 +90,7 @@
       </view>
       
       <view class="form-item">
-        <text class="input-label">密码</text>
+        <text class="input-label">密码 <text class="required">*</text></text>
         <view class="input-wrapper">
           <text class="input-icon">🔒</text>
           <input
@@ -128,7 +105,7 @@
       </view>
       
       <view class="form-item">
-        <text class="input-label">确认密码</text>
+        <text class="input-label">确认密码 <text class="required">*</text></text>
         <view class="input-wrapper">
           <text class="input-icon">🔐</text>
           <input
@@ -178,20 +155,16 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useUserStore } from '../../stores/user'
-import { userApi } from '../../api/index'
 import { familyApi } from '../../api/family'
 
 const userStore = useUserStore()
 const loading = ref(false)
-const codeCountdown = ref(0)
 const agreed = ref(false)
 const registerType = ref('') // 'create' | 'join'
 
 const form = reactive({
-  nickname: '',
   username: '',
-  phone: '',
-  code: '',
+  nickname: '',
   password: '',
   confirmPassword: '',
   familyName: '',
@@ -205,25 +178,20 @@ const selectRegisterType = (type) => {
 
 // 表单验证
 const validateForm = () => {
+  if (!form.username.trim()) {
+    uni.showToast({ title: '请输入用户名', icon: 'none' })
+    return false
+  }
+  if (form.username.trim().length < 2) {
+    uni.showToast({ title: '用户名至少2个字符', icon: 'none' })
+    return false
+  }
   if (!form.nickname.trim()) {
     uni.showToast({ title: '请输入昵称', icon: 'none' })
     return false
   }
   if (form.nickname.trim().length < 2) {
     uni.showToast({ title: '昵称至少2个字符', icon: 'none' })
-    return false
-  }
-  // 使用手机号作为用户名
-  if (!form.phone.trim()) {
-    uni.showToast({ title: '请输入手机号', icon: 'none' })
-    return false
-  }
-  if (!form.phone || form.phone.length !== 11) {
-    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
-    return false
-  }
-  if (!form.code || form.code.length !== 6) {
-    uni.showToast({ title: '请输入6位验证码', icon: 'none' })
     return false
   }
   if (!form.password || form.password.length < 6) {
@@ -263,9 +231,7 @@ const handleRegister = async () => {
     // 第一步：注册用户
     const registerData = {
       nickname: form.nickname,
-      username: form.phone,
-      phone: form.phone,
-      code: form.code,
+      username: form.username,
       password: form.password
     }
     
@@ -297,7 +263,7 @@ const handleRegister = async () => {
     setTimeout(async () => {
       try {
         await userStore.login({
-          username: form.phone,
+          username: form.username,
           password: form.password
         })
         uni.switchTab({ url: '/pages/home/index' })
@@ -310,29 +276,6 @@ const handleRegister = async () => {
     uni.showToast({ title: e.message || '注册失败', icon: 'none' })
   } finally {
     loading.value = false
-  }
-}
-
-const sendCode = async () => {
-  if (codeCountdown.value > 0) return
-  if (!form.phone || form.phone.length !== 11) {
-    uni.showToast({ title: '请输入正确手机号', icon: 'none' })
-    return
-  }
-  
-  try {
-    await userApi.sendSmsCode(form.phone)
-    uni.showToast({ title: '验证码已发送', icon: 'success' })
-    
-    codeCountdown.value = 60
-    const timer = setInterval(() => {
-      codeCountdown.value--
-      if (codeCountdown.value <= 0) {
-        clearInterval(timer)
-      }
-    }, 1000)
-  } catch (e) {
-    uni.showToast({ title: e.message || '发送失败', icon: 'none' })
   }
 }
 
@@ -527,42 +470,6 @@ button::after {
   font-size: 28rpx;
 }
 
-.code-item {
-  display: flex;
-  align-items: flex-end;
-  gap: 16rpx;
-  
-  .code-input-wrapper {
-    flex: 1;
-  }
-}
-
-.code-btn {
-  padding: 0 24rpx;
-  height: 84rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 26rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  flex-shrink: 0;
-  font-weight: 500;
-  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
-  
-  &.disabled {
-    background: #ccc;
-    box-shadow: none;
-  }
-  
-  &:active:not(.disabled) {
-    opacity: 0.9;
-    transform: translateY(2rpx);
-  }
-}
-
 .agreement {
   margin: 24rpx 0 32rpx;
   
@@ -689,10 +596,6 @@ button::after {
   }
   
   .input-wrapper {
-    height: 76rpx;
-  }
-  
-  .code-btn {
     height: 76rpx;
   }
   

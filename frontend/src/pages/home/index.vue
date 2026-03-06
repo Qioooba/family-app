@@ -8,28 +8,50 @@
       </view>
       <view class="header-content">
         <view class="header-left">
-          <!-- 用户头像 -->
-          <view class="user-avatar" @click="goToProfile">
-            <image 
-              v-if="userStore.userInfo?.avatar" 
-              :src="userStore.userInfo.avatar" 
-              class="avatar-img"
-              mode="aspectFill"
-            />
-            <text v-else class="avatar-placeholder">
-              {{ (userStore.userInfo?.nickname || userStore.userInfo?.username || '用').substring(0, 1) }}
-            </text>
-          </view>
-          <view class="header-info">
-            <view class="greeting-row">
-              <text class="time-label">{{ greeting }}</text>
-              <text class="user-name">{{ userStore.userInfo?.nickname || '亲爱的用户' }}</text>
+          <!-- 未登录状态 -->
+          <template v-if="!isLoggedIn">
+            <view class="user-avatar" @click="goLogin">
+              <view class="avatar-placeholder">
+                <text>登录</text>
+              </view>
             </view>
-            <view class="date-row">
-              <text class="date-icon">📅</text>
-              <text class="current-date">{{ currentDate }}</text>
+            <view class="header-info">
+              <view class="greeting-row">
+                <text class="time-label">{{ greeting }}</text>
+                <text class="user-name" @click="goLogin">点击登录/注册</text>
+              </view>
+              <view class="date-row">
+                <text class="date-icon">📅</text>
+                <text class="current-date">{{ currentDate }}</text>
+              </view>
             </view>
-          </view>
+          </template>
+          
+          <!-- 已登录状态 -->
+          <template v-else>
+            <!-- 用户头像 -->
+            <view class="user-avatar" @click="goToProfile">
+              <image 
+                v-if="userStore.userInfo?.avatar" 
+                :src="userStore.userInfo.avatar" 
+                class="avatar-img"
+                mode="aspectFill"
+              />
+              <text v-else class="avatar-placeholder">
+                {{ (userStore.userInfo?.nickname || userStore.userInfo?.username || '用').substring(0, 1) }}
+              </text>
+            </view>
+            <view class="header-info">
+              <view class="greeting-row">
+                <text class="time-label">{{ greeting }}</text>
+                <text class="user-name">{{ userStore.userInfo?.nickname || '亲爱的用户' }}</text>
+              </view>
+              <view class="date-row">
+                <text class="date-icon">📅</text>
+                <text class="current-date">{{ currentDate }}</text>
+              </view>
+            </view>
+          </template>
         </view>
       </view>
     </view>
@@ -597,13 +619,18 @@ const currentDate = computed(() => {
   return `${month}月${day}日 ${weekDay}`
 })
 
+// 登录状态判断
+const isLoggedIn = computed(() => {
+  return !!userStore.userInfo?.id && !!userStore.token
+})
+
 const currentFamily = ref({ name: '幸福小家' })
 
 // 快捷功能 - 添加阴影
 const quickActions = [
   { name: '纪念日', icon: '❤️', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
   { name: '记账', icon: '💰', bgColor: '#68d391', shadow: '0 8rpx 20rpx rgba(104, 211, 145, 0.35)', path: '/pages/food/record' },
-  { name: 'AI', icon: '🤖', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/ai/chat' },
+  { name: '相册', icon: '📷', bgColor: '#9B59B6', shadow: '0 8rpx 20rpx rgba(155, 89, 182, 0.35)', path: '/pages/family-sub/album' },
   { name: '天气', icon: '🌤️', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
 ]
 
@@ -681,6 +708,10 @@ const goTaskList = () => {
 
 const goToProfile = () => {
   uni.navigateTo({ url: '/pages/profile/index' })
+}
+
+const goLogin = () => {
+  uni.navigateTo({ url: '/pages/login/index' })
 }
 
 const handleSetWaterGoal = (goal) => {

@@ -21,7 +21,7 @@ export const recipeApi = {
   getFamilyRecipes: (familyId) => request.get(`/api/recipe/family/${familyId}`),
   
   /**
-   * AI推荐菜谱
+   * 推荐菜谱
    * @param {Array} ingredients - 食材列表
    * @returns {Promise<Array>} 推荐菜谱列表
    */

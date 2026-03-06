@@ -209,13 +209,6 @@
           }
         },
         {
-          "path": "ai-classify",
-          "style": {
-            "navigationBarTitleText": "AI分类",
-            "navigationStyle": "custom"
-          }
-        },
-        {
           "path": "camera",
           "style": {
             "navigationBarTitleText": "拍照创建",
@@ -387,67 +380,6 @@
           "path": "files",
           "style": {
             "navigationBarTitleText": "文件共享",
-            "navigationStyle": "custom"
-          }
-        }
-      ]
-    },
-    {
-      "root": "pages/ai",
-      "pages": [
-        {
-          "path": "index",
-          "style": {
-            "navigationBarTitleText": "AI助手",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "chat",
-          "style": {
-            "navigationBarTitleText": "AI对话",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "voice",
-          "style": {
-            "navigationBarTitleText": "语音助手",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "nutritionist",
-          "style": {
-            "navigationBarTitleText": "AI营养师",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "shopping-assistant",
-          "style": {
-            "navigationBarTitleText": "购物助手",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "voice-input",
-          "style": {
-            "navigationBarTitleText": "语音输入",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "morning-report",
-          "style": {
-            "navigationBarTitleText": "早安日报",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "night-summary",
-          "style": {
-            "navigationBarTitleText": "晚安总结",
             "navigationStyle": "custom"
           }
         }
@@ -665,25 +597,6 @@
           "path": "index",
           "style": {
             "navigationBarTitleText": "营养成分",
-            "navigationStyle": "custom"
-          }
-        }
-      ]
-    },
-    {
-      "root": "pages/ai-shopping",
-      "pages": [
-        {
-          "path": "index",
-          "style": {
-            "navigationBarTitleText": "AI购物助手",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "detail",
-          "style": {
-            "navigationBarTitleText": "清单详情",
             "navigationStyle": "custom"
           }
         }

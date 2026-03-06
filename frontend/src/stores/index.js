@@ -87,7 +87,6 @@ export const useWishStore = defineStore('wish', () => {
 // 菜谱Store
 export const useRecipeStore = defineStore('recipe', () => {
   const recipes = ref([])
-  const aiRecipes = ref([])
   const loading = ref(false)
   
   const fetchRecipes = async (familyId) => {
@@ -112,19 +111,11 @@ export const useRecipeStore = defineStore('recipe', () => {
     }
   }
   
-  const getAIRecommend = async (ingredients) => {
-    const res = await recipeApi.recommend(ingredients)
-    aiRecipes.value = res
-    return res
-  }
-  
   return {
     recipes,
-    aiRecipes,
     loading,
     fetchRecipes,
-    searchRecipes,
-    getAIRecommend
+    searchRecipes
   }
 })
 

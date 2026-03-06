@@ -37,7 +37,7 @@
       <view class="section-card">
         <view class="section-title">
           <text class="title-icon">📷</text>
-          <text>AI拍照识别</text>
+          <text>拍照识别</text>
         </view>
         
         <view class="camera-area" @click="takePhoto">
@@ -46,7 +46,7 @@
               <u-icon name="camera" size="60" color="#5AD8A6"></u-icon>
             </view>
             <text class="camera-text">点击拍照识别食物</text>
-            <text class="camera-subtext">AI自动识别食物并估算卡路里（可拍多张）</text>
+            <text class="camera-subtext">自动识别食物并估算卡路里（可拍多张）</text>
           </view>
           <view v-else class="photo-grid">
             <view v-for="(photo, index) in photoUrls" :key="index" class="photo-item">
@@ -83,10 +83,10 @@
           </view>
         </view>
 
-        <!-- AI识别中状态 -->
+        <!-- 识别中状态 -->
         <view v-if="isRecognizing" class="recognizing-state">
           <view class="loading-spinner"></view>
-          <text>AI正在识别食物...</text>
+          <text>正在识别食物...</text>
         </view>
       </view>
       
@@ -170,9 +170,8 @@
           </view>
         </view>
         
-        <!-- AI计算结果 -->
         <view v-if="form.calories > 0" class="calorie-result">
-          <text class="result-label">AI计算结果</text>
+          <text class="result-label">计算结果</text>
           <view class="result-value">
             <text class="calorie-num">{{ form.calories }}</text>
             <text class="calorie-unit">千卡</text>
@@ -549,12 +548,12 @@ const removePhoto = (index) => {
   }
 }
 
-// AI识别食物
+// 识别食物
 const recognizeFood = async (imagePath) => {
   isRecognizing.value = true
   
   try {
-    // 调用AI识别API
+    // 调用识别API
     const res = await dietApi.recognizeFood(imagePath)
     
     if (res && res.foods && res.foods.length > 0) {
@@ -666,14 +665,14 @@ const setWeight = (weight) => {
   calculateCalories()
 }
 
-// 计算卡路里 - 调用AI API
+// 计算卡路里 - 调用API
 const calculateCalories = async () => {
   const weight = parseFloat(form.value.weight)
   const foodName = form.value.foodName
   if (!weight || !foodName) return
   
   try {
-    // 调用API获取AI计算的卡路里
+    // 调用API获取计算的卡路里
     const res = await dietApi.calculateCalories({
       foodName: foodName,
       weight: weight
@@ -689,7 +688,7 @@ const calculateCalories = async () => {
       }
     }
   } catch (e) {
-    console.error('AI计算失败', e)
+    console.error('计算失败', e)
     // 本地计算作为fallback
     const food = foodDatabase.find(f => f.name === foodName)
     if (food) {

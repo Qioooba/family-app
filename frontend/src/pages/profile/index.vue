@@ -333,10 +333,26 @@ const goLogin = () => {
 const showAbout = () => {
   uni.showModal({
     title: '🏠 幸福小家',
-    content: '━━━━━━━━━━━━━━━━━━\n\n✨ 版本：v1.0.0\n\n❤️ 用心打造的家庭管理平台\n\n👨\u200d💻 开发：Qioba\n\n让家更有爱，让生活更美好',
-    showCancel: false,
+    content: '━━━━━━━━━━━━━━━━━━\n\n✨ 版本：v1.0.0\n\n❤️ 用心打造的家庭管理平台\n\n👨\u200d💻 开发：Qioba\n\n让家更有爱，让生活更美好\n\n━━━━━━━━━━━━━━━━━━\n\n📋 隐私政策：本小程序尊重并保护用户隐私。\n我们仅收集必要的数据用于提供服务，\n不会对外分享或出售用户信息。\n\n💡 详细隐私政策请访问:\n点击"隐私政策"按钮查看',
+    showCancel: true,
     confirmText: '💖 知道了',
-    confirmColor: '#ff6b6b'
+    cancelText: '🔒 隐私政策',
+    confirmColor: '#ff6b6b',
+    success: (res) => {
+      if (res.cancel) {
+        showPrivacyPolicy()
+      }
+    }
+  })
+}
+
+const showPrivacyPolicy = () => {
+  uni.showModal({
+    title: '🔒 隐私政策',
+    content: '━━━━━━━━━━━━━━━━━━\n\n【数据收集】\n我们仅收集为您提供服务所必需的数据，包括：\n• 账户信息（用户名、昵称、头像）\n• 家庭成员信息\n• 任务、心愿等家庭数据\n• 位置信息（仅用于任务提醒功能）\n\n【数据使用】\n您的数据仅用于：\n• 提供核心家庭管理功能\n• 改善用户体验\n• 数据备份与同步\n\n【数据保护】\n• 我们不会出售或分享您的个人数据给第三方\n• 您可以随时查看、修改或删除您的数据\n• 账户注销后，我们将删除您的所有个人数据\n\n【联系我们】\n如有问题，请联系开发者。\n\n━━━━━━━━━━━━━━━━━━\n\n✓ 我已阅读并同意隐私政策',
+    showCancel: false,
+    confirmText: '✓ 同意',
+    confirmColor: '#68d391'
   })
 }
 

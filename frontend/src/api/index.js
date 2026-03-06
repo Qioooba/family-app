@@ -9,11 +9,10 @@ import { shoppingApi } from './shopping.js'
 import { gameApi } from './game.js'
 import { scheduleApi } from './schedule.js'
 import { waterApi } from './water.js'
-import { aiShoppingApi } from './ai-shopping.js'
 import { healthApi } from './health.js'
 import { messageApi } from './message.js'
 
-export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi, familyApi, shoppingApi, gameApi, scheduleApi, waterApi, aiShoppingApi, healthApi, messageApi }
+export { taskApi, wishApi, recipeApi, anniversaryApi, voteApi, familyApi, shoppingApi, gameApi, scheduleApi, waterApi, healthApi, messageApi }
 
 // 食材相关API
 export const ingredientApi = {
@@ -53,7 +52,7 @@ export const dietApi = {
   // 识别食物
   recognizeFood: (imageBase64) => request.post('/api/health/diet/recognize', { imageBase64 }),
   
-  // AI计算卡路里
+  // 计算卡路里
   calculateCalories: (data) => request.post('/api/health/diet/calculate', data),
   
   // 删除记录
@@ -88,11 +87,5 @@ export const userApi = {
 
   // 修改密码
   changePassword: (oldPassword, newPassword) =>
-    request.post('/api/user/password', { oldPassword, newPassword }),
-
-  // 发送验证码
-  sendSmsCode: (phone) => request.post('/api/user/sms-code', { phone }),
-
-  // 微信用户绑定手机号
-  wxBindPhone: (data) => request.post('/api/user/wx-bind-phone', data)
+    request.post('/api/user/password', { oldPassword, newPassword })
 }

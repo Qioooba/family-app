@@ -94,10 +94,10 @@
     </scroll-view>
     
     
-    <!-- AI识别按钮 -->
+    <!-- 拍照识别按钮 -->
     <view class="ai-recognize" @click="aiRecognize">
       <text class="ai-icon">📷</text>
-      <text>AI拍照识别食物</text>
+      <text>拍照识别食物</text>
     </view>
     
     
