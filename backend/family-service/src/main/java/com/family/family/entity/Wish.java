@@ -32,7 +32,6 @@ public class Wish extends BaseEntity {
     private Integer progress;
     private String images;
     private LocalDate finishTime;
-    private LocalDateTime deleteTime;
     
     // Getters and Setters
     public Long getFamilyId() { return familyId; }
@@ -82,7 +81,4 @@ public class Wish extends BaseEntity {
     
     public LocalDate getFinishTime() { return finishTime; }
     public void setFinishTime(LocalDate finishTime) { this.finishTime = finishTime; }
-    
-    public LocalDateTime getDeleteTime() { return deleteTime; }
-    public void setDeleteTime(LocalDateTime deleteTime) { this.deleteTime = deleteTime; }
 }
