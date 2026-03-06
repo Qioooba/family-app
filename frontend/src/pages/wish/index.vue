@@ -400,7 +400,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { wishApi } from '../../api/wish'
 
 const loading = ref(true)
