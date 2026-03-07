@@ -42,7 +42,7 @@
     <view class="content-area" v-if="activeTab === 'works'">
       <view class="upload-btn" @click="showUpload = true" v-if="currentContest?.status === 'ongoing'">
         <u-icon name="plus" color="#fff" size="48"></u-icon>
-        <text>上传作品</text‼
+        <text>上传作品</text>
       </view>
 
       <view class="works-list">
