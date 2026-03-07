@@ -92,11 +92,16 @@
             <text class="weather-desc">{{ weatherData.description }}</text>
           </view>
           
-          <!-- 第三行：当前位置提示 -->
+          <!-- 第三行：当前位置提示 + 降雨提醒 -->
           <view class="weather-row hint-row">
             <text v-if="!weatherData.isLocationAuthorized" class="location-hint">点击开启定位</text>
             <text v-else-if="weatherData.loading" class="location-hint">获取位置中...</text>
             <text v-else class="location-hint">当前位置</text>
+          </view>
+          
+          <!-- 第四行：降雨提醒 -->
+          <view v-if="weatherData.rainAlert" class="weather-row rain-alert-row">
+            <text class="rain-alert-text">☔ {{ weatherData.rainAlert }}</text>
           </view>
         </view>
       </view>
@@ -408,7 +413,8 @@ const weatherData = ref({
   humidity: 0,
   isLoaded: false,
   isLocationAuthorized: true,
-  loading: false
+  loading: false,
+  rainAlert: null // 降雨提醒信息
 })
 
 // 获取天气图标背景色
@@ -436,6 +442,81 @@ const getWeatherIconBg = (weatherCode) => {
   if (code >= 95) return 'linear-gradient(135deg, #7E57C2 0%, #5E35B1 100%)'
   // 默认
   return 'linear-gradient(135deg, #FFD93D 0%, #F6AD55 100%)'
+}
+
+// 分析降雨提醒
+const analyzeRainAlert = (hourlyData) => {
+  if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
+    return null
+  }
+  
+  const now = new Date()
+  const alerts = []
+  
+  for (let i = 0; i < hourlyData.time.length; i++) {
+    const hourTime = new Date(hourlyData.time[i])
+    const hoursDiff = Math.round((hourTime - now) / (1000 * 60 * 60))
+    
+    // 只关注未来24小时内
+    if (hoursDiff < 0 || hoursDiff > 24) continue
+    
+    const weatherCode = hourlyData.weathercode[i]
+    const precipitation = hourlyData.precipitation[i] || 0
+    const precipitationProbability = hourlyData.precipitation_probability?.[i] || 0
+    
+    // 判断是否有雨/雪/雷暴
+    const isRain = [51, 53, 55, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(weatherCode)
+    const isSnow = [71, 73, 75, 77, 85, 86].includes(weatherCode)
+    const isStorm = [95, 96, 99].includes(weatherCode)
+    
+    if (isRain || isSnow || isStorm) {
+      // 判断强度
+      let intensity = '小'
+      if (precipitation >= 10 || precipitationProbability >= 70) {
+        intensity = '暴'
+      } else if (precipitation >= 5 || precipitationProbability >= 50) {
+        intensity = '大'
+      } else if (precipitation >= 2 || precipitationProbability >= 30) {
+        intensity = '中'
+      }
+      
+      alerts.push({
+        hoursLater: hoursDiff,
+        type: isStorm ? '雷暴' : (isSnow ? '雪' : '雨'),
+        intensity: intensity,
+        weatherCode: weatherCode
+      })
+    }
+  }
+  
+  // 返回最近的降雨提醒
+  if (alerts.length > 0) {
+    // 按时间排序，取最近的一个
+    alerts.sort((a, b) => a.hoursLater - b.hoursLater)
+    return alerts[0]
+  }
+  
+  return null
+}
+
+// 生成降雨提醒文案
+const generateRainAlertText = (alert) => {
+  if (!alert) return null
+  
+  const { hoursLater, type, intensity } = alert
+  
+  // 根据时间范围生成不同文案
+  if (hoursLater === 0) {
+    return `正在${intensity}${type}`
+  } else if (hoursLater === 1) {
+    return `1小时后可能会${intensity}${type}`
+  } else if (hoursLater <= 3) {
+    return `未来${hoursLater}小时可能会${intensity}${type}`
+  } else if (hoursLater <= 12) {
+    return `${hoursLater}小时后可能会有${intensity}${type}`
+  } else {
+    return `${hoursLater}小时后可能会有${intensity}${type}`
+  }
 }
 
 // 获取位置和加载天气
@@ -492,21 +573,40 @@ const loadWeatherData = async () => {
     weatherData.value.fullLocation = location.locationInfo?.fullAddress || shortLocationName
     weatherData.value.locationName = shortLocationName
     
-    // 调用 Open-Meteo API 获取天气
+    // 调用 Open-Meteo API 获取天气和逐小时预报
     let weatherJson = null
+    let hourlyData = null
     try {
-      const weatherRes = await new Promise((resolve, reject) => {
-        uni.request({
-          url: `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`,
-          method: 'GET',
-          success: (res) => resolve(res.data),
-          fail: (err) => reject(err)
+      const [weatherRes, hourlyRes] = await Promise.all([
+        new Promise((resolve, reject) => {
+          uni.request({
+            url: `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`,
+            method: 'GET',
+            success: (res) => resolve(res.data),
+            fail: (err) => reject(err)
+          })
+        }),
+        new Promise((resolve, reject) => {
+          uni.request({
+            url: `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&hourly=weathercode,precipitation,precipitation_probability&timezone=Asia/Shanghai&forecast_days=2`,
+            method: 'GET',
+            success: (res) => resolve(res.data?.hourly || null),
+            fail: (err) => {
+              console.log('获取逐小时预报失败:', err)
+              resolve(null)
+            }
+          })
         })
-      })
+      ])
       weatherJson = weatherRes
+      hourlyData = hourlyRes
     } catch (e) {
       console.log('获取天气API失败:', e)
     }
+    
+    // 分析降雨提醒
+    const rainAlert = analyzeRainAlert(hourlyData)
+    const rainAlertText = generateRainAlertText(rainAlert)
     
     if (weatherJson && weatherJson.current_weather) {
       const current = weatherJson.current_weather
@@ -525,7 +625,8 @@ const loadWeatherData = async () => {
         humidity: 0,
         isLoaded: true,
         isLocationAuthorized: true,
-        loading: false
+        loading: false,
+        rainAlert: rainAlertText
       }
     } else {
       // API 返回数据异常，显示默认天气
@@ -541,7 +642,8 @@ const loadWeatherData = async () => {
         humidity: 0,
         isLoaded: true,
         isLocationAuthorized: true,
-        loading: false
+        loading: false,
+        rainAlert: null
       }
     }
   } catch (error) {
@@ -559,7 +661,8 @@ const loadWeatherData = async () => {
       humidity: 0,
       isLoaded: true,
       isLocationAuthorized: true,
-      loading: false
+      loading: false,
+      rainAlert: null
     }
   }
 }
@@ -1180,6 +1283,20 @@ const getAnniversaryIcon = (type) => {
         .location-hint {
           font-size: 22rpx;
           color: #8b9aad;
+        }
+      }
+      
+      // 第四行：降雨提醒
+      .rain-alert-row {
+        margin-top: 4rpx;
+        
+        .rain-alert-text {
+          font-size: 22rpx;
+          color: #3182ce;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 6rpx;
         }
       }
     }
