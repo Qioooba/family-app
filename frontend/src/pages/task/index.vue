@@ -43,7 +43,7 @@
         
         <view class="task-info">
           <text class="task-time" v-if="task.dueDate || task.dueTime">⏰ {{ formatDateTimeFull(task) }}</text>
-          <text class="task-assignee" v-if="task.assigneeName">👤 {{ task.assigneeName }}</text>
+          <text class="task-assignee" v-if="task.assigneeName || task.assigneeNickname">👤 {{ task.assigneeName || task.assigneeNickname }}</text>
         </view>
         
         <view class="task-footer" v-if="task.remark">
@@ -280,11 +280,16 @@ function formatDateTimeFull(task) {
   let dateStr = ''
   let timeStr = ''
   
-  // 处理日期
+  // 处理日期 - 优先使用 dueDate，如果没有则从 dueTime 提取
   if (task.dueDate) {
     const date = new Date(task.dueDate)
     const month = date.getMonth() + 1
     const day = date.getDate()
+    dateStr = `${month}月${day}日`
+  } else if (task.dueTime && Array.isArray(task.dueTime)) {
+    // 从数组格式提取日期 [2026, 3, 8, 22, 57]
+    const month = task.dueTime[1]
+    const day = task.dueTime[2]
     dateStr = `${month}月${day}日`
   }
   

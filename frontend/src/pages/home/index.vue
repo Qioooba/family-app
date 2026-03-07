@@ -446,6 +446,10 @@ const getWeatherIconBg = (weatherCode) => {
 
 // 分析降雨提醒
 const analyzeRainAlert = (hourlyData) => {
+  // 调试：强制显示降雨提醒（测试用）
+  // 取消下面注释可测试显示效果
+  // return { hoursLater: 2, type: '雨', intensity: '大', weatherCode: 61 }
+  
   if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
     return null
   }
