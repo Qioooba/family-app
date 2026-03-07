@@ -73,7 +73,7 @@
           >
             <image 
               class="assignee-avatar" 
-              :src="member.avatar || '../../static/avatar-default.png'" 
+              :src="member.avatar || '/static/avatar-default.png'" 
               mode="aspectFill" 
             />
             <text class="assignee-text">{{ member.nickname || member.name || '家人' }}</text>

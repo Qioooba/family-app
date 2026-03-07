@@ -94,10 +94,23 @@ export function rafThrottle(fn) {
   return function(...args) {
     if (!ticking) {
       ticking = true
-      requestAnimationFrame(() => {
+      // #ifdef H5
+      if (typeof requestAnimationFrame !== 'undefined') {
+        requestAnimationFrame(() => {
+          ticking = false
+          fn.apply(this, args)
+        })
+      } else {
         ticking = false
         fn.apply(this, args)
-      })
+      }
+      // #endif
+      // #ifndef H5
+      setTimeout(() => {
+        ticking = false
+        fn.apply(this, args)
+      }, 16)
+      // #endif
     }
   }
 }
@@ -309,18 +322,46 @@ export function useBatchUpdate() {
     pendingUpdates.value.push(updateFn)
     
     if (!rafId) {
-      rafId = requestAnimationFrame(() => {
+      // #ifdef H5
+      if (typeof requestAnimationFrame !== 'undefined') {
+        rafId = requestAnimationFrame(() => {
+          pendingUpdates.value.forEach(fn => fn())
+          pendingUpdates.value = []
+          rafId = null
+        })
+      } else {
+        rafId = setTimeout(() => {
+          pendingUpdates.value.forEach(fn => fn())
+          pendingUpdates.value = []
+          rafId = null
+        }, 16)
+      }
+      // #endif
+      // #ifndef H5
+      rafId = setTimeout(() => {
         pendingUpdates.value.forEach(fn => fn())
         pendingUpdates.value = []
         rafId = null
-      })
+      }, 16)
+      // #endif
     }
   }
   
   onUnmounted(() => {
+    // #ifdef H5
     if (rafId) {
-      cancelAnimationFrame(rafId)
+      if (typeof cancelAnimationFrame !== 'undefined') {
+        cancelAnimationFrame(rafId)
+      } else {
+        clearTimeout(rafId)
+      }
     }
+    // #endif
+    // #ifndef H5
+    if (rafId) {
+      clearTimeout(rafId)
+    }
+    // #endif
   })
   
   return {
@@ -365,11 +406,16 @@ export function useChunkedTasks(tasks, options = {}) {
     
     // 让出主线程
     timeoutId = setTimeout(() => {
+      // #ifdef H5
       if (typeof requestIdleCallback !== 'undefined') {
         requestIdleCallback(runChunk, { timeout: 100 })
       } else {
         runChunk()
       }
+      // #endif
+      // #ifndef H5
+      runChunk()
+      // #endif
     }, delay)
   }
   

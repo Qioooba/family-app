@@ -199,10 +199,11 @@ export function usePerformanceMonitor() {
   })
   
   onMounted(() => {
-    // 页面加载完成时间
+    // #ifdef H5
+    // 页面加载完成时间 - 仅在H5环境执行
     if (typeof performance !== 'undefined') {
       // 使用 PerformanceObserver 监控性能指标
-      if (PerformanceObserver) {
+      if (typeof PerformanceObserver !== 'undefined') {
         try {
           // 监控 FCP
           const fcpObserver = new PerformanceObserver((list) => {
@@ -230,14 +231,17 @@ export function usePerformanceMonitor() {
       }
       
       // 页面加载时间
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const timing = performance.timing
-          metrics.value.pageLoad = timing.loadEventEnd - timing.navigationStart
-          console.log('[Performance] Page Load:', metrics.value.pageLoad)
-        }, 0)
-      })
+      if (typeof window !== 'undefined') {
+        window.addEventListener('load', () => {
+          setTimeout(() => {
+            const timing = performance.timing
+            metrics.value.pageLoad = timing.loadEventEnd - timing.navigationStart
+            console.log('[Performance] Page Load:', metrics.value.pageLoad)
+          }, 0)
+        })
+      }
     }
+    // #endif
   })
   
   return {
@@ -268,19 +272,31 @@ export function lazyComponent(importer, options = {}) {
 export function useProgressiveImage() {
   const loadProgressive = (lowQualitySrc, highQualitySrc) => {
     return new Promise((resolve) => {
-      // 先加载低质量图
-      const img = new Image()
-      img.onload = () => {
-        resolve({ src: lowQualitySrc, quality: 'low' })
-        
-        // 再加载高质量图
-        const highImg = new Image()
-        highImg.onload = () => {
-          resolve({ src: highQualitySrc, quality: 'high' })
+      // #ifdef H5
+      // 先加载低质量图 - 仅在H5环境使用Image对象
+      if (typeof Image !== 'undefined') {
+        const img = new Image()
+        img.onload = () => {
+          resolve({ src: lowQualitySrc, quality: 'low' })
+          
+          // 再加载高质量图
+          const highImg = new Image()
+          highImg.onload = () => {
+            resolve({ src: highQualitySrc, quality: 'high' })
+          }
+          highImg.src = highQualitySrc
         }
-        highImg.src = highQualitySrc
+        img.src = lowQualitySrc
+      } else {
+        // 非H5环境直接返回高清图
+        resolve({ src: highQualitySrc, quality: 'high' })
       }
-      img.src = lowQualitySrc
+      // #endif
+      
+      // #ifndef H5
+      // 小程序环境直接返回高清图
+      resolve({ src: highQualitySrc, quality: 'high' })
+      // #endif
     })
   }
   

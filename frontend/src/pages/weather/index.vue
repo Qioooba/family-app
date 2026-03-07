@@ -289,6 +289,8 @@ $border-radius-xl: 48rpx;
   background: linear-gradient(180deg, $bg-gradient-start 0%, $bg-gradient-mid 50%, $bg-gradient-end 100%);
   overflow-x: hidden;
   touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
 }
 
 .bg-gradient {
@@ -403,8 +405,10 @@ $border-radius-xl: 48rpx;
 
 // 天气内容区域
 .weather-content {
-  height: calc(100vh - 180rpx);
+  flex: 1;
   padding: 0 32rpx;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 // 当前天气卡片
@@ -578,16 +582,19 @@ $border-radius-xl: 48rpx;
   margin-top: 32rpx;
   background: $card-bg;
   border-radius: $border-radius-lg;
-  padding: 32rpx 0 32rpx 32rpx;
+  padding: 32rpx;
   box-shadow: $card-shadow;
+  overflow: hidden;
   
   .hourly-scroll {
     width: 100%;
+    margin: 0 -32rpx;
+    padding: 0 32rpx;
+    box-sizing: content-box;
     
     .hourly-list {
       display: flex;
       gap: 24rpx;
-      padding-right: 32rpx;
       
       .hourly-item {
         display: flex;
