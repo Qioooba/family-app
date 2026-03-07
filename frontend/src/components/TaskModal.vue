@@ -87,10 +87,10 @@
             <view class="picker-item" v-for="day in daysInMonth" :key="day">{{ day }}日</view>
           </picker-view-column>
           <picker-view-column>
-            <view class="picker-item" v-for="hour in 24" :key="hour">{{ hour }}时</view>
+            <view class="picker-item" v-for="hour in 24" :key="hour">{{ String(hour-1).padStart(2, '0') }}时</view>
           </picker-view-column>
           <picker-view-column>
-            <view class="picker-item" v-for="minute in 60" :key="minute">{{ minute }}分</view>
+            <view class="picker-item" v-for="minute in 60" :key="minute">{{ String(minute-1).padStart(2, '0') }}分</view>
           </picker-view-column>
         </picker-view>
       </view>
