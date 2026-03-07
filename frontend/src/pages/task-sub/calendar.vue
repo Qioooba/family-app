@@ -146,7 +146,7 @@
                 <text class="meta-icon">👤</text>{{ task.assigneeName }}
               </text>
               <text class="meta-item" v-if="task.dueTime">
-                <text class="meta-icon">⏰</text>{{ task.dueTime }}
+                <text class="meta-icon">⏰</text>{{ formatDateTime(task.dueTime, 'time') }}
               </text>
             </view>
             
@@ -272,11 +272,11 @@
           <view class="detail-info">
             <view class="info-item">
               <text class="info-label">📅 截止日期</text>
-              <text class="info-value">{{ selectedTask.dueDate || '未设置' }}</text>
+              <text class="info-value">{{ formatDateTime(selectedTask.dueTime, 'date') || '未设置' }}</text>
             </view>
             <view class="info-item">
               <text class="info-label">⏰ 截止时间</text>
-              <text class="info-value">{{ selectedTask.dueTime || '未设置' }}</text>
+              <text class="info-value">{{ formatDateTime(selectedTask.dueTime, 'time') || '未设置' }}</text>
             </view>
             <view class="info-item">
               <text class="info-label">👤 负责人</text>
@@ -316,6 +316,7 @@ import dayjs from 'dayjs'
 import PageHeader from '../../components/common/PageHeader.vue'
 import TaskStatsCards from '../../components/task/TaskStatsCards.vue'
 import MonthNavigator from '../../components/calendar/MonthNavigator.vue'
+import { formatDateTime } from '@/utils/dateHelper'
 
 // 常量定义
 const weekdays = ['日', '一', '二', '三', '四', '五', '六']

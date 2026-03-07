@@ -11,6 +11,26 @@
       </view>
     </view>
     
+    <!-- Tab 状态筛选栏 -->
+    <view class="tab-bar">
+      <view 
+        class="tab-item"
+        :class="{ active: currentTab === 0 }"
+        @click="switchTab(0)"
+      >
+        <text class="tab-text">待实现</text>
+        <view v-if="currentTab === 0" class="tab-indicator"></view>
+      </view>
+      <view 
+        class="tab-item"
+        :class="{ active: currentTab === 1 }"
+        @click="switchTab(1)"
+      >
+        <text class="tab-text">已实现</text>
+        <view v-if="currentTab === 1" class="tab-indicator"></view>
+      </view>
+    </view>
+    
     <!-- 心愿列表 -->
     <scroll-view scroll-y class="wish-list" refresher-enabled @refresherrefresh="onRefresh">
       <!-- 加载中 -->
@@ -167,29 +187,6 @@
               </view>
             </picker>
           </view>
-          
-          <!-- 可见范围 -->
-          <view class="form-item">
-            <text class="form-label">可见范围</text>
-            <view class="visibility-list">
-              <view 
-                class="visibility-item"
-                :class="{ active: formData.visibility === 'couple' }"
-                @click="formData.visibility = 'couple'"
-              >
-                <text class="visibility-icon">💑</text>
-                <text>仅情侣</text>
-              </view>
-              <view 
-                class="visibility-item"
-                :class="{ active: formData.visibility === 'family' }"
-                @click="formData.visibility = 'family'"
-              >
-                <text class="visibility-icon">👨‍👩‍👧</text>
-                <text>全家可见</text>
-              </view>
-            </view>
-          </view>
         </view>
         
         <!-- 弹窗底部 -->
@@ -213,6 +210,7 @@ import { ref, onMounted } from 'vue'
 const loading = ref(false)
 const wishes = ref([])
 const showAddModal = ref(false)
+const currentTab = ref(0) // 0-待实现, 1-已实现
 
 // 表单数据
 const formData = ref({
@@ -221,8 +219,7 @@ const formData = ref({
   type: 'gift',
   budgetMin: '',
   budgetMax: '',
-  expectDate: '',
-  visibility: 'couple'
+  expectDate: ''
 })
 
 // 愿望类型
@@ -269,8 +266,7 @@ const openAddModal = () => {
     type: 'gift',
     budgetMin: '',
     budgetMax: '',
-    expectDate: '',
-    visibility: 'couple'
+    expectDate: ''
   }
   showAddModal.value = true
 }
@@ -298,7 +294,6 @@ const createWish = async () => {
       title: formData.value.title,
       description: formData.value.description,
       type: formData.value.type,
-      visibility: formData.value.visibility,
       familyId: familyId
     }
     
@@ -415,12 +410,18 @@ const deleteWish = (wish) => {
 // 加载心愿列表
 const loadWishes = async () => {
   loading.value = true
-  console.log('加载心愿列表')
+  console.log('加载心愿列表, tab:', currentTab.value)
   
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
+    // 构建URL，根据当前Tab传入status参数
+    let url = `https://qioba.cn:8443/api/wish/list?familyId=${familyId}`
+    if (currentTab.value !== null) {
+      url += `&status=${currentTab.value}`
+    }
+    
     const res = await uni.request({
-      url: `https://qioba.cn:8443/api/wish/list?familyId=${familyId}`,
+      url: url,
       method: 'GET'
     })
     
@@ -438,6 +439,13 @@ const loadWishes = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 切换Tab
+const switchTab = (tab) => {
+  if (currentTab.value === tab) return
+  currentTab.value = tab
+  loadWishes()
 }
 
 // 下拉刷新
@@ -490,6 +498,45 @@ onMounted(() => {
   }
 }
 
+/* Tab 状态筛选栏 */
+.tab-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  padding: 0 32rpx 24rpx;
+  gap: 32rpx;
+  
+  .tab-item {
+    position: relative;
+    padding: 16rpx 0;
+    
+    .tab-text {
+      font-size: 30rpx;
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    
+    &.active {
+      .tab-text {
+        color: #fff;
+        font-weight: 600;
+      }
+    }
+    
+    .tab-indicator {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40rpx;
+      height: 4rpx;
+      background: #fff;
+      border-radius: 2rpx;
+    }
+  }
+}
+
 .add-btn {
   position: fixed;
   bottom: 60rpx;
@@ -515,7 +562,7 @@ onMounted(() => {
   position: relative;
   z-index: 1;
   padding: 0 32rpx;
-  height: calc(100vh - 300rpx);
+  height: calc(100vh - 380rpx);
 }
 
 .loading-state, .empty-state {
@@ -832,32 +879,6 @@ onMounted(() => {
     color: #2d3748;
     
     &.placeholder { color: #a0aec0; }
-  }
-}
-
-.visibility-list {
-  display: flex;
-  gap: 24rpx;
-  
-  .visibility-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24rpx;
-    background: #f8f9fc;
-    border-radius: 20rpx;
-    border: 2rpx solid transparent;
-    
-    &.active {
-      background: rgba(255, 107, 107, 0.1);
-      border-color: #FF6B6B;
-    }
-    
-    .visibility-icon {
-      font-size: 48rpx;
-      margin-bottom: 8rpx;
-    }
   }
 }
 

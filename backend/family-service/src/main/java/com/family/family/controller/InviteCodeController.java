@@ -3,6 +3,7 @@ package com.family.family.controller;
 import com.family.family.entity.Family;
 import com.family.family.entity.InviteCode;
 import com.family.family.service.InviteCodeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.Map;
 /**
  * 邀请码控制器
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/family")
 public class InviteCodeController {
@@ -69,15 +71,35 @@ public class InviteCodeController {
         Map<String, Object> result = new HashMap<>();
         
         try {
+            // 检查 code 参数是否存在
+            if (data == null || data.get("code") == null) {
+                log.warn("验证邀请码失败: 参数为空");
+                result.put("code", 400);
+                result.put("message", "邀请码不能为空");
+                return result;
+            }
+            
             String code = data.get("code").toString();
+            log.info("收到验证邀请码请求: code={}", code);
+            
+            // 检查 code 是否为空字符串
+            if (code == null || code.trim().isEmpty()) {
+                log.warn("验证邀请码失败: code 为空字符串");
+                result.put("code", 400);
+                result.put("message", "邀请码不能为空");
+                return result;
+            }
             
             InviteCode inviteCode = inviteCodeService.verifyInviteCode(code);
             
             if (inviteCode == null) {
+                log.warn("验证邀请码失败: 邀请码无效或已过期, code={}", code);
                 result.put("code", 404);
                 result.put("message", "邀请码无效或已过期");
                 return result;
             }
+            
+            log.info("验证邀请码成功: code={}, familyId={}", code, inviteCode.getFamilyId());
             
             result.put("code", 200);
             result.put("message", "success");
@@ -86,6 +108,7 @@ public class InviteCodeController {
                 "familyId", inviteCode.getFamilyId()
             ));
         } catch (Exception e) {
+            log.error("验证邀请码异常: code={}, error={}", data != null ? data.get("code") : "null", e.getMessage(), e);
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }

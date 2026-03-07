@@ -13,6 +13,6 @@ public interface UserMapper extends BaseMapper<User> {
     User selectByPhone(String phone);
     
     // 根据微信OpenID查询用户
-    @Select("SELECT * FROM sys_user WHERE wx_openid = #{wxOpenid} LIMIT 1")
+    @Select("SELECT * FROM sys_user WHERE open_id = #{wxOpenid} LIMIT 1")
     User selectByWxOpenid(String wxOpenid);
 }

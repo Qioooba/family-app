@@ -35,9 +35,9 @@
             <text class="picker-text">{{ form.dueDate }}</text>
             <u-icon name="arrow-down" size="14" color="#ccc"></u-icon>
           </view>
-          <view class="picker time-picker" @click="showTimePicker">
+          <view class="picker time-picker" @click.stop="showTimePicker">
             <text class="picker-icon">🕐</text>
-            <text class="picker-text">{{ form.dueTime }}</text>
+            <text class="picker-text">{{ form.dueTime || '23:59' }}</text>
             <u-icon name="arrow-down" size="14" color="#ccc"></u-icon>
           </view>
         </view>
@@ -93,14 +93,14 @@
     </view>
     
     <!-- 自定义日期选择器弹窗 - 放在最外层确保层级最高 -->
-    <view v-if="datePickerVisible" class="picker-overlay" @click="closeDatePicker">
+    <view v-if="datePickerVisible && !timePickerVisible" class="picker-overlay" @click="closeDatePicker">
       <view class="picker-popup" @click.stop>
         <view class="picker-header">
           <text class="picker-cancel" @click="closeDatePicker">取消</text>
           <text class="picker-title">选择日期</text>
           <text class="picker-confirm" @click="confirmDatePicker">确定</text>
         </view>
-        <picker-view class="picker-view" :value="datePickerValue" @change="onDatePickerChange">
+        <picker-view v-if="datePickerVisible" class="picker-view" :value="tempDateValue" @change="onDatePickerChange">
           <picker-view-column>
             <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
           </picker-view-column>
@@ -115,19 +115,25 @@
     </view>
     
     <!-- 自定义时间选择器弹窗 -->
-    <view v-if="timePickerVisible" class="picker-overlay" @click="closeTimePicker">
+    <view v-if="timePickerVisible && !datePickerVisible" class="picker-overlay" @click="closeTimePicker">
       <view class="picker-popup" @click.stop>
         <view class="picker-header">
           <text class="picker-cancel" @click="closeTimePicker">取消</text>
           <text class="picker-title">选择时间</text>
           <text class="picker-confirm" @click="confirmTimePicker">确定</text>
         </view>
-        <picker-view class="picker-view" :value="timePickerValue" @change="onTimePickerChange">
+        <picker-view 
+          v-if="timePickerVisible" 
+          class="picker-view" 
+          :value="tempTimeValue" 
+          @change="onTimePickerChange"
+          indicator-style="height: 80rpx;"
+        >
           <picker-view-column>
-            <view v-for="hour in 24" :key="hour-1" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
+            <view v-for="h in 24" :key="h" class="picker-item">{{ String(h-1).padStart(2, '0') }}时</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="minute in 60" :key="minute-1" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
+            <view v-for="m in 60" :key="m" class="picker-item">{{ String(m-1).padStart(2, '0') }}分</view>
           </picker-view-column>
         </picker-view>
       </view>
@@ -137,6 +143,7 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { extractDateTime } from '@/utils/dateHelper'
 
 const props = defineProps({
   visible: Boolean,
@@ -194,6 +201,7 @@ const datePickerValue = ref([10, new Date().getMonth(), new Date().getDate() - 1
 // 时间选择器状态
 const timePickerVisible = ref(false)
 const timePickerValue = ref([23, 59])
+const isTimePicking = ref(false)
 
 // 临时存储选择值
 const tempDateValue = ref([...datePickerValue.value])
@@ -209,27 +217,8 @@ const form = ref({
 })
 
 // 从任务数据中提取日期和时间
-const extractDateTime = (dueTime) => {
-  if (!dueTime) return { date: today, time: '23:59' }
-  try {
-    const date = new Date(dueTime)
-    if (isNaN(date.getTime())) {
-      // 尝试解析 YYYY-MM-DD HH:mm 格式
-      const parts = dueTime.split(' ')
-      if (parts.length === 2) {
-        return { date: parts[0], time: parts[1] }
-      }
-      return { date: today, time: '23:59' }
-    }
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return { date: `${year}-${month}-${day}`, time: `${hours}:${minutes}` }
-  } catch (e) {
-    return { date: today, time: '23:59' }
-  }
+const extractDateTimeFromTask = (dueTime) => {
+  return extractDateTime(dueTime)
 }
 
 // 解析日期字符串到picker值
@@ -260,7 +249,7 @@ watch(() => props.visible, (val) => {
   if (val) {
     if (isEditMode.value && props.task) {
       // 编辑模式：加载任务数据
-      const { date, time } = extractDateTime(props.task.dueTime)
+      const { date, time } = extractDateTimeFromTask(props.task.dueTime)
       form.value = {
         title: props.task.title || '',
         dueDate: date,
@@ -288,6 +277,9 @@ const priorities = ['普通', '重要', '紧急']
 
 // 显示日期选择器
 const showDatePicker = () => {
+  // 先关闭时间选择器（如果打开的话）
+  timePickerVisible.value = false
+  
   tempDateValue.value = [...datePickerValue.value]
   datePickerVisible.value = true
 }
@@ -314,27 +306,72 @@ const onDatePickerChange = (e) => {
 
 // 显示时间选择器
 const showTimePicker = () => {
-  tempTimeValue.value = [...timePickerValue.value]
+  // 先关闭日期选择器（如果打开的话）
+  datePickerVisible.value = false
+  
+  // 从当前表单值解析时间
+  const currentTime = form.value.dueTime || '23:59'
+  const [h, m] = currentTime.split(':').map(v => parseInt(v) || 0)
+  
+  // 确保值在有效范围内
+  const validHour = Math.max(0, Math.min(23, h))
+  const validMinute = Math.max(0, Math.min(59, m))
+  
+  // 同步到 tempTimeValue 和 timePickerValue
+  tempTimeValue.value = [validHour, validMinute]
+  timePickerValue.value = [validHour, validMinute]
+  
+  console.log('显示时间选择器, 当前时间:', currentTime, 'picker值:', tempTimeValue.value)
+  
   timePickerVisible.value = true
 }
 
 // 关闭时间选择器
 const closeTimePicker = () => {
   timePickerVisible.value = false
+  isTimePicking.value = false
 }
 
 // 确认时间选择
 const confirmTimePicker = () => {
-  timePickerValue.value = [...tempTimeValue.value]
-  const hours = String(timePickerValue.value[0]).padStart(2, '0')
-  const minutes = String(timePickerValue.value[1]).padStart(2, '0')
-  form.value.dueTime = `${hours}:${minutes}`
+  // 确保 tempTimeValue 是有效的数组
+  let hours = 23
+  let minutes = 59
+  
+  if (tempTimeValue.value && Array.isArray(tempTimeValue.value) && tempTimeValue.value.length >= 2) {
+    hours = Math.max(0, Math.min(23, parseInt(tempTimeValue.value[0]) || 0))
+    minutes = Math.max(0, Math.min(59, parseInt(tempTimeValue.value[1]) || 0))
+  }
+  
+  // 更新 picker 状态
+  timePickerValue.value = [hours, minutes]
+  
+  // 格式化时间字符串
+  const hoursStr = String(hours).padStart(2, '0')
+  const minutesStr = String(minutes).padStart(2, '0')
+  form.value.dueTime = `${hoursStr}:${minutesStr}`
+  
+  console.log('时间选择确认:', form.value.dueTime, '原始值:', tempTimeValue.value)
+  
   closeTimePicker()
 }
 
 // 时间选择变化
 const onTimePickerChange = (e) => {
-  tempTimeValue.value = e.detail.value
+  const value = e.detail.value
+  if (value && value.length === 2) {
+    tempTimeValue.value = value
+  }
+}
+
+// picker 开始滚动
+const onTimePickStart = () => {
+  isTimePicking.value = true
+}
+
+// picker 结束滚动
+const onTimePickEnd = () => {
+  isTimePicking.value = false
 }
 
 // 关闭弹窗

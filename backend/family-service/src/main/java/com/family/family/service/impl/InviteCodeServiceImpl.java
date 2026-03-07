@@ -9,6 +9,7 @@ import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.mapper.FamilyMapper;
 import com.family.family.mapper.InviteCodeMapper;
 import com.family.family.service.InviteCodeService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.UUID;
 /**
  * 邀请码服务实现
  */
+@Slf4j
 @Service
 public class InviteCodeServiceImpl extends ServiceImpl<InviteCodeMapper, InviteCode> implements InviteCodeService {
     
@@ -52,6 +54,8 @@ public class InviteCodeServiceImpl extends ServiceImpl<InviteCodeMapper, InviteC
     
     @Override
     public InviteCode verifyInviteCode(String code) {
+        log.info("验证邀请码: code={}", code);
+        
         LambdaQueryWrapper<InviteCode> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(InviteCode::getCode, code)
                .eq(InviteCode::getStatus, 1);
@@ -59,20 +63,29 @@ public class InviteCodeServiceImpl extends ServiceImpl<InviteCodeMapper, InviteC
         InviteCode inviteCode = this.getOne(wrapper);
         
         if (inviteCode == null) {
+            log.warn("邀请码不存在或已禁用: code={}", code);
             return null;
         }
+        
+        log.info("找到邀请码: code={}, familyId={}, expiresAt={}, usedCount={}, maxUses={}", 
+                 code, inviteCode.getFamilyId(), inviteCode.getExpiresAt(), 
+                 inviteCode.getUsedCount(), inviteCode.getMaxUses());
         
         // 检查是否过期
         if (inviteCode.getExpiresAt() != null && 
             inviteCode.getExpiresAt().isBefore(LocalDateTime.now())) {
+            log.warn("邀请码已过期: code={}, expiresAt={}", code, inviteCode.getExpiresAt());
             return null;
         }
         
         // 检查使用次数
         if (inviteCode.getUsedCount() >= inviteCode.getMaxUses()) {
+            log.warn("邀请码使用次数已达上限: code={}, usedCount={}, maxUses={}", 
+                     code, inviteCode.getUsedCount(), inviteCode.getMaxUses());
             return null;
         }
         
+        log.info("邀请码验证通过: code={}", code);
         return inviteCode;
     }
     

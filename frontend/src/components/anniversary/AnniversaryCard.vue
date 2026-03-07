@@ -96,9 +96,16 @@ const getDefaultIcon = (type) => {
 }
 
 // 格式化日期
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
+const formatDate = (dateValue) => {
+  if (!dateValue) return ''
+
+  // 处理数组格式 [2026, 5, 6]
+  if (Array.isArray(dateValue)) {
+    const [year, month, day] = dateValue
+    return `${month}月${day}日`
+  }
+
+  const date = new Date(dateValue)
   const month = date.getMonth() + 1
   const day = date.getDate()
   return `${month}月${day}日`

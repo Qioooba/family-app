@@ -56,16 +56,35 @@ public class WxLoginController {
         try {
             String code = (String) params.get("code");
             
+            log.info("收到微信登录请求: code={}", code != null ? code.substring(0, Math.min(code.length(), 10)) + "..." : "null");
+            
             if (code == null || code.isEmpty()) {
+                log.warn("微信登录失败: code 为空");
                 result.put("code", 400);
                 result.put("message", "微信授权码不能为空");
                 return result;
             }
             
+            // 检查微信配置
+            if (wxAppId == null || wxAppId.isEmpty()) {
+                log.error("微信登录失败: 未配置 wxAppId");
+                result.put("code", 500);
+                result.put("message", "服务器配置错误：未配置微信 AppID");
+                return result;
+            }
+            if (wxAppSecret == null || wxAppSecret.isEmpty()) {
+                log.error("微信登录失败: 未配置 wxAppSecret");
+                result.put("code", 500);
+                result.put("message", "服务器配置错误：未配置微信 AppSecret");
+                return result;
+            }
+            
             // 1. 用 code 换取 openid 和 session_key
+            log.info("开始调用微信接口换取 openid...");
             String wxResponse = WxDecryptUtil.getOpenidAndSessionKey(wxAppId, wxAppSecret, code);
             
             if (wxResponse == null || wxResponse.isEmpty()) {
+                log.error("微信登录失败: WxDecryptUtil 返回 null 或空");
                 result.put("code", 401);
                 result.put("message", "微信登录失败，无法获取用户信息");
                 return result;
@@ -73,18 +92,20 @@ public class WxLoginController {
             
             // 解析 openid 和 session_key
             String[] parts = wxResponse.split(",");
-            if (parts.length < 2) {
+            if (parts.length < 1) {
+                log.error("微信登录失败: 响应格式错误, wxResponse={}", wxResponse);
                 result.put("code", 401);
                 result.put("message", "微信登录响应格式错误");
                 return result;
             }
             
             String openid = parts[0];
-            String sessionKey = parts[1];
+            String sessionKey = parts.length > 1 ? parts[1] : "";
             
-            log.info("微信登录成功，openid: {}", openid);
+            log.info("微信登录获取 openid 成功: openid={}", openid);
             
             // 2. 根据 openid 查找用户
+            log.info("开始查询用户: openid={}", openid);
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(User::getWxOpenid, openid);
             User user = userMapper.selectOne(queryWrapper);
@@ -93,8 +114,7 @@ public class WxLoginController {
             
             // 3. 如不存在，自动创建新用户
             if (user == null) {
-                log.info("用户不存在，创建新用户");
-                isNewUser = true;
+                log.info("用户不存在，创建新用户: openid={}", openid);
                 
                 user = new User();
                 user.setWxOpenid(openid);
@@ -124,8 +144,11 @@ public class WxLoginController {
                 
                 log.info("新用户创建成功，userId: {}", user.getId());
             } else {
+                log.info("用户已存在: userId={}, status={}", user.getId(), user.getStatus());
+                
                 // 检查用户状态
                 if (user.getStatus() != null && user.getStatus() == 0) {
+                    log.warn("用户已被禁用: userId={}", user.getId());
                     result.put("code", 403);
                     result.put("message", "账号已被禁用");
                     return result;
@@ -133,10 +156,12 @@ public class WxLoginController {
                 
                 // 确保用户有默认家庭
                 if (user.getCurrentFamilyId() == null) {
+                    log.info("用户没有默认家庭，设置为默认值: userId={}", user.getId());
                     user.setCurrentFamilyId(DEFAULT_FAMILY_ID);
                     // 检查是否已经是家庭成员，如果不是则添加
                     FamilyMember existingMember = familyMemberMapper.selectByUserIdAndFamilyId(user.getId(), DEFAULT_FAMILY_ID);
                     if (existingMember == null) {
+                        log.info("添加现有用户到默认家庭: userId={}", user.getId());
                         FamilyMember familyMember = new FamilyMember();
                         familyMember.setFamilyId(DEFAULT_FAMILY_ID);
                         familyMember.setUserId(user.getId());
@@ -149,8 +174,10 @@ public class WxLoginController {
             }
             
             // 4. 执行 Sa-Token 登录
+            log.info("执行 Sa-Token 登录: userId={}", user.getId());
             StpUtil.login(user.getId());
             String tokenValue = StpUtil.getTokenValue();
+            log.info("Sa-Token 登录成功: userId={}", user.getId());
             
             // 5. 更新最后登录时间
             user.setLastLoginTime(LocalDateTime.now());
@@ -170,10 +197,10 @@ public class WxLoginController {
             data.put("isNewUser", isNewUser);
             result.put("data", data);
             
-            log.info("微信登录完成，userId: {}, isNewUser: {}", user.getId(), isNewUser);
+            log.info("微信登录完成: userId={}, isNewUser={}", user.getId(), isNewUser);
             
         } catch (Exception e) {
-            log.error("微信登录失败", e);
+            log.error("微信登录异常: {}", e.getMessage(), e);
             result.put("code", 500);
             result.put("message", "登录失败：" + e.getMessage());
         }

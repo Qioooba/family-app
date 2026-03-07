@@ -6,9 +6,6 @@
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
       <text class="title">喝水打卡</text>
-      <view class="right-btn" @click="showSettings">
-        <u-icon name="setting" size="40" color="#333"></u-icon>
-      </view>
     </view>
 
     <!-- 主内容区 -->
@@ -42,9 +39,12 @@
             <text class="stats-unit">ml</text>
           </view>
           <text class="stats-divider">/</text>
-          <view class="stats-item" @click="showSettings">
+          <view class="stats-item target-item" @click="showSettings">
             <text class="stats-num target">{{ targetAmount }}</text>
             <text class="stats-unit">ml 目标</text>
+            <view class="settings-icon-small">
+              <u-icon name="setting" size="24" color="#999"></u-icon>
+            </view>
           </view>
         </view>
 
@@ -884,6 +884,26 @@ const deleteHistoryRecord = async (recordId) => {
       .stats-unit {
         font-size: 24rpx;
         color: #666;
+      }
+
+      &.target-item {
+        align-items: center;
+        cursor: pointer;
+
+        .settings-icon-small {
+          width: 36rpx;
+          height: 36rpx;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 4rpx;
+          opacity: 0.7;
+          transition: opacity 0.2s;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
       }
     }
 

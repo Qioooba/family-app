@@ -37,6 +37,17 @@ export const weatherApi = {
   },
   
   /**
+   * 获取逐小时天气预报
+   * @param {number} lat - 纬度
+   * @param {number} lon - 经度
+   * @param {number} hours - 预报小时数 (1-48)
+   * @returns {Promise<object>} 逐小时预报数据
+   */
+  getHourlyForecast: (lat, lon, hours = 24) => {
+    return request.get('/api/weather/hourly', { lat, lon, hours })
+  },
+  
+  /**
    * 搜索城市
    * @param {string} keyword - 搜索关键词
    * @returns {Promise<Array>} 城市列表

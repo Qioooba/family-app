@@ -25,6 +25,22 @@ public class WxDecryptUtil {
      */
     public static String getOpenidAndSessionKey(String appId, String appSecret, String code) {
         try {
+            // 参数校验
+            if (appId == null || appId.isEmpty()) {
+                log.error("微信登录失败: appId 为空");
+                return null;
+            }
+            if (appSecret == null || appSecret.isEmpty()) {
+                log.error("微信登录失败: appSecret 为空");
+                return null;
+            }
+            if (code == null || code.isEmpty()) {
+                log.error("微信登录失败: code 为空");
+                return null;
+            }
+            
+            log.info("微信登录请求: appId={}, code={}", appId, code.substring(0, Math.min(code.length(), 10)) + "...");
+            
             String url = "https://api.weixin.qq.com/sns/jscode2session" +
                     "?appid=" + appId +
                     "&secret=" + appSecret +
@@ -34,7 +50,12 @@ public class WxDecryptUtil {
             java.net.URL urlObj = new java.net.URL(url);
             java.net.HttpURLConnection connection = (java.net.HttpURLConnection) urlObj.openConnection();
             connection.setRequestMethod("GET");
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
             connection.connect();
+            
+            int responseCode = connection.getResponseCode();
+            log.info("微信登录 HTTP 响应码: {}", responseCode);
             
             java.io.BufferedReader reader = new java.io.BufferedReader(
                 new java.io.InputStreamReader(connection.getInputStream()));
@@ -53,17 +74,21 @@ public class WxDecryptUtil {
             
             if (json.has("openid")) {
                 String openid = json.get("openid").asText();
-                String sessionKey = json.get("session_key").asText();
+                String sessionKey = json.has("session_key") ? json.get("session_key").asText() : "";
+                log.info("微信登录成功: openid={}", openid);
                 return openid + "," + sessionKey;
             } else if (json.has("errcode")) {
-                log.error("微信登录失败: errcode={}, errmsg={}", 
-                    json.get("errcode").asInt(), json.get("errmsg").asText());
+                int errCode = json.get("errcode").asInt();
+                String errMsg = json.has("errmsg") ? json.get("errmsg").asText() : "未知错误";
+                log.error("微信登录失败: errcode={}, errmsg={}", errCode, errMsg);
+            } else {
+                log.error("微信登录响应异常: {}", resp);
             }
             
             return null;
             
         } catch (Exception e) {
-            log.error("获取微信 openid 失败", e);
+            log.error("获取微信 openid 失败: {}", e.getMessage(), e);
             return null;
         }
     }

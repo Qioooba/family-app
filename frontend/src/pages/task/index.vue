@@ -42,7 +42,7 @@
         </view>
         
         <view class="task-info">
-          <text class="task-time" v-if="task.dueTime">⏰ {{ formatTime(task.dueTime) }}</text>
+          <text class="task-time" v-if="task.dueDate || task.dueTime">⏰ {{ formatDateTimeFull(task) }}</text>
           <text class="task-assignee" v-if="task.assigneeName">👤 {{ task.assigneeName }}</text>
         </view>
         
@@ -65,7 +65,7 @@
     </scroll-view>
     
     <!-- 任务弹窗组件 -->
-    <TaskModal ref="taskModalRef" @success="onTaskSaved" />
+    <TaskModal ref="taskModalRef" :members="familyMembers" @success="onTaskSaved" />
   </view>
 </template>
 
@@ -73,6 +73,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { onShow, onLoad } from '@dcloudio/uni-app'
 import { taskApi, familyApi } from '../../api/index.js'
+import { formatDateTime, parseDate } from '../../utils/dateHelper'
 import TaskModal from '@/components/TaskModal.vue'
 
 // ========== 页面状态 ==========
@@ -94,6 +95,13 @@ const pageSize = ref(20)
 // 家庭成员
 const familyMembers = ref([])
 
+// 工具函数：获取成员名称
+function getMemberName(userId) {
+  if (!userId) return '未知'
+  const member = familyMembers.value.find(m => m.userId === userId)
+  return member ? (member.nickname || member.name || '家人') : '未知'
+}
+
 // 计算各分类数量
 const categoryCounts = computed(() => {
   const todoCount = tasks.value.filter(t => t.status === 0 || t.status === 1).length
@@ -114,8 +122,8 @@ const filteredTasks = computed(() => {
     if (result.length > 1) {
       const now = Date.now()
       result = result.slice().sort((a, b) => {
-        const dateA = a.dueTime ? new Date(a.dueTime).getTime() : Infinity
-        const dateB = b.dueTime ? new Date(b.dueTime).getTime() : Infinity
+        const dateA = parseDate(a.dueTime)?.getTime() || Infinity
+        const dateB = parseDate(b.dueTime)?.getTime() || Infinity
         
         if (dateA < now && dateB < now) return dateB - dateA
         if (dateA >= now && dateB >= now) return dateA - dateB
@@ -216,11 +224,20 @@ function loadMoreTasks() {
 
 // ========== 弹窗操作 ==========
 function openTaskModal(task = null) {
-  if (task && task.id) {
-    taskModalRef.value?.openEdit(task)
-  } else {
-    taskModalRef.value?.open()
-  }
+  console.log('打开任务弹窗', task, 'ref:', taskModalRef.value)
+  setTimeout(() => {
+    console.log('延迟后 ref:', taskModalRef.value)
+    if (!taskModalRef.value) {
+      console.error('TaskModal 组件未加载')
+      uni.showToast({ title: '组件加载中，请重试', icon: 'none' })
+      return
+    }
+    if (task && task.id) {
+      taskModalRef.value?.openEdit(task)
+    } else {
+      taskModalRef.value?.open()
+    }
+  }, 500)
 }
 
 function onTaskSaved() {
@@ -253,11 +270,50 @@ async function toggleTask(task) {
 // ========== 工具函数 ==========
 function formatTime(timeValue) {
   if (!timeValue) return ''
-  if (Array.isArray(timeValue)) {
-    const [year, month, day, hour, minute] = timeValue
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`
+  return formatDateTime(timeValue, 'time')
+}
+
+// 格式化完整的日期时间：3月8日 22:57
+function formatDateTimeFull(task) {
+  if (!task) return ''
+  
+  let dateStr = ''
+  let timeStr = ''
+  
+  // 处理日期
+  if (task.dueDate) {
+    const date = new Date(task.dueDate)
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    dateStr = `${month}月${day}日`
   }
-  return timeValue
+  
+  // 处理时间
+  if (task.dueTime) {
+    // 如果是数组格式 [2026, 3, 8, 22, 57]
+    if (Array.isArray(task.dueTime)) {
+      const hour = String(task.dueTime[3] || 0).padStart(2, '0')
+      const minute = String(task.dueTime[4] || 0).padStart(2, '0')
+      timeStr = `${hour}:${minute}`
+    } else if (typeof task.dueTime === 'string') {
+      // 字符串格式 "2026-03-08T22:57:00" 或 "22:57"
+      if (task.dueTime.includes('T')) {
+        timeStr = task.dueTime.split('T')[1].substring(0, 5)
+      } else {
+        timeStr = task.dueTime.substring(0, 5)
+      }
+    }
+  }
+  
+  // 组合日期和时间
+  if (dateStr && timeStr) {
+    return `${dateStr} ${timeStr}`
+  } else if (dateStr) {
+    return dateStr
+  } else if (timeStr) {
+    return timeStr
+  }
+  return ''
 }
 </script>
 

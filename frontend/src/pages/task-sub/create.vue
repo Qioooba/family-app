@@ -156,6 +156,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { taskApi } from '../../api/index.js'
+import { parseDate, formatDateTime } from '../../utils/dateHelper'
 
 const form = ref({
   title: '',
@@ -199,16 +200,18 @@ const loadTaskData = async (id) => {
       form.value.remark = res.remark || ''
       form.value.status = res.status || 0
       
-      // 处理截止时间 - 格式：年-月-日 时:分:秒
+      // 处理截止时间 - 使用 parseDate 处理数组或字符串格式
       if (res.dueTime) {
-        const date = new Date(res.dueTime)
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
-        const hours = String(date.getHours()).padStart(2, '0')
-        const minutes = String(date.getMinutes()).padStart(2, '0')
-        const seconds = String(date.getSeconds()).padStart(2, '0')
-        form.value.deadline = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+        const date = parseDate(res.dueTime)
+        if (date) {
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          const hours = String(date.getHours()).padStart(2, '0')
+          const minutes = String(date.getMinutes()).padStart(2, '0')
+          const seconds = String(date.getSeconds()).padStart(2, '0')
+          form.value.deadline = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+        }
       }
       
       console.log('[TaskCreate] 表单数据填充完成:', form.value)

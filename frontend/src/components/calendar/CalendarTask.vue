@@ -32,7 +32,7 @@
             <text class="meta-icon">👤</text>{{ task.assigneeName }}
           </text>
           <text class="meta-item" v-if="task.dueTime">
-            <text class="meta-icon">⏰</text>{{ task.dueTime }}
+            <text class="meta-icon">⏰</text>{{ formatTaskTime(task.dueTime) }}
           </text>
         </view>
       </view>
@@ -54,6 +54,8 @@
 </template>
 
 <script setup>
+import { formatDateTime } from '@/utils/dateHelper'
+
 const props = defineProps({
   tasks: {
     type: Array,
@@ -75,6 +77,11 @@ const isOverdue = (task) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return dueDate < today
+}
+
+// 格式化时间显示
+const formatTaskTime = (dueTime) => {
+  return formatDateTime(dueTime, 'time')
 }
 
 defineEmits(['viewTask', 'showMenu', 'toggleTask', 'addTask'])

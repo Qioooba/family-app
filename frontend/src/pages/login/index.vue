@@ -165,16 +165,37 @@ const handleWxLogin = async () => {
   
   try {
     // 调用 uni.login 获取微信 code
-    const [loginErr, loginRes] = await uni.login({
+    // 注意：uni.login 返回的是对象，不是数组，不能使用数组解构
+    const loginRes = await uni.login({
       provider: 'weixin'
     })
     
-    if (loginErr || !loginRes || !loginRes.code) {
-      uni.showToast({ title: '微信授权失败', icon: 'none' })
+    // 检查返回结果格式
+    if (!loginRes) {
+      uni.showToast({ title: '微信授权失败：无响应', icon: 'none' })
       return
     }
     
-    const code = loginRes.code
+    // uni.login 返回的可能是 [err, res] 数组（某些uni-app版本）或直接使用 res
+    // 需要兼容处理
+    let code = null
+    if (Array.isArray(loginRes)) {
+      // 某些版本的 uni-app promisify 返回 [err, res] 数组
+      const [err, res] = loginRes
+      if (err || !res || !res.code) {
+        uni.showToast({ title: '微信授权失败', icon: 'none' })
+        return
+      }
+      code = res.code
+    } else {
+      // 标准 Promise 返回对象
+      if (!loginRes.code) {
+        uni.showToast({ title: '微信授权失败：未获取到code', icon: 'none' })
+        return
+      }
+      code = loginRes.code
+    }
+    
     console.log('[WxLogin] 获取 code 成功:', code)
     
     // 调用后端微信登录接口

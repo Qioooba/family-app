@@ -3,9 +3,15 @@ package com.family.family.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 /**
  * 任务实体
@@ -13,6 +19,36 @@ import java.time.LocalDateTime;
 @TableName("task")
 public class Task {
     
+    /**
+     * 支持多种日期格式的 LocalDateTime 反序列化器
+     */
+    public static class FlexibleLocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+        private static final DateTimeFormatter[] FORMATTERS = new DateTimeFormatter[] {
+            DateTimeFormatter.ISO_LOCAL_DATE_TIME,                    // 2026-03-08T15:00:00
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),       // 2026-03-08 15:00:00
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),          // 2026-03-08 15:00
+            DateTimeFormatter.ofPattern("yyyy-MM-dd")                 // 2026-03-08
+        };
+        
+        @Override
+        public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            String text = p.getValueAsString();
+            if (text == null || text.isEmpty()) {
+                return null;
+            }
+            
+            for (DateTimeFormatter formatter : FORMATTERS) {
+                try {
+                    return LocalDateTime.parse(text, formatter);
+                } catch (DateTimeParseException ignored) {
+                    // 尝试下一个格式
+                }
+            }
+            
+            throw new IOException("无法解析日期时间: " + text);
+        }
+    }
+
     @TableId(type = IdType.AUTO)
     private Long id;
     
@@ -25,9 +61,9 @@ public class Task {
     private Integer status;
     private Long assigneeId;
     private Long creatorId;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Shanghai")
+    @JsonDeserialize(using = FlexibleLocalDateTimeDeserializer.class)
     private LocalDateTime dueTime;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Shanghai")
+    @JsonDeserialize(using = FlexibleLocalDateTimeDeserializer.class)
     private LocalDateTime remindTime;
     private String location;
     private Long parentId;

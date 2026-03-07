@@ -165,6 +165,46 @@ public class WeatherController {
     }
     
     /**
+     * 获取逐小时天气预报
+     * GET /api/weather/hourly?lat={lat}&lon={lon}&hours={hours}
+     * 
+     * @param lat 纬度
+     * @param lon 经度
+     * @param hours 预报小时数 (1-48)
+     * @return 逐小时预报数据
+     */
+    @GetMapping("/hourly")
+    public Result<HourlyForecastData> getHourlyForecast(
+            @RequestParam Double lat,
+            @RequestParam Double lon,
+            @RequestParam(defaultValue = "24") Integer hours) {
+        try {
+            log.info("获取逐小时预报: lat={}, lon={}, hours={}", lat, lon, hours);
+            
+            // 限制预报小时数
+            hours = Math.min(Math.max(hours, 1), 48);
+            
+            String url = String.format(
+                "%s?latitude=%.4f&longitude=%.4f&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,precipitation,rain,showers,snowfall,cloud_cover&timezone=auto&forecast_days=2",
+                OPEN_METEO_API, lat, lon
+            );
+            
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            
+            if (response == null || !response.containsKey("hourly")) {
+                return Result.error("获取逐小时预报失败");
+            }
+            
+            HourlyForecastData hourlyData = parseHourlyForecastData(response, hours);
+            return Result.success(hourlyData);
+            
+        } catch (Exception e) {
+            log.error("获取逐小时预报失败", e);
+            return Result.error("获取逐小时预报失败: " + e.getMessage());
+        }
+    }
+    
+    /**
      * 搜索城市
      * GET /api/weather/cities?keyword={keyword}
      * 
@@ -276,6 +316,65 @@ public class WeatherController {
         }
         
         ForecastData data = new ForecastData();
+        data.setForecasts(forecasts);
+        return data;
+    }
+    
+    /**
+     * 解析逐小时预报数据
+     */
+    private HourlyForecastData parseHourlyForecastData(Map<String, Object> response, int limit) {
+        Map<String, Object> hourly = (Map<String, Object>) response.get("hourly");
+        
+        var times = (java.util.List<String>) hourly.get("time");
+        var temperatures = (java.util.List<Number>) hourly.get("temperature_2m");
+        var weatherCodes = (java.util.List<Number>) hourly.get("weather_code");
+        var precipitationProbs = (java.util.List<Number>) hourly.get("precipitation_probability");
+        var precipitations = (java.util.List<Number>) hourly.get("precipitation");
+        var rains = (java.util.List<Number>) hourly.get("rain");
+        var showers = (java.util.List<Number>) hourly.get("showers");
+        
+        java.util.List<HourlyForecast> forecasts = new java.util.ArrayList<>();
+        
+        int count = Math.min(times.size(), limit);
+        
+        for (int i = 0; i < count; i++) {
+            HourlyForecast forecast = new HourlyForecast();
+            
+            // 解析时间，格式为 YYYY-MM-DDTHH:MM
+            String timeStr = times.get(i);
+            forecast.setTime(timeStr);
+            forecast.setHour(timeStr.substring(11, 16)); // 提取 HH:MM
+            
+            forecast.setTemperature(temperatures.get(i).doubleValue());
+            
+            int code = weatherCodes.get(i).intValue();
+            forecast.setWeatherCode(code);
+            forecast.setDescription(getWeatherDescription(code));
+            forecast.setIcon(getWeatherIcon(code, true));
+            
+            if (precipitationProbs != null && i < precipitationProbs.size()) {
+                forecast.setPrecipitationProbability(precipitationProbs.get(i).intValue());
+            }
+            
+            // 判断是否有降雨
+            double rainAmount = 0;
+            if (precipitations != null && i < precipitations.size()) {
+                rainAmount = precipitations.get(i).doubleValue();
+            }
+            if (rains != null && i < rains.size()) {
+                rainAmount = Math.max(rainAmount, rains.get(i).doubleValue());
+            }
+            if (showers != null && i < showers.size()) {
+                rainAmount = Math.max(rainAmount, showers.get(i).doubleValue());
+            }
+            forecast.setPrecipitation(rainAmount);
+            forecast.setHasRain(rainAmount > 0 || (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95);
+            
+            forecasts.add(forecast);
+        }
+        
+        HourlyForecastData data = new HourlyForecastData();
         data.setForecasts(forecasts);
         return data;
     }
@@ -398,5 +497,23 @@ public class WeatherController {
         private String admin1;
         private Double latitude;
         private Double longitude;
+    }
+    
+    @Data
+    public static class HourlyForecastData {
+        private java.util.List<HourlyForecast> forecasts;
+    }
+    
+    @Data
+    public static class HourlyForecast {
+        private String time;          // 完整时间字符串 YYYY-MM-DDTHH:MM
+        private String hour;          // 小时 HH:MM
+        private Double temperature;   // 温度
+        private Integer weatherCode;  // 天气代码
+        private String description;   // 天气描述
+        private String icon;          // 天气图标
+        private Integer precipitationProbability; // 降水概率
+        private Double precipitation; // 降水量
+        private Boolean hasRain;      // 是否有雨
     }
 }

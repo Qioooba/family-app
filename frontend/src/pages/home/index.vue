@@ -75,20 +75,30 @@
     
     <!-- 今日概览卡片 -->
     <view class="overview-cards animate-in">
-      <!-- 天气卡片 -->
+      <!-- 天气卡片 - 优化版 -->
       <view class="overview-card weather-card" @click="handleWeatherClick">
-        <view class="card-header">
-          <view class="card-icon-wrapper weather-icon">
-            <text class="card-icon">{{ weatherData.icon }}</text>
+        <view class="weather-card-content">
+          <!-- 第一行：图标 + 位置 -->
+          <view class="weather-row location-row">
+            <view class="weather-icon-wrapper" :style="{ background: weatherData.iconBg }">
+              <text class="weather-icon">{{ weatherData.icon }}</text>
+            </view>
+            <text class="location-name">{{ weatherData.locationName }}</text>
           </view>
-          <text class="card-title">天气</text>
+          
+          <!-- 第二行：温度 + 天气描述 -->
+          <view class="weather-row temp-row">
+            <text class="temp-value">{{ weatherData.temperature === '--' ? '--' : weatherData.temperature + '°' }}</text>
+            <text class="weather-desc">{{ weatherData.description }}</text>
+          </view>
+          
+          <!-- 第三行：当前位置提示 -->
+          <view class="weather-row hint-row">
+            <text v-if="!weatherData.isLocationAuthorized" class="location-hint">点击开启定位</text>
+            <text v-else-if="weatherData.loading" class="location-hint">获取位置中...</text>
+            <text v-else class="location-hint">当前位置</text>
+          </view>
         </view>
-        <view class="weather-info">
-          <text class="temp-value">{{ weatherData.temperature === '--' ? '--' : weatherData.temperature + '°' }}</text>
-          <text class="weather-desc">{{ weatherData.description }}</text>
-        </view>
-        <text class="city-name">{{ weatherData.city }}</text>
-        <text v-if="!weatherData.isLocationAuthorized" class="location-tip">点击开启定位</text>
       </view>
       
       <!-- 喝水卡片 -->
@@ -219,7 +229,7 @@
     </view>
     
     <!-- 任务弹窗组件 -->
-    <TaskModal ref="taskModalRef" @success="onTaskSaved" />
+    <TaskModal ref="taskModalRef" :members="familyMembers" @success="onTaskSaved" />
   </view>
 </template>
 
@@ -232,6 +242,8 @@ import { familyApi } from '../../api/family'
 import { anniversaryApi } from '../../api/anniversary'
 import { weatherApi } from '../../api/weather'
 import { waterApi } from '../../api/water'
+import { getCurrentLocationWithAddress, getWeatherByCode, getShortLocationName } from '../../utils/weather'
+import { formatDateTime } from '../../utils/dateHelper'
 import LazyImage from '@/components/common/LazyImage.vue'
 import TaskModal from '@/components/TaskModal.vue'
 
@@ -240,8 +252,22 @@ const taskModalRef = ref(null)
 
 // ========== 任务弹窗操作 ==========
 const goAddTask = () => {
-  // 直接打开弹窗，不跳转页面
-  taskModalRef.value?.open()
+  console.log('点击添加按钮', taskModalRef.value)
+  // 添加延迟确保组件已挂载
+  setTimeout(async () => {
+    if (!taskModalRef.value) {
+      console.error('TaskModal 组件未加载')
+      uni.showToast({ title: '组件未加载，请重试', icon: 'none' })
+      return
+    }
+    console.log('准备打开弹窗')
+    try {
+      await taskModalRef.value.open()
+      console.log('弹窗打开成功')
+    } catch (err) {
+      console.error('弹窗打开失败:', err)
+    }
+  }, 100)
 }
 
 const onTaskSaved = () => {
@@ -257,11 +283,7 @@ const getMemberName = (userId) => {
 
 // 格式化任务时间
 const formatTaskTime = (dueTime) => {
-  if (!dueTime) return ''
-  const date = new Date(dueTime)
-  const hours = date.getHours().toString().padStart(2, '0')
-  const minutes = date.getMinutes().toString().padStart(2, '0')
-  return `${hours}:${minutes}`
+  return formatDateTime(dueTime, 'time')
 }
 
 // 加载今日待办数据
@@ -372,82 +394,167 @@ const loadWaterData = async () => {
   }
 }
 
-// 天气数据
+// 天气数据 - 优化版
 const weatherData = ref({
-  city: '',
-  temperature: 0,
+  locationName: '定位中...', // 简短位置名（区/街道）
+  fullLocation: '',          // 完整位置信息
+  temperature: '--',
   description: '加载中...',
   icon: '📍',
+  iconBg: 'linear-gradient(135deg, #FFD93D 0%, #F6AD55 100%)', // 默认背景
+  weatherCode: 0,
   tempMin: 0,
   tempMax: 0,
   humidity: 0,
   isLoaded: false,
-  isLocationAuthorized: true // 位置授权状态
+  isLocationAuthorized: true,
+  loading: false
 })
+
+// 获取天气图标背景色
+const getWeatherIconBg = (weatherCode) => {
+  const code = Number(weatherCode)
+  // 晴天 - 暖黄色
+  if (code === 0) return 'linear-gradient(135deg, #FFD93D 0%, #FF9F43 100%)'
+  // 多云 - 橙色
+  if (code === 1) return 'linear-gradient(135deg, #FFA726 0%, #FF7043 100%)'
+  // 阴天 - 灰色
+  if (code === 2 || code === 3) return 'linear-gradient(135deg, #90A4AE 0%, #607D8B 100%)'
+  // 雾 - 浅灰
+  if (code === 45 || code === 48) return 'linear-gradient(135deg, #B0BEC5 0%, #78909C 100%)'
+  // 毛毛雨 - 浅蓝
+  if (code >= 51 && code <= 55) return 'linear-gradient(135deg, #64B5F6 0%, #42A5F5 100%)'
+  // 雨 - 蓝色
+  if (code >= 61 && code <= 67) return 'linear-gradient(135deg, #42A5F5 0%, #2196F3 100%)'
+  // 雪 - 淡蓝
+  if (code >= 71 && code <= 77) return 'linear-gradient(135deg, #81D4FA 0%, #4FC3F7 100%)'
+  // 阵雨 - 蓝紫
+  if (code >= 80 && code <= 82) return 'linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%)'
+  // 阵雪 - 冰蓝
+  if (code >= 85 && code <= 86) return 'linear-gradient(135deg, #B3E5FC 0%, #81D4FA 100%)'
+  // 雷雨 - 深紫
+  if (code >= 95) return 'linear-gradient(135deg, #7E57C2 0%, #5E35B1 100%)'
+  // 默认
+  return 'linear-gradient(135deg, #FFD93D 0%, #F6AD55 100%)'
+}
 
 // 获取位置和加载天气
 const loadWeatherData = async () => {
   try {
+    weatherData.value.loading = true
+    
     // 先检查位置授权状态
-    const locationAuth = await checkLocationAuth()
+    let locationAuth = { authorized: false }
+    try {
+      locationAuth = await checkLocationAuth()
+    } catch (e) {
+      console.log('检查位置授权失败:', e)
+    }
     
     if (!locationAuth.authorized) {
       // 未授权，显示提示
       weatherData.value = {
-        city: '定位未开启',
+        locationName: '定位未开启',
+        fullLocation: '',
         temperature: '--',
         description: '点击开启定位',
         icon: '📍',
+        iconBg: 'linear-gradient(135deg, #BDBDBD 0%, #9E9E9E 100%)',
         tempMin: 0,
         tempMax: 0,
         humidity: 0,
         isLoaded: true,
-        isLocationAuthorized: false
+        isLocationAuthorized: false,
+        loading: false
       }
       return
     }
     
-    // 获取位置
-    const location = await getUserLocation()
+    // 获取位置（带详细地址）
+    let location = null
+    try {
+      location = await getCurrentLocationWithAddress()
+    } catch (e) {
+      console.log('获取位置失败:', e)
+    }
     
-    if (!location) {
-      // 获取位置失败
+    // 如果位置获取失败，使用默认位置（北京）
+    if (!location || !location.latitude) {
+      location = {
+        latitude: 39.9042,
+        longitude: 116.4074,
+        locationInfo: { city: '北京市', district: '朝阳区', street: '' }
+      }
+    }
+    
+    // 获取简短位置名称
+    const shortLocationName = getShortLocationName(location.locationInfo)
+    weatherData.value.fullLocation = location.locationInfo?.fullAddress || shortLocationName
+    weatherData.value.locationName = shortLocationName
+    
+    // 调用 Open-Meteo API 获取天气
+    let weatherJson = null
+    try {
+      const weatherRes = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`
+      )
+      weatherJson = await weatherRes.json()
+    } catch (e) {
+      console.log('获取天气API失败:', e)
+    }
+    
+    if (weatherJson && weatherJson.current_weather) {
+      const current = weatherJson.current_weather
+      const weatherInfo = getWeatherByCode(current.weathercode)
+      
       weatherData.value = {
-        city: '定位失败',
+        locationName: shortLocationName,
+        fullLocation: location.locationInfo?.fullAddress || shortLocationName,
+        temperature: Math.round(current.temperature),
+        description: weatherInfo.desc,
+        icon: weatherInfo.icon,
+        iconBg: getWeatherIconBg(current.weathercode),
+        weatherCode: current.weathercode,
+        tempMin: Math.round(current.temperature - 3),
+        tempMax: Math.round(current.temperature + 3),
+        humidity: 0,
+        isLoaded: true,
+        isLocationAuthorized: true,
+        loading: false
+      }
+    } else {
+      // API 返回数据异常，显示默认天气
+      weatherData.value = {
+        locationName: shortLocationName || '当前位置',
+        fullLocation: '',
         temperature: '--',
-        description: '点击重试',
-        icon: '📍',
+        description: '暂无数据',
+        icon: '☁️',
+        iconBg: 'linear-gradient(135deg, #90A4AE 0%, #607D8B 100%)',
         tempMin: 0,
         tempMax: 0,
         humidity: 0,
         isLoaded: true,
-        isLocationAuthorized: true
-      }
-      return
-    }
-    
-    // 调用天气API
-    const res = await weatherApi.getCurrentByLocation(location.lat, location.lon)
-    if (res) {
-      weatherData.value = {
-        city: res.city || '当前位置',
-        temperature: Math.round(res.temperature),
-        description: res.description,
-        icon: res.icon,
-        tempMin: Math.round(res.temperature - 3),
-        tempMax: Math.round(res.temperature + 3),
-        humidity: res.humidity,
-        isLoaded: true,
-        isLocationAuthorized: true
+        isLocationAuthorized: true,
+        loading: false
       }
     }
   } catch (error) {
     console.error('加载天气失败:', error)
+    // 使用默认天气数据，而不是显示失败
     weatherData.value = {
-      ...weatherData.value,
-      city: '加载失败',
-      description: '点击重试',
-      isLoaded: true
+      locationName: '当前位置',
+      fullLocation: '',
+      temperature: '--',
+      description: '点击刷新',
+      icon: '☁️',
+      iconBg: 'linear-gradient(135deg, #90A4AE 0%, #607D8B 100%)',
+      tempMin: 0,
+      tempMax: 0,
+      humidity: 0,
+      isLoaded: true,
+      isLocationAuthorized: true,
+      loading: false
     }
   }
 }
@@ -994,6 +1101,82 @@ const getAnniversaryIcon = (type) => {
     .water-target {
       font-size: 22rpx;
       color: #8b9aad;
+    }
+    
+    // 天气卡片样式 - 优化版
+    &.weather-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      padding: 24rpx 20rpx;
+      min-height: 200rpx;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      
+      .weather-card-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12rpx;
+      }
+      
+      // 第一行：图标 + 位置
+      .location-row {
+        display: flex;
+        align-items: center;
+        gap: 12rpx;
+        
+        .weather-icon-wrapper {
+          width: 52rpx;
+          height: 52rpx;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+          
+          .weather-icon {
+            font-size: 32rpx;
+          }
+        }
+        
+        .location-name {
+          font-size: 28rpx;
+          font-weight: 600;
+          color: #2d3748;
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+      
+      // 第二行：温度 + 天气描述
+      .temp-row {
+        display: flex;
+        align-items: baseline;
+        gap: 16rpx;
+        
+        .temp-value {
+          font-size: 48rpx;
+          font-weight: 700;
+          color: #2d3748;
+          line-height: 1;
+        }
+        
+        .weather-desc {
+          font-size: 26rpx;
+          color: #5a6c7d;
+          font-weight: 500;
+        }
+      }
+      
+      // 第三行：提示
+      .hint-row {
+        .location-hint {
+          font-size: 22rpx;
+          color: #8b9aad;
+        }
+      }
     }
     
     .weather-info {

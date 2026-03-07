@@ -262,6 +262,95 @@
           }
         }
       ]
+    },
+    {
+      "root": "pages/game",
+      "pages": [
+        {
+          "path": "index/index",
+          "style": {
+            "navigationBarTitleText": "游戏大厅",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "riddle/index",
+          "style": {
+            "navigationBarTitleText": "猜谜语",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "quiz/index",
+          "style": {
+            "navigationBarTitleText": "问答竞赛",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "idiom/index",
+          "style": {
+            "navigationBarTitleText": "成语接龙",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "truth-dare/index",
+          "style": {
+            "navigationBarTitleText": "真心话大冒险",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "undercover/index",
+          "style": {
+            "navigationBarTitleText": "谁是卧底",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "draw-guess/index",
+          "style": {
+            "navigationBarTitleText": "你画我猜",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "karaoke/index",
+          "style": {
+            "navigationBarTitleText": "家庭K歌",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "sports/index",
+          "style": {
+            "navigationBarTitleText": "家庭运动会",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "cooking/index",
+          "style": {
+            "navigationBarTitleText": "厨艺比拼",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "treasure/index",
+          "style": {
+            "navigationBarTitleText": "家庭寻宝",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "config/index",
+          "style": {
+            "navigationBarTitleText": "游戏设置",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
     }
   ],
   "globalStyle": {

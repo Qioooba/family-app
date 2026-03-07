@@ -1,161 +1,147 @@
 <template>
-  <view>
-    <!-- 统一任务弹窗 - 中间弹出式 -->
-    <u-popup
-      v-model="visible"
-      mode="center"
-      border-radius="20"
-      width="85%"
-      :closeable="true"
-      @close="close"
-    >
-      <view class="task-modal-content">
-        <!-- 标题 -->
-        <view class="modal-header">
-          <text class="modal-title">{{ isEdit ? '编辑待办' : '添加待办' }}</text>
-        </view>
-        
-        <!-- 表单内容 -->
-        <view class="modal-body">
-          <!-- 任务标题 -->
-          <view class="form-item">
-            <text class="form-label">任务标题</text>
-            <input 
-              class="form-input" 
-              v-model="form.title" 
-              placeholder="请输入待办事项"
-            />
-          </view>
-          
-          <!-- 备注 -->
-          <view class="form-item">
-            <text class="form-label">备注</text>
-            <textarea 
-              class="form-textarea" 
-              v-model="form.remark" 
-              placeholder="添加备注说明..."
-              :auto-height="true"
-            />
-          </view>
-          
-          <!-- 截止时间 -->
-          <view class="form-item">
-            <text class="form-label">截止时间</text>
-            <view class="form-picker" @click="showDatePicker = true">
-              <text class="picker-text">{{ form.dueTime || '请选择时间' }}</text>
-              <text class="picker-arrow">›</text>
-            </view>
-          </view>
-          
-          <!-- 指派给 -->
-          <view class="form-item">
-            <text class="form-label">指派给</text>
-            <view class="form-picker" @click="showMemberPicker = true">
-              <text class="picker-text">{{ getMemberName(form.assigneeId) || '点击选择' }}</text>
-              <text class="picker-arrow">›</text>
-            </view>
-          </view>
-        </view>
-        
-        <!-- 底部按钮 -->
-        <view class="modal-footer">
-          <button class="btn-cancel" @click="close">取消</button>
-          <button class="btn-confirm" @click="save">{{ isEdit ? '保存' : '创建' }}</button>
+  <view class="task-modal-wrapper">
+    <!-- 遮罩层 -->
+    <view class="modal-mask" v-if="visible" @click="close"></view>
+    
+    <!-- 弹窗内容 -->
+    <view class="modal-container" v-if="visible" :class="{ 'show': visible }">
+      <!-- 头部 -->
+      <view class="modal-header">
+        <text class="modal-title">{{ isEdit ? '编辑待办' : '添加待办' }}</text>
+        <view class="close-btn" @click="close">
+          <text class="close-icon">×</text>
         </view>
       </view>
-    </u-popup>
-    
-    <!-- 日期时间选择器弹窗 -->
-    <u-popup
-      v-model="showDatePicker"
-      mode="bottom"
-      border-radius="20"
-      height="50%"
-      :closeable="true"
-    >
-      <view class="picker-content">
-        <view class="picker-header">
-          <text class="picker-title">选择时间</text>
+      
+      <!-- 表单内容 -->
+      <scroll-view class="modal-body" scroll-y>
+        <!-- 任务标题 -->
+        <view class="form-group">
+          <text class="form-label">任务标题 <text class="required">*</text></text>
+          <input 
+            class="form-input" 
+            v-model="form.title" 
+            placeholder="请输入待办事项标题"
+            maxlength="50"
+          />
         </view>
-        <picker-view class="picker-view" :value="pickerValue" @change="onPickerChange">
+        
+        <!-- 备注 -->
+        <view class="form-group">
+          <text class="form-label">备注</text>
+          <textarea 
+            class="form-textarea" 
+            v-model="form.remark" 
+            placeholder="添加备注说明..."
+            maxlength="200"
+            auto-height
+          />
+        </view>
+        
+        <!-- 截止时间 -->
+        <view class="form-group" @click="showDateTimePicker">
+          <text class="form-label">截止时间</text>
+          <view class="form-picker">
+            <text class="picker-value" :class="{ 'placeholder': !form.dueTime }">
+              {{ form.dueTime ? formatDisplayDateTime(form.dueTime) : '请选择截止时间' }}
+            </text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </view>
+        
+        <!-- 指派给 -->
+        <view class="form-group" @click="showMemberPicker">
+          <text class="form-label">指派给</text>
+          <view class="form-picker">
+            <text class="picker-value" :class="{ 'placeholder': !form.assigneeId }">
+              {{ getAssigneeName() }}
+            </text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </view>
+      </scroll-view>
+      
+      <!-- 底部按钮 -->
+      <view class="modal-footer">
+        <view class="btn btn-cancel" @click="close">取消</view>
+        <view class="btn btn-submit" :class="{ 'disabled': !form.title.trim() }" @click="save">
+          {{ isEdit ? '保存' : '创建' }}
+        </view>
+      </view>
+      
+      <!-- 时间选择器弹窗 -->
+      <view class="picker-popup" v-if="showDatePicker" @click.stop>
+        <view class="picker-header">
+          <text class="picker-cancel" @click="showDatePicker = false">取消</text>
+          <text class="picker-title">选择时间</text>
+          <text class="picker-confirm" @click="confirmDateTime">确定</text>
+        </view>
+        <picker-view class="picker-view" :value="dateValue" @change="onDateChange">
           <picker-view-column>
-            <view v-for="year in yearRange" :key="year" class="picker-item">{{ year }}年</view>
+            <view class="picker-item" v-for="year in years" :key="year">{{ year }}年</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="month in 12" :key="'m'+month" class="picker-item">{{ month }}月</view>
+            <view class="picker-item" v-for="month in 12" :key="month">{{ month }}月</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="day in daysInMonth" :key="'d'+day" class="picker-item">{{ day }}日</view>
+            <view class="picker-item" v-for="day in daysInMonth" :key="day">{{ day }}日</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="hour in 24" :key="'h'+hour" class="picker-item">{{ String(hour-1).padStart(2, '0') }}时</view>
+            <view class="picker-item" v-for="hour in 24" :key="hour">{{ hour }}时</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="minute in 60" :key="'min'+minute" class="picker-item">{{ String(minute-1).padStart(2, '0') }}分</view>
+            <view class="picker-item" v-for="minute in 60" :key="minute">{{ minute }}分</view>
           </picker-view-column>
         </picker-view>
-        <view class="picker-actions">
-          <button class="btn-cancel" @click="showDatePicker = false">取消</button>
-          <button class="btn-confirm" @click="confirmDatePicker">确定</button>
-        </view>
       </view>
-    </u-popup>
-    
-    <!-- 成员选择弹窗 -->
-    <u-popup
-      v-model="showMemberPicker"
-      mode="bottom"
-      border-radius="20"
-      height="50%"
-      :closeable="true"
-    >
-      <view class="picker-content">
+      
+      <!-- 人员选择器弹窗 -->
+      <view class="picker-popup member-popup" v-if="showMemberPickerFlag" @click.stop>
         <view class="picker-header">
-          <text class="picker-title">选择家庭成员</text>
+          <text class="picker-cancel" @click="showMemberPickerFlag = false">取消</text>
+          <text class="picker-title">选择指派人员</text>
+          <text class="picker-confirm" @click="showMemberPickerFlag = false">确定</text>
         </view>
         <scroll-view class="member-list" scroll-y>
           <view 
-            v-for="member in familyMembers" 
+            class="member-item" 
+            v-for="member in members" 
             :key="member.userId"
-            class="member-item"
             :class="{ active: form.assigneeId === member.userId }"
-            @click="selectMember(member.userId)"
+            @click="selectMember(member)"
           >
-            <image 
-              class="member-avatar" 
-              :src="member.avatar || '/static/avatar-default.png'" 
-              mode="aspectFill" 
-            />
+            <image class="member-avatar" :src="member.avatar || '/static/avatar-default.png'" />
             <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
-            <text v-if="form.assigneeId === member.userId" class="member-check">✓</text>
+            <view class="member-check" v-if="form.assigneeId === member.userId">✓</view>
           </view>
         </scroll-view>
       </view>
-    </u-popup>
+    </view>
   </view>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { taskApi, familyApi } from '../api/index.js'
+import { ref, computed, watch } from 'vue'
+import { taskApi } from '@/api/task.js'
+import { formatDateTime, extractDateTime } from '@/utils/dateHelper.js'
 
-// Props
+// 接收props
 const props = defineProps({
-  // 可以传入家庭成员列表，如果不传则组件自己加载
   members: {
     type: Array,
     default: () => []
   }
 })
 
-// Emits
+// 发送事件
 const emit = defineEmits(['success', 'close'])
 
-// ========== 状态 ==========
+// 响应式状态
 const visible = ref(false)
 const isEdit = ref(false)
 const currentTaskId = ref(null)
-const familyMembers = ref([])
+const showDatePicker = ref(false)
+const showMemberPickerFlag = ref(false)
 
 // 表单数据
 const form = ref({
@@ -165,23 +151,20 @@ const form = ref({
   assigneeId: null
 })
 
-// 选择器状态
-const showDatePicker = ref(false)
-const showMemberPicker = ref(false)
-const yearRange = ref([2024, 2025, 2026, 2027, 2028])
-const pickerValue = ref([1, new Date().getMonth(), new Date().getDate() - 1, 15, 0])
+// 日期选择器数据
+const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i)
+const dateValue = ref([0, new Date().getMonth(), new Date().getDate() - 1, new Date().getHours(), new Date().getMinutes()])
 
-// 计算当月天数
+// 计算属性：当前月份的天数
 const daysInMonth = computed(() => {
-  const year = yearRange.value[pickerValue.value[0]]
-  const month = pickerValue.value[1] + 1
+  const year = years[dateValue.value[0]]
+  const month = dateValue.value[1] + 1
   return new Date(year, month, 0).getDate()
 })
 
-// ========== 方法 ==========
-
 // 打开弹窗 - 创建模式
 const open = () => {
+  console.log('TaskModal open called')
   isEdit.value = false
   currentTaskId.value = null
   
@@ -201,43 +184,92 @@ const open = () => {
   }
   
   visible.value = true
-  // 确保家庭成员已加载
-  ensureFamilyMembers()
+  console.log('弹窗已打开，visible:', visible.value)
 }
 
 // 打开弹窗 - 编辑模式
 const openEdit = (task) => {
+  console.log('TaskModal openEdit called', task)
   if (!task || !task.id) {
-    console.error('TaskModal.openEdit: task or task.id is required')
+    console.error('编辑任务时task或task.id为空')
     return
   }
   
   isEdit.value = true
   currentTaskId.value = task.id
+  
+  // 使用 extractDateTime 处理数组格式或字符串格式的日期
+  const { date, time } = extractDateTime(task.dueTime)
+  const dueTimeStr = date && time ? `${date} ${time}:00` : ''
+  
   form.value = {
     title: task.title || '',
     remark: task.remark || '',
-    dueTime: formatTime(task.dueTime) || '',
+    dueTime: dueTimeStr,
     assigneeId: task.assigneeId || null
   }
   
   visible.value = true
-  // 确保家庭成员已加载
-  ensureFamilyMembers()
 }
 
 // 关闭弹窗
 const close = () => {
   visible.value = false
-  isEdit.value = false
-  currentTaskId.value = null
-  form.value = {
-    title: '',
-    remark: '',
-    dueTime: '',
-    assigneeId: null
-  }
+  showDatePicker.value = false
+  showMemberPickerFlag.value = false
   emit('close')
+}
+
+// 显示时间选择器
+const showDateTimePicker = () => {
+  console.log('显示时间选择器')
+  showDatePicker.value = true
+}
+
+// 日期选择变化
+const onDateChange = (e) => {
+  dateValue.value = e.detail.value
+}
+
+// 确认时间选择
+const confirmDateTime = () => {
+  const year = years[dateValue.value[0]]
+  const month = String(dateValue.value[1] + 1).padStart(2, '0')
+  const day = String(dateValue.value[2] + 1).padStart(2, '0')
+  const hour = String(dateValue.value[3]).padStart(2, '0')
+  const minute = String(dateValue.value[4]).padStart(2, '0')
+  
+  // 使用空格格式: yyyy-MM-dd HH:mm:ss (后端期望的格式)
+  form.value.dueTime = `${year}-${month}-${day} ${hour}:${minute}:00`
+  showDatePicker.value = false
+}
+
+// 显示人员选择器
+const showMemberPicker = () => {
+  console.log('显示人员选择器，成员列表:', props.members)
+  if (!props.members || props.members.length === 0) {
+    uni.showToast({ title: '暂无家庭成员', icon: 'none' })
+    return
+  }
+  showMemberPickerFlag.value = true
+}
+
+// 选择成员
+const selectMember = (member) => {
+  form.value.assigneeId = member.userId
+}
+
+// 获取指派人名称
+const getAssigneeName = () => {
+  if (!form.value.assigneeId) return '请选择指派人员'
+  const member = props.members.find(m => m.userId === form.value.assigneeId)
+  return member ? (member.nickname || member.name || '家人') : '未知'
+}
+
+// 格式化日期时间显示
+const formatDisplayDateTime = (dateTimeStr) => {
+  if (!dateTimeStr) return ''
+  return formatDateTime(dateTimeStr, 'datetime')
 }
 
 // 保存任务
@@ -246,122 +278,66 @@ const save = async () => {
     uni.showToast({ title: '请输入任务标题', icon: 'none' })
     return
   }
-
+  
+  // 验证日期格式
+  if (form.value.dueTime) {
+    const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
+    if (!dateRegex.test(form.value.dueTime)) {
+      console.error('日期格式不正确:', form.value.dueTime)
+      uni.showToast({ title: '日期格式错误', icon: 'none' })
+      return
+    }
+  }
+  
   try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
     const userInfo = uni.getStorageSync('userInfo') || {}
-    const currentUserId = userInfo.id || userInfo.userId
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const userId = userInfo.id || userInfo.userId
     
-    // 处理截止时间格式
-    let dueTime = form.value.dueTime
-    if (dueTime) {
-      dueTime = dueTime.replace(' ', 'T')
-      if (!dueTime.endsWith(':00')) {
-        dueTime += ':00'
-      }
+    if (!userId) {
+      uni.showToast({ title: '请先登录', icon: 'none' })
+      return
     }
     
-    // 处理 assigneeId，未选择时默认给自己
-    let assigneeId = form.value.assigneeId
-    if (!assigneeId) {
-      assigneeId = currentUserId
-    }
-
+    // 准备请求数据
     const data = {
       title: form.value.title.trim(),
       remark: form.value.remark.trim(),
-      familyId: familyId,
-      dueTime: dueTime,
-      assigneeId: assigneeId,
+      familyId: Number(familyId),
+      dueTime: form.value.dueTime,
+      assigneeId: Number(form.value.assigneeId || userId),
       status: 0,
       priority: 0
     }
-
+    
+    console.log('保存任务数据:', JSON.stringify(data))
+    
+    // 调用API
     if (isEdit.value && currentTaskId.value) {
-      // 更新任务
       data.id = currentTaskId.value
-      await taskApi.update(data)
+      const res = await taskApi.update(data)
+      console.log('更新成功:', res)
       uni.showToast({ title: '更新成功', icon: 'success' })
     } else {
-      // 创建任务
-      data.creatorId = currentUserId
-      await taskApi.create(data)
-      uni.showToast({ title: '添加成功', icon: 'success' })
+      data.creatorId = Number(userId)
+      const res = await taskApi.create(data)
+      console.log('创建成功:', res)
+      uni.showToast({ title: '创建成功', icon: 'success' })
     }
     
     close()
     emit('success')
-  } catch (e) {
-    console.error('保存任务失败', e)
-    uni.showToast({ title: '保存失败: ' + (e.message || ''), icon: 'none', duration: 3000 })
+  } catch (error) {
+    console.error('保存任务失败:', error)
+    let msg = '保存失败'
+    if (error.message) {
+      msg += ': ' + error.message
+    }
+    uni.showToast({ title: msg, icon: 'none', duration: 3000 })
   }
 }
 
-// 确保家庭成员已加载
-const ensureFamilyMembers = async () => {
-  if (props.members && props.members.length > 0) {
-    familyMembers.value = props.members
-    return
-  }
-  
-  if (familyMembers.value.length === 0) {
-    await loadFamilyMembers()
-  }
-}
-
-// 加载家庭成员
-const loadFamilyMembers = async () => {
-  try {
-    const familyId = uni.getStorageSync('currentFamilyId') || 1
-    const members = await familyApi.getMembers(familyId)
-    familyMembers.value = members || []
-  } catch (e) {
-    console.error('加载家庭成员失败', e)
-    familyMembers.value = []
-  }
-}
-
-// 获取成员名称
-const getMemberName = (userId) => {
-  if (!userId) return ''
-  const member = familyMembers.value.find(m => m.userId === userId)
-  return member?.nickname || member?.name || '家人'
-}
-
-// 日期选择器变化
-const onPickerChange = (e) => {
-  pickerValue.value = e.detail.value
-}
-
-// 确认日期选择
-const confirmDatePicker = () => {
-  const year = yearRange.value[pickerValue.value[0]]
-  const month = String(pickerValue.value[1] + 1).padStart(2, '0')
-  const day = String(pickerValue.value[2] + 1).padStart(2, '0')
-  const hour = String(pickerValue.value[3]).padStart(2, '0')
-  const minute = String(pickerValue.value[4]).padStart(2, '0')
-  
-  form.value.dueTime = `${year}-${month}-${day} ${hour}:${minute}:00`
-  showDatePicker.value = false
-}
-
-// 选择成员
-const selectMember = (userId) => {
-  form.value.assigneeId = userId
-  showMemberPicker.value = false
-}
-
-// 格式化时间
-const formatTime = (timeValue) => {
-  if (!timeValue) return ''
-  if (Array.isArray(timeValue)) {
-    const [year, month, day, hour, minute] = timeValue
-    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`
-  }
-  return timeValue
-}
-
-// 暴露方法给父组件
+// 暴露方法
 defineExpose({
   open,
   openEdit,
@@ -370,216 +346,289 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-.task-modal-content {
-  padding: 24px;
+.task-modal-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.modal-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 85%;
+  max-width: 600rpx;
   background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  pointer-events: auto;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.modal-container.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .modal-header {
-  text-align: center;
-  margin-bottom: 24px;
-  
-  .modal-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #2D5A3D;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx 32rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.close-btn {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f5f5f5;
+}
+
+.close-icon {
+  font-size: 40rpx;
+  color: #999;
+  line-height: 1;
 }
 
 .modal-body {
-  .form-item {
-    margin-bottom: 20px;
-    
-    .form-label {
-      display: block;
-      font-size: 14px;
-      color: #5A7A5A;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-    
-    .form-input {
-      width: 100%;
-      height: 48px;
-      background: #F8FBF8;
-      border-radius: 12px;
-      padding: 0 16px;
-      font-size: 16px;
-      color: #3D5A4D;
-      border: 1px solid #E8F5E9;
-      box-sizing: border-box;
-      
-      &:focus {
-        border-color: #81C784;
-      }
-    }
-    
-    .form-textarea {
-      width: 100%;
-      min-height: 80px;
-      background: #F8FBF8;
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 15px;
-      color: #3D5A4D;
-      border: 1px solid #E8F5E9;
-      box-sizing: border-box;
-      
-      &:focus {
-        border-color: #81C784;
-      }
-    }
-    
-    .form-picker {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 48px;
-      background: #F8FBF8;
-      border-radius: 12px;
-      padding: 0 16px;
-      border: 1px solid #E8F5E9;
-      
-      .picker-text {
-        font-size: 15px;
-        color: #3D5A4D;
-      }
-      
-      .picker-arrow {
-        font-size: 20px;
-        color: #8B9A8B;
-      }
-    }
-  }
+  max-height: 600rpx;
+  padding: 24rpx 32rpx;
+}
+
+.form-group {
+  margin-bottom: 32rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.required {
+  color: #ff4d4f;
+  margin-left: 4rpx;
+}
+
+.form-input {
+  width: 100%;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #bbb;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  padding: 20rpx 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.form-textarea::placeholder {
+  color: #bbb;
+}
+
+.form-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 88rpx;
+  padding: 0 24rpx;
+  background: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.picker-value {
+  font-size: 30rpx;
+  color: #333;
+}
+
+.picker-value.placeholder {
+  color: #bbb;
+}
+
+.picker-arrow {
+  font-size: 32rpx;
+  color: #999;
 }
 
 .modal-footer {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  
-  button {
-    flex: 1;
-    height: 44px;
-    border-radius: 22px;
-    font-size: 15px;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .btn-cancel {
-    background: #F5F7FA;
-    color: #7F8C8D;
-  }
-  
-  .btn-confirm {
-    background: linear-gradient(135deg, #81C784, #4CAF50);
-    color: #fff;
-  }
+  padding: 24rpx 32rpx 40rpx;
+  gap: 24rpx;
 }
 
-// ========== 选择器样式 ==========
-.picker-content {
-  height: 100%;
+.btn {
+  flex: 1;
+  height: 88rpx;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.btn-submit.disabled {
+  background: #ccc;
+  pointer-events: none;
+}
+
+// 选择器弹窗
+.picker-popup {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 .picker-header {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid #F0F5F0;
-  
-  .picker-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #2D5A3D;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.picker-cancel {
+  font-size: 30rpx;
+  color: #999;
+}
+
+.picker-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.picker-confirm {
+  font-size: 30rpx;
+  color: #667eea;
+  font-weight: 500;
 }
 
 .picker-view {
-  flex: 1;
-  height: 300px;
-  
-  .picker-item {
-    line-height: 48px;
-    text-align: center;
-    font-size: 16px;
-    color: #3D5A4D;
-  }
+  height: 400rpx;
 }
 
-.picker-actions {
+.picker-item {
   display: flex;
-  gap: 12px;
-  padding: 20px;
-  border-top: 1px solid #F0F5F0;
-  
-  button {
-    flex: 1;
-    height: 44px;
-    border-radius: 22px;
-    font-size: 15px;
-    border: none;
-  }
-  
-  .btn-cancel {
-    background: #F5F7FA;
-    color: #7F8C8D;
-  }
-  
-  .btn-confirm {
-    background: linear-gradient(135deg, #81C784, #4CAF50);
-    color: #fff;
-  }
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #333;
 }
 
-// 成员列表
+// 人员选择器
+.member-popup {
+  max-height: 60vh;
+}
+
 .member-list {
+  max-height: 400rpx;
+  padding: 0 32rpx;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.member-item.active {
+  background: #f0f4ff;
+  margin: 0 -32rpx;
+  padding: 24rpx 32rpx;
+}
+
+.member-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  margin-right: 24rpx;
+}
+
+.member-name {
   flex: 1;
-  padding: 10px 20px;
-  
-  .member-item {
-    display: flex;
-    align-items: center;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    background: #F8FBF8;
-    border-radius: 12px;
-    border: 2px solid transparent;
-    transition: all 0.2s ease;
-    
-    &.active {
-      border-color: #4CAF50;
-      background: #E8F5E9;
-    }
-    
-    &:active {
-      transform: scale(0.98);
-    }
-    
-    .member-avatar {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      margin-right: 14px;
-      background: linear-gradient(135deg, #81C784, #4CAF50);
-    }
-    
-    .member-name {
-      flex: 1;
-      font-size: 16px;
-      color: #3D5A4D;
-    }
-    
-    .member-check {
-      font-size: 18px;
-      color: #4CAF50;
-      font-weight: bold;
-    }
-  }
+  font-size: 30rpx;
+  color: #333;
+}
+
+.member-check {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #667eea;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 24rpx;
 }
 </style>

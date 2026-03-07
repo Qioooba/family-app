@@ -75,11 +75,11 @@
         <view class="detail-info">
           <view class="info-item">
             <text class="info-label">📅 截止日期</text>
-            <text class="info-value">{{ task.dueDate || '未设置' }}</text>
+            <text class="info-value">{{ formatDateDisplay(task.dueDate, task.dueTime) }}</text>
           </view>
           <view class="info-item">
             <text class="info-label">⏰ 截止时间</text>
-            <text class="info-value">{{ task.dueTime || '未设置' }}</text>
+            <text class="info-value">{{ formatTimeDisplay(task.dueTime) }}</text>
           </view>
           <view class="info-item">
             <text class="info-label">👤 负责人</text>
@@ -109,6 +109,8 @@
 </template>
 
 <script setup>
+import { formatDateTime } from '@/utils/dateHelper'
+
 const props = defineProps({
   visible: {
     type: Boolean,
@@ -148,6 +150,20 @@ const categories = [
 ]
 
 const priorityText = (p) => priorities[p] || '普通'
+
+// 格式化日期显示
+const formatDateDisplay = (dueDate, dueTime) => {
+  if (!dueDate && !dueTime) return '未设置'
+  if (dueTime) {
+    return formatDateTime(dueTime, 'date')
+  }
+  return dueDate || '未设置'
+}
+
+// 格式化时间显示
+const formatTimeDisplay = (dueTime) => {
+  return formatDateTime(dueTime, 'time') || '未设置'
+}
 
 const emit = defineEmits(['update:visible', 'update:formData', 'confirm', 'toggleTask', 'editTask', 'deleteTask'])
 

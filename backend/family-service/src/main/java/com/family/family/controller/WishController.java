@@ -34,17 +34,33 @@ public class WishController {
 
     /**
      * 获取心愿列表
+     * @param familyId 家庭ID
+     * @param status 状态筛选：0-待实现(待认领+进行中), 1-已实现
      */
     @GetMapping("/list")
-    public Map<String, Object> list(@RequestParam Long familyId) {
+    public Map<String, Object> list(@RequestParam Long familyId, 
+                                    @RequestParam(required = false) Integer status) {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            List<Wish> allWishes = wishMapper.selectList(
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Wish> wrapper = 
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Wish>()
-                    .eq(Wish::getFamilyId, familyId)
-                    .orderByDesc(Wish::getCreateTime)
-            );
+                    .eq(Wish::getFamilyId, familyId);
+            
+            // 根据状态筛选
+            if (status != null) {
+                if (status == 0) {
+                    // 待实现：待认领(0) 或 进行中(1)
+                    wrapper.in(Wish::getStatus, Arrays.asList(0, 1));
+                } else if (status == 1) {
+                    // 已实现：已完成(2)
+                    wrapper.eq(Wish::getStatus, 2);
+                }
+            }
+            
+            wrapper.orderByDesc(Wish::getCreateTime);
+            
+            List<Wish> allWishes = wishMapper.selectList(wrapper);
             
             List<Map<String, Object>> wishList = new ArrayList<>();
             for (Wish wish : allWishes) {

@@ -263,7 +263,227 @@ export const gameApi = {
    * @param {number} familyId - 家庭ID
    * @returns {Promise<object>} 默契值数据
    */
-  getMindMatchRate: (familyId) => request.get(`/api/game/mindmatch/match-rate/${familyId}`)
+  getMindMatchRate: (familyId) => request.get(`/api/game/mindmatch/match-rate/${familyId}`),
+  
+  // ========== 成语接龙 ==========
+  
+  /**
+   * 获取随机成语
+   * @returns {Promise<object>} 成语
+   */
+  getRandomIdiom: () => request.get('/api/game/idiom/random'),
+  
+  /**
+   * 验证成语接龙
+   * @param {string} prevIdiom - 上一个成语
+   * @param {string} currentIdiom - 当前成语
+   * @returns {Promise<boolean>} 是否有效
+   */
+  verifyIdiomChain: (prevIdiom, currentIdiom) => request.post('/api/game/idiom/verify', { prevIdiom, currentIdiom }),
+  
+  /**
+   * 获取成语提示
+   * @param {string} char - 首字
+   * @returns {Promise<Array>} 成语列表
+   */
+  getIdiomHints: (char) => request.get(`/api/game/idiom/hints?char=${char}`),
+  
+  // ========== 谁是卧底 ==========
+  
+  /**
+   * 创建游戏房间
+   * @param {object} data - 房间数据
+   * @returns {Promise<object>} 房间信息
+   */
+  createUndercoverRoom: (data) => request.post('/api/game/undercover/room', data),
+  
+  /**
+   * 加入游戏房间
+   * @param {string} roomCode - 房间代码
+   * @returns {Promise<object>} 房间信息
+   */
+  joinUndercoverRoom: (roomCode) => request.post(`/api/game/undercover/room/${roomCode}/join`),
+  
+  /**
+   * 获取房间信息
+   * @param {string} roomCode - 房间代码
+   * @returns {Promise<object>} 房间信息
+   */
+  getUndercoverRoom: (roomCode) => request.get(`/api/game/undercover/room/${roomCode}`),
+  
+  /**
+   * 投票
+   * @param {string} roomCode - 房间代码
+   * @param {number} targetId - 目标玩家ID
+   * @returns {Promise<void>}
+   */
+  voteUndercover: (roomCode, targetId) => request.post(`/api/game/undercover/room/${roomCode}/vote`, { targetId }),
+  
+  /**
+   * 获取随机词语
+   * @param {string} category - 分类
+   * @returns {Promise<object>} 词语对
+   */
+  getUndercoverWords: (category) => request.get(`/api/game/undercover/words?category=${category}`),
+  
+  // ========== 真心话大冒险 ==========
+  
+  /**
+   * 获取随机题目
+   * @param {string} type - 类型: truth/dare
+   * @param {number} difficulty - 难度
+   * @returns {Promise<object>} 题目
+   */
+  getRandomTruthDare: (type, difficulty) => request.get('/api/game/truthdare/random', { type, difficulty }),
+  
+  /**
+   * 获取题目列表
+   * @param {string} type - 类型
+   * @returns {Promise<Array>} 题目列表
+   */
+  getTruthDareList: (type) => request.get(`/api/game/truthdare/list?type=${type}`),
+  
+  // ========== 你画我猜 ==========
+  
+  /**
+   * 获取随机词语
+   * @param {string} category - 分类
+   * @returns {Promise<object>} 词语
+   */
+  getRandomDrawingWord: (category) => request.get('/api/game/drawguess/word/random', { category }),
+  
+  /**
+   * 提交画作
+   * @param {object} data - 画作数据
+   * @returns {Promise<object>} 结果
+   */
+  submitDrawing: (data) => request.post('/api/game/drawguess/submit', data),
+  
+  /**
+   * 验证猜测
+   * @param {number} drawingId - 画作ID
+   * @param {string} guess - 猜测
+   * @returns {Promise<boolean>} 是否正确
+   */
+  verifyDrawingGuess: (drawingId, guess) => request.post(`/api/game/drawguess/${drawingId}/verify`, { guess }),
+  
+  // ========== 家庭运动会 ==========
+  
+  /**
+   * 记录运动成绩
+   * @param {object} data - 成绩数据
+   * @returns {Promise<object>} 记录
+   */
+  recordSportsScore: (data) => request.post('/api/game/sports/record', data),
+  
+  /**
+   * 获取运动成绩列表
+   * @param {string} sportType - 运动类型
+   * @returns {Promise<Array>} 成绩列表
+   */
+  getSportsRecords: (sportType) => request.get('/api/game/sports/records', { sportType }),
+  
+  /**
+   * 获取排行榜
+   * @param {string} sportType - 运动类型
+   * @returns {Promise<Array>} 排行榜
+   */
+  getSportsRankings: (sportType) => request.get('/api/game/sports/rankings', { sportType }),
+  
+  // ========== 厨艺比拼 ==========
+  
+  /**
+   * 创建比赛
+   * @param {object} data - 比赛数据
+   * @returns {Promise<object>} 比赛
+   */
+  createCookingContest: (data) => request.post('/api/game/cooking/contest', data),
+  
+  /**
+   * 上传作品
+   * @param {object} data - 作品数据
+   * @returns {Promise<object>} 作品
+   */
+  uploadCookingWork: (data) => request.post('/api/game/cooking/work', data),
+  
+  /**
+   * 投票
+   * @param {number} workId - 作品ID
+   * @returns {Promise<void>}
+   */
+  voteCookingWork: (workId) => request.post(`/api/game/cooking/work/${workId}/vote`),
+  
+  /**
+   * 评分
+   * @param {number} workId - 作品ID
+   * @param {object} scores - 分数
+   * @returns {Promise<void>}
+   */
+  scoreCookingWork: (workId, scores) => request.post(`/api/game/cooking/work/${workId}/score`, scores),
+  
+  /**
+   * 获取比赛详情
+   * @param {number} contestId - 比赛ID
+   * @returns {Promise<object>} 比赛详情
+   */
+  getCookingContest: (contestId) => request.get(`/api/game/cooking/contest/${contestId}`),
+  
+  // ========== 家庭寻宝 ==========
+  
+  /**
+   * 创建寻宝游戏
+   * @param {object} data - 游戏数据
+   * @returns {Promise<object>} 游戏
+   */
+  createTreasureHunt: (data) => request.post('/api/game/treasure/hunt', data),
+  
+  /**
+   * 获取线索
+   * @param {number} huntId - 游戏ID
+   * @param {number} clueIndex - 线索索引
+   * @returns {Promise<object>} 线索
+   */
+  getTreasureClue: (huntId, clueIndex) => request.get(`/api/game/treasure/hunt/${huntId}/clue/${clueIndex}`),
+  
+  /**
+   * 验证宝藏
+   * @param {number} huntId - 游戏ID
+   * @param {number} treasureId - 宝藏ID
+   * @param {string} photo - 照片
+   * @returns {Promise<boolean>} 是否成功
+   */
+  verifyTreasure: (huntId, treasureId, photo) => request.post(`/api/game/treasure/hunt/${huntId}/verify`, { treasureId, photo }),
+  
+  /**
+   * 获取游戏进度
+   * @param {number} huntId - 游戏ID
+   * @returns {Promise<object>} 进度
+   */
+  getTreasureProgress: (huntId) => request.get(`/api/game/treasure/hunt/${huntId}/progress`),
+  
+  // ========== 游戏配置 ==========
+  
+  /**
+   * 保存游戏配置
+   * @param {string} gameCode - 游戏代码
+   * @param {object} config - 配置
+   * @returns {Promise<void>}
+   */
+  saveGameConfig: (gameCode, config) => request.post(`/api/game/config/${gameCode}`, config),
+  
+  /**
+   * 获取游戏配置
+   * @param {string} gameCode - 游戏代码
+   * @returns {Promise<object>} 配置
+   */
+  getGameConfig: (gameCode) => request.get(`/api/game/config/${gameCode}`),
+  
+  /**
+   * 获取默认配置
+   * @param {string} gameCode - 游戏代码
+   * @returns {Promise<object>} 默认配置
+   */
+  getDefaultConfig: (gameCode) => request.get(`/api/game/config/${gameCode}/default`)
 }
 
 export default gameApi

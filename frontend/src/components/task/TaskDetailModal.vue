@@ -35,7 +35,7 @@
           <view class="info-card-content">
             <text class="info-card-label">截止时间</text>
             <text class="info-card-value">
-              {{ formatDateTime(task.dueDate, task.dueTime) }}
+              {{ formatDateTimeDisplay(task.dueDate, task.dueTime) }}
             </text>
           </view>
         </view>
@@ -75,7 +75,7 @@
           <view class="info-card-icon">🕐</view>
           <view class="info-card-content">
             <text class="info-card-label">指派时间</text>
-            <text class="info-card-value time-value">{{ formatTime(task.createTime) }}</text>
+            <text class="info-card-value time-value">{{ formatTimeDisplay(task.createTime) }}</text>
           </view>
         </view>
       </view>
@@ -102,6 +102,8 @@
 </template>
 
 <script setup>
+import { formatDateTime, parseDate } from '@/utils/dateHelper'
+
 const props = defineProps({
   visible: Boolean,
   task: Object,
@@ -114,16 +116,26 @@ const priorityText = (p) => {
   return props.priorities?.[p] || ['普通', '重要', '紧急'][p] || '普通'
 }
 
-const formatDateTime = (date, time) => {
+const formatDateTimeDisplay = (date, time) => {
   if (!date && !time) return '未设置'
+  // 优先使用 task.dueTime 数组/字符串格式化
+  if (props.task?.dueTime) {
+    return formatDateTime(props.task.dueTime, 'datetime')
+  }
   if (date && time) return `${date} ${time}`
   return date || time || '未设置'
 }
 
-const formatTime = (time) => {
+const formatTimeDisplay = (time) => {
   if (!time) return '-'
-  const date = new Date(time)
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`
+  const date = parseDate(time)
+  if (!date) return '-'
+  const year = date.getFullYear()
+  const month = String(date.getMonth()+1).padStart(2,'0')
+  const day = String(date.getDate()).padStart(2,'0')
+  const hours = String(date.getHours()).padStart(2,'0')
+  const minutes = String(date.getMinutes()).padStart(2,'0')
+  return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 </script>
 
