@@ -495,10 +495,15 @@ const loadWeatherData = async () => {
     // 调用 Open-Meteo API 获取天气
     let weatherJson = null
     try {
-      const weatherRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`
-      )
-      weatherJson = await weatherRes.json()
+      const weatherRes = await new Promise((resolve, reject) => {
+        uni.request({
+          url: `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current_weather=true`,
+          method: 'GET',
+          success: (res) => resolve(res.data),
+          fail: (err) => reject(err)
+        })
+      })
+      weatherJson = weatherRes
     } catch (e) {
       console.log('获取天气API失败:', e)
     }

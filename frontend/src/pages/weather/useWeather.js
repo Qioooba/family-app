@@ -238,13 +238,20 @@ const onSearchInput = async () => {
 const sortCitiesByPriority = (cities) => {
   if (!cities || cities.length === 0) return []
   
-  // 中国主要省份列表（用于优先排序）
+  // 中国主要省份列表（用于优先排序）- 支持中英文
   const chinaProvinces = [
-    '江苏', '北京', '上海', '广东', '浙江', '四川', '湖北', '湖南', 
-    '河南', '山东', '河北', '福建', '安徽', '陕西', '辽宁', '江西',
-    '重庆', '天津', '山西', '广西', '云南', '贵州', '黑龙江', '吉林',
-    '甘肃', '海南', '内蒙古', '新疆', '西藏', '青海', '宁夏', '台湾',
-    '香港', '澳门'
+    '江苏', 'Jiangsu', '北京', 'Beijing', '上海', 'Shanghai', 
+    '广东', 'Guangdong', '浙江', 'Zhejiang', '四川', 'Sichuan', 
+    '湖北', 'Hubei', '湖南', 'Hunan', '河南', 'Henan', 
+    '山东', 'Shandong', '河北', 'Hebei', '福建', 'Fujian', 
+    '安徽', 'Anhui', '陕西', 'Shaanxi', '辽宁', 'Liaoning', 
+    '江西', 'Jiangxi', '重庆', 'Chongqing', '天津', 'Tianjin', 
+    '山西', 'Shanxi', '广西', 'Guangxi', '云南', 'Yunnan', 
+    '贵州', 'Guizhou', '黑龙江', 'Heilongjiang', '吉林', 'Jilin',
+    '甘肃', 'Gansu', '海南', 'Hainan', '内蒙古', 'Inner Mongolia', 
+    '新疆', 'Xinjiang', '西藏', 'Tibet', '青海', 'Qinghai', 
+    '宁夏', 'Ningxia', '台湾', 'Taiwan', '香港', 'Hong Kong', 
+    '澳门', 'Macao'
   ]
   
   // 中国主要城市（用于优先排序）

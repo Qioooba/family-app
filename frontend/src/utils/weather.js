@@ -250,32 +250,25 @@ export const getShortLocationName = (locationInfo) => {
 }
 
 /**
- * 获取完整位置显示（城市+区）- 如"南京市 鼓楼区"
+ * 获取完整位置显示（省+市+区）- 如"江苏省南京市秦淮区"
  * @param {object} locationInfo - 位置信息对象
  * @returns {string} 完整位置名
  */
 export const getFullLocationName = (locationInfo) => {
   if (!locationInfo) return '定位中...'
   
-  const city = locationInfo.city ? locationInfo.city.replace(/(市|地区)$/g, '') : ''
+  const province = locationInfo.province || ''
+  const city = locationInfo.city || ''
   const district = locationInfo.district || ''
   
-  // 确保城市名后面带"市"
-  const cityWithSuffix = city ? city + '市' : ''
+  // 组合省市区
+  const parts = []
+  if (province) parts.push(province)
+  if (city) parts.push(city)
+  if (district) parts.push(district)
   
-  if (cityWithSuffix && district) {
-    return `${cityWithSuffix} ${district}`
-  }
-  if (cityWithSuffix) {
-    return cityWithSuffix
-  }
-  if (district) {
-    return district
-  }
-  
-  // 如果有省份信息，显示省份
-  if (locationInfo.province) {
-    return locationInfo.province
+  if (parts.length > 0) {
+    return parts.join('')
   }
   
   return '定位中...'

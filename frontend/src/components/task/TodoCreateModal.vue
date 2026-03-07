@@ -130,10 +130,10 @@
           indicator-style="height: 80rpx;"
         >
           <picker-view-column>
-            <view v-for="h in 24" :key="h" class="picker-item">{{ String(h-1).padStart(2, '0') }}时</view>
+            <view v-for="(hour, index) in hours" :key="index" class="picker-item">{{ hour }}</view>
           </picker-view-column>
           <picker-view-column>
-            <view v-for="m in 60" :key="m" class="picker-item">{{ String(m-1).padStart(2, '0') }}分</view>
+            <view v-for="(minute, index) in minutes" :key="index" class="picker-item">{{ minute }}</view>
           </picker-view-column>
         </picker-view>
       </view>
@@ -202,6 +202,23 @@ const datePickerValue = ref([10, new Date().getMonth(), new Date().getDate() - 1
 const timePickerVisible = ref(false)
 const timePickerValue = ref([23, 59])
 const isTimePicking = ref(false)
+
+// 时间选择器选项 - 固定数组确保只显示 00-23 时和 00-59 分
+const hours = computed(() => {
+  const arr = []
+  for (let i = 0; i < 24; i++) {
+    arr.push(String(i).padStart(2, '0') + '时')
+  }
+  return arr
+})
+
+const minutes = computed(() => {
+  const arr = []
+  for (let i = 0; i < 60; i++) {
+    arr.push(String(i).padStart(2, '0') + '分')
+  }
+  return arr
+})
 
 // 临时存储选择值
 const tempDateValue = ref([...datePickerValue.value])
