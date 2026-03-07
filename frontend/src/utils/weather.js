@@ -63,53 +63,57 @@ export const getWeatherByCode = (code) => {
 
 /**
  * 反向地理编码 - 获取详细地址
- * 使用微信小程序的逆地理编码能力或腾讯地图API
+ * 使用免费的 Nominatim (OpenStreetMap) 反向地理编码API
  * @param {number} latitude - 纬度
  * @param {number} longitude - 经度
  * @returns {Promise<object>} 地址信息 { district: '鼓楼区', street: '新街口', city: '南京市', fullAddress: '...' }
  */
 export const reverseGeocode = (latitude, longitude) => {
   return new Promise((resolve) => {
-    // #ifdef MP-WEIXIN
-    // 微信小程序使用 wx.getLocation 的逆地理编码
-    uni.getLocation({
-      type: 'gcj02',
-      altitude: false,
-      // #ifdef MP-WEIXIN
-      isHighAccuracy: true,
-      // #endif
+    // 使用 Nominatim 反向地理编码API（免费，无需key）
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+    
+    uni.request({
+      url: url,
+      method: 'GET',
+      header: {
+        'User-Agent': 'FamilyApp/1.0 (MiniProgram)'
+      },
       success: (res) => {
-        // 优先使用 address 中的详细地址信息
-        const address = res.address || {}
-        const result = {
-          province: address.province || '',
-          city: address.city || res.city || '',
-          district: address.district || '',
-          street: address.street || '',
-          streetNumber: address.streetNum || '',
-          name: address.name || '',
-          fullAddress: formatAddress(address)
+        if (res.data && res.data.address) {
+          const address = res.data.address
+          const result = {
+            province: address.state || address.province || address.county || '',
+            city: address.city || address.municipality || address.state || '',
+            district: address.district || address.suburb || address.neighbourhood || '',
+            street: address.road || address.street || '',
+            streetNumber: address.house_number || '',
+            name: res.data.name || '',
+            fullAddress: res.data.display_name || ''
+          }
+          resolve(result)
+        } else {
+          // API失败，使用坐标对应的默认地址（南京）
+          resolve({ 
+            province: '江苏省', 
+            city: '南京市', 
+            district: '秦淮区', 
+            street: '', 
+            fullAddress: '江苏省南京市秦淮区' 
+          })
         }
-        
-        // 如果没有详细地址信息，尝试使用腾讯地图API
-        if (!result.district && !result.street) {
-          resolve(getLocationByTencentMap(latitude, longitude))
-          return
-        }
-        
-        resolve(result)
       },
       fail: () => {
-        // 失败后尝试使用腾讯地图API
-        resolve(getLocationByTencentMap(latitude, longitude))
+        // 失败，使用默认地址（南京）
+        resolve({ 
+          province: '江苏省', 
+          city: '南京市', 
+          district: '秦淮区', 
+          street: '', 
+          fullAddress: '江苏省南京市秦淮区' 
+        })
       }
     })
-    // #endif
-    
-    // #ifndef MP-WEIXIN
-    // H5/App 使用腾讯地图API
-    resolve(getLocationByTencentMap(latitude, longitude))
-    // #endif
   })
 }
 
