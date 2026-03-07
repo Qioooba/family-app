@@ -64,11 +64,20 @@ public class UserController {
             Long userId = StpUtil.getLoginIdAsLong();
             String tokenValue = StpUtil.getTokenValue();
 
+            // 检查 token 是否有效
+            if (!StpUtil.isLogin()) {
+                result.put("code", 401);
+                result.put("message", "登录已过期，请重新登录");
+                return result;
+            }
+
             // 从数据库查询用户信息
             User user = userMapper.selectById(userId);
             if (user == null) {
+                // Token 有效但用户不存在，可能是用户被删除
                 result.put("code", 404);
-                result.put("message", "用户不存在");
+                result.put("message", "用户数据不存在，请联系管理员");
+                result.put("errorType", "USER_NOT_FOUND");
                 return result;
             }
 
@@ -85,8 +94,14 @@ public class UserController {
             data.put("token", tokenValue);
             result.put("data", data);
         } catch (Exception e) {
-            result.put("code", 401);
-            result.put("message", "未登录或登录已过期");
+            // 捕获 token 解析异常
+            if (e.getMessage() != null && e.getMessage().contains("token")) {
+                result.put("code", 401);
+                result.put("message", "登录已过期，请重新登录");
+            } else {
+                result.put("code", 401);
+                result.put("message", "未登录或登录已过期");
+            }
         }
         return result;
     }
