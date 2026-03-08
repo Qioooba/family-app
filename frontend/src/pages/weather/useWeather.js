@@ -226,7 +226,20 @@ const onSearchInput = async () => {
   }
   
   const keyword = searchKeyword.value.trim()
-  const key = 'QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY'
+  // 从环境变量读取 Key，避免硬编码
+  const key = process.env.VITE_TENCENT_MAP_KEY || ''
+  
+  if (!key) {
+    console.warn('[Weather] 腾讯地图 API Key 未配置')
+    // 回退到后端API
+    try {
+      const res = await weatherApi.searchCities(keyword)
+      searchResults.value = sortCitiesByPriority(res || [])
+    } catch (e) {
+      searchResults.value = []
+    }
+    return
+  }
   
   try {
     // 第1步：使用 search 接口搜索城市（获取坐标）
