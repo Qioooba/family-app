@@ -23,7 +23,41 @@ const current = ref(0)
 // 初始化主题
 onMounted(() => {
   initTheme()
+  
+  // 启动时清理过期缓存（开发测试用）
+  clearExpiredCache()
 })
+
+// 清理过期缓存
+const clearExpiredCache = () => {
+  try {
+    // 清理本地存储的用户数据（强制重新登录）
+    const timestamp = uni.getStorageSync('cache_clear_time')
+    const now = Date.now()
+    
+    // 如果超过1小时或强制清理标志存在，则清理
+    if (!timestamp || (now - timestamp > 3600000) || uni.getStorageSync('force_clear')) {
+      console.log('[App] 清理本地缓存...')
+      
+      // 保留邀请码等配置，只清理用户相关
+      const keepKeys = ['family_invite_code', 'cache_clear_time']
+      const allKeys = uni.getStorageInfoSync().keys || []
+      
+      allKeys.forEach(key => {
+        if (!keepKeys.includes(key)) {
+          uni.removeStorageSync(key)
+        }
+      })
+      
+      uni.setStorageSync('cache_clear_time', now)
+      uni.removeStorageSync('force_clear')
+      
+      console.log('[App] 缓存清理完成')
+    }
+  } catch (e) {
+    console.error('[App] 清理缓存失败:', e)
+  }
+}
 
 const tabList = [
   {
