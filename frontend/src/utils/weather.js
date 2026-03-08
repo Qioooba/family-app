@@ -80,18 +80,8 @@ export const reverseGeocode = (latitude, longitude) => {
  */
 export const getLocationByTencentMap = (latitude, longitude) => {
   return new Promise((resolve) => {
-    // 从环境变量或配置文件读取，避免硬编码
-    const key = process.env.VITE_TENCENT_MAP_KEY || ''
-    if (!key) {
-      console.warn('[TencentMap] API Key 未配置')
-      resolve({ 
-        province: '', city: '当前位置', district: '', street: '', 
-        poiName: '', fullAddress: '', displayName: '当前位置', shortName: '' 
-      })
-      return
-    }
-    
-    const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${key}&get_poi=1&poi_options=address_format=short`
+    const TENCENT_MAP_KEY = 'QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY'
+    const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${TENCENT_MAP_KEY}&get_poi=1&poi_options=address_format=short`
     
     uni.request({
       url,
