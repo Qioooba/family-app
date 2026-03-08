@@ -85,60 +85,67 @@ export const useUserStore = defineStore('user', () => {
       const res = await request.get('/api/user/info')
       console.log('[Store] getUserInfo result:', JSON.stringify(res))
       
-      // 处理错误状态码
-      if (res.code === 401) {
-        console.error('[Store] Token已过期，需要重新登录')
-        // 清除本地token
-        token.value = ''
-        userInfo.value = null
-        uni.removeStorageSync('token')
-        uni.removeStorageSync('userInfo')
-        // 显示提示
-        uni.showToast({
-          title: '登录已过期，请重新登录',
-          icon: 'none',
-          duration: 2000
-        })
-        // 延迟跳转到登录页
-        setTimeout(() => {
-          uni.reLaunch({ url: '/pages/login/index' })
-        }, 1500)
-        return null
-      }
-      
-      if (res.code === 404) {
-        console.error('[Store] 用户不存在:', res.message)
-        // 清除本地token
-        token.value = ''
-        userInfo.value = null
-        uni.removeStorageSync('token')
-        uni.removeStorageSync('userInfo')
-        // 显示具体错误提示
-        uni.showToast({
-          title: res.message || '用户数据不存在',
-          icon: 'none',
-          duration: 2500
-        })
-        // 延迟跳转到登录页
-        setTimeout(() => {
-          uni.reLaunch({ url: '/pages/login/index' })
-        }, 2000)
-        return null
-      }
-      
-      // 成功获取用户信息
-      if (res.code === 200 && res.data) {
-        setUserInfo(res.data)
+      // request.js 已经解包了响应，res 直接是用户数据对象
+      // 检查 res 是否是用户对象（有 phone 或 nickname 字段）
+      if (res && (res.phone || res.nickname || res.userId || res.id)) {
+        setUserInfo(res)
         // 同时保存 currentFamilyId
-        const familyId = res.data.currentFamilyId
+        const familyId = res.currentFamilyId
         if (familyId) {
           uni.setStorageSync('currentFamilyId', familyId)
         }
-        return res.data
+        return res
       }
       
-      // 其他错误
-      console.error('[Store] 获取用户信息失败:', res.message)
+      // 如果是错误响应格式 {code: xxx, message: '...'}
+      if (res && res.code) {
+        // 处理错误状态码
+        if (res.code === 401) {
+          console.error('[Store] Token已过期，需要重新登录')
+          // 清除本地token
+          token.value = ''
+          userInfo.value = null
+          uni.removeStorageSync('token')
+          uni.removeStorageSync('userInfo')
+          // 显示提示
+          uni.showToast({
+            title: '登录已过期，请重新登录',
+            icon: 'none',
+            duration: 2000
+          })
+          // 延迟跳转到登录页
+          setTimeout(() => {
+            uni.reLaunch({ url: '/pages/login/index' })
+          }, 1500)
+          return null
+        }
+        
+        if (res.code === 404) {
+          console.error('[Store] 用户不存在:', res.message)
+          // 清除本地token
+          token.value = ''
+          userInfo.value = null
+          uni.removeStorageSync('token')
+          uni.removeStorageSync('userInfo')
+          // 显示具体错误提示
+          uni.showToast({
+            title: res.message || '用户数据不存在',
+            icon: 'none',
+            duration: 2500
+          })
+          // 延迟跳转到登录页
+          setTimeout(() => {
+            uni.reLaunch({ url: '/pages/login/index' })
+          }, 2000)
+          return null
+        }
+        
+        // 其他错误
+        console.error('[Store] 获取用户信息失败:', res.message)
+        return null
+      }
+      
+      console.error('[Store] 获取用户信息失败: 响应格式不正确')
       return null
     } catch (e) {
       console.error('[Store] getUserInfo error:', e)

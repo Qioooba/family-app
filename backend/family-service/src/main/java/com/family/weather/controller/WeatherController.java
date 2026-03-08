@@ -28,8 +28,12 @@ public class WeatherController {
     // Open-Meteo API 基础地址
     private static final String OPEN_METEO_API = "https://api.open-meteo.com/v1/forecast";
     
-    // 地理编码API (用于城市名称转坐标)
+    // 地理编码API (用于城市名称转坐标) - Open-Meteo
     private static final String GEOCODING_API = "https://geocoding-api.open-meteo.com/v1/search";
+    
+    // 腾讯地图 API (用于城市搜索，解决中文城市名识别问题)
+    private static final String QQ_MAP_API = "https://apis.map.qq.com/ws/place/v1/suggestion";
+    private static final String QQ_MAP_KEY = "QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY"; // 腾讯地图 Key
     
     /**
      * 根据经纬度获取当前天气
@@ -205,7 +209,7 @@ public class WeatherController {
     }
     
     /**
-     * 搜索城市
+     * 搜索城市 - 使用腾讯地图API (解决中文城市名识别问题)
      * GET /api/weather/cities?keyword={keyword}
      * 
      * @param keyword 搜索关键词
@@ -216,6 +220,112 @@ public class WeatherController {
         try {
             log.info("搜索城市: keyword={}", keyword);
             
+            // URL编码关键词
+            String encodedKeyword = java.net.URLEncoder.encode(keyword, "UTF-8");
+            
+            // 使用腾讯地图智能提示API
+            String url = String.format("%s?keyword=%s&region=%s&region_fix=1&page_size=20&key=%s", 
+                QQ_MAP_API, encodedKeyword, 
+                java.net.URLEncoder.encode("中国", "UTF-8"), 
+                QQ_MAP_KEY);
+            
+            log.info("腾讯地图API请求: {}", url.replace(QQ_MAP_KEY, "***"));
+            
+            // 创建请求头，添加Referer
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.set("Referer", "https://qioba.cn");
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
+            
+            org.springframework.http.ResponseEntity<Map> responseEntity = restTemplate.exchange(
+                url, 
+                org.springframework.http.HttpMethod.GET, 
+                entity, 
+                Map.class
+            );
+            Map<String, Object> response = responseEntity.getBody();
+            
+            log.info("腾讯地图API响应: {}", response);
+            
+            // 检查响应状态 - status 可能是 Integer
+            if (response == null) {
+                log.warn("腾讯地图API返回空响应");
+                return searchCitiesWithOpenMeteo(keyword);
+            }
+            
+            Object statusObj = response.get("status");
+            int status = -1;
+            if (statusObj instanceof Integer) {
+                status = (Integer) statusObj;
+            } else if (statusObj instanceof String) {
+                status = Integer.parseInt((String) statusObj);
+            }
+            
+            if (status != 0) {
+                String message = (String) response.getOrDefault("message", "未知错误");
+                log.warn("腾讯地图API调用失败: status={}, message={}", status, message);
+                return searchCitiesWithOpenMeteo(keyword);
+            }
+            
+            var data = (Map<String, Object>) response.get("data");
+            if (data == null) {
+                log.warn("腾讯地图API返回空data");
+                return searchCitiesWithOpenMeteo(keyword);
+            }
+            
+            var results = (java.util.List<Map<String, Object>>) data.get("suggestion");
+            if (results == null || results.isEmpty()) {
+                log.warn("腾讯地图API返回空结果");
+                return searchCitiesWithOpenMeteo(keyword);
+            }
+            
+            java.util.List<CityInfo> cities = new java.util.ArrayList<>();
+            for (Map<String, Object> result : results) {
+                CityInfo city = new CityInfo();
+                
+                // 腾讯地图返回字段
+                String title = (String) result.get("title");
+                String province = (String) result.get("province");
+                String district = (String) result.get("district");
+                Map<String, Object> location = (Map<String, Object>) result.get("location");
+                
+                // 优先使用城市名(title)，如果没有则使用 district
+                String cityName = title != null ? title : district;
+                city.setName(cityName);
+                city.setCountry("中国");
+                
+                if (location != null) {
+                    Object lat = location.get("lat");
+                    Object lng = location.get("lng");
+                    if (lat instanceof Number && lng instanceof Number) {
+                        city.setLatitude(((Number) lat).doubleValue());
+                        city.setLongitude(((Number) lng).doubleValue());
+                    }
+                }
+                
+                // 组合省份和城市作为 admin1
+                String admin1 = province != null ? province : "";
+                if (district != null && !district.isEmpty()) {
+                    admin1 = admin1 + " " + district;
+                }
+                city.setAdmin1(admin1.trim());
+                
+                cities.add(city);
+            }
+            
+            log.info("腾讯地图API返回 {} 个城市", cities.size());
+            return Result.success(cities);
+            
+        } catch (Exception e) {
+            log.error("搜索城市异常，回退到Open-Meteo", e);
+            return searchCitiesWithOpenMeteo(keyword);
+        }
+    }
+    
+    /**
+     * 使用Open-Meteo搜索城市 (备用方案)
+     */
+    private Result<java.util.List<CityInfo>> searchCitiesWithOpenMeteo(String keyword) {
+        try {
             String url = String.format("%s?name=%s&count=10&language=zh&format=json", 
                 GEOCODING_API, keyword);
             
@@ -237,14 +347,14 @@ public class WeatherController {
                 city.setCountry((String) result.get("country"));
                 city.setLatitude(((Number) result.get("latitude")).doubleValue());
                 city.setLongitude(((Number) result.get("longitude")).doubleValue());
-                city.setAdmin1((String) result.get("admin1")); // 省份/州
+                city.setAdmin1((String) result.get("admin1"));
                 cities.add(city);
             }
             
             return Result.success(cities);
             
         } catch (Exception e) {
-            log.error("搜索城市失败", e);
+            log.error("Open-Meteo搜索城市也失败", e);
             return Result.error("搜索城市失败: " + e.getMessage());
         }
     }

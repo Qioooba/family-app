@@ -259,11 +259,19 @@ const resetForm = () => {
 // 监听数据变化
 watch(() => props.data, (newVal) => {
   if (newVal) {
+    // 处理日期格式 - 后端可能返回数组 [2026, 4, 7] 或字符串 "2026-04-07"
+    let targetDate = newVal.targetDate || ''
+    if (Array.isArray(targetDate)) {
+      // 数组格式 [2026, 4, 7] 转成 "2026-04-07"
+      const [year, month, day] = targetDate
+      targetDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    }
+    
     formData.value = {
       id: newVal.id,
       title: newVal.title || '',
       type: newVal.type || 'custom',
-      targetDate: newVal.targetDate || '',
+      targetDate: targetDate,
       dateType: newVal.dateType || 'solar',
       isRecurring: newVal.isRecurring ?? 1,
       description: newVal.description || '',

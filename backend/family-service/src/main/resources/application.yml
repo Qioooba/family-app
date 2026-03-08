@@ -67,7 +67,7 @@ file:
 # 微信小程序配置（使用环境变量传入）
 weixin:
   appId: ${WEIXIN_APPID:wxbdc70536c5e52b82}
-  appSecret: ${WEIXIN_APPSECRET:}
+  appSecret: ${WEIXIN_APPSECRET:ee79692373557e80d206c09a1876dbea}
 
 mybatis-plus:
   configuration:

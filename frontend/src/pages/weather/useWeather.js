@@ -218,19 +218,85 @@ const requestLocation = async () => {
   }
 }
 
-// 搜索城市
+// 搜索城市 - 使用腾讯地图API
 const onSearchInput = async () => {
   if (!searchKeyword.value.trim()) {
     searchResults.value = []
     return
   }
   
+  const keyword = searchKeyword.value.trim()
+  const key = 'QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY'
+  
   try {
-    const res = await weatherApi.searchCities(searchKeyword.value)
-    // 对结果进行排序：优先显示中国大城市
-    searchResults.value = sortCitiesByPriority(res || [])
+    // 第1步：使用 search 接口搜索城市（获取坐标）
+    const searchUrl = `https://apis.map.qq.com/ws/place/v1/search?keyword=${encodeURIComponent(keyword)}&boundary=region(中国)&page_size=10&key=${key}`
+    
+    console.log('1. 搜索城市:', searchUrl)
+    const [searchErr, searchRes] = await uni.request({ url: searchUrl, method: 'GET' })
+    
+    if (searchErr || !searchRes || searchRes.statusCode !== 200) {
+      throw new Error('搜索请求失败')
+    }
+    
+    const searchData = searchRes.data
+    if (searchData.status !== 0 || !searchData.data || searchData.data.length === 0) {
+      throw new Error('搜索无结果')
+    }
+    
+    // 第2步：用坐标反向查询省份
+    const cities = await Promise.all(
+      searchData.data.slice(0, 5).map(async (item) => {
+        const lat = item.location?.lat
+        const lng = item.location?.lng
+        
+        if (!lat || !lng) return null
+        
+        // 反向地理编码获取省份 - 如果不成功就不显示省份
+        let province = ''
+        try {
+          const geoUrl = `https://apis.map.qq.com/ws/geocoder/v1/?location=${lat},${lng}&key=${key}`
+          const [, geoRes] = await uni.request({ url: geoUrl, method: 'GET' })
+          
+          if (geoRes?.data?.status === 0) {
+            const result = geoRes.data.result
+            const addressComp = result?.address_component
+            province = addressComp?.province || ''
+          }
+        } catch (e) {
+          console.log('获取省份失败，不显示省份')
+        }
+        
+        return {
+          name: item.title || keyword,
+          country: '中国',
+          admin1: province,  // 可能为空
+          latitude: lat,
+          longitude: lng
+        }
+      })
+    )
+    
+    // 过滤有效结果
+    const validCities = cities.filter(c => c && c.latitude && c.longitude)
+    
+    if (validCities.length === 0) {
+      throw new Error('没有有效结果')
+    }
+    
+    console.log('搜索结果:', validCities)
+    searchResults.value = sortCitiesByPriority(validCities)
+    
   } catch (error) {
-    console.error('搜索城市失败:', error)
+    console.error('腾讯地图搜索失败:', error)
+    // 只用后端作为最后备选
+    try {
+      const res = await weatherApi.searchCities(keyword)
+      searchResults.value = sortCitiesByPriority(res || [])
+    } catch (e) {
+      console.error('后端也失败:', e)
+      searchResults.value = []
+    }
   }
 }
 

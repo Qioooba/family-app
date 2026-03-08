@@ -179,7 +179,8 @@ const handleRegister = async () => {
   try {
     // 第一步：先验证邀请码是否有效
     const verifyResult = await familyApi.verifyCode(form.inviteCode.trim())
-    if (verifyResult.code !== 200) {
+    // request.js 已解包响应，直接检查 valid 或 familyId 字段
+    if (!verifyResult || !verifyResult.valid) {
       uni.showToast({ title: '邀请码无效或已过期', icon: 'none' })
       loading.value = false
       return

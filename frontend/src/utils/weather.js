@@ -63,72 +63,26 @@ export const getWeatherByCode = (code) => {
 
 /**
  * 反向地理编码 - 获取详细地址
- * 使用免费的 Nominatim (OpenStreetMap) 反向地理编码API
+ * 使用腾讯地图API（精确到街道、小区）
  * @param {number} latitude - 纬度
  * @param {number} longitude - 经度
  * @returns {Promise<object>} 地址信息 { district: '鼓楼区', street: '新街口', city: '南京市', fullAddress: '...' }
  */
 export const reverseGeocode = (latitude, longitude) => {
-  return new Promise((resolve) => {
-    // 使用 Nominatim 反向地理编码API（免费，无需key）
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
-    
-    uni.request({
-      url: url,
-      method: 'GET',
-      header: {
-        'User-Agent': 'FamilyApp/1.0 (MiniProgram)'
-      },
-      success: (res) => {
-        if (res.data && res.data.address) {
-          const address = res.data.address
-          const result = {
-            province: address.state || address.province || address.county || '',
-            city: address.city || address.municipality || address.state || '',
-            district: address.district || address.suburb || address.neighbourhood || '',
-            street: address.road || address.street || '',
-            streetNumber: address.house_number || '',
-            name: res.data.name || '',
-            fullAddress: res.data.display_name || ''
-          }
-          resolve(result)
-        } else {
-          // API失败，使用坐标对应的默认地址（南京）
-          resolve({ 
-            province: '江苏省', 
-            city: '南京市', 
-            district: '秦淮区', 
-            street: '', 
-            fullAddress: '江苏省南京市秦淮区' 
-          })
-        }
-      },
-      fail: () => {
-        // 失败，使用默认地址（南京）
-        resolve({ 
-          province: '江苏省', 
-          city: '南京市', 
-          district: '秦淮区', 
-          street: '', 
-          fullAddress: '江苏省南京市秦淮区' 
-        })
-      }
-    })
-  })
+  return getLocationByTencentMap(latitude, longitude)
 }
 
 /**
- * 使用腾讯地图API进行反向地理编码
+ * 使用腾讯地图API进行反向地理编码（精确到街道、小区）
  * @param {number} latitude - 纬度
  * @param {number} longitude - 经度
  * @returns {Promise<object>} 地址信息
  */
-const getLocationByTencentMap = (latitude, longitude) => {
+export const getLocationByTencentMap = (latitude, longitude) => {
   return new Promise((resolve) => {
-    // 腾讯地图逆地址解析API
-    // 注意：小程序环境不支持 process，如需使用腾讯地图API，请在下方填入你的key
-    const TENCENT_MAP_KEY = ''
-    const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${TENCENT_MAP_KEY}&get_poi=1`
+    const TENCENT_MAP_KEY = 'QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY'
+    // get_poi=1 获取周边POI，poi_options=address_format=short 获取短地址
+    const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${TENCENT_MAP_KEY}&get_poi=1&poi_options=address_format=short`
     
     uni.request({
       url,
@@ -137,7 +91,11 @@ const getLocationByTencentMap = (latitude, longitude) => {
         if (res.data && res.data.status === 0 && res.data.result) {
           const result = res.data.result
           const address = result.address_component || {}
-          const poi = result.pois && result.pois[0] || {}
+          const pois = result.pois || []
+          const poi = pois[0] || {} // 最近的POI（小区、大厦等）
+          
+          // 优先使用POI名称（小区/大厦），其次是街道
+          const locationName = poi.title || address.street || address.district || ''
           
           resolve({
             province: address.province || '',
@@ -145,15 +103,28 @@ const getLocationByTencentMap = (latitude, longitude) => {
             district: address.district || '',
             street: address.street || '',
             streetNumber: address.street_number || '',
-            name: poi.title || '',
-            fullAddress: result.address || ''
+            // POI信息（小区、大厦、商场等）
+            poiName: poi.title || '',
+            poiCategory: poi.category || '',
+            // 用于显示的完整地址
+            fullAddress: result.address || '',
+            // 推荐显示格式：省份 + 城市 + 区县 + 街道/POI
+            displayName: `${address.province || ''}${address.city || ''}${address.district || ''}${locationName}`.replace(/^(.*?省)?(.*?市)?(.*?区)?(.*)$/, '$1$2$3$4'),
+            // 简写：区县 + 街道/POI
+            shortName: `${address.district || ''}${locationName}`
           })
         } else {
-          resolve({ district: '', street: '', city: '当前位置', fullAddress: '' })
+          resolve({ 
+            province: '', city: '当前位置', district: '', street: '', 
+            poiName: '', fullAddress: '', displayName: '当前位置', shortName: '' 
+          })
         }
       },
       fail: () => {
-        resolve({ district: '', street: '', city: '当前位置', fullAddress: '' })
+        resolve({ 
+          province: '', city: '当前位置', district: '', street: '', 
+          poiName: '', fullAddress: '', displayName: '当前位置', shortName: '' 
+        })
       }
     })
   })
@@ -227,20 +198,30 @@ export const isCurrentHour = (timeStr) => {
 }
 
 /**
- * 获取简短位置名称（用于天气小组件）- 支持区/县级别
+ * 获取简短位置名称（用于天气小组件）- 支持精确到街道、小区
  * @param {object} locationInfo - 位置信息对象
  * @returns {string} 简短位置名
  */
 export const getShortLocationName = (locationInfo) => {
   if (!locationInfo) return '当前位置'
   
-  // 优先显示区/县名称
+  // 优先使用腾讯地图返回的简写名称（区县+POI/街道）
+  if (locationInfo.shortName) {
+    return locationInfo.shortName
+  }
+  
+  // 优先显示POI名称（小区、大厦）
+  if (locationInfo.poiName) {
+    return locationInfo.poiName
+  }
+  
+  // 其次显示区/县名称
   if (locationInfo.district) {
     // 去掉"区"、"县"、"市辖区"等后缀，使显示更简洁
     return locationInfo.district.replace(/(区|县|市辖区)$/g, '')
   }
   
-  // 其次显示街道
+  // 再次显示街道
   if (locationInfo.street) {
     return locationInfo.street.replace(/(街道|镇|乡)$/g, '')
   }
@@ -254,22 +235,35 @@ export const getShortLocationName = (locationInfo) => {
 }
 
 /**
- * 获取完整位置显示（省+市+区）- 如"江苏省南京市秦淮区"
+ * 获取完整位置显示（省+市+区+街道/POI）- 如"江苏省南京市秦淮区月牙湖街道"
  * @param {object} locationInfo - 位置信息对象
  * @returns {string} 完整位置名
  */
 export const getFullLocationName = (locationInfo) => {
   if (!locationInfo) return '定位中...'
   
+  // 优先使用腾讯地图返回的完整显示名称
+  if (locationInfo.displayName) {
+    return locationInfo.displayName
+  }
+  
   const province = locationInfo.province || ''
   const city = locationInfo.city || ''
   const district = locationInfo.district || ''
+  const street = locationInfo.street || ''
+  const poiName = locationInfo.poiName || ''
   
-  // 组合省市区
+  // 组合省市区+街道/POI
   const parts = []
   if (province) parts.push(province)
   if (city) parts.push(city)
   if (district) parts.push(district)
+  // 优先显示POI（小区/大厦），其次是街道
+  if (poiName) {
+    parts.push(poiName)
+  } else if (street) {
+    parts.push(street)
+  }
   
   if (parts.length > 0) {
     return parts.join('')

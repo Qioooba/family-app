@@ -202,7 +202,7 @@
               @click="selectCity(city)"
             >
               <text class="city-name">{{ city.name }}</text>
-              <text class="city-region">{{ city.admin1 }} {{ city.country }}</text>
+              <text class="city-region" v-if="city.admin1">{{ city.admin1 }}</text>
             </view>
           </view>
           
