@@ -168,7 +168,7 @@
               {{ task.title }}
             </text>
             <view class="task-meta">
-              <text class="assignee">{{ task.assigneeName }}</text>
+              <text class="assignee">{{ getTaskPeople(task) }}</text>
               <text class="divider">·</text>
               <text class="time">{{ task.time }}</text>
             </view>
@@ -286,6 +286,23 @@ const getMemberName = (userId) => {
   return member ? (member.nickname || member.name || '家人') : '未知'
 }
 
+// 获取任务人员显示（创建人 → 被指派人）
+const getTaskPeople = (task) => {
+  if (!task) return ''
+  const creatorId = task.creatorId
+  const assigneeId = task.assigneeId
+  const creatorName = task.creatorName || task.creatorNickname || getMemberName(creatorId)
+  const assigneeName = task.assigneeName || task.assigneeNickname || getMemberName(assigneeId)
+  
+  // 如果是自己创建并指派给自己，只显示创建人
+  if (creatorId === assigneeId) {
+    return creatorName
+  }
+  
+  // 否则显示 创建人 → 被指派人
+  return `${creatorName} → ${assigneeName}`
+}
+
 // 格式化任务时间
 const formatTaskTime = (dueTime) => {
   return formatDateTime(dueTime, 'time')
@@ -313,7 +330,8 @@ const loadTodayTasks = async () => {
     if (todayTodoTasks.length > 0) {
       todayTasks.value = todayTodoTasks.map(task => ({
         ...task,
-        assigneeName: getMemberName(task.assigneeId) || '家人',
+        assigneeName: task.assigneeNickname || getMemberName(task.assigneeId) || '家人',
+        creatorName: task.creatorNickname || getMemberName(task.creatorId) || '家人',
         time: formatTaskTime(task.dueTime)
       }))
     } else {

@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 @Mapper
 public interface FamilyMemberMapper extends BaseMapper<FamilyMember> {
     
@@ -14,4 +16,10 @@ public interface FamilyMemberMapper extends BaseMapper<FamilyMember> {
      */
     @Select("SELECT id, family_id, user_id, role, nickname, join_time FROM family_member WHERE user_id = #{userId} AND family_id = #{familyId}")
     FamilyMember selectByUserIdAndFamilyId(@Param("userId") Long userId, @Param("familyId") Long familyId);
+    
+    /**
+     * 根据用户ID查询所有家庭成员记录
+     */
+    @Select("SELECT id, family_id, user_id, role, nickname, join_time FROM family_member WHERE user_id = #{userId}")
+    List<FamilyMember> selectByUserId(@Param("userId") Long userId);
 }

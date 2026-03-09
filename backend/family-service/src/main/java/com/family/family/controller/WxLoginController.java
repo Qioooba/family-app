@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 微信登录控制器
@@ -110,66 +109,40 @@ public class WxLoginController {
             queryWrapper.eq(User::getWxOpenid, openid);
             User user = userMapper.selectOne(queryWrapper);
             
-            boolean isNewUser = false;
-            
-            // 3. 如不存在，自动创建新用户
+            // 3. 如不存在，返回错误提示用户先注册
             if (user == null) {
-                log.info("用户不存在，创建新用户: openid={}", openid);
-                
-                user = new User();
-                user.setWxOpenid(openid);
-                // 生成随机用户名
-                String randomUsername = "wx_" + UUID.randomUUID().toString().substring(0, 8);
-                user.setUsername(randomUsername);
-                // 生成随机昵称
-                String randomNickname = "微信用户" + (int)(Math.random() * 10000);
-                user.setNickname(randomNickname);
-                // 无密码登录（密码为空）
-                user.setPassword("");
-                user.setStatus(1); // 正常状态
-                user.setCurrentFamilyId(DEFAULT_FAMILY_ID); // 设置默认家庭
-                user.setCreateTime(LocalDateTime.now());
-                user.setUpdateTime(LocalDateTime.now());
-                
-                userMapper.insert(user);
-                
-                // 自动将用户加入默认家庭
-                FamilyMember familyMember = new FamilyMember();
-                familyMember.setFamilyId(DEFAULT_FAMILY_ID);
-                familyMember.setUserId(user.getId());
-                familyMember.setRole("member");
-                familyMember.setNickname(randomNickname);
-                familyMember.setJoinTime(LocalDateTime.now());
-                familyMemberMapper.insert(familyMember);
-                
-                log.info("新用户创建成功，userId: {}", user.getId());
-            } else {
-                log.info("用户已存在: userId={}, status={}", user.getId(), user.getStatus());
-                
-                // 检查用户状态
-                if (user.getStatus() != null && user.getStatus() == 0) {
-                    log.warn("用户已被禁用: userId={}", user.getId());
-                    result.put("code", 403);
-                    result.put("message", "账号已被禁用");
-                    return result;
-                }
-                
-                // 确保用户有默认家庭
-                if (user.getCurrentFamilyId() == null) {
-                    log.info("用户没有默认家庭，设置为默认值: userId={}", user.getId());
-                    user.setCurrentFamilyId(DEFAULT_FAMILY_ID);
-                    // 检查是否已经是家庭成员，如果不是则添加
-                    FamilyMember existingMember = familyMemberMapper.selectByUserIdAndFamilyId(user.getId(), DEFAULT_FAMILY_ID);
-                    if (existingMember == null) {
-                        log.info("添加现有用户到默认家庭: userId={}", user.getId());
-                        FamilyMember familyMember = new FamilyMember();
-                        familyMember.setFamilyId(DEFAULT_FAMILY_ID);
-                        familyMember.setUserId(user.getId());
-                        familyMember.setRole("member");
-                        familyMember.setNickname(user.getNickname());
-                        familyMember.setJoinTime(LocalDateTime.now());
-                        familyMemberMapper.insert(familyMember);
-                    }
+                log.warn("微信登录失败: 用户未注册, openid={}", openid);
+                result.put("code", 40401);
+                result.put("message", "您还未注册，请先注册账号");
+                result.put("needRegister", true);
+                return result;
+            }
+            
+            log.info("用户已存在: userId={}, status={}", user.getId(), user.getStatus());
+            
+            // 检查用户状态
+            if (user.getStatus() != null && user.getStatus() == 0) {
+                log.warn("用户已被禁用: userId={}", user.getId());
+                result.put("code", 403);
+                result.put("message", "账号已被禁用");
+                return result;
+            }
+            
+            // 确保用户有默认家庭
+            if (user.getCurrentFamilyId() == null) {
+                log.info("用户没有默认家庭，设置为默认值: userId={}", user.getId());
+                user.setCurrentFamilyId(DEFAULT_FAMILY_ID);
+                // 检查是否已经是家庭成员，如果不是则添加
+                FamilyMember existingMember = familyMemberMapper.selectByUserIdAndFamilyId(user.getId(), DEFAULT_FAMILY_ID);
+                if (existingMember == null) {
+                    log.info("添加现有用户到默认家庭: userId={}", user.getId());
+                    FamilyMember familyMember = new FamilyMember();
+                    familyMember.setFamilyId(DEFAULT_FAMILY_ID);
+                    familyMember.setUserId(user.getId());
+                    familyMember.setRole("member");
+                    familyMember.setNickname(user.getNickname());
+                    familyMember.setJoinTime(LocalDateTime.now());
+                    familyMemberMapper.insert(familyMember);
                 }
             }
             
@@ -185,7 +158,7 @@ public class WxLoginController {
             
             // 6. 返回 token 和用户信息
             result.put("code", 200);
-            result.put("message", isNewUser ? "注册并登录成功" : "登录成功");
+            result.put("message", "登录成功");
             
             Map<String, Object> data = new HashMap<>();
             data.put("token", tokenValue);
@@ -194,10 +167,9 @@ public class WxLoginController {
             data.put("nickname", user.getNickname());
             data.put("avatar", user.getAvatar());
             data.put("currentFamilyId", user.getCurrentFamilyId());
-            data.put("isNewUser", isNewUser);
             result.put("data", data);
             
-            log.info("微信登录完成: userId={}, isNewUser={}", user.getId(), isNewUser);
+            log.info("微信登录完成: userId={}", user.getId());
             
         } catch (Exception e) {
             log.error("微信登录异常: {}", e.getMessage(), e);

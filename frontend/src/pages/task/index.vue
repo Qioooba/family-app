@@ -43,7 +43,7 @@
         
         <view class="task-info">
           <text class="task-time" v-if="task.dueDate || task.dueTime">⏰ {{ formatDateTimeFull(task) }}</text>
-          <text class="task-assignee" v-if="task.assigneeName || task.assigneeNickname">👤 {{ task.assigneeName || task.assigneeNickname }}</text>
+          <text class="task-assignee" v-if="getTaskPeople(task)">👤 {{ getTaskPeople(task) }}</text>
         </view>
         
         <view class="task-footer" v-if="task.remark">
@@ -100,6 +100,23 @@ function getMemberName(userId) {
   if (!userId) return '未知'
   const member = familyMembers.value.find(m => m.userId === userId)
   return member ? (member.nickname || member.name || '家人') : '未知'
+}
+
+// 工具函数：获取任务人员显示（创建人 → 被指派人）
+function getTaskPeople(task) {
+  if (!task) return ''
+  const creatorId = task.creatorId
+  const assigneeId = task.assigneeId
+  const creatorName = task.creatorNickname || getMemberName(creatorId)
+  const assigneeName = task.assigneeNickname || task.assigneeName || getMemberName(assigneeId)
+  
+  // 如果是自己创建并指派给自己，只显示创建人
+  if (creatorId === assigneeId) {
+    return creatorName
+  }
+  
+  // 否则显示 创建人 → 被指派人
+  return `${creatorName} → ${assigneeName}`
 }
 
 // 计算各分类数量
@@ -183,7 +200,8 @@ async function loadTasks(force = false, loadMore = false) {
     const taskList = res.list || res.data || res || []
     const formattedTasks = taskList.map(task => ({
       ...task,
-      assigneeName: getMemberName(task.assigneeId)
+      assigneeName: task.assigneeNickname || getMemberName(task.assigneeId),
+      creatorName: task.creatorNickname || getMemberName(task.creatorId)
     }))
     
     if (loadMore) {

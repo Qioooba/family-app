@@ -194,6 +194,14 @@ public class TaskController {
                     }
                 }
                 
+                // 获取创建人的昵称
+                if (task.getCreatorId() != null) {
+                    User creator = userMapper.selectById(task.getCreatorId());
+                    if (creator != null) {
+                        taskMap.put("creatorNickname", creator.getNickname());
+                    }
+                }
+                
                 taskList.add(taskMap);
             }
             

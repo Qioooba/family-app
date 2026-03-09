@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -123,7 +124,15 @@ public class UserController {
             
             // 更新可选字段
             if (params.containsKey("nickname")) {
-                user.setNickname((String) params.get("nickname"));
+                String newNickname = (String) params.get("nickname");
+                user.setNickname(newNickname);
+                
+                // 同步更新所有家庭成员记录中的昵称
+                List<FamilyMember> memberRecords = familyMemberMapper.selectByUserId(userId);
+                for (FamilyMember member : memberRecords) {
+                    member.setNickname(newNickname);
+                    familyMemberMapper.updateById(member);
+                }
             }
             if (params.containsKey("phone")) {
                 user.setPhone((String) params.get("phone"));
@@ -132,6 +141,7 @@ public class UserController {
                 user.setAvatar((String) params.get("avatar"));
             }
             
+            user.setUpdateTime(LocalDateTime.now());
             userMapper.updateById(user);
             
             result.put("code", 200);

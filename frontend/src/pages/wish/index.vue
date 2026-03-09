@@ -94,7 +94,7 @@
             <view v-if="wish.status === 1" class="action-btn complete" @click="completeWish(wish)">
               <text>完成</text>
             </view>
-            <view class="action-btn delete" @click="deleteWish(wish)">
+            <view v-if="wish.status !== 2" class="action-btn delete" @click="deleteWish(wish)">
               <text>删除</text>
             </view>
           </view>

@@ -464,7 +464,7 @@ public class FamilyController {
                     .eq(FamilyMember::getFamilyId, familyId)
             );
             
-            // 组装成员信息，包含用户头像
+            // 组装成员信息，包含用户头像和最新昵称
             List<Map<String, Object>> memberList = new ArrayList<>();
             for (FamilyMember member : members) {
                 Map<String, Object> memberInfo = new HashMap<>();
@@ -472,16 +472,25 @@ public class FamilyController {
                 memberInfo.put("familyId", member.getFamilyId());
                 memberInfo.put("userId", member.getUserId());
                 memberInfo.put("role", member.getRole());
-                memberInfo.put("nickname", member.getNickname());
-                memberInfo.put("joinTime", member.getJoinTime());
                 
-                // 获取用户头像和手机号
+                // 获取用户最新信息（头像、昵称等）
                 User user = userMapper.selectById(member.getUserId());
                 if (user != null) {
+                    // 优先使用 User 表的最新昵称，如果没有则使用 FamilyMember 的昵称
+                    String displayNickname = user.getNickname();
+                    if (displayNickname == null || displayNickname.trim().isEmpty()) {
+                        displayNickname = member.getNickname();
+                    }
+                    memberInfo.put("nickname", displayNickname);
                     memberInfo.put("avatar", user.getAvatar());
                     memberInfo.put("username", user.getUsername());
                     memberInfo.put("phone", user.getPhone());
+                } else {
+                    // 用户不存在时使用成员表的数据
+                    memberInfo.put("nickname", member.getNickname());
                 }
+                
+                memberInfo.put("joinTime", member.getJoinTime());
                 
                 memberList.add(memberInfo);
             }
