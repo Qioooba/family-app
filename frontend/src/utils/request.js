@@ -20,6 +20,23 @@ const CONFIG = {
   RETRY_DELAY: 1000
 }
 
+// 处理头像URL - 将相对路径转为完整URL
+export const getAvatarUrl = (avatar) => {
+  if (!avatar) {
+    // 返回在线默认头像
+    return 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + Math.random()
+  }
+  // 如果已经是完整URL（http:// 或 https:// 或 wxfile://），直接使用
+  if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('wxfile://')) {
+    return avatar
+  }
+  // 如果是相对路径（如 /api/avatars/xxx.jpg），拼接base URL
+  if (avatar.startsWith('/')) {
+    return `${CONFIG.BASE_URL}${avatar}`
+  }
+  return avatar
+}
+
 // 始终使用完整URL直接访问后端，避免前端静态服务器拦截API请求
 // 注意：如需使用vite代理，请在vite.config.js中配置server.proxy
 const isH5 = typeof window !== 'undefined' && window.location

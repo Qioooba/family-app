@@ -260,13 +260,9 @@ const uploadAvatar = async (filePath) => {
     }
   } catch (e) {
     console.error('上传头像失败:', e)
-    // 如果上传失败，尝试直接保存本地路径（仅用于演示）
-    await userStore.updateUserInfo({
-      avatar: filePath
-    })
     uni.showToast({
-      title: '头像已更新',
-      icon: 'success'
+      title: '上传失败，请重试',
+      icon: 'none'
     })
   } finally {
     uni.hideLoading()

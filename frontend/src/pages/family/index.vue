@@ -221,6 +221,7 @@ import { familyApi } from '@/api/family.js'
 import { statsApi } from '@/api/stats.js'
 import { getDefaultFamily } from '@/utils/defaultFamily.js'
 import { useUserStore } from '@/stores/user.js'
+import { getAvatarUrl } from '@/utils/request.js'
 
 const userStore = useUserStore()
 
@@ -342,7 +343,7 @@ const loadFamilyData = async () => {
       members.value = membersRes.map(m => ({
         id: m.id || m.userId,
         nickname: m.nickname || m.name || '未知',
-        avatar: m.avatar || '../../static/avatar/default.jpg',
+        avatar: getAvatarUrl(m.avatar),
         phone: m.phone || '',
         role: m.role || 'member',
         isOnline: m.isOnline || false
