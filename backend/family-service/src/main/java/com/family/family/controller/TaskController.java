@@ -9,6 +9,7 @@ import com.family.family.entity.User;
 import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.mapper.TaskMapper;
 import com.family.family.mapper.UserMapper;
+import com.family.family.service.WechatWorkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +36,9 @@ public class TaskController {
     
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private WechatWorkService wechatWorkService;
 
     /**
      * 获取当前登录用户ID
@@ -304,6 +308,38 @@ public class TaskController {
             task.setIsDeleted(0);
 
             taskMapper.insert(task);
+            
+            // ===== 企业微信推送通知 =====
+            try {
+                // 获取创建者信息
+                User creator = userMapper.selectById(userId);
+                String creatorName = creator != null ? creator.getNickname() : "家人";
+                
+                // 如果有被指派人，给被指派人发通知
+                if (task.getAssigneeId() != null && !task.getAssigneeId().equals(userId)) {
+                    User assignee = userMapper.selectById(task.getAssigneeId());
+                    if (assignee != null) {
+                        // 通知执行人（齐军）
+                        wechatWorkService.notifyTaskAssignedToAssignee(
+                            task.getAssigneeId(),
+                            creatorName,
+                            task.getTitle()
+                        );
+                        
+                        // 通知指派人（陶陶）
+                        wechatWorkService.notifyTaskAssignedToCreator(
+                            userId,
+                            assignee.getNickname(),
+                            task.getTitle()
+                        );
+                    }
+                }
+            } catch (Exception e) {
+                // 推送失败不影响主流程
+                System.err.println("[WechatWork] 任务指派推送失败: " + e.getMessage());
+            }
+            // =============================
+            
             result.put("code", 200);
             result.put("message", "success");
             result.put("data", task);
@@ -459,6 +495,32 @@ public class TaskController {
             task.setFinishTime(LocalDateTime.now());
             task.setUpdateTime(LocalDateTime.now());
             taskMapper.updateById(task);
+            
+            // ===== 企业微信推送通知 =====
+            try {
+                // 获取完成者信息
+                User completer = userMapper.selectById(userId);
+                String completerName = completer != null ? completer.getNickname() : "家人";
+                
+                // 通知自己（完成者）
+                wechatWorkService.notifyTaskCompletedToSelf(
+                    userId,
+                    task.getTitle()
+                );
+                
+                // 如果创建者不是自己，通知创建者
+                if (task.getCreatorId() != null && !task.getCreatorId().equals(userId)) {
+                    wechatWorkService.notifyTaskCompletedToCreator(
+                        task.getCreatorId(),
+                        completerName,
+                        task.getTitle()
+                    );
+                }
+            } catch (Exception e) {
+                // 推送失败不影响主流程
+                System.err.println("[WechatWork] 任务完成推送失败: " + e.getMessage());
+            }
+            // =============================
 
             result.put("code", 200);
             result.put("message", "success");

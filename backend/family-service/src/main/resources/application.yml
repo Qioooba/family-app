@@ -69,6 +69,13 @@ weixin:
   appId: ${WEIXIN_APPID:wxbdc70536c5e52b82}
   appSecret: ${WEIXIN_APPSECRET:ee79692373557e80d206c09a1876dbea}
 
+# 企业微信配置（用于任务通知推送）
+wechat:
+  work:
+    corpid: ${WECHAT_WORK_CORPID:}
+    agentid: ${WECHAT_WORK_AGENTID:}
+    secret: ${WECHAT_WORK_SECRET:}
+
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

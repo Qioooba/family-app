@@ -22,6 +22,7 @@ public class User {
     private String phone;
     private String email;
     private String wxOpenid; // 微信OpenID
+    private String workUserId; // 企业微信成员ID
     private Integer gender;
     private LocalDateTime lastLoginTime;
     private Integer status;
@@ -53,6 +54,9 @@ public class User {
     
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    
+    public String getWorkUserId() { return workUserId; }
+    public void setWorkUserId(String workUserId) { this.workUserId = workUserId; }
     
     public Integer getGender() { return gender; }
     public void setGender(Integer gender) { this.gender = gender; }
