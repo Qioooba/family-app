@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -15,69 +18,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 企业微信推送服务
+ * 企业微信推送服务 - 通过腾讯云函数调用
  */
 @Slf4j
 @Service
 public class WechatWorkService {
 
-    @Value("${wechat.work.corpid:}")
-    private String corpId;
-
-    @Value("${wechat.work.agentid:}")
-    private String agentId;
-
-    @Value("${wechat.work.secret:}")
-    private String secret;
+    @Value("${wechat.work.cloud-function-url:}")
+    private String cloudFunctionUrl;
 
     @Autowired
     private UserMapper userMapper;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private String accessToken;
-    private long tokenExpireTime;
-
-    /**
-     * 获取企业微信access_token
-     */
-    private synchronized String getAccessToken() {
-        // 如果token未过期，直接返回
-        if (accessToken != null && System.currentTimeMillis() < tokenExpireTime) {
-            return accessToken;
-        }
-
-        // 检查配置是否完整
-        if (corpId == null || corpId.isEmpty() || secret == null || secret.isEmpty()) {
-            log.warn("企业微信配置不完整，无法获取access_token");
-            return null;
-        }
-
-        try {
-            String url = String.format(
-                "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=%s&corpsecret=%s",
-                corpId, secret
-            );
-
-            String response = restTemplate.getForObject(url, String.class);
-            Map<String, Object> result = objectMapper.readValue(response, Map.class);
-
-            if (result.get("access_token") != null) {
-                accessToken = (String) result.get("access_token");
-                // token有效期2小时，提前5分钟刷新
-                tokenExpireTime = System.currentTimeMillis() + (7200 - 300) * 1000;
-                log.info("获取企业微信access_token成功");
-                return accessToken;
-            } else {
-                log.error("获取access_token失败: {}", result);
-            }
-        } catch (Exception e) {
-            log.error("获取企业微信access_token异常", e);
-        }
-
-        return null;
-    }
 
     /**
      * 获取用户的企业微信ID
@@ -116,9 +70,15 @@ public class WechatWorkService {
     }
 
     /**
-     * 实际发送消息
+     * 实际发送消息 - 调用腾讯云函数
      */
     private void doSendMessage(WechatMessage message) throws Exception {
+        // 检查云函数URL配置
+        if (cloudFunctionUrl == null || cloudFunctionUrl.isEmpty()) {
+            log.warn("云函数URL未配置，跳过推送");
+            return;
+        }
+
         // 获取用户企业微信ID
         String workUserId = getWorkUserId(message.getTargetUserId());
         if (workUserId == null || workUserId.isEmpty()) {
@@ -126,32 +86,22 @@ public class WechatWorkService {
             return;
         }
 
-        // 获取access_token
-        String token = getAccessToken();
-        if (token == null) {
-            throw new RuntimeException("无法获取access_token");
-        }
+        // 构建请求体
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("userId", workUserId);
+        requestBody.put("title", message.getTitle());
+        requestBody.put("description", message.getDescription());
+        requestBody.put("url", message.getUrl());
 
-        // 构建消息
-        String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("touser", workUserId);
-        payload.put("msgtype", "textcard");
-        payload.put("agentid", agentId);
+        // 发送请求到云函数
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
+        String response = restTemplate.postForObject(cloudFunctionUrl, request, String.class);
 
-        // 文本卡片消息（美观）
-        Map<String, String> textcard = new HashMap<>();
-        textcard.put("title", message.getTitle());
-        textcard.put("description", message.getDescription());
-        textcard.put("url", message.getUrl() != null ? message.getUrl() : "https://qioba.cn");
-        textcard.put("btntxt", "查看详情");
-
-        payload.put("textcard", textcard);
-
-        // 发送请求
-        String response = restTemplate.postForObject(url, payload, String.class);
-        log.info("企业微信消息发送成功, userId={}, workId={}, response={}", 
+        log.info("云函数调用成功, userId={}, workId={}, response={}", 
                  message.getTargetUserId(), workUserId, response);
     }
 
