@@ -328,14 +328,16 @@ const loadTodayTasks = async () => {
     const res = await taskApi.getTodayTasks(familyId)
     const todayTodoTasks = res || []
     
-    // 格式化并显示所有今日待办
+    // 格式化并显示所有今日待办（过滤掉已完成的）
     if (todayTodoTasks.length > 0) {
-      todayTasks.value = todayTodoTasks.map(task => ({
-        ...task,
-        assigneeName: task.assigneeNickname || getMemberName(task.assigneeId) || '家人',
-        creatorName: task.creatorNickname || getMemberName(task.creatorId) || '家人',
-        time: formatTaskTime(task.dueTime)
-      }))
+      todayTasks.value = todayTodoTasks
+        .filter(task => task.status !== 2) // 过滤已完成的任务
+        .map(task => ({
+          ...task,
+          assigneeName: task.assigneeNickname || getMemberName(task.assigneeId) || '家人',
+          creatorName: task.creatorNickname || getMemberName(task.creatorId) || '家人',
+          time: formatTaskTime(task.dueTime)
+        }))
     } else {
       todayTasks.value = []
     }
@@ -784,6 +786,16 @@ const toggleTask = async (task) => {
   try {
     // 调用后端 API 完成/取消完成任务
     await taskApi.complete(task.id)
+    
+    // 如果是完成任务，立即从今日待办列表中移除
+    if (isCompleting) {
+      todayTasks.value = todayTasks.value.filter(t => t.id !== task.id)
+      uni.showToast({
+        title: '任务已完成',
+        icon: 'success',
+        duration: 1500
+      })
+    }
   } catch (error) {
     // API 调用失败，回滚状态
     task.status = originalStatus
