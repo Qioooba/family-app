@@ -7,9 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -18,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 企业微信推送服务 - 直接调用企业微信API
+ * 微信推送服务 - 支持微信小程序订阅消息
  */
 @Slf4j
 @Service
@@ -35,6 +32,9 @@ public class WechatWorkService {
 
     @Value("${wechat.appid:wxbdc70536c5e52b82}")
     private String wechatAppId;
+
+    @Value("${weixin.appSecret:}")
+    private String wechatAppSecret;
 
     @Autowired
     private UserMapper userMapper;
@@ -113,7 +113,7 @@ public class WechatWorkService {
     }
 
     /**
-     * 实际发送消息 - 直接调用企业微信API
+     * 实际发送消息 - 使用TextCard格式（在微信中显示详细内容）
      */
     private void doSendMessage(WechatMessage message) throws Exception {
         String token = getAccessToken();
@@ -129,39 +129,29 @@ public class WechatWorkService {
 
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
+        // 构建小程序跳转链接 - 使用URL Link
+        String miniProgramUrl = "https://qioba.cn/jump-mp"; // 跳转页
+
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
-        payload.put("msgtype", "miniprogram_notice");
+        payload.put("msgtype", "text");
         payload.put("agentid", agentId);
         
-        // 小程序通知消息（点击跳转到小程序）
-        Map<String, Object> miniprogramNotice = new HashMap<>();
-        miniprogramNotice.put("appid", wechatAppId);
-        miniprogramNotice.put("page", "pages/task/index");
-        miniprogramNotice.put("title", message.getTitle());
         // 去除HTML标签
         String cleanDesc = message.getDescription().replaceAll("<[^>]*>", "");
-        miniprogramNotice.put("description", cleanDesc);
         
-        // 内容项
-        java.util.List<Map<String, String>> contentItems = new java.util.ArrayList<>();
-        Map<String, String> item1 = new HashMap<>();
-        item1.put("key", "时间");
-        item1.put("value", java.time.LocalDateTime.now().toString().substring(0, 16));
-        contentItems.add(item1);
+        // 文字消息 - 在微信中直接显示完整内容
+        String content = message.getTitle() + "\n\n" 
+                        + cleanDesc + "\n\n" 
+                        + "【点击查看】" + miniProgramUrl;
         
-        Map<String, String> item2 = new HashMap<>();
-        item2.put("key", "内容");
-        item2.put("value", cleanDesc.length() > 100 ? cleanDesc.substring(0, 100) + "..." : cleanDesc);
-        contentItems.add(item2);
+        Map<String, String> text = new HashMap<>();
+        text.put("content", content);
         
-        miniprogramNotice.put("content_item", contentItems);
-        miniprogramNotice.put("emphasis_first_item", true);
-        
-        payload.put("miniprogram_notice", miniprogramNotice);
+        payload.put("text", text);
 
         String response = restTemplate.postForObject(url, payload, String.class);
-        log.info("企业微信消息发送成功(小程序), userId={}, workId={}, response={}", 
+        log.info("企业微信消息发送成功(text), userId={}, workId={}, response={}", 
                  message.getTargetUserId(), workUserId, response);
     }
 
@@ -173,9 +163,9 @@ public class WechatWorkService {
         msg.setTargetUserId(assigneeId);
         msg.setTitle("🏠 新任务指派");
         msg.setDescription(String.format(
-            "<div class='gray'>%s</div><div class='highlight'>%s给你指派了任务：%s</div>",
-            java.time.LocalDateTime.now().toString().substring(0, 16),
-            fromName, taskTitle
+            "【%s】给你指派了新任务：%s  时间：%s",
+            fromName, taskTitle,
+            java.time.LocalDateTime.now().toString().substring(0, 16)
         ));
         sendMessageAsync(msg);
     }
@@ -186,9 +176,9 @@ public class WechatWorkService {
         msg.setTargetUserId(creatorId);
         msg.setTitle("✅ 任务已指派");
         msg.setDescription(String.format(
-            "<div class='gray'>%s</div><div class='highlight'>你已指派任务给%s：%s</div>",
-            java.time.LocalDateTime.now().toString().substring(0, 16),
-            toName, taskTitle
+            "你已指派任务给【%s】：%s  时间：%s",
+            toName, taskTitle,
+            java.time.LocalDateTime.now().toString().substring(0, 16)
         ));
         sendMessageAsync(msg);
     }
@@ -199,9 +189,9 @@ public class WechatWorkService {
         msg.setTargetUserId(creatorId);
         msg.setTitle("🎉 任务已完成");
         msg.setDescription(String.format(
-            "<div class='gray'>%s</div><div class='highlight'>%s完成了你指派的任务：%s</div>",
-            java.time.LocalDateTime.now().toString().substring(0, 16),
-            completeByName, taskTitle
+            "【%s】完成了你指派的任务：%s  时间：%s",
+            completeByName, taskTitle,
+            java.time.LocalDateTime.now().toString().substring(0, 16)
         ));
         sendMessageAsync(msg);
     }
@@ -212,9 +202,9 @@ public class WechatWorkService {
         msg.setTargetUserId(userId);
         msg.setTitle("✨ 任务完成");
         msg.setDescription(String.format(
-            "<div class='gray'>%s</div><div class='highlight'>你完成了任务：%s</div>继续保持！",
-            java.time.LocalDateTime.now().toString().substring(0, 16),
-            taskTitle
+            "你完成了任务：%s  时间：%s  继续保持！",
+            taskTitle,
+            java.time.LocalDateTime.now().toString().substring(0, 16)
         ));
         sendMessageAsync(msg);
     }
