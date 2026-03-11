@@ -378,7 +378,18 @@ const closeAddModal = () => {
 // 打开详情弹窗
 const openDetailModal = (wish) => {
   console.log('打开详情弹窗', wish)
-  currentWish.value = { ...wish }
+  
+  // 处理日期格式
+  let expectDate = wish.expectDate
+  if (Array.isArray(expectDate)) {
+    const [year, month, day] = expectDate
+    expectDate = `${year}年${month}月${day}日`
+  }
+  
+  currentWish.value = { 
+    ...wish,
+    expectDate: expectDate
+  }
   showDetailModal.value = true
 }
 
