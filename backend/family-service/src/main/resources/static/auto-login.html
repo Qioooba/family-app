@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>正在登录家庭小程序...</title>
+    <title>正在登录...</title>
     <style>
         * {
             margin: 0;
@@ -68,35 +68,6 @@
             font-size: 14px;
             opacity: 0.9;
         }
-        .steps {
-            margin-top: 40px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 16px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-        }
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            text-align: left;
-        }
-        .step:last-child {
-            margin-bottom: 0;
-        }
-        .step-num {
-            width: 24px;
-            height: 24px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 600;
-        }
         .error {
             background: rgba(255,100,100,0.2);
             border-radius: 12px;
@@ -123,31 +94,16 @@
     <div class="container">
         <div class="logo">🏠</div>
         <div class="title">家庭小程序</div>
-        <div class="subtitle">正在自动登录...</div>
+        <div class="subtitle" id="subtitle">正在自动登录...</div>
         
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <div class="loading-text">验证登录信息</div>
-        </div>
-
-        <div class="steps" id="steps">
-            <div class="step">
-                <div class="step-num">1</div>
-                <span>验证临时Token</span>
-            </div>
-            <div class="step">
-                <div class="step-num">2</div>
-                <span>保存登录凭证</span>
-            </div>
-            <div class="step">
-                <div class="step-num">3</div>
-                <span>打开小程序首页</span>
-            </div>
+            <div class="loading-text">请稍候</div>
         </div>
 
         <div class="error" id="error" style="display: none;">
-            <div class="error-text">登录链接已过期或无效</div>
-            <button class="retry-btn" onclick="goToMiniProgram()">手动进入小程序</button>
+            <div class="error-text" id="errorText">登录失败</div>
+            <button class="retry-btn" onclick="location.reload()">重新尝试</button>
         </div>
     </div>
 
@@ -160,70 +116,62 @@
 
         // 获取token
         const token = getQueryParam('token');
+        const subtitle = document.getElementById('subtitle');
+        const loadingText = document.querySelector('.loading-text');
 
-        // 跳转到小程序（使用URL Scheme）
-        function goToMiniProgram() {
-            // 微信小程序URL Scheme
-            // 需要在微信公众平台配置URL Scheme
-            const appId = 'wxbdc70536c5e52b82';
-            const path = 'pages/home/index';
-            
-            // 尝试使用URL Scheme跳转
-            const wxUrl = `weixin://dl/miniprogram?appid=${appId}&path=${encodeURIComponent(path)}`;
-            
-            // 保存token到localStorage，小程序启动时可以读取
-            if (token) {
-                localStorage.setItem('family_auto_login_token', token);
-                // 同时保存到sessionStorage用于当前会话
-                sessionStorage.setItem('family_auto_login_token', token);
-            }
-            
-            // 显示提示
-            showManualGuide();
-        }
-
-        // 显示手动操作指南
-        function showManualGuide() {
-            alert('请按以下步骤进入小程序：\n\n1. 点击右上角「···」\n2. 选择「在小程序中打开」或「浮窗」\n3. 小程序会自动识别登录状态\n\n或返回微信首页，下拉查看最近使用的小程序');
-        }
-
-        // 验证token并保存
-        async function validateAndLogin() {
+        // 执行自动登录
+        async function autoLogin() {
             if (!token) {
                 showError('缺少登录凭证');
                 return;
             }
 
             try {
-                // 保存token到localStorage
-                localStorage.setItem('family_auto_login_token', token);
-                sessionStorage.setItem('family_auto_login_token', token);
+                loadingText.textContent = '正在验证...';
                 
-                // 尝试通过API验证token（可选，用于提前检查）
-                // const res = await fetch(`/api/auth/validate-temp-token?token=${token}`);
+                // 调用后端API进行免密登录
+                const res = await fetch('https://qioba.cn:8443/api/auth/auto-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ tempToken: token })
+                });
                 
-                // 延迟后提示用户进入小程序
-                setTimeout(() => {
-                    document.querySelector('.loading-text').textContent = '请手动进入小程序';
-                    goToMiniProgram();
-                }, 2000);
+                const data = await res.json();
                 
-            } catch (e) {
-                console.error('保存登录凭证失败:', e);
-                showError('保存登录凭证失败');
+                if (data.code === 200) {
+                    // 登录成功，保存token
+                    const authToken = data.data.token;
+                    localStorage.setItem('token', authToken);
+                    localStorage.setItem('userInfo', JSON.stringify(data.data));
+                    
+                    loadingText.textContent = '登录成功，正在跳转...';
+                    subtitle.textContent = '欢迎回来！';
+                    
+                    // 延迟后跳转到H5首页
+                    setTimeout(() => {
+                        window.location.href = 'https://qioba.cn';
+                    }, 1000);
+                } else {
+                    showError(data.message || '登录链接已过期');
+                }
+            } catch (error) {
+                console.error('登录失败:', error);
+                showError('网络错误，请重试');
             }
         }
 
         // 显示错误
         function showError(msg) {
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('steps').style.display = 'none';
             document.getElementById('error').style.display = 'block';
-            document.querySelector('.error-text').textContent = msg;
+            document.getElementById('errorText').textContent = msg;
+            subtitle.textContent = '登录遇到问题';
         }
 
-        // 页面加载完成后执行
-        window.onload = validateAndLogin;
+        // 页面加载后执行
+        window.onload = autoLogin;
     </script>
 </body>
 </html>
