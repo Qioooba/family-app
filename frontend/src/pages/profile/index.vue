@@ -228,10 +228,13 @@ const uploadAvatar = async (filePath) => {
   try {
     uni.showLoading({ title: '上传中...' })
     
+    // 使用完整 URL，避免 url scheme 错误
+    const baseUrl = 'https://qioba.cn:8443'
+    
     // 这里调用上传接口
     const uploadRes = await new Promise((resolve, reject) => {
       uni.uploadFile({
-        url: '/api/user/avatar',
+        url: `${baseUrl}/api/user/avatar`,
         filePath: filePath,
         name: 'file',
         header: {
