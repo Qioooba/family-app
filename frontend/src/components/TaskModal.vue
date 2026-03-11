@@ -423,7 +423,7 @@ defineExpose({
 }
 
 .modal-body {
-  max-height: 600rpx;
+  max-height: 900rpx;
   padding: 24rpx 32rpx;
 }
 
