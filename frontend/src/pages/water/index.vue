@@ -5,7 +5,6 @@
       <view class="back-btn" @click="goBack">
         <u-icon name="arrow-left" size="40" color="#333"></u-icon>
       </view>
-      <text class="title">喝水打卡</text>
     </view>
 
     <!-- 主内容区 -->
@@ -288,7 +287,7 @@ const historyDate = ref('')
 const historyData = ref({})
 const today = ref(new Date().toISOString().split('T')[0])
 
-const quickAmounts = [100, 150, 200, 250, 350, 500]
+const quickAmounts = [100, 125, 150, 175, 200, 250, 350, 500]
 const targetOptions = [1500, 2000, 2500, 3000, 3500]
 const isCustomTarget = ref(false)
 const customTargetInput = ref('')
