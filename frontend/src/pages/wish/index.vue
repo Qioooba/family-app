@@ -55,6 +55,7 @@
           class="wish-card"
           :class="{ completed: wish.status === 2 }"
           :style="{ animationDelay: index * 0.1 + 's' }"
+          @click="openDetailModal(wish)"
         >
           <!-- 卡片头部 -->
           <view class="card-header">
@@ -200,6 +201,78 @@
         </view>
       </view>
     </view>
+    
+    <!-- 查看心愿详情弹窗 -->
+    <view v-if="showDetailModal" class="modal-overlay" @click="closeDetailModal">
+      <view class="modal-content" @click.stop>
+        <!-- 弹窗头部 -->
+        <view class="modal-header">
+          <text class="modal-title">心愿详情</text>
+          <text class="modal-close" @click="closeDetailModal">✕</text>
+        </view>
+        
+        <!-- 弹窗内容 - 只读显示 -->
+        <view class="modal-body" v-if="currentWish">
+          <!-- 心愿标题 -->
+          <view class="form-item">
+            <text class="form-label">心愿标题</text>
+            <view class="form-display">{{ currentWish.title }}</view>
+          </view>
+          
+          <!-- 心愿描述 -->
+          <view class="form-item" v-if="currentWish.description">
+            <text class="form-label">详细描述</text>
+            <view class="form-display form-display-textarea">{{ currentWish.description }}</view>
+          </view>
+          
+          <!-- 心愿类型 -->
+          <view class="form-item">
+            <text class="form-label">愿望类型</text>
+            <view class="type-list">
+              <view 
+                class="type-item active"
+              >
+                <text class="type-icon">{{ getTypeIcon(currentWish.type) }}</text>
+                <text class="type-name">{{ getTypeName(currentWish.type) }}</text>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 预算 -->
+          <view class="form-item" v-if="currentWish.budgetMin || currentWish.budgetMax">
+            <text class="form-label">预算范围</text>
+            <view class="form-display">{{ formatBudget(currentWish.budgetMin, currentWish.budgetMax) }}</view>
+          </view>
+          
+          <!-- 期望日期 -->
+          <view class="form-item" v-if="currentWish.expectDate">
+            <text class="form-label">期望实现日期</text>
+            <view class="form-display">{{ currentWish.expectDate }}</view>
+          </view>
+          
+          <!-- 状态 -->
+          <view class="form-item">
+            <text class="form-label">当前状态</text>
+            <view class="status-display" :class="'status-' + currentWish.status">
+              {{ getStatusText(currentWish.status) }}
+            </view>
+          </view>
+        </view>
+        
+        <!-- 弹窗底部 -->
+        <view class="modal-footer">
+          <view class="cancel-btn" @click="closeDetailModal">
+            <text>关闭</text>
+          </view>
+          <view class="submit-btn" @click="claimFromDetail" v-if="currentWish && currentWish.status === 0">
+            <text>认领</text>
+          </view>
+          <view class="submit-btn" @click="completeFromDetail" v-if="currentWish && currentWish.status === 1">
+            <text>完成</text>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -210,6 +283,8 @@ import { ref, onMounted } from 'vue'
 const loading = ref(false)
 const wishes = ref([])
 const showAddModal = ref(false)
+const showDetailModal = ref(false)
+const currentWish = ref(null)
 const currentTab = ref(0) // 0-待实现, 1-已实现
 
 // 表单数据
@@ -235,6 +310,12 @@ const wishTypes = [
 const getTypeName = (type) => {
   const found = wishTypes.find(t => t.value === type)
   return found ? found.label : '其他'
+}
+
+// 获取类型图标
+const getTypeIcon = (type) => {
+  const found = wishTypes.find(t => t.value === type)
+  return found ? found.icon : '💝'
 }
 
 // 获取状态文本
@@ -275,6 +356,34 @@ const openAddModal = () => {
 const closeAddModal = () => {
   console.log('关闭添加弹窗')
   showAddModal.value = false
+}
+
+// 打开详情弹窗
+const openDetailModal = (wish) => {
+  console.log('打开详情弹窗', wish)
+  currentWish.value = { ...wish }
+  showDetailModal.value = true
+}
+
+// 关闭详情弹窗
+const closeDetailModal = () => {
+  console.log('关闭详情弹窗')
+  showDetailModal.value = false
+  currentWish.value = null
+}
+
+// 从详情页认领
+const claimFromDetail = async () => {
+  if (!currentWish.value) return
+  await claimWish(currentWish.value)
+  closeDetailModal()
+}
+
+// 从详情页完成
+const completeFromDetail = async () => {
+  if (!currentWish.value) return
+  await completeWish(currentWish.value)
+  closeDetailModal()
 }
 
 // 创建心愿
@@ -903,6 +1012,46 @@ onMounted(() => {
   .submit-btn {
     background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
     color: #fff;
+  }
+}
+
+// 详情弹窗只读样式
+.form-display {
+  padding: 24rpx;
+  background: #f8f9fc;
+  border-radius: 20rpx;
+  font-size: 30rpx;
+  color: #2d3748;
+  min-height: 80rpx;
+  display: flex;
+  align-items: center;
+}
+
+.form-display-textarea {
+  min-height: 160rpx;
+  align-items: flex-start;
+}
+
+.status-display {
+  display: inline-block;
+  padding: 12rpx 32rpx;
+  border-radius: 24rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  
+  &.status-0 {
+    background: rgba(107, 141, 214, 0.1);
+    color: #6B8DD6;
+  }
+  
+  &.status-1 {
+    background: rgba(246, 173, 85, 0.1);
+    color: #f6ad55;
+  }
+  
+  &.status-2 {
+    background: rgba(104, 211, 145, 0.1);
+    color: #68d391;
   }
 }
 </style>
