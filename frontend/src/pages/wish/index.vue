@@ -53,49 +53,50 @@
           v-for="(wish, index) in wishes" 
           :key="wish.id"
           class="wish-card"
-          :class="{ completed: wish.status === 2 }"
           :style="{ animationDelay: index * 0.1 + 's' }"
-          @click="openDetailModal(wish)"
         >
-          <!-- 卡片头部 -->
-          <view class="card-header">
-            <view class="wish-type-tag" :class="wish.type || 'other'">
-              <text>{{ getTypeName(wish.type) }}</text>
+          <!-- 卡片可点击区域（不包含按钮） -->
+          <view class="card-content" @click="openDetailModal(wish)">
+            <!-- 卡片头部 -->
+            <view class="card-header">
+              <view class="wish-type-tag" :class="wish.type || 'other'">
+                <text>{{ getTypeName(wish.type) }}</text>
+              </view>
+              <view class="wish-status" :class="'status-' + wish.status">
+                <text>{{ getStatusText(wish.status) }}</text>
+              </view>
             </view>
-            <view class="wish-status" :class="'status-' + wish.status">
-              <text>{{ getStatusText(wish.status) }}</text>
+            
+            <!-- 标题 -->
+            <text class="wish-title">{{ wish.title }}</text>
+            
+            <!-- 描述 -->
+            <text v-if="wish.description" class="wish-desc">{{ wish.description }}</text>
+            
+            <!-- 预算 -->
+            <view v-if="wish.budgetMin || wish.budgetMax" class="wish-budget">
+              <text class="budget-icon">💰</text>
+              <text class="budget-text">{{ formatBudget(wish.budgetMin, wish.budgetMax) }}</text>
+            </view>
+            
+            <!-- 进度条 -->
+            <view v-if="wish.status === 1" class="progress-section">
+              <view class="progress-bar">
+                <view class="progress-fill" :style="{ width: (wish.progress || 0) + '%' }"></view>
+              </view>
+              <text class="progress-text">{{ wish.progress || 0 }}%</text>
             </view>
           </view>
           
-          <!-- 标题 -->
-          <text class="wish-title">{{ wish.title }}</text>
-          
-          <!-- 描述 -->
-          <text v-if="wish.description" class="wish-desc">{{ wish.description }}</text>
-          
-          <!-- 预算 -->
-          <view v-if="wish.budgetMin || wish.budgetMax" class="wish-budget">
-            <text class="budget-icon">💰</text>
-            <text class="budget-text">{{ formatBudget(wish.budgetMin, wish.budgetMax) }}</text>
-          </view>
-          
-          <!-- 进度条 -->
-          <view v-if="wish.status === 1" class="progress-section">
-            <view class="progress-bar">
-              <view class="progress-fill" :style="{ width: (wish.progress || 0) + '%' }"></view>
-            </view>
-            <text class="progress-text">{{ wish.progress || 0 }}%</text>
-          </view>
-          
-          <!-- 操作按钮 -->
-          <view class="card-actions">
-            <view v-if="wish.status === 0" class="action-btn claim" @click="claimWish(wish)">
+          <!-- 操作按钮（独立区域，点击不触发详情） -->
+          <view v-if="wish.status !== 2" class="card-actions">
+            <view v-if="wish.status === 0" class="action-btn claim" @click.stop="claimWish(wish)">
               <text>认领</text>
             </view>
-            <view v-if="wish.status === 1" class="action-btn complete" @click="completeWish(wish)">
+            <view v-if="wish.status === 1" class="action-btn complete" @click.stop="completeWish(wish)">
               <text>完成</text>
             </view>
-            <view v-if="wish.status !== 2" class="action-btn delete" @click="deleteWish(wish)">
+            <view class="action-btn delete" @click.stop="deleteWish(wish)">
               <text>删除</text>
             </view>
           </view>
@@ -264,11 +265,13 @@
           <view class="cancel-btn" @click="closeDetailModal">
             <text>关闭</text>
           </view>
-          <view class="submit-btn" @click="claimFromDetail" v-if="currentWish && currentWish.status === 0">
-            <text>认领</text>
-          </view>
-          <view class="submit-btn" @click="completeFromDetail" v-if="currentWish && currentWish.status === 1">
-            <text>完成</text>
+          <view class="action-btns" v-if="currentWish && currentWish.status !== 2">
+            <view class="submit-btn" @click="claimFromDetail" v-if="currentWish.status === 0">
+              <text>认领</text>
+            </view>
+            <view class="submit-btn" @click="completeFromDetail" v-if="currentWish.status === 1">
+              <text>完成</text>
+            </view>
           </view>
         </view>
       </view>
@@ -1009,7 +1012,14 @@ onMounted(() => {
     color: #5a6c7d;
   }
   
+  .action-btns {
+    display: flex;
+    gap: 24rpx;
+    flex: 2;
+  }
+  
   .submit-btn {
+    flex: 1;
     background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
     color: #fff;
   }
