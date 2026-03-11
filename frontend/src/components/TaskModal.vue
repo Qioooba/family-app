@@ -110,7 +110,7 @@
             :class="{ active: form.assigneeId === member.userId }"
             @click="selectMember(member)"
           >
-            <image class="member-avatar" :src="member.avatar || '/static/avatar-default.png'" />
+            <image class="member-avatar" :src="getAvatarUrl(member.avatar) || '/static/avatar-default.png'" />
             <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
             <view class="member-check" v-if="form.assigneeId === member.userId">✓</view>
           </view>
@@ -124,6 +124,7 @@
 import { ref, computed, watch } from 'vue'
 import { taskApi } from '@/api/task.js'
 import { formatDateTime, extractDateTime } from '@/utils/dateHelper.js'
+import { getAvatarUrl } from '@/utils/request.js'
 
 // 接收props
 const props = defineProps({
