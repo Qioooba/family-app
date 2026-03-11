@@ -279,6 +279,18 @@ function loadMoreTasks() {
 // ========== 弹窗操作 ==========
 function openTaskModal(task = null) {
   console.log('打开任务弹窗', task, 'ref:', taskModalRef.value)
+  
+  // 已完成的任务只能查看详情，不能编辑
+  if (task && task.status === 2) {
+    uni.showModal({
+      title: '任务详情',
+      content: `任务：${task.title}\n${task.remark ? '备注：' + task.remark + '\n' : ''}状态：已完成`,
+      showCancel: false,
+      confirmText: '知道了'
+    })
+    return
+  }
+  
   setTimeout(() => {
     console.log('延迟后 ref:', taskModalRef.value)
     if (!taskModalRef.value) {
@@ -306,6 +318,12 @@ function switchCategory(index) {
 }
 
 async function toggleTask(task) {
+  // 已完成的任务不能恢复
+  if (task.status === 2) {
+    uni.showToast({ title: '已完成任务不能恢复', icon: 'none' })
+    return
+  }
+  
   const newStatus = task.status === 2 ? 0 : 2
   try {
     if (newStatus === 2) {
