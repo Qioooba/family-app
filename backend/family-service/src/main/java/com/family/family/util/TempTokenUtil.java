@@ -20,7 +20,7 @@ public class TempTokenUtil {
     private StringRedisTemplate redisTemplate;
 
     private static final String TEMP_TOKEN_PREFIX = "temp:token:";
-    private static final long TOKEN_EXPIRE_MINUTES = 30; // Token有效期30分钟
+    private static final long TOKEN_EXPIRE_MINUTES = 4320; // Token有效期3天 (3 * 24 * 60 = 4320分钟)
 
     /**
      * 生成临时Token
