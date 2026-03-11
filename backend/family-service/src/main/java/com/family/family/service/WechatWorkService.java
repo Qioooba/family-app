@@ -129,8 +129,8 @@ public class WechatWorkService {
 
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
-        // 构建小程序跳转链接 - 使用URL Link
-        String miniProgramUrl = "https://qioba.cn/jump-mp"; // 跳转页
+        // 构建跳转链接 - 使用后端服务地址
+        String miniProgramUrl = "https://qioba.cn:8443";
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
