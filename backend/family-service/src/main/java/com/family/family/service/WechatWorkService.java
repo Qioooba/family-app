@@ -133,9 +133,6 @@ public class WechatWorkService {
 
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
-        // 生成免密登录链接
-        String autoLoginUrl = tempTokenUtil.getAutoLoginUrl(message.getTargetUserId());
-
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
         payload.put("msgtype", "text");
@@ -145,9 +142,18 @@ public class WechatWorkService {
         String cleanDesc = message.getDescription().replaceAll("<[^>]*>", "");
         
         // 文字消息 - 在微信中直接显示完整内容
-        String content = message.getTitle() + "\n\n" 
-                        + cleanDesc + "\n\n" 
-                        + "【点击免密登录】" + autoLoginUrl;
+        String content;
+        
+        // 完成任务的消息不需要链接，其他消息需要免密登录链接
+        if (message.getType() == MessageType.TASK_COMPLETED || 
+            message.getType() == MessageType.TASK_COMPLETE_SELF) {
+            // 纯文本消息，不附带链接
+            content = message.getTitle() + "\n\n" + cleanDesc;
+        } else {
+            // 生成免密登录链接
+            String autoLoginUrl = tempTokenUtil.getAutoLoginUrl(message.getTargetUserId());
+            content = message.getTitle() + "\n\n" + cleanDesc + "\n\n" + "【点击免密登录】" + autoLoginUrl;
+        }
         
         Map<String, String> text = new HashMap<>();
         text.put("content", content);

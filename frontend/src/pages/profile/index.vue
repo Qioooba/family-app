@@ -229,30 +229,41 @@ const uploadAvatar = async (filePath) => {
     uni.showLoading({ title: '上传中...' })
     
     // 使用完整 URL，避免 url scheme 错误
-    const baseUrl = 'https://qioba.cn:8443'
+    const uploadUrl = 'https://qioba.cn:8443/api/user/avatar'
+    const token = uni.getStorageSync('token') || ''
+    
+    console.log('上传头像, URL:', uploadUrl)
+    console.log('文件路径:', filePath)
     
     // 这里调用上传接口
     const uploadRes = await new Promise((resolve, reject) => {
       uni.uploadFile({
-        url: `${baseUrl}/api/user/avatar`,
+        url: uploadUrl,
         filePath: filePath,
         name: 'file',
         header: {
-          'Authorization': uni.getStorageSync('token') || ''
+          'Authorization': token
         },
         success: (res) => {
+          console.log('上传成功, 响应:', res)
           try {
             const data = JSON.parse(res.data)
             resolve(data)
           } catch (e) {
+            console.error('解析响应失败:', e)
             reject(e)
           }
         },
-        fail: reject
+        fail: (err) => {
+          console.error('上传失败:', err)
+          reject(err)
+        }
       })
     })
     
-    if (uploadRes.data?.url) {
+    console.log('上传结果:', uploadRes)
+    
+    if (uploadRes.code === 200 && uploadRes.data?.url) {
       await userStore.updateUserInfo({
         avatar: uploadRes.data.url
       })
@@ -260,11 +271,13 @@ const uploadAvatar = async (filePath) => {
         title: '上传成功',
         icon: 'success'
       })
+    } else {
+      throw new Error(uploadRes.message || '上传失败')
     }
   } catch (e) {
     console.error('上传头像失败:', e)
     uni.showToast({
-      title: '上传失败，请重试',
+      title: e.message || '上传失败，请重试',
       icon: 'none'
     })
   } finally {

@@ -168,6 +168,25 @@
               {{ task.title }}
             </text>
             <view class="task-meta">
+              <view class="avatar-flow" v-if="task.creatorId !== task.assigneeId">
+                <image 
+                  class="task-avatar-small" 
+                  :src="getMemberAvatar(task.creatorId) || '/static/avatar-default.png'" 
+                  mode="aspectFill"
+                />
+                <text class="arrow-small">→</text>
+                <image 
+                  class="task-avatar-small" 
+                  :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
+                  mode="aspectFill"
+                />
+              </view>
+              <image 
+                v-else
+                class="task-avatar-small" 
+                :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
+                mode="aspectFill"
+              />
               <text class="assignee">{{ getTaskPeople(task) }}</text>
               <text class="divider">·</text>
               <text class="time">{{ task.time }}</text>
@@ -1564,9 +1583,29 @@ const getAnniversaryIcon = (type) => {
         display: flex;
         flex-wrap: wrap;
         gap: 4rpx 8rpx;
+        align-items: center;
         
         text {
           display: inline;
+        }
+        
+        .avatar-flow {
+          display: flex;
+          align-items: center;
+          gap: 4rpx;
+        }
+        
+        .task-avatar-small {
+          width: 28rpx;
+          height: 28rpx;
+          border-radius: 50%;
+          background: #E8F5E9;
+        }
+        
+        .arrow-small {
+          font-size: 20rpx;
+          color: #999;
+          margin: 0 2rpx;
         }
         
         .assignee {
