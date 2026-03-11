@@ -86,6 +86,7 @@ const categories = ref([
 
 const currentCategory = ref(0)
 const tasks = ref([])
+const allTasks = ref([]) // 所有任务用于统计数量
 const loading = ref(false)
 const isLoadingMore = ref(false)
 const hasMore = ref(true)
@@ -121,8 +122,9 @@ function getTaskPeople(task) {
 
 // 计算各分类数量
 const categoryCounts = computed(() => {
-  const todoCount = tasks.value.filter(t => t.status === 0 || t.status === 1).length
-  const doneCount = tasks.value.filter(t => t.status === 2).length
+  // 使用所有任务统计（包括已加载的所有状态）
+  const todoCount = allTasks.value.filter(t => t.status === 0 || t.status === 1).length
+  const doneCount = allTasks.value.filter(t => t.status === 2).length
   return [todoCount, doneCount]
 })
 
@@ -190,6 +192,7 @@ async function loadTasks(force = false, loadMore = false) {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     const status = categories.value[currentCategory.value]?.status
     
+    // 加载当前分类的任务
     const res = await taskApi.getList({
       familyId,
       status,
@@ -208,6 +211,24 @@ async function loadTasks(force = false, loadMore = false) {
       tasks.value = [...tasks.value, ...formattedTasks]
     } else {
       tasks.value = formattedTasks
+    }
+    
+    // 如果不是加载更多，同时加载另一状态的任务用于统计数量
+    if (!loadMore) {
+      const otherStatus = status === 0 ? 2 : 0
+      const otherRes = await taskApi.getList({
+        familyId,
+        status: otherStatus,
+        page: 1,
+        size: 999
+      })
+      const otherTaskList = otherRes.list || otherRes.data || otherRes || []
+      const otherFormattedTasks = otherTaskList.map(task => ({
+        ...task,
+        assigneeName: task.assigneeNickname || getMemberName(task.assigneeId),
+        creatorName: task.creatorNickname || getMemberName(task.creatorId)
+      }))
+      allTasks.value = [...formattedTasks, ...otherFormattedTasks]
     }
     
     const total = res.total || 0
