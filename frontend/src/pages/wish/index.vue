@@ -248,7 +248,7 @@
           <!-- 期望日期 -->
           <view class="form-item" v-if="currentWish.expectDate">
             <text class="form-label">期望实现日期</text>
-            <view class="form-display">{{ currentWish.expectDate }}</view>
+            <view class="form-display">{{ formatDate(currentWish.expectDate) }}</view>
           </view>
           
           <!-- 状态 -->
@@ -333,6 +333,20 @@ const formatBudget = (min, max) => {
   if (min) return `${min}元起`
   if (max) return `最高${max}元`
   return '面议'
+}
+
+// 格式化日期
+const formatDate = (dateValue) => {
+  if (!dateValue) return ''
+  
+  // 处理数组格式 [2026, 3, 14]
+  if (Array.isArray(dateValue)) {
+    const [year, month, day] = dateValue
+    return `${year}年${month}月${day}日`
+  }
+  
+  // 处理字符串格式
+  return dateValue
 }
 
 // 日期选择
