@@ -3,6 +3,7 @@ package com.family.family.service;
 import com.family.family.entity.MessageType;
 import com.family.family.entity.WechatMessage;
 import com.family.family.mapper.UserMapper;
+import com.family.family.util.TempTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ public class WechatWorkService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private TempTokenUtil tempTokenUtil;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -129,8 +133,8 @@ public class WechatWorkService {
 
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
-        // 构建跳转链接 - 使用跳转页
-        String jumpUrl = "https://qioba.cn:8443/jump-mp/index.html";
+        // 生成免密登录链接
+        String autoLoginUrl = tempTokenUtil.getAutoLoginUrl(message.getTargetUserId());
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
@@ -143,7 +147,7 @@ public class WechatWorkService {
         // 文字消息 - 在微信中直接显示完整内容
         String content = message.getTitle() + "\n\n" 
                         + cleanDesc + "\n\n" 
-                        + "【点击查看】" + jumpUrl;
+                        + "【点击免密登录】" + autoLoginUrl;
         
         Map<String, String> text = new HashMap<>();
         text.put("content", content);

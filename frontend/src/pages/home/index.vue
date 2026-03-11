@@ -249,6 +249,7 @@ import { weatherApi } from '../../api/weather'
 import { waterApi } from '../../api/water'
 import { getCurrentLocationWithAddress, getWeatherByCode, getShortLocationName } from '../../utils/weather'
 import { formatDateTime } from '../../utils/dateHelper'
+import { checkAutoLogin, doAutoLogin } from '../../utils/autoLogin'
 import LazyImage from '@/components/common/LazyImage.vue'
 import TaskModal from '@/components/TaskModal.vue'
 
@@ -854,12 +855,19 @@ const refreshHomeData = async () => {
 onShow(async () => {
   // H5 兼容：强制从 storage 同步 token
   const storedToken = uni.getStorageSync('token')
-  // 简化日志
-  // console.log('[Home onShow] storage token:', storedToken ? '存在' : '空')
-  // console.log('[Home onShow] store token:', userStore.token ? '存在' : '空')
   
   if (storedToken && storedToken !== userStore.token) {
     userStore.setToken(storedToken)
+  }
+  
+  // 检查免密登录（从企业微信跳转过来）
+  const autoLoginResult = await checkAutoLogin()
+  if (autoLoginResult.needLogin && autoLoginResult.token) {
+    const loginRes = await doAutoLogin(autoLoginResult.token)
+    if (loginRes.success) {
+      // 登录成功，刷新用户信息
+      await userStore.fetchUserInfo()
+    }
   }
   
   // 每次显示页面都刷新数据
