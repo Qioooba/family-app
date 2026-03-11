@@ -309,6 +309,14 @@ const getMemberName = (userId) => {
   return member ? (member.nickname || member.name || '家人') : '未知'
 }
 
+// 获取成员头像
+const getMemberAvatar = (userId) => {
+  if (!userId) return ''
+  const userIdNum = Number(userId)
+  const member = familyMembers.value.find(m => Number(m.userId) === userIdNum)
+  return member ? getAvatarUrl(member.avatar) : ''
+}
+
 // 获取任务人员显示（创建人 → 被指派人）
 const getTaskPeople = (task) => {
   if (!task) return ''

@@ -130,7 +130,9 @@ function getMemberName(userId) {
 // 工具函数：获取成员头像
 function getMemberAvatar(userId) {
   if (!userId) return ''
-  const member = familyMembers.value.find(m => m.userId === userId)
+  // 确保类型匹配
+  const userIdNum = Number(userId)
+  const member = familyMembers.value.find(m => Number(m.userId) === userIdNum)
   return member ? getAvatarUrl(member.avatar) : ''
 }
 
