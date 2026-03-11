@@ -23,8 +23,8 @@ const CONFIG = {
 // 处理头像URL - 将相对路径转为完整URL
 export const getAvatarUrl = (avatar) => {
   if (!avatar) {
-    // 返回在线默认头像
-    return 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + Math.random()
+    // 返回本地默认头像（小程序中外部HTTPS链接可能无法加载）
+    return '/static/avatar-default.png'
   }
   // 如果已经是完整URL（http:// 或 https:// 或 wxfile://），直接使用
   if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('wxfile://')) {
