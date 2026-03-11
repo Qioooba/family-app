@@ -43,7 +43,14 @@
         
         <view class="task-info">
           <text class="task-time" v-if="task.dueDate || task.dueTime">⏰ {{ formatDateTimeFull(task) }}</text>
-          <text class="task-assignee" v-if="getTaskPeople(task)">👤 {{ getTaskPeople(task) }}</text>
+          <view class="task-people" v-if="getTaskPeople(task)">
+            <image 
+              class="task-avatar" 
+              :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
+              mode="aspectFill"
+            />
+            <text class="task-assignee">{{ getTaskPeople(task) }}</text>
+          </view>
         </view>
         
         <view class="task-footer" v-if="task.remark">
@@ -74,6 +81,7 @@ import { ref, computed, onMounted } from 'vue'
 import { onShow, onLoad } from '@dcloudio/uni-app'
 import { taskApi, familyApi } from '../../api/index.js'
 import { formatDateTime, parseDate } from '../../utils/dateHelper'
+import { getAvatarUrl } from '../../utils/request.js'
 import TaskModal from '@/components/TaskModal.vue'
 
 // ========== 页面状态 ==========
@@ -101,6 +109,13 @@ function getMemberName(userId) {
   if (!userId) return '未知'
   const member = familyMembers.value.find(m => m.userId === userId)
   return member ? (member.nickname || member.name || '家人') : '未知'
+}
+
+// 工具函数：获取成员头像
+function getMemberAvatar(userId) {
+  if (!userId) return ''
+  const member = familyMembers.value.find(m => m.userId === userId)
+  return member ? getAvatarUrl(member.avatar) : ''
 }
 
 // 工具函数：获取任务人员显示（创建人 → 被指派人）
@@ -496,6 +511,24 @@ function formatDateTimeFull(task) {
   color: #8B9A8B;
   margin-bottom: 12px;
   flex-wrap: wrap;
+  
+  .task-people {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    .task-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #E8F5E9;
+    }
+    
+    .task-assignee {
+      font-size: 13px;
+      color: #8B9A8B;
+    }
+  }
 }
 
 .task-footer {
