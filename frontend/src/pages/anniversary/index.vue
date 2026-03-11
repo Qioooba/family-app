@@ -45,8 +45,8 @@
               <text class="card-date">{{ formatDate(item.targetDate) }}</text>
             </view>
             <view class="card-days">
-              <text class="days-num">{{ getDaysUntil(item.targetDate) }}</text>
-              <text class="days-label">天后</text>
+              <text class="days-num">{{ Math.abs(getDaysUntil(item.targetDate)) }}</text>
+              <text class="days-label">{{ getDaysUntil(item.targetDate) >= 0 ? '天后' : '天前' }}</text>
             </view>
           </view>
           
@@ -176,7 +176,22 @@ const loadData = async () => {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     const res = await anniversaryApi.getList(familyId)
     if (res && Array.isArray(res)) {
-      anniversaries.value = res
+      // 排序：未来的日期（天数少的）排前面，过去的日期排后面
+      anniversaries.value = res.sort((a, b) => {
+        const daysA = getDaysUntil(a.targetDate)
+        const daysB = getDaysUntil(b.targetDate)
+        
+        // 如果都是未来日期，天数少的排前面
+        if (daysA >= 0 && daysB >= 0) {
+          return daysA - daysB
+        }
+        // 如果都是过去日期，天数多的（离现在近的）排前面
+        if (daysA < 0 && daysB < 0) {
+          return daysB - daysA
+        }
+        // 未来日期排前面，过去日期排后面
+        return daysB >= 0 ? 1 : -1
+      })
     }
   } catch (e) {
     console.error('加载失败:', e)
@@ -210,7 +225,7 @@ const isPassed = (dateStr) => {
   return date < today
 }
 
-// 距离天数
+// 距离天数（未来为正数，过去为负数）
 const getDaysUntil = (dateValue) => {
   if (!dateValue) return 0
   
@@ -230,6 +245,18 @@ const getDaysUntil = (dateValue) => {
   date.setHours(0, 0, 0, 0)
   const diff = date - today
   return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
+
+// 获取显示天数文本（未来：还有xx天，过去：距今xx天）
+const getDaysText = (dateValue) => {
+  const days = getDaysUntil(dateValue)
+  if (days > 0) {
+    return `${days}天后`
+  } else if (days < 0) {
+    return `距今${Math.abs(days)}天`
+  } else {
+    return '今天'
+  }
 }
 
 // 进度
