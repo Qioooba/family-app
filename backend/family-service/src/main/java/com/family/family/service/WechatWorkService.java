@@ -18,20 +18,65 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 企业微信推送服务 - 通过腾讯云函数调用
+ * 企业微信推送服务 - 直接调用企业微信API
  */
 @Slf4j
 @Service
 public class WechatWorkService {
 
-    @Value("${wechat.work.cloud-function-url:}")
-    private String cloudFunctionUrl;
+    @Value("${wechat.work.corpid:}")
+    private String corpId;
+
+    @Value("${wechat.work.agentid:}")
+    private String agentId;
+
+    @Value("${wechat.work.secret:}")
+    private String secret;
+
+    @Value("${wechat.appid:wxbdc70536c5e52b82}")
+    private String wechatAppId;
 
     @Autowired
     private UserMapper userMapper;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private String accessToken;
+    private long tokenExpireTime;
+
+    /**
+     * 获取企业微信access_token
+     */
+    private synchronized String getAccessToken() {
+        if (accessToken != null && System.currentTimeMillis() < tokenExpireTime) {
+            return accessToken;
+        }
+
+        if (corpId == null || corpId.isEmpty() || secret == null || secret.isEmpty()) {
+            log.warn("企业微信配置不完整");
+            return null;
+        }
+
+        try {
+            String url = String.format(
+                "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=%s&corpsecret=%s",
+                corpId, secret
+            );
+            String response = restTemplate.getForObject(url, String.class);
+            Map<String, Object> result = objectMapper.readValue(response, Map.class);
+
+            if (result.get("access_token") != null) {
+                accessToken = (String) result.get("access_token");
+                tokenExpireTime = System.currentTimeMillis() + (7200 - 300) * 1000;
+                log.info("获取企业微信access_token成功");
+                return accessToken;
+            }
+        } catch (Exception e) {
+            log.error("获取企业微信access_token异常", e);
+        }
+        return null;
+    }
 
     /**
      * 获取用户的企业微信ID
@@ -56,13 +101,11 @@ public class WechatWorkService {
         for (int i = 0; i < maxRetry; i++) {
             try {
                 doSendMessage(message);
-                return; // 发送成功，退出重试
+                return;
             } catch (Exception e) {
                 log.error("企业微信推送失败，第{}次尝试, userId={}", i + 1, message.getTargetUserId(), e);
                 if (i < maxRetry - 1) {
-                    try {
-                        Thread.sleep(1000 * (i + 1)); // 递增延迟：1s, 2s, 3s
-                    } catch (InterruptedException ignored) {}
+                    try { Thread.sleep(1000 * (i + 1)); } catch (InterruptedException ignored) {}
                 }
             }
         }
@@ -70,47 +113,60 @@ public class WechatWorkService {
     }
 
     /**
-     * 实际发送消息 - 调用腾讯云函数
+     * 实际发送消息 - 直接调用企业微信API
      */
     private void doSendMessage(WechatMessage message) throws Exception {
-        // 检查云函数URL配置
-        if (cloudFunctionUrl == null || cloudFunctionUrl.isEmpty()) {
-            log.warn("云函数URL未配置，跳过推送");
-            return;
+        String token = getAccessToken();
+        if (token == null) {
+            throw new Exception("无法获取access_token");
         }
 
-        // 获取用户企业微信ID
         String workUserId = getWorkUserId(message.getTargetUserId());
         if (workUserId == null || workUserId.isEmpty()) {
             log.debug("用户{}未配置企业微信ID，跳过推送", message.getTargetUserId());
             return;
         }
 
-        // 构建请求体
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("userId", workUserId);
-        requestBody.put("title", message.getTitle());
-        requestBody.put("description", message.getDescription());
-        requestBody.put("url", message.getUrl());
+        String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
-        // 设置请求头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("touser", workUserId);
+        payload.put("msgtype", "miniprogram_notice");
+        payload.put("agentid", agentId);
+        
+        // 小程序通知消息（点击跳转到小程序）
+        Map<String, Object> miniprogramNotice = new HashMap<>();
+        miniprogramNotice.put("appid", wechatAppId);
+        miniprogramNotice.put("page", "pages/task/index");
+        miniprogramNotice.put("title", message.getTitle());
+        // 去除HTML标签
+        String cleanDesc = message.getDescription().replaceAll("<[^>]*>", "");
+        miniprogramNotice.put("description", cleanDesc);
+        
+        // 内容项
+        java.util.List<Map<String, String>> contentItems = new java.util.ArrayList<>();
+        Map<String, String> item1 = new HashMap<>();
+        item1.put("key", "时间");
+        item1.put("value", java.time.LocalDateTime.now().toString().substring(0, 16));
+        contentItems.add(item1);
+        
+        Map<String, String> item2 = new HashMap<>();
+        item2.put("key", "内容");
+        item2.put("value", cleanDesc.length() > 100 ? cleanDesc.substring(0, 100) + "..." : cleanDesc);
+        contentItems.add(item2);
+        
+        miniprogramNotice.put("content_item", contentItems);
+        miniprogramNotice.put("emphasis_first_item", true);
+        
+        payload.put("miniprogram_notice", miniprogramNotice);
 
-        // 发送请求到云函数
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
-        String response = restTemplate.postForObject(cloudFunctionUrl, request, String.class);
-
-        log.info("云函数调用成功, userId={}, workId={}, response={}", 
+        String response = restTemplate.postForObject(url, payload, String.class);
+        log.info("企业微信消息发送成功(小程序), userId={}, workId={}, response={}", 
                  message.getTargetUserId(), workUserId, response);
     }
 
     // ==================== 便捷方法：任务相关 ====================
 
-    /**
-     * 任务被指派 - 通知执行人
-     * 例：齐军收到"陶陶给你指派了任务：买菜"
-     */
     public void notifyTaskAssignedToAssignee(Long assigneeId, String fromName, String taskTitle) {
         WechatMessage msg = new WechatMessage();
         msg.setType(MessageType.TASK_ASSIGNED);
@@ -124,10 +180,6 @@ public class WechatWorkService {
         sendMessageAsync(msg);
     }
 
-    /**
-     * 任务已指派 - 通知指派人
-     * 例：陶陶收到"你已指派任务给齐军：买菜"
-     */
     public void notifyTaskAssignedToCreator(Long creatorId, String toName, String taskTitle) {
         WechatMessage msg = new WechatMessage();
         msg.setType(MessageType.TASK_ASSIGN_NOTIFY);
@@ -141,10 +193,6 @@ public class WechatWorkService {
         sendMessageAsync(msg);
     }
 
-    /**
-     * 任务完成 - 通知指派人
-     * 例：陶陶收到"齐军完成了任务：买菜"
-     */
     public void notifyTaskCompletedToCreator(Long creatorId, String completeByName, String taskTitle) {
         WechatMessage msg = new WechatMessage();
         msg.setType(MessageType.TASK_COMPLETED);
@@ -158,10 +206,6 @@ public class WechatWorkService {
         sendMessageAsync(msg);
     }
 
-    /**
-     * 任务完成 - 通知自己
-     * 例：齐军收到"你完成了任务：买菜"
-     */
     public void notifyTaskCompletedToSelf(Long userId, String taskTitle) {
         WechatMessage msg = new WechatMessage();
         msg.setType(MessageType.TASK_COMPLETE_SELF);
@@ -173,41 +217,5 @@ public class WechatWorkService {
             taskTitle
         ));
         sendMessageAsync(msg);
-    }
-
-    // ==================== 预留方法：心愿相关 ====================
-
-    /**
-     * 新心愿 - 通知家庭其他成员（预留）
-     */
-    public void notifyWishCreated(Long targetUserId, String creatorName, String wishTitle) {
-        // 预留实现
-        log.debug("心愿创建通知预留, target={}, creator={}, wish={}", targetUserId, creatorName, wishTitle);
-    }
-
-    /**
-     * 心愿完成 - 通知创建者（预留）
-     */
-    public void notifyWishCompleted(Long targetUserId, String completeByName, String wishTitle) {
-        // 预留实现
-        log.debug("心愿完成通知预留, target={}, by={}, wish={}", targetUserId, completeByName, wishTitle);
-    }
-
-    // ==================== 预留方法：纪念日相关 ====================
-
-    /**
-     * 纪念日提醒（预留）
-     */
-    public void notifyAnniversaryRemind(Long targetUserId, String title, int daysLeft) {
-        // 预留实现
-        log.debug("纪念日提醒预留, target={}, title={}, days={}", targetUserId, title, daysLeft);
-    }
-
-    /**
-     * 今日纪念日（预留）
-     */
-    public void notifyAnniversaryToday(Long targetUserId, String title) {
-        // 预留实现
-        log.debug("今日纪念日预留, target={}, title={}", targetUserId, title);
     }
 }

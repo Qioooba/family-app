@@ -72,8 +72,9 @@ weixin:
 # 企业微信配置（用于任务通知推送）
 wechat:
   work:
-    # 腾讯云函数URL（部署后获取）
-    cloud-function-url: ${WECHAT_CLOUD_FUNCTION_URL:}
+    corpid: ${WECHAT_WORK_CORPID:}
+    agentid: ${WECHAT_WORK_AGENTID:}
+    secret: ${WECHAT_WORK_SECRET:}
 
 mybatis-plus:
   configuration:
