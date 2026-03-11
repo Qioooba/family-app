@@ -36,7 +36,7 @@
           >
             <image 
               class="avatar-img" 
-              :src="member.avatar" 
+              :src="getAvatarUrl(member.avatar)" 
               :style="{ borderColor: getAvatarBorder(index) }"
             />
             <view v-if="index === 0 && member.role === 'owner'" class="owner-badge">👑</view>
@@ -150,7 +150,7 @@
             class="member-card"
             @click="showMemberDetail(member)"
           >
-            <image class="member-avatar" :src="member.avatar" />
+            <image class="member-avatar" :src="getAvatarUrl(member.avatar)" />
             
             <view class="member-info">
               <view class="name-row">

@@ -33,7 +33,7 @@
             <view class="user-avatar" @click="goToProfile">
               <image 
                 v-if="userStore.userInfo?.avatar" 
-                :src="userStore.userInfo.avatar" 
+                :src="getAvatarUrl(userStore.userInfo.avatar)" 
                 class="avatar-img"
                 mode="aspectFill"
               />
@@ -250,6 +250,7 @@ import { waterApi } from '../../api/water'
 import { getCurrentLocationWithAddress, getWeatherByCode, getShortLocationName } from '../../utils/weather'
 import { formatDateTime } from '../../utils/dateHelper'
 import { checkAutoLogin, doAutoLogin } from '../../utils/autoLogin'
+import { getAvatarUrl } from '../../utils/request'
 import LazyImage from '@/components/common/LazyImage.vue'
 import TaskModal from '@/components/TaskModal.vue'
 
