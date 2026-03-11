@@ -53,7 +53,7 @@
       
       <view v-if="filteredTasks.length === 0" class="empty-state">
         <text class="empty-icon">📝</text>
-        <text class="empty-text">暂无任务，点击右上角添加</text>
+        <text class="empty-text">暂无任务，点击右下角添加</text>
       </view>
       
       <!-- 加载更多提示 -->
