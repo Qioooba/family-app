@@ -44,27 +44,28 @@
         <view class="task-info">
           <text class="task-time" v-if="task.dueDate || task.dueTime">⏰ {{ formatDateTimeFull(task) }}</text>
           <view class="task-people" v-if="getTaskPeople(task)">
-            <view class="avatar-flow" v-if="task.creatorId !== task.assigneeId">
-              <image 
-                class="task-avatar creator" 
-                :src="getMemberAvatar(task.creatorId) || '/static/avatar-default.png'" 
-                mode="aspectFill"
-              />
-              <text class="arrow">→</text>
-              <image 
-                class="task-avatar assignee" 
-                :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
-                mode="aspectFill"
-              />
+            <view class="people-display">
+              <!-- 创建者 -->
+              <view class="person" v-if="task.creatorId">
+                <image 
+                  class="person-avatar" 
+                  :src="getMemberAvatar(task.creatorId) || '/static/avatar-default.png'" 
+                  mode="aspectFill"
+                />
+                <text class="person-name">{{ task.creatorNickname || getMemberName(task.creatorId) }}</text>
+              </view>
+              <!-- 箭头 -->
+              <text class="arrow" v-if="task.creatorId !== task.assigneeId">→</text>
+              <!-- 执行者 -->
+              <view class="person" v-if="task.assigneeId && task.creatorId !== task.assigneeId">
+                <image 
+                  class="person-avatar" 
+                  :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
+                  mode="aspectFill"
+                />
+                <text class="person-name">{{ task.assigneeNickname || getMemberName(task.assigneeId) }}</text>
+              </view>
             </view>
-            <view class="avatar-single" v-else>
-              <image 
-                class="task-avatar" 
-                :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
-                mode="aspectFill"
-              />
-            </view>
-            <text class="task-assignee">{{ getTaskPeople(task) }}</text>
           </view>
         </view>
         
@@ -550,33 +551,34 @@ function formatDateTimeFull(task) {
     align-items: center;
     gap: 6px;
     
-    .avatar-flow {
+    .people-display {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .person {
       display: flex;
       align-items: center;
       gap: 4px;
     }
     
-    .avatar-single {
-      display: flex;
-      align-items: center;
-    }
-    
-    .task-avatar {
+    .person-avatar {
       width: 24px;
       height: 24px;
       border-radius: 50%;
       background: #E8F5E9;
     }
     
+    .person-name {
+      font-size: 13px;
+      color: #8B9A8B;
+    }
+    
     .arrow {
       font-size: 12px;
       color: #999;
       margin: 0 2px;
-    }
-    
-    .task-assignee {
-      font-size: 13px;
-      color: #8B9A8B;
     }
   }
 }

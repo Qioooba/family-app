@@ -168,26 +168,28 @@
               {{ task.title }}
             </text>
             <view class="task-meta">
-              <view class="avatar-flow" v-if="task.creatorId !== task.assigneeId">
-                <image 
-                  class="task-avatar-small" 
-                  :src="getMemberAvatar(task.creatorId) || '/static/avatar-default.png'" 
-                  mode="aspectFill"
-                />
-                <text class="arrow-small">→</text>
-                <image 
-                  class="task-avatar-small" 
-                  :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
-                  mode="aspectFill"
-                />
+              <view class="people-display">
+                <!-- 创建者 -->
+                <view class="person" v-if="task.creatorId">
+                  <image 
+                    class="person-avatar-small" 
+                    :src="getMemberAvatar(task.creatorId) || '/static/avatar-default.png'" 
+                    mode="aspectFill"
+                  />
+                  <text class="person-name-small">{{ task.creatorNickname || getMemberName(task.creatorId) }}</text>
+                </view>
+                <!-- 箭头 -->
+                <text class="arrow-small" v-if="task.creatorId !== task.assigneeId">→</text>
+                <!-- 执行者 -->
+                <view class="person" v-if="task.assigneeId && task.creatorId !== task.assigneeId">
+                  <image 
+                    class="person-avatar-small" 
+                    :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
+                    mode="aspectFill"
+                  />
+                  <text class="person-name-small">{{ task.assigneeNickname || getMemberName(task.assigneeId) }}</text>
+                </view>
               </view>
-              <image 
-                v-else
-                class="task-avatar-small" 
-                :src="getMemberAvatar(task.assigneeId) || '/static/avatar-default.png'" 
-                mode="aspectFill"
-              />
-              <text class="assignee">{{ getTaskPeople(task) }}</text>
               <text class="divider">·</text>
               <text class="time">{{ task.time }}</text>
             </view>
@@ -1589,23 +1591,34 @@ const getAnniversaryIcon = (type) => {
           display: inline;
         }
         
-        .avatar-flow {
+        .people-display {
           display: flex;
           align-items: center;
           gap: 4rpx;
         }
         
-        .task-avatar-small {
+        .person {
+          display: flex;
+          align-items: center;
+          gap: 4rpx;
+        }
+        
+        .person-avatar-small {
           width: 28rpx;
           height: 28rpx;
           border-radius: 50%;
           background: #E8F5E9;
         }
         
+        .person-name-small {
+          color: #6B8DD6;
+          font-weight: 500;
+        }
+        
         .arrow-small {
           font-size: 20rpx;
           color: #999;
-          margin: 0 2rpx;
+          margin: 0 4rpx;
         }
         
         .assignee {
