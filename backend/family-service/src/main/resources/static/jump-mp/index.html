@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正在打开家庭小程序...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            color: #fff;
+        }
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: #fff;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 60px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .btn {
+            background: #fff;
+            color: #667eea;
+            padding: 15px 40px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .tips {
+            margin-top: 30px;
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🏠</div>
+        <div class="title">家庭小程序</div>
+        <div class="subtitle">正在为您打开...</div>
+        
+        <div class="loading">
+            <div class="spinner"></div>
+            <span>自动跳转中</span>
+        </div>
+        
+        <a href="javascript:void(0)" class="btn" id="openBtn" style="display:none;">
+            点击进入小程序
+        </a>
+        
+        <div class="tips">
+            如果未能自动打开<br>
+            请点击上方按钮手动进入
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getQueryParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // 获取token
+        const token = getQueryParam('token');
+        
+        // 保存token到localStorage（用于小程序webview获取）
+        if (token) {
+            localStorage.setItem('family_app_token', token);
+        }
+        
+        // 尝试自动跳转到小程序
+        function openMiniProgram() {
+            const btn = document.getElementById('openBtn');
+            btn.style.display = 'inline-block';
+            
+            // 尝试使用URL Scheme打开小程序
+            // 微信小程序URL Scheme格式
+            const wxUrl = 'weixin://dl/business/?t= *.*.*';
+            
+            // 或者使用公众号网页授权方式
+            // 这里使用简单的提示，让用户手动进入小程序
+            
+            // 实际项目中可以使用微信JS-SDK的跳转小程序功能
+            // 需要配置公众号和JS接口安全域名
+        }
+        
+        // 显示按钮
+        setTimeout(openMiniProgram, 1500);
+        
+        // 点击按钮处理
+        document.getElementById('openBtn').addEventListener('click', function() {
+            // 提示用户如何进入小程序
+            alert('请按以下步骤操作：\n\n1. 点击右上角「···」\n2. 选择「在小程序中打开」\n3. 或返回微信首页下拉查看最近使用的小程序');
+        });
+    </script>
+</body>
+</html>

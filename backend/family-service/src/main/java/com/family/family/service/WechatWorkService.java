@@ -129,8 +129,8 @@ public class WechatWorkService {
 
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
-        // 构建跳转链接 - 使用后端服务地址
-        String miniProgramUrl = "https://qioba.cn:8443";
+        // 构建跳转链接 - 使用跳转页
+        String jumpUrl = "https://qioba.cn:8443/jump-mp/index.html";
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
@@ -143,7 +143,7 @@ public class WechatWorkService {
         // 文字消息 - 在微信中直接显示完整内容
         String content = message.getTitle() + "\n\n" 
                         + cleanDesc + "\n\n" 
-                        + "【点击查看】" + miniProgramUrl;
+                        + "【点击查看】" + jumpUrl;
         
         Map<String, String> text = new HashMap<>();
         text.put("content", content);
