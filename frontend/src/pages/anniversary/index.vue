@@ -79,7 +79,7 @@
           <text class="modal-close" @click="closeModal">✕</text>
         </view>
         
-        <view class="modal-body">
+        <view class="modal-body" scroll-y @touchmove.stop.prevent>
           <!-- 标题 -->
           <view class="form-item">
             <text class="form-label">标题 *</text>
@@ -276,9 +276,17 @@ const onDateChange = (e) => {
 // 编辑
 const editItem = (item) => {
   editingItem.value = item
+  
+  // 处理日期格式，如果是数组则转换为字符串
+  let dateValue = item.targetDate || ''
+  if (Array.isArray(dateValue)) {
+    const [year, month, day] = dateValue
+    dateValue = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  }
+  
   formData.value = {
     title: item.title || '',
-    date: item.targetDate || '',
+    date: dateValue,
     type: item.type || 'birthday',
     description: item.description || '',
     isRepeat: item.isRepeat || false
@@ -621,6 +629,8 @@ onMounted(() => {
 .modal-body {
   padding: 0 40rpx 40rpx;
   max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .form-item {
