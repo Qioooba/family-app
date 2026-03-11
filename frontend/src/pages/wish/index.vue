@@ -32,7 +32,7 @@
     </view>
     
     <!-- 心愿列表 -->
-    <scroll-view scroll-y class="wish-list" refresher-enabled @refresherrefresh="onRefresh">
+    <view class="wish-list">
       <!-- 加载中 -->
       <view v-if="loading" class="loading-state">
         <text class="loading-text">加载中...</text>
@@ -101,7 +101,7 @@
           </view>
         </view>
       </view>
-    </scroll-view>
+    </view>
     
     <!-- 添加按钮 -->
     <view class="add-btn" @click="openAddModal">
