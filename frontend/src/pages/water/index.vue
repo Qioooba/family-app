@@ -947,26 +947,30 @@ const deleteHistoryRecord = async (recordId) => {
   .quick-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 16rpx;
-    margin-bottom: 20rpx;
+    justify-content: center;
+    gap: 20rpx;
+    margin-bottom: 24rpx;
+    padding: 0 10rpx;
 
     .quick-btn {
       display: flex;
       align-items: center;
-      gap: 8rpx;
-      padding: 16rpx 24rpx;
+      justify-content: center;
+      gap: 6rpx;
+      padding: 14rpx 20rpx;
       background: #f5f6fa;
       border-radius: 30rpx;
       border: 2rpx solid transparent;
       transition: all 0.3s;
+      min-width: 120rpx;
 
       text {
-        font-size: 26rpx;
+        font-size: 24rpx;
         color: #666;
       }
 
       .water-icon {
-        font-size: 32rpx;
+        font-size: 28rpx;
       }
 
       &.active {
