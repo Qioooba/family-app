@@ -37,21 +37,39 @@ onMounted(() => {
 // 输出版本信息
 const logVersionInfo = () => {
   // #ifdef MP-WEIXIN
-  const accountInfo = wx.getAccountInfoSync()
-  const env = accountInfo.miniProgram.envVersion
-  const version = accountInfo.miniProgram.version
+  try {
+    // 使用 uni.getAccountInfoSync 替代 wx.getAccountInfoSync
+    const accountInfo = uni.getAccountInfoSync()
+    console.log('accountInfo:', accountInfo)
+    
+    if (accountInfo && accountInfo.miniProgram) {
+      const env = accountInfo.miniProgram.envVersion
+      const version = accountInfo.miniProgram.version
+      
+      console.log('========== 小程序版本信息 ==========')
+      console.log('环境类型:', env || 'unknown')  // develop-开发版 trial-体验版 release-正式版
+      console.log('版本号:', version || 'unknown')
+      console.log('====================================')
+      
+      // 存到全局方便调试
+      uni.setStorageSync('app_version_info', {
+        env: env || 'unknown',
+        version: version || 'unknown',
+        time: new Date().toLocaleString()
+      })
+    } else {
+      console.log('无法获取版本信息，accountInfo格式:', accountInfo)
+    }
+  } catch (e) {
+    console.error('获取版本信息失败:', e)
+    // 备用方案：从 manifest.json 读取
+    const manifest = uni.getStorageSync('__UNI_MANIFEST__')
+    console.log('manifest:', manifest)
+  }
+  // #endif
   
-  console.log('========== 小程序版本信息 ==========')
-  console.log('环境类型:', env)  // develop-开发版 trial-体验版 release-正式版
-  console.log('版本号:', version)
-  console.log('====================================')
-  
-  // 可以存到全局方便调试
-  uni.setStorageSync('app_version_info', {
-    env: env,
-    version: version,
-    time: new Date().toLocaleString()
-  })
+  // #ifndef MP-WEIXIN
+  console.log('非微信小程序环境，跳过版本检测')
   // #endif
 }
 

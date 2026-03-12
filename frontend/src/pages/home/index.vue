@@ -311,10 +311,24 @@ const getMemberName = (userId) => {
 
 // 获取成员头像
 const getMemberAvatar = (userId) => {
-  if (!userId) return ''
-  const userIdNum = Number(userId)
-  const member = familyMembers.value.find(m => Number(m.userId) === userIdNum)
-  return member ? getAvatarUrl(member.avatar) : ''
+  if (!userId) {
+    console.log('getMemberAvatar: userId is empty')
+    return '/static/avatar-default.png'
+  }
+  try {
+    const userIdNum = Number(userId)
+    const member = familyMembers.value?.find(m => Number(m?.userId) === userIdNum)
+    if (!member) {
+      console.log('getMemberAvatar: member not found for userId:', userId)
+      return '/static/avatar-default.png'
+    }
+    const avatarUrl = getAvatarUrl(member.avatar)
+    console.log('getMemberAvatar: found for userId:', userId, 'avatar:', avatarUrl)
+    return avatarUrl || '/static/avatar-default.png'
+  } catch (e) {
+    console.error('getMemberAvatar error:', e)
+    return '/static/avatar-default.png'
+  }
 }
 
 // 获取任务人员显示（创建人 → 被指派人）
