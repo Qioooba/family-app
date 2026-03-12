@@ -51,8 +51,11 @@ export default defineConfig({
     noDiscovery: true,
     include: undefined
   },
-  // 禁用所有 sourcemap 相关功能
   vueCompilerOptions: {
     reactivityTransform: false
+  },
+  // 关闭vConsole（生产环境）
+  define: {
+    __VUE_PROD_DEVTOOLS__: false
   }
 })

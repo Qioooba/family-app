@@ -2,8 +2,8 @@
   "name": "family-app",
   "appid": "__UNI__FAMILY_APP",
   "description": "家庭小程序 - 记录美好生活的每一天",
-  "versionName": "1.0.0",
-  "versionCode": 100,
+  "versionName": "1.0.1",
+  "versionCode": 101,
   "transformPx": false,
   "app-plus": {
     "usingComponents": true,
@@ -58,13 +58,22 @@
       "nodeModules": false,
       "autoAudits": false,
       "showShadowRootInWkwebview": true,
-      "uglifyFileName": false
+      "uglifyFileName": false,
+      "checkSiteMap": false,
+      "babelSetting": {
+        "ignore": [],
+        "disablePlugins": [],
+        "outputPath": ""
+      }
     },
     "usingComponents": true,
     "permission": {
       "scope.userLocation": {
         "desc": "您的位置信息将用于小程序位置接口的效果展示"
       }
+    },
+    "optimization": {
+      "subPackages": true
     }
   },
   "mp-alipay": {
