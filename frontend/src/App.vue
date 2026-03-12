@@ -29,7 +29,31 @@ onMounted(() => {
   
   // 检测小程序版本更新
   checkUpdate()
+  
+  // 输出当前版本信息
+  logVersionInfo()
 })
+
+// 输出版本信息
+const logVersionInfo = () => {
+  // #ifdef MP-WEIXIN
+  const accountInfo = wx.getAccountInfoSync()
+  const env = accountInfo.miniProgram.envVersion
+  const version = accountInfo.miniProgram.version
+  
+  console.log('========== 小程序版本信息 ==========')
+  console.log('环境类型:', env)  // develop-开发版 trial-体验版 release-正式版
+  console.log('版本号:', version)
+  console.log('====================================')
+  
+  // 可以存到全局方便调试
+  uni.setStorageSync('app_version_info', {
+    env: env,
+    version: version,
+    time: new Date().toLocaleString()
+  })
+  // #endif
+}
 
 // 检测小程序版本更新
 const checkUpdate = () => {
