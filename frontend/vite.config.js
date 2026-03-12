@@ -54,8 +54,8 @@ export default defineConfig({
   vueCompilerOptions: {
     reactivityTransform: false
   },
-  // 关闭vConsole（生产环境）
+  // 控制vConsole显示（家庭内部使用，保留调试功能）
   define: {
-    __VUE_PROD_DEVTOOLS__: false
+    __VUE_PROD_DEVTOOLS__: true
   }
 })
