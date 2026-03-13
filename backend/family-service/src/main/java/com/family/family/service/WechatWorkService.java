@@ -37,6 +37,9 @@ public class WechatWorkService {
     @Autowired
     private TempTokenUtil tempTokenUtil;
 
+    @Autowired
+    private MiniAppUrlLinkService miniAppUrlLinkService;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -362,30 +365,63 @@ public class WechatWorkService {
      */
     private String buildRichMessageContent(WechatMessage message) {
         StringBuilder sb = new StringBuilder();
-        
+
         // 标题
         sb.append("🏠 ").append(message.getTitle()).append("\n\n");
-        
+
         // 描述内容（去除HTML标签）
         String cleanDesc = message.getDescription().replaceAll("<[^>]*>", "");
         sb.append(cleanDesc).append("\n\n");
-        
+
         // 分隔线
         sb.append("━━━━━━━━━━━━━━━\n\n");
-        
-        // 小程序跳转链接
-        String miniAppId = getMiniProgramAppId();
-        String path = message.getUrl() != null ? message.getUrl().replace("https://qioba.cn", "") : getMiniProgramPage();
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
-        
-        // 使用小程序链接格式（企业微信支持）
-        sb.append("<a href=\"http://mp.weixin.qq.com/mp/inappmsg?appid=")
-          .append(miniAppId)
-          .append("\">📱 点击查看详情</a>");
-        
+
+        // 生成小程序 URL Link
+        String miniAppLink = generateMiniAppLink(message);
+        sb.append("📱 点击打开小程序：").append(miniAppLink);
+
         return sb.toString();
+    }
+
+    /**
+     * 生成小程序跳转链接
+     */
+    private String generateMiniAppLink(WechatMessage message) {
+        // 从消息URL中提取路径
+        String path = message.getUrl();
+        String query = "";
+
+        if (path != null && !path.isEmpty()) {
+            // 去掉开头的 /
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
+            // 分离路径和参数
+            int queryIndex = path.indexOf("?");
+            if (queryIndex > 0) {
+                query = path.substring(queryIndex + 1);
+                path = path.substring(0, queryIndex);
+            }
+        } else {
+            path = "pages/home/index";
+        }
+
+        // 默认返回免密登录链接（如果URL Link生成失败）
+        String tempToken = tempTokenUtil.generateTempToken(message.getTargetUserId());
+        String fallbackUrl = String.format("https://qioba.cn:8443/auto-login.html?token=%s", tempToken);
+
+        try {
+            // 尝试生成小程序 URL Link
+            String urlLink = miniAppUrlLinkService.generateUrlLink(path, query, 7 * 24 * 3600);
+            if (urlLink != null && !urlLink.equals(fallbackUrl)) {
+                log.debug("生成小程序URL Link成功: {}", urlLink);
+                return urlLink;
+            }
+        } catch (Exception e) {
+            log.warn("生成小程序URL Link失败，使用备用链接", e);
+        }
+
+        return fallbackUrl;
     }
 
     /**
