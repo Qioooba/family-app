@@ -357,12 +357,8 @@ const showPrivacyPolicy = () => {
 }
 
 const showUpdateHistory = () => {
-  uni.showModal({
-    title: '更新日志',
-    content: 'v1.0.0 (2026-03)\n\n- 初始版本\n- 基础功能：任务管理、纪念日、天气\n- 微信一键登录',
-    showCancel: false,
-    confirmText: '知道了',
-    confirmColor: '#333333'
+  uni.navigateTo({
+    url: '/pages/profile/changelog'
   })
 }
 

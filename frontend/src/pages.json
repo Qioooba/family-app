@@ -64,6 +64,13 @@
       }
     },
     {
+      "path": "pages/profile/changelog",
+      "style": {
+        "navigationBarTitleText": "更新历史",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/water/index",
       "style": {
         "navigationBarTitleText": "喝水记录",
