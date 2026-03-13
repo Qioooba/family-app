@@ -8,11 +8,11 @@ import com.family.family.util.TempTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,28 +20,16 @@ import java.util.Map;
 
 /**
  * 企业微信推送服务
- * 支持两种推送方式：
- * 1. 企业内部成员 - /message/send (work_user_id)
- * 2. 外部联系人(客户) - /externalcontact/add_msg_template (external_user_id)
+ * 配置从数据库读取，支持两种推送方式：
+ * 1. 外部联系人(客户) - /externalcontact/add_msg_template (external_user_id) - 优先
+ * 2. 企业内部成员 - /message/send (work_user_id) - 备用
  */
 @Slf4j
 @Service
 public class WechatWorkService {
 
-    @Value("${wechat.work.corpid:}")
-    private String corpId;
-
-    @Value("${wechat.work.agentid:}")
-    private String agentId;
-
-    @Value("${wechat.work.secret:}")
-    private String secret;
-
-    @Value("${wechat.appid:wxbdc70536c5e52b82}")
-    private String wechatAppId;
-
-    @Value("${weixin.appSecret:}")
-    private String wechatAppSecret;
+    @Autowired
+    private SystemConfigService configService;
 
     @Autowired
     private UserMapper userMapper;
@@ -55,6 +43,24 @@ public class WechatWorkService {
     private String accessToken;
     private long tokenExpireTime;
 
+    // ==================== 配置获取 ====================
+    
+    private String getCorpId() {
+        return configService.getWechatWorkCorpId();
+    }
+    
+    private String getAgentId() {
+        return configService.getWechatWorkAgentId();
+    }
+    
+    private String getSecret() {
+        return configService.getWechatWorkSecret();
+    }
+    
+    private String getWorkUserId() {
+        return configService.getWechatWorkUserId();
+    }
+
     // ==================== Token管理 ====================
 
     /**
@@ -65,8 +71,11 @@ public class WechatWorkService {
             return accessToken;
         }
 
-        if (corpId == null || corpId.isEmpty() || secret == null || secret.isEmpty()) {
-            log.warn("企业微信配置不完整");
+        String corpId = getCorpId();
+        String secret = getSecret();
+        
+        if (corpId.isEmpty() || secret.isEmpty()) {
+            log.warn("企业微信配置不完整，请在数据库sys_config表中配置");
             return null;
         }
 
@@ -83,6 +92,8 @@ public class WechatWorkService {
                 tokenExpireTime = System.currentTimeMillis() + (7200 - 300) * 1000;
                 log.debug("获取企业微信access_token成功");
                 return accessToken;
+            } else {
+                log.error("获取access_token失败: {}", result.get("errmsg"));
             }
         } catch (Exception e) {
             log.error("获取企业微信access_token异常", e);
@@ -137,7 +148,7 @@ public class WechatWorkService {
 
     /**
      * 核心：异步发送消息（带3次重试）
-     * 自动选择最优发送方式：内部成员 > 外部联系人
+     * 自动选择最优发送方式：外部联系人（优先）> 内部成员（备用）
      */
     @Async("wechatWorkExecutor")
     public void sendMessageAsync(WechatMessage message) {
@@ -158,12 +169,12 @@ public class WechatWorkService {
 
     /**
      * 实际发送消息
-     * 优先级：1.内部成员推送 2.外部联系人推送
+     * 优先级：1.外部联系人推送（微信显示更好） 2.内部成员推送
      */
     private void doSendMessage(WechatMessage message) throws Exception {
         String token = getAccessToken();
         if (token == null) {
-            throw new Exception("无法获取access_token");
+            throw new Exception("无法获取access_token，请检查企业微信配置");
         }
 
         WechatWorkIdentity identity = getWorkIdentity(message.getTargetUserId());
@@ -172,25 +183,25 @@ public class WechatWorkService {
             return;
         }
 
-        // 优先使用内部成员推送（更可靠）
-        if (identity.hasWorkUserId()) {
+        // 优先使用外部联系人推送（微信里显示更明显）
+        if (identity.hasExternalUserId()) {
             try {
-                sendToInternalUser(token, identity.workUserId, message);
+                sendToExternalUser(token, identity.externalUserId, message);
                 return;
             } catch (Exception e) {
-                log.warn("内部成员推送失败，尝试外部联系人, userId={}", message.getTargetUserId());
-                // 如果内部推送失败，且有外部ID，尝试外部推送
-                if (identity.hasExternalUserId()) {
-                    sendToExternalUser(token, identity.externalUserId, message);
+                log.warn("外部联系人推送失败，尝试内部成员, userId={}, error={}", message.getTargetUserId(), e.getMessage());
+                // 如果外部推送失败（如48小时限制），且有内部ID，尝试内部推送
+                if (identity.hasWorkUserId()) {
+                    sendToInternalUser(token, identity.workUserId, message);
                     return;
                 }
                 throw e;
             }
         }
         
-        // 只有外部联系人ID
-        if (identity.hasExternalUserId()) {
-            sendToExternalUser(token, identity.externalUserId, message);
+        // 只有内部成员ID
+        if (identity.hasWorkUserId()) {
+            sendToInternalUser(token, identity.workUserId, message);
         }
     }
 
@@ -203,7 +214,7 @@ public class WechatWorkService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
         payload.put("msgtype", "text");
-        payload.put("agentid", agentId);
+        payload.put("agentid", getAgentId());
         
         String content = buildMessageContent(message);
         
@@ -241,7 +252,7 @@ public class WechatWorkService {
         payload.put("external_userid", externalUserIds);
         
         // 发送者 - 使用企业微信小助手
-        payload.put("sender", "XIAOXHUSHOU");
+        payload.put("sender", getWorkUserId());
         
         // 消息类型 - 文本
         payload.put("msgtype", "text");
@@ -263,6 +274,7 @@ public class WechatWorkService {
         }
         
         // 检查是否有失败的用户
+        @SuppressWarnings("unchecked")
         List<String> failList = (List<String>) result.get("fail_list");
         if (failList != null && !failList.isEmpty()) {
             log.warn("外部联系人消息部分发送失败: {}", failList);
@@ -341,5 +353,111 @@ public class WechatWorkService {
             java.time.LocalDateTime.now().toString().substring(0, 16)
         ));
         sendMessageAsync(msg);
+    }
+    
+    // ==================== 配置管理API ====================
+    
+    /**
+     * 同步企业微信外部联系人
+     * 调用企业微信API获取客户列表，并更新到用户表
+     */
+    public void syncExternalUsers() {
+        try {
+            String token = getAccessToken();
+            if (token == null) {
+                log.error("无法获取access_token，跳过同步");
+                return;
+            }
+            
+            // 1. 获取客户列表
+            String listUrl = String.format(
+                "https://qyapi.weixin.qq.com/cgi-bin/externalcontact/list?access_token=%s&userid=%s",
+                token, getWorkUserId()
+            );
+            String listResponse = restTemplate.getForObject(listUrl, String.class);
+            Map<String, Object> listResult = objectMapper.readValue(listResponse, Map.class);
+            
+            if ((Integer) listResult.getOrDefault("errcode", -1) != 0) {
+                log.error("获取客户列表失败: {}", listResult.get("errmsg"));
+                return;
+            }
+            
+            @SuppressWarnings("unchecked")
+            List<String> externalUserIds = (List<String>) listResult.get("external_userid");
+            if (externalUserIds == null || externalUserIds.isEmpty()) {
+                log.info("小助手没有客户");
+                return;
+            }
+            
+            log.info("找到 {} 个客户，开始同步", externalUserIds.size());
+            
+            // 2. 获取每个客户的详情并匹配用户
+            for (String externalUserId : externalUserIds) {
+                try {
+                    String detailUrl = String.format(
+                        "https://qyapi.weixin.qq.com/cgi-bin/externalcontact/get?access_token=%s&external_userid=%s",
+                        token, externalUserId
+                    );
+                    String detailResponse = restTemplate.getForObject(detailUrl, String.class);
+                    Map<String, Object> detailResult = objectMapper.readValue(detailResponse, Map.class);
+                    
+                    if ((Integer) detailResult.getOrDefault("errcode", -1) != 0) {
+                        continue;
+                    }
+                    
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> contact = (Map<String, Object>) detailResult.get("external_contact");
+                    if (contact == null) continue;
+                    
+                    String name = (String) contact.get("name");
+                    
+                    // 3. 根据名称匹配用户并更新
+                    matchAndUpdateUser(name, externalUserId);
+                    
+                } catch (Exception e) {
+                    log.error("获取客户详情失败: {}", externalUserId, e);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("同步外部联系人失败", e);
+        }
+    }
+    
+    /**
+     * 根据名称匹配用户并更新external_user_id
+     */
+    private void matchAndUpdateUser(String customerName, String externalUserId) {
+        if (customerName == null || customerName.isEmpty()) return;
+        
+        // 查询所有用户，尝试匹配
+        List<User> users = userMapper.selectList(null);
+        
+        for (User user : users) {
+            String nickname = user.getNickname();
+            String username = user.getUsername();
+            
+            boolean matched = false;
+            
+            if (nickname != null && nickname.equals(customerName)) {
+                matched = true;
+            } else if (username != null && username.equalsIgnoreCase(customerName)) {
+                matched = true;
+            } else if (customerName.contains("齐") && (nickname != null && nickname.contains("齐"))) {
+                matched = true;
+            } else if (customerName.contains("陶") && (nickname != null && nickname.contains("陶"))) {
+                matched = true;
+            }
+            
+            if (matched) {
+                // 更新external_user_id
+                if (user.getExternalUserId() == null || !user.getExternalUserId().equals(externalUserId)) {
+                    user.setExternalUserId(externalUserId);
+                    userMapper.updateById(user);
+                    log.info("已更新用户 {} 的external_user_id: {}", user.getNickname() || user.getUsername(), externalUserId);
+                }
+                break;
+            }
+        }
     }
 }
