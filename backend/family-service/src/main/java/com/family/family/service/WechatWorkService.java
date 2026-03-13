@@ -43,7 +43,15 @@ public class WechatWorkService {
     private String accessToken;
     private long tokenExpireTime;
 
-    // ==================== 配置获取 ====================
+    // ==================== 小程序配置获取 ====================
+    
+    private String getMiniProgramAppId() {
+        return configService.getValue("wechat.miniapp.appid", "wxbdc70536c5e52b82");
+    }
+    
+    private String getMiniProgramPage() {
+        return configService.getValue("wechat.miniapp.default_page", "pages/task/index");
+    }
     
     private String getCorpId() {
         return configService.getWechatWorkCorpId();
@@ -206,9 +214,49 @@ public class WechatWorkService {
     }
 
     /**
-     * 发送给企业内部成员
+     * 发送给企业内部成员（使用miniprogram_notice或图文卡片）
      */
     private void sendToInternalUser(String token, String workUserId, WechatMessage message) throws Exception {
+        String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("touser", workUserId);
+        payload.put("agentid", getAgentId());
+        
+        // 使用news图文消息，支持小程序跳转
+        Map<String, Object> news = new HashMap<>();
+        List<Map<String, String>> articles = new ArrayList<>();
+        
+        Map<String, String> article = new HashMap<>();
+        article.put("title", message.getTitle());
+        article.put("description", buildRichMessageContent(message));
+        article.put("url", "https://mp.weixin.qq.com/s?__biz=" + getMiniProgramAppId() + "&page=" + getMiniProgramPage());
+        article.put("picurl", "https://qioba.cn/logo.png");
+        
+        articles.add(article);
+        news.put("articles", articles);
+        payload.put("news", news);
+        payload.put("msgtype", "news");
+
+        String response = restTemplate.postForObject(url, payload, String.class);
+        Map<String, Object> result = objectMapper.readValue(response, Map.class);
+        
+        int errcode = (Integer) result.getOrDefault("errcode", -1);
+        if (errcode != 0) {
+            // 如果news失败，回退到text
+            log.warn("图文消息发送失败，回退到文本消息: {}", result.get("errmsg"));
+            sendTextMessage(token, workUserId, message);
+            return;
+        }
+        
+        log.info("企业微信图文消息发送成功, userId={}, workId={}", 
+                 message.getTargetUserId(), workUserId);
+    }
+    
+    /**
+     * 发送纯文本消息（回退方案）
+     */
+    private void sendTextMessage(String token, String workUserId, WechatMessage message) throws Exception {
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
         Map<String, Object> payload = new HashMap<>();
@@ -230,7 +278,7 @@ public class WechatWorkService {
             throw new Exception("发送失败: " + result.get("errmsg"));
         }
         
-        log.info("企业微信内部成员消息发送成功, userId={}, workId={}", 
+        log.info("企业微信文本消息发送成功, userId={}, workId={}", 
                  message.getTargetUserId(), workUserId);
     }
 
@@ -241,29 +289,54 @@ public class WechatWorkService {
     private void sendToExternalUser(String token, String externalUserId, WechatMessage message) throws Exception {
         String url = "https://qyapi.weixin.qq.com/cgi-bin/externalcontact/add_msg_template?access_token=" + token;
 
-        String content = buildMessageContent(message);
-        
         // 构建外部联系人消息
         Map<String, Object> payload = new HashMap<>();
-        
+
         // 接收人列表
         List<String> externalUserIds = new ArrayList<>();
         externalUserIds.add(externalUserId);
         payload.put("external_userid", externalUserIds);
-        
+
         // 发送者 - 使用企业微信小助手
         payload.put("sender", getWorkUserId());
-        
-        // 消息类型 - 文本
+
+        // 尝试使用小程序卡片消息
+        try {
+            Map<String, Object> miniprogram = new HashMap<>();
+            miniprogram.put("title", message.getTitle());
+            miniprogram.put("pic_media_id", ""); // 可以用默认图片或上传图片获取media_id
+            miniprogram.put("appid", getMiniProgramAppId());
+            miniprogram.put("page", message.getUrl() != null ? message.getUrl() : getMiniProgramPage());
+
+            payload.put("msgtype", "miniprogram");
+            payload.put("miniprogram", miniprogram);
+
+            String response = restTemplate.postForObject(url, payload, String.class);
+            Map<String, Object> result = objectMapper.readValue(response, Map.class);
+
+            int errcode = (Integer) result.getOrDefault("errcode", -1);
+            if (errcode == 0) {
+                log.info("企业微信外部联系人小程序消息发送成功, userId={}, externalId={}, msgId={}",
+                        message.getTargetUserId(), externalUserId, result.get("msgid"));
+                return;
+            } else {
+                log.warn("小程序消息发送失败，回退到文本消息: {}", result.get("errmsg"));
+            }
+        } catch (Exception e) {
+            log.warn("小程序消息发送异常，回退到文本消息", e);
+        }
+
+        // 回退到文本消息
+        String content = buildRichMessageContent(message);
         payload.put("msgtype", "text");
-        
+
         Map<String, String> text = new HashMap<>();
         text.put("content", content);
         payload.put("text", text);
 
         String response = restTemplate.postForObject(url, payload, String.class);
         Map<String, Object> result = objectMapper.readValue(response, Map.class);
-        
+
         int errcode = (Integer) result.getOrDefault("errcode", -1);
         if (errcode != 0) {
             // 特殊错误处理
@@ -272,20 +345,51 @@ public class WechatWorkService {
             }
             throw new Exception("发送失败: " + result.get("errmsg"));
         }
-        
+
         // 检查是否有失败的用户
         @SuppressWarnings("unchecked")
         List<String> failList = (List<String>) result.get("fail_list");
         if (failList != null && !failList.isEmpty()) {
             log.warn("外部联系人消息部分发送失败: {}", failList);
         }
-        
-        log.info("企业微信外部联系人消息发送成功, userId={}, externalId={}, msgId={}", 
-                 message.getTargetUserId(), externalUserId, result.get("msgid"));
+
+        log.info("企业微信外部联系人文本消息发送成功, userId={}, externalId={}, msgId={}",
+                message.getTargetUserId(), externalUserId, result.get("msgid"));
     }
 
     /**
-     * 构建消息内容
+     * 构建丰富的任务消息内容（支持小程序跳转）
+     */
+    private String buildRichMessageContent(WechatMessage message) {
+        StringBuilder sb = new StringBuilder();
+        
+        // 标题
+        sb.append("🏠 ").append(message.getTitle()).append("\n\n");
+        
+        // 描述内容（去除HTML标签）
+        String cleanDesc = message.getDescription().replaceAll("<[^>]*>", "");
+        sb.append(cleanDesc).append("\n\n");
+        
+        // 分隔线
+        sb.append("━━━━━━━━━━━━━━━\n\n");
+        
+        // 小程序跳转链接
+        String miniAppId = getMiniProgramAppId();
+        String path = message.getUrl() != null ? message.getUrl().replace("https://qioba.cn", "") : getMiniProgramPage();
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        
+        // 使用小程序链接格式（企业微信支持）
+        sb.append("<a href=\"http://mp.weixin.qq.com/mp/inappmsg?appid=")
+          .append(miniAppId)
+          .append("\">📱 点击查看详情</a>");
+        
+        return sb.toString();
+    }
+
+    /**
+     * 构建简单的消息内容（向后兼容）
      */
     private String buildMessageContent(WechatMessage message) {
         String cleanDesc = message.getDescription().replaceAll("<[^>]*>", "");
@@ -296,12 +400,93 @@ public class WechatWorkService {
             return message.getTitle() + "\n\n" + cleanDesc;
         }
         
-        // 其他消息附加免密登录链接
+        // 其他消息附加免密登录链接和小程序跳转
         String autoLoginUrl = tempTokenUtil.getAutoLoginUrl(message.getTargetUserId());
-        return message.getTitle() + "\n\n" + cleanDesc + "\n\n" + "【点击免密登录】" + autoLoginUrl;
+        StringBuilder sb = new StringBuilder();
+        sb.append(message.getTitle()).append("\n\n")
+          .append(cleanDesc).append("\n\n")
+          .append("━━━━━━━━━━━━━━━\n\n")
+          .append("<a href=\"http://mp.weixin.qq.com/mp/inappmsg?appid=")
+          .append(getMiniProgramAppId())
+          .append("\">📱 打开小程序查看</a>\n\n")
+          .append("或点击免密登录：").append(autoLoginUrl);
+        
+        return sb.toString();
     }
 
-    // ==================== 便捷方法：任务相关 ====================
+    // ==================== 便捷方法：任务相关（增强版） ====================
+
+    /**
+     * 发送富文本任务通知（带小程序跳转）
+     * 
+     * @param userId 接收者用户ID
+     * @param type 消息类型
+     * @param taskTitle 任务标题
+     * @param taskContent 任务内容/备注
+     * @param creatorName 创建人
+     * @param assigneeName 执行人
+     * @param operatorName 操作人
+     * @param miniProgramPath 小程序页面路径
+     */
+    public void sendTaskNotification(Long userId, MessageType type, String taskTitle, 
+                                     String taskContent, String creatorName, 
+                                     String assigneeName, String operatorName,
+                                     String miniProgramPath) {
+        WechatMessage msg = new WechatMessage();
+        msg.setType(type);
+        msg.setTargetUserId(userId);
+        msg.setUrl(miniProgramPath);
+        
+        String title;
+        StringBuilder desc = new StringBuilder();
+        
+        switch (type) {
+            case TASK_ASSIGNED:
+                title = "🏠 新任务指派";
+                desc.append("📋 任务：").append(taskTitle).append("\n\n");
+                if (taskContent != null && !taskContent.isEmpty()) {
+                    desc.append("📝 备注：").append(taskContent).append("\n\n");
+                }
+                desc.append("👤 指派人：").append(operatorName).append("\n");
+                desc.append("📅 时间：").append(java.time.LocalDateTime.now().toString().substring(0, 16));
+                break;
+                
+            case TASK_ASSIGN_NOTIFY:
+                title = "✅ 任务已指派";
+                desc.append("📋 任务：").append(taskTitle).append("\n\n");
+                desc.append("👤 执行人：").append(assigneeName).append("\n");
+                desc.append("📅 时间：").append(java.time.LocalDateTime.now().toString().substring(0, 16));
+                break;
+                
+            case TASK_COMPLETED:
+                title = "🎉 任务已完成";
+                desc.append("📋 任务：").append(taskTitle).append("\n\n");
+                if (taskContent != null && !taskContent.isEmpty()) {
+                    desc.append("📝 完成备注：").append(taskContent).append("\n\n");
+                }
+                desc.append("👤 完成人：").append(operatorName).append("\n");
+                desc.append("📅 时间：").append(java.time.LocalDateTime.now().toString().substring(0, 16));
+                break;
+                
+            case TASK_COMPLETE_SELF:
+                title = "✨ 任务完成";
+                desc.append("📋 任务：").append(taskTitle).append("\n\n");
+                desc.append("👍 恭喜你完成了任务！\n");
+                desc.append("📅 完成时间：").append(java.time.LocalDateTime.now().toString().substring(0, 16));
+                break;
+                
+            default:
+                title = "📱 任务通知";
+                desc.append("📋 任务：").append(taskTitle);
+        }
+        
+        msg.setTitle(title);
+        msg.setDescription(desc.toString());
+        
+        sendMessageAsync(msg);
+    }
+
+    // ==================== 便捷方法：向后兼容 ====================
 
     public void notifyTaskAssignedToAssignee(Long assigneeId, String fromName, String taskTitle) {
         WechatMessage msg = new WechatMessage();
