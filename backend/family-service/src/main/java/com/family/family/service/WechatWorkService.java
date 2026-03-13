@@ -191,25 +191,25 @@ public class WechatWorkService {
             return;
         }
 
-        // 优先使用外部联系人推送（微信里显示更明显）
-        if (identity.hasExternalUserId()) {
+        // 优先使用内部成员推送（自动发送，无需确认）
+        if (identity.hasWorkUserId()) {
             try {
-                sendToExternalUser(token, identity.externalUserId, message);
+                sendToInternalUser(token, identity.workUserId, message);
                 return;
             } catch (Exception e) {
-                log.warn("外部联系人推送失败，尝试内部成员, userId={}, error={}", message.getTargetUserId(), e.getMessage());
-                // 如果外部推送失败（如48小时限制），且有内部ID，尝试内部推送
-                if (identity.hasWorkUserId()) {
-                    sendToInternalUser(token, identity.workUserId, message);
+                log.warn("内部成员推送失败，尝试外部联系人, userId={}, error={}", message.getTargetUserId(), e.getMessage());
+                // 如果内部推送失败，且有外部ID，尝试外部推送
+                if (identity.hasExternalUserId()) {
+                    sendToExternalUser(token, identity.externalUserId, message);
                     return;
                 }
                 throw e;
             }
         }
         
-        // 只有内部成员ID
-        if (identity.hasWorkUserId()) {
-            sendToInternalUser(token, identity.workUserId, message);
+        // 只有外部联系人ID（需要管理员确认）
+        if (identity.hasExternalUserId()) {
+            sendToExternalUser(token, identity.externalUserId, message);
         }
     }
 
