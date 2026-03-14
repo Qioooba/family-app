@@ -396,134 +396,124 @@ public class WechatWorkService {
     }
     
     /**
-     * 构建mpnews消息摘要
-     */
-    private String buildMessageDigest(WechatMessage message, String timeStr) {
-        StringBuilder sb = new StringBuilder();
-        
-        // 解析description获取任务信息
-        String[] lines = message.getDescription().split("\n");
-        String taskName = extractFromLines(lines, "任务[:：]");
-        if (taskName.isEmpty()) {
-            taskName = message.getTitle().replaceAll(".*[：:]", "").trim();
-        }
-        String assigner = extractOperatorFromLines(lines);
-        if (assigner.isEmpty()) {
-            assigner = "系统";
-        }
-        String remark = extractFromLines(lines, "备注[:：]");
-        
-        switch (message.getType()) {
-            case TASK_ASSIGNED:
-                sb.append("📋 任务：").append(taskName).append("\n");
-                if (!remark.isEmpty()) {
-                    sb.append("📝 备注：").append(remark).append("\n");
-                }
-                sb.append("👤 指派人：").append(assigner).append("\n");
-                sb.append("📅 时间：").append(timeStr).append("\n\n");
-                sb.append("📱 请长按小程序码查看");
-                break;
-            case TASK_ASSIGN_NOTIFY:
-                sb.append("📋 任务：").append(taskName).append("\n");
-                sb.append("👤 执行人：").append(assigner).append("\n");
-                sb.append("📅 时间：").append(timeStr);
-                break;
-            case TASK_COMPLETED:
-                sb.append("📋 任务：").append(taskName).append("\n");
-                sb.append("👤 完成人：").append(assigner).append("\n");
-                sb.append("📅 时间：").append(timeStr);
-                break;
-            default:
-                sb.append(message.getDescription().replaceAll("<[^>]*>", ""));
-        }
-        
-        return sb.toString();
-    }
-    
-    /**
-     * 构建mpnews消息内容（HTML格式，使用外部URL引用图片）
+     * 构建mpnews消息内容（美观的卡片式设计）
      */
     private String buildMpnewsContentWithImageUrl(WechatMessage message, String timeStr) {
         StringBuilder content = new StringBuilder();
-        
-        // 添加样式
-        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 10px;'>");
         
         // 解析description获取任务信息
         String desc = message.getDescription();
         String[] lines = desc.split("\n");
         
-        // 任务详情
+        // 提取信息
         String taskName = extractFromLines(lines, "任务[:：]");
         if (taskName.isEmpty()) {
-            // 尝试旧格式: "任务给【xxx】：任务名"
-            java.util.regex.Pattern oldPattern = java.util.regex.Pattern.compile("任务给[【\\[]([^】\\]]+)[】\\]][：:]\\s*(.+?)(?:\\s+时间|$)");
-            java.util.regex.Matcher oldMatcher = oldPattern.matcher(desc);
-            if (oldMatcher.find()) {
-                taskName = oldMatcher.group(2).trim();
-            }
-        }
-        if (taskName.isEmpty()) {
-            // 如果解析失败，尝试从title提取（去掉前面的表情符号）
             taskName = message.getTitle().replaceAll("^[✅🏠🎉✨📱\\s]+", "").replaceAll(".*[：:]", "").trim();
         }
-        content.append("<p><strong style='color: #333; font-size: 16px;'>📋 任务详情：</strong>");
-        content.append(escapeHtml(taskName)).append("</p>");
-        
-        // 备注 - 尝试多种格式
         String remark = extractFromLines(lines, "备注[:：]");
-        if (remark.isEmpty()) {
-            remark = extractFromLines(lines, "完成备注[:：]");
-        }
-        if (!remark.isEmpty()) {
-            content.append("<p><strong style='color: #333;'>📝 备注：</strong>");
-            content.append(escapeHtml(remark)).append("</p>");
-        }
-        
-        // 指派人（👤）
         String assigner = extractFromLines(lines, "指派[人]?[：:]");
-        if (assigner.isEmpty()) {
-            // 尝试旧格式: "【xxx】"
-            java.util.regex.Pattern bracketPattern = java.util.regex.Pattern.compile("[【\\[]([^】\\]]+)[】\\]]");
-            java.util.regex.Matcher bracketMatcher = bracketPattern.matcher(desc);
-            if (bracketMatcher.find()) {
-                assigner = bracketMatcher.group(1).trim();
-            }
-        }
-        if (!assigner.isEmpty() && !assigner.equals("系统")) {
-            content.append("<p><strong style='color: #333;'>👤 指派人：</strong>");
-            content.append(escapeHtml(assigner)).append("</p>");
-        }
-        
-        // 执行人（👥）
         String executor = extractFromLines(lines, "执行[人]?[：:]");
-        if (!executor.isEmpty()) {
-            content.append("<p><strong style='color: #333;'>👥 执行人：</strong>");
-            content.append(escapeHtml(executor)).append("</p>");
+        
+        // 确定消息类型和配色
+        String headerColor, statusBadge, headerIcon;
+        switch (message.getType()) {
+            case TASK_ASSIGNED:
+                headerColor = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
+                statusBadge = "新任务";
+                headerIcon = "📬";
+                break;
+            case TASK_ASSIGN_NOTIFY:
+                headerColor = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
+                statusBadge = "已指派";
+                headerIcon = "✅";
+                break;
+            case TASK_COMPLETED:
+                headerColor = "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)";
+                statusBadge = "已完成";
+                headerIcon = "🎉";
+                break;
+            default:
+                headerColor = "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)";
+                statusBadge = "任务";
+                headerIcon = "📋";
         }
         
-        // 时间
-        content.append("<p><strong style='color: #333;'>📅 时间：</strong>");
-        content.append(timeStr).append("</p>");
+        // 开始构建HTML
+        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; padding: 0; margin: 0;'>")
+               .append("<div style='max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);'>")
+               
+               // 顶部渐变头部
+               .append("<div style='background: ").append(headerColor).append("; padding: 24px 20px; text-align: center; color: white;'>")
+               .append("<div style='display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; backdrop-filter: blur(10px);'>")
+               .append(statusBadge).append("</div>")
+               .append("<div style='font-size: 32px; margin-bottom: 8px;'>").append(headerIcon).append("</div>")
+               .append("<h1 style='margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px;'>")
+               .append(escapeHtml(taskName)).append("</h1>")
+               .append("</div>")
+               
+               // 内容区域
+               .append("<div style='padding: 24px 20px;'>")
+               
+               // 备注（如果有）
+               .append(!remark.isEmpty() ? 
+                   "<div style='background: #f8f9fa; border-left: 4px solid #667eea; padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0;'>" +
+                   "<div style='font-size: 12px; color: #999; margin-bottom: 4px;'>📝 备注</div>" +
+                   "<div style='font-size: 15px; color: #333; line-height: 1.5;'>" + escapeHtml(remark) + "</div>" +
+                   "</div>" : "")
+               
+               // 人员信息卡片
+               .append("<div style='display: flex; gap: 12px; margin-bottom: 20px;'>");
         
-        // 分隔线
-        content.append("<p style='border-top: 1px solid #eee; margin: 20px 0;'></p>");
+        // 指派人
+        if (!assigner.isEmpty() && !assigner.equals("系统")) {
+            content.append("<div style='flex: 1; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 16px; border-radius: 12px; text-align: center;'>")
+                   .append("<div style='font-size: 24px; margin-bottom: 4px;'>👤</div>")
+                   .append("<div style='font-size: 11px; color: #666; margin-bottom: 2px;'>指派人</div>")
+                   .append("<div style='font-size: 15px; font-weight: 600; color: #333;'>").append(escapeHtml(assigner)).append("</div>")
+                   .append("</div>");
+        }
         
-        // 小程序码提示
-        content.append("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>");
-        content.append("<strong>📱 请长按下方小程序码，识别后进入小程序查看任务</strong></p>");
+        // 执行人
+        if (!executor.isEmpty()) {
+            content.append("<div style='flex: 1; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 16px; border-radius: 12px; text-align: center;'>")
+                   .append("<div style='font-size: 24px; margin-bottom: 4px;'>👥</div>")
+                   .append("<div style='font-size: 11px; color: #666; margin-bottom: 2px;'>执行人</div>")
+                   .append("<div style='font-size: 15px; font-weight: 600; color: #333;'>").append(escapeHtml(executor)).append("</div>")
+                   .append("</div>");
+        }
         
-        // 小程序码图片（使用外部URL引用）
-        content.append("<p style='text-align: center;'>");
-        content.append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" ");
-        content.append("style='max-width: 200px; width: 80%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'");
-        content.append(" alt='小程序码'/></p>");
-        
-        // 底部提示
-        content.append("<p style='color: #999; font-size: 12px; text-align: center; margin-top: 20px;'>");
-        content.append("扫码后直接打开小程序首页</p>");
-        
-        content.append("</div>");
+        content.append("</div>")
+               
+               // 时间
+               .append("<div style='text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 24px;'>")
+               .append("<span style='font-size: 13px; color: #666;'>📅 ").append(timeStr).append("</span>")
+               .append("</div>")
+               
+               // 分隔线
+               .append("<div style='border-top: 1px dashed #ddd; margin: 20px 0; position: relative;'>")
+               .append("<div style='position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 12px; color: #999; font-size: 12px;'>长按识别小程序码</div>")
+               .append("</div>")
+               
+               // 小程序码区域
+               .append("<div style='text-align: center; padding: 20px 0;'>")
+               .append("<div style='display: inline-block; background: white; padding: 16px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);'>")
+               .append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" style='width: 180px; height: 180px; border-radius: 12px; display: block;' alt='小程序码'/>")
+               .append("</div>")
+               .append("<div style='margin-top: 16px; color: #666; font-size: 14px;'>")
+               .append("<div style='color: #333; font-weight: 500; margin-bottom: 4px;'>扫码进入小程序查看任务</div>")
+               .append("<div style='font-size: 12px; color: #999;'>家庭小程序 · 让家更美好</div>")
+               .append("</div>")
+               .append("</div>")
+               
+               // 底部按钮
+               .append("<div style='text-align: center; margin-top: 20px;'>")
+               .append("<a href=\"https://qioba.cn:8443\" style='display: inline-block; background: ").append(headerColor).append("; color: white; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-size: 15px; font-weight: 500; box-shadow: 0 4px 12px rgba(102,126,234,0.4);'>")
+               .append("打开小程序 →</a>")
+               .append("</div>")
+               
+               .append("</div>") // 内容区域结束
+               .append("</div>") // 卡片结束
+               .append("</div>"); // 外层结束
         
         return content.toString();
     }
@@ -572,6 +562,51 @@ public class WechatWorkService {
                    .replace("'", "&#x27;");
     }
     
+    /**
+     * 构建mpnews消息摘要
+     */
+    private String buildMessageDigest(WechatMessage message, String timeStr) {
+        StringBuilder sb = new StringBuilder();
+        
+        // 解析description获取任务信息
+        String[] lines = message.getDescription().split("\n");
+        String taskName = extractFromLines(lines, "任务[:：]");
+        if (taskName.isEmpty()) {
+            taskName = message.getTitle().replaceAll(".*[：:]", "").trim();
+        }
+        String assigner = extractOperatorFromLines(lines);
+        if (assigner.isEmpty()) {
+            assigner = "系统";
+        }
+        String remark = extractFromLines(lines, "备注[:：]");
+        
+        switch (message.getType()) {
+            case TASK_ASSIGNED:
+                sb.append("📋 任务：").append(taskName).append("\n");
+                if (!remark.isEmpty()) {
+                    sb.append("📝 备注：").append(remark).append("\n");
+                }
+                sb.append("👤 指派人：").append(assigner).append("\n");
+                sb.append("📅 时间：").append(timeStr).append("\n\n");
+                sb.append("📱 请长按小程序码查看");
+                break;
+            case TASK_ASSIGN_NOTIFY:
+                sb.append("📋 任务：").append(taskName).append("\n");
+                sb.append("👤 执行人：").append(assigner).append("\n");
+                sb.append("📅 时间：").append(timeStr);
+                break;
+            case TASK_COMPLETED:
+                sb.append("📋 任务：").append(taskName).append("\n");
+                sb.append("👤 完成人：").append(assigner).append("\n");
+                sb.append("📅 时间：").append(timeStr);
+                break;
+            default:
+                sb.append(message.getDescription().replaceAll("<[^>]*>", ""));
+        }
+        
+        return sb.toString();
+    }
+
     /**
      * 发送纯文本消息（回退方案）
      */
@@ -814,7 +849,6 @@ public class WechatWorkService {
                 desc.append("👥 执行人：").append(assigneeName).append("\n");
                 desc.append("📅 时间：").append(java.time.LocalDateTime.now().toString().substring(0, 16));
                 break;
-                
             case TASK_COMPLETED:
                 title = "🎉 任务已完成";
                 desc.append("📋 任务：").append(taskTitle).append("\n\n");
