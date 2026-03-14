@@ -480,32 +480,27 @@ public class WechatWorkService {
             content.append(escapeHtml(remark)).append("</p>");
         }
         
-        // 指派人/执行人 - 尝试多种格式
-        String assigner = extractOperatorFromLines(lines);
+        // 指派人（👤）
+        String assigner = extractFromLines(lines, "指派[人]?[：:]");
         if (assigner.isEmpty()) {
-            // 尝试旧格式: "【xxx】" 或 "任务给【xxx】"
+            // 尝试旧格式: "【xxx】"
             java.util.regex.Pattern bracketPattern = java.util.regex.Pattern.compile("[【\\[]([^】\\]]+)[】\\]]");
             java.util.regex.Matcher bracketMatcher = bracketPattern.matcher(desc);
             if (bracketMatcher.find()) {
                 assigner = bracketMatcher.group(1).trim();
             }
         }
-        if (assigner.isEmpty()) {
-            assigner = "系统";
+        if (!assigner.isEmpty() && !assigner.equals("系统")) {
+            content.append("<p><strong style='color: #333;'>👤 指派人：</strong>");
+            content.append(escapeHtml(assigner)).append("</p>");
         }
-        // 根据消息类型判断标签
-        String operatorLabel;
-        if (message.getType() == MessageType.TASK_ASSIGNED) {
-            operatorLabel = "👤 指派人：";
-        } else if (message.getType() == MessageType.TASK_ASSIGN_NOTIFY) {
-            operatorLabel = "👤 执行人：";
-        } else if (message.getType() == MessageType.TASK_COMPLETED) {
-            operatorLabel = "👤 完成人：";
-        } else {
-            operatorLabel = desc.contains("执行") ? "👤 执行人：" : "👤 指派人：";
+        
+        // 执行人（👥）
+        String executor = extractFromLines(lines, "执行[人]?[：:]");
+        if (!executor.isEmpty()) {
+            content.append("<p><strong style='color: #333;'>👥 执行人：</strong>");
+            content.append(escapeHtml(executor)).append("</p>");
         }
-        content.append("<p><strong style='color: #333;'>").append(operatorLabel).append("</strong>");
-        content.append(escapeHtml(assigner)).append("</p>");
         
         // 时间
         content.append("<p><strong style='color: #333;'>📅 时间：</strong>");
@@ -805,13 +800,18 @@ public class WechatWorkService {
                     desc.append("📝 备注：").append(taskContent).append("\n\n");
                 }
                 desc.append("👤 指派人：").append(operatorName).append("\n");
+                desc.append("👥 执行人：").append(assigneeName).append("\n");
                 desc.append("📅 时间：").append(java.time.LocalDateTime.now().toString().substring(0, 16));
                 break;
                 
             case TASK_ASSIGN_NOTIFY:
                 title = "✅ 任务已指派";
                 desc.append("📋 任务：").append(taskTitle).append("\n\n");
-                desc.append("👤 执行人：").append(assigneeName).append("\n");
+                if (taskContent != null && !taskContent.isEmpty()) {
+                    desc.append("📝 备注：").append(taskContent).append("\n\n");
+                }
+                desc.append("👤 指派人：").append(operatorName).append("\n");
+                desc.append("👥 执行人：").append(assigneeName).append("\n");
                 desc.append("📅 时间：").append(java.time.LocalDateTime.now().toString().substring(0, 16));
                 break;
                 
