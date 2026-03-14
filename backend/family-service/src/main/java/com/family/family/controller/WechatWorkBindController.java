@@ -1,7 +1,7 @@
 package com.family.family.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.family.family.common.Result;
+import com.family.common.core.Result;
 import com.family.family.entity.User;
 import com.family.family.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;

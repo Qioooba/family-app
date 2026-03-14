@@ -2,7 +2,7 @@ package com.family.family.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
-import com.family.family.common.Result;
+import com.family.common.core.Result;
 import com.family.family.entity.SystemConfig;
 import com.family.family.mapper.SystemConfigMapper;
 import com.family.family.service.SystemConfigService;
@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

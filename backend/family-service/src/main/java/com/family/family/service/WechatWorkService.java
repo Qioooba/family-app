@@ -12,7 +12,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -675,7 +676,7 @@ public class WechatWorkService {
                 if (user.getExternalUserId() == null || !user.getExternalUserId().equals(externalUserId)) {
                     user.setExternalUserId(externalUserId);
                     userMapper.updateById(user);
-                    log.info("已更新用户 {} 的external_user_id: {}", user.getNickname() || user.getUsername(), externalUserId);
+                    log.info("已更新用户 {} 的external_user_id: {}", user.getNickname() != null ? user.getNickname() : user.getUsername(), externalUserId);
                 }
                 break;
             }
