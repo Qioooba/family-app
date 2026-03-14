@@ -396,7 +396,7 @@ public class WechatWorkService {
     }
     
     /**
-     * 构建mpnews消息内容（美观的卡片式设计）
+     * 构建mpnews消息内容（简洁紧凑设计）
      */
     private String buildMpnewsContentWithImageUrl(WechatMessage message, String timeStr) {
         StringBuilder content = new StringBuilder();
@@ -414,106 +414,35 @@ public class WechatWorkService {
         String assigner = extractFromLines(lines, "指派[人]?[：:]");
         String executor = extractFromLines(lines, "执行[人]?[：:]");
         
-        // 确定消息类型和配色
-        String headerColor, statusBadge, headerIcon;
-        switch (message.getType()) {
-            case TASK_ASSIGNED:
-                headerColor = "linear-gradient(135deg, #667eea 0%, #764ba2 100%)";
-                statusBadge = "新任务";
-                headerIcon = "📬";
-                break;
-            case TASK_ASSIGN_NOTIFY:
-                headerColor = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
-                statusBadge = "已指派";
-                headerIcon = "✅";
-                break;
-            case TASK_COMPLETED:
-                headerColor = "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)";
-                statusBadge = "已完成";
-                headerIcon = "🎉";
-                break;
-            default:
-                headerColor = "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)";
-                statusBadge = "任务";
-                headerIcon = "📋";
-        }
-        
-        // 开始构建HTML
-        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; padding: 0; margin: 0;'>")
-               .append("<div style='max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);'>")
+        // 简洁白色卡片设计
+        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; padding: 16px;'>")
                
-               // 顶部渐变头部
-               .append("<div style='background: ").append(headerColor).append("; padding: 24px 20px; text-align: center; color: white;'>")
-               .append("<div style='display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; backdrop-filter: blur(10px);'>")
-               .append(statusBadge).append("</div>")
-               .append("<div style='font-size: 32px; margin-bottom: 8px;'>").append(headerIcon).append("</div>")
-               .append("<h1 style='margin: 0; font-size: 20px; font-weight: 600; letter-spacing: 0.5px;'>")
-               .append(escapeHtml(taskName)).append("</h1>")
+               // 标题行
+               .append("<div style='border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px;'>")
+               .append("<div style='font-size: 17px; font-weight: 600; color: #333; margin-bottom: 4px;'>📋 ").append(escapeHtml(taskName)).append("</div>")
+               .append("<div style='font-size: 13px; color: #999;'>").append(timeStr).append("</div>")
                .append("</div>")
-               
-               // 内容区域
-               .append("<div style='padding: 24px 20px;'>")
                
                // 备注（如果有）
                .append(!remark.isEmpty() ? 
-                   "<div style='background: #f8f9fa; border-left: 4px solid #667eea; padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0;'>" +
-                   "<div style='font-size: 12px; color: #999; margin-bottom: 4px;'>📝 备注</div>" +
-                   "<div style='font-size: 15px; color: #333; line-height: 1.5;'>" + escapeHtml(remark) + "</div>" +
-                   "</div>" : "")
+                   "<div style='background: #f5f5f5; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; color: #666;'>" +
+                   "📝 " + escapeHtml(remark) + "</div>" : "")
                
-               // 人员信息卡片
-               .append("<div style='display: flex; gap: 12px; margin-bottom: 20px;'>");
-        
-        // 指派人
-        if (!assigner.isEmpty() && !assigner.equals("系统")) {
-            content.append("<div style='flex: 1; background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); padding: 16px; border-radius: 12px; text-align: center;'>")
-                   .append("<div style='font-size: 24px; margin-bottom: 4px;'>👤</div>")
-                   .append("<div style='font-size: 11px; color: #666; margin-bottom: 2px;'>指派人</div>")
-                   .append("<div style='font-size: 15px; font-weight: 600; color: #333;'>").append(escapeHtml(assigner)).append("</div>")
-                   .append("</div>");
-        }
-        
-        // 执行人
-        if (!executor.isEmpty()) {
-            content.append("<div style='flex: 1; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); padding: 16px; border-radius: 12px; text-align: center;'>")
-                   .append("<div style='font-size: 24px; margin-bottom: 4px;'>👥</div>")
-                   .append("<div style='font-size: 11px; color: #666; margin-bottom: 2px;'>执行人</div>")
-                   .append("<div style='font-size: 15px; font-weight: 600; color: #333;'>").append(escapeHtml(executor)).append("</div>")
-                   .append("</div>");
-        }
-        
-        content.append("</div>")
-               
-               // 时间
-               .append("<div style='text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 24px;'>")
-               .append("<span style='font-size: 13px; color: #666;'>📅 ").append(timeStr).append("</span>")
+               // 人员信息一行显示
+               .append("<div style='display: flex; gap: 20px; margin-bottom: 16px; font-size: 14px;'>")
+               .append(!assigner.isEmpty() && !assigner.equals("系统") ? 
+                   "<div><span style='color: #999;'>指派人：</span><span style='color: #333; font-weight: 500;'>" + escapeHtml(assigner) + "</span></div>" : "")
+               .append(!executor.isEmpty() ? 
+                   "<div><span style='color: #999;'>执行人：</span><span style='color: #333; font-weight: 500;'>" + escapeHtml(executor) + "</span></div>" : "")
                .append("</div>")
                
-               // 分隔线
-               .append("<div style='border-top: 1px dashed #ddd; margin: 20px 0; position: relative;'>")
-               .append("<div style='position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 12px; color: #999; font-size: 12px;'>长按识别小程序码</div>")
+               // 小程序码（紧凑）
+               .append("<div style='text-align: center; padding-top: 12px; border-top: 1px dashed #ddd;'>")
+               .append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" style='width: 150px; height: 150px; border-radius: 8px;' alt='小程序码'/>")
+               .append("<div style='margin-top: 8px; font-size: 12px; color: #999;'>长按识别小程序码</div>")
                .append("</div>")
                
-               // 小程序码区域
-               .append("<div style='text-align: center; padding: 20px 0;'>")
-               .append("<div style='display: inline-block; background: white; padding: 16px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);'>")
-               .append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" style='width: 180px; height: 180px; border-radius: 12px; display: block;' alt='小程序码'/>")
-               .append("</div>")
-               .append("<div style='margin-top: 16px; color: #666; font-size: 14px;'>")
-               .append("<div style='color: #333; font-weight: 500; margin-bottom: 4px;'>扫码进入小程序查看任务</div>")
-               .append("<div style='font-size: 12px; color: #999;'>家庭小程序 · 让家更美好</div>")
-               .append("</div>")
-               .append("</div>")
-               
-               // 底部按钮
-               .append("<div style='text-align: center; margin-top: 20px;'>")
-               .append("<a href=\"https://qioba.cn:8443\" style='display: inline-block; background: ").append(headerColor).append("; color: white; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-size: 15px; font-weight: 500; box-shadow: 0 4px 12px rgba(102,126,234,0.4);'>")
-               .append("打开小程序 →</a>")
-               .append("</div>")
-               
-               .append("</div>") // 内容区域结束
-               .append("</div>") // 卡片结束
-               .append("</div>"); // 外层结束
+               .append("</div>");
         
         return content.toString();
     }
