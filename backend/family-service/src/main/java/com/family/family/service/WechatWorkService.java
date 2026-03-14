@@ -396,7 +396,7 @@ public class WechatWorkService {
     }
     
     /**
-     * 构建mpnews消息内容（简洁紧凑设计）
+     * 构建mpnews消息内容（简洁工整设计）
      */
     private String buildMpnewsContentWithImageUrl(WechatMessage message, String timeStr) {
         StringBuilder content = new StringBuilder();
@@ -414,35 +414,59 @@ public class WechatWorkService {
         String assigner = extractFromLines(lines, "指派[人]?[：:]");
         String executor = extractFromLines(lines, "执行[人]?[：:]");
         
-        // 简洁白色卡片设计
-        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; padding: 16px;'>")
-               
-               // 标题行
-               .append("<div style='border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px;'>")
-               .append("<div style='font-size: 17px; font-weight: 600; color: #333; margin-bottom: 4px;'>📋 ").append(escapeHtml(taskName)).append("</div>")
-               .append("<div style='font-size: 13px; color: #999;'>").append(timeStr).append("</div>")
-               .append("</div>")
-               
-               // 备注（如果有）
-               .append(!remark.isEmpty() ? 
-                   "<div style='background: #f5f5f5; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; color: #666;'>" +
-                   "📝 " + escapeHtml(remark) + "</div>" : "")
-               
-               // 人员信息一行显示
-               .append("<div style='display: flex; gap: 20px; margin-bottom: 16px; font-size: 14px;'>")
-               .append(!assigner.isEmpty() && !assigner.equals("系统") ? 
-                   "<div><span style='color: #999;'>指派人：</span><span style='color: #333; font-weight: 500;'>" + escapeHtml(assigner) + "</span></div>" : "")
-               .append(!executor.isEmpty() ? 
-                   "<div><span style='color: #999;'>执行人：</span><span style='color: #333; font-weight: 500;'>" + escapeHtml(executor) + "</span></div>" : "")
-               .append("</div>")
-               
-               // 小程序码（紧凑）
-               .append("<div style='text-align: center; padding-top: 12px; border-top: 1px dashed #ddd;'>")
-               .append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" style='width: 150px; height: 150px; border-radius: 8px;' alt='小程序码'/>")
-               .append("<div style='margin-top: 8px; font-size: 12px; color: #999;'>长按识别小程序码</div>")
-               .append("</div>")
-               
-               .append("</div>");
+        // 整洁卡片设计
+        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; padding: 20px; max-width: 500px; margin: 0 auto;'>");
+        
+        // 头部：图标+标题
+        content.append("<div style='display: flex; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #eee;'>");
+        content.append("<div style='width: 40px; height: 40px; background: #07c160; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 20px;'>✅</div>");
+        content.append("<div>");
+        content.append("<div style='font-size: 18px; font-weight: 600; color: #333;'>").append(escapeHtml(taskName)).append("</div>");
+        content.append("<div style='font-size: 13px; color: #999; margin-top: 2px;'>").append(timeStr).append("</div>");
+        content.append("</div>");
+        content.append("</div>");
+        
+        // 备注（如果有）
+        if (!remark.isEmpty()) {
+            content.append("<div style='background: #f7f7f7; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;'>");
+            content.append("<div style='font-size: 12px; color: #999; margin-bottom: 4px;'>📝 备注</div>");
+            content.append("<div style='font-size: 15px; color: #333;'>").append(escapeHtml(remark)).append("</div>");
+            content.append("</div>");
+        }
+        
+        // 人员信息表格
+        content.append("<div style='margin-bottom: 20px;'>");
+        
+        // 指派人行
+        if (!assigner.isEmpty() && !assigner.equals("系统")) {
+            content.append("<div style='display: flex; padding: 12px 0; border-bottom: 1px solid #f0f0f0;'>");
+            content.append("<div style='width: 80px; color: #999; font-size: 14px;'>👤 指派人</div>");
+            content.append("<div style='flex: 1; color: #333; font-size: 15px; font-weight: 500;'>").append(escapeHtml(assigner)).append("</div>");
+            content.append("</div>");
+        }
+        
+        // 执行人行
+        if (!executor.isEmpty()) {
+            content.append("<div style='display: flex; padding: 12px 0; border-bottom: 1px solid #f0f0f0;'>");
+            content.append("<div style='width: 80px; color: #999; font-size: 14px;'>👥 执行人</div>");
+            content.append("<div style='flex: 1; color: #333; font-size: 15px; font-weight: 500;'>").append(escapeHtml(executor)).append("</div>");
+            content.append("</div>");
+        }
+        
+        content.append("</div>");
+        
+        // 小程序码区域
+        content.append("<div style='text-align: center; padding: 20px; background: #fafafa; border-radius: 12px;'>");
+        content.append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" style='width: 160px; height: 160px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);' alt='小程序码'/>");
+        content.append("<div style='margin-top: 12px; font-size: 13px; color: #666;'>长按识别小程序码查看任务</div>");
+        content.append("</div>");
+        
+        // 底部按钮
+        content.append("<div style='text-align: center; margin-top: 20px;'>");
+        content.append("<a href=\"https://qioba.cn:8443\" style='display: inline-block; background: #07c160; color: white; padding: 12px 40px; border-radius: 24px; text-decoration: none; font-size: 15px; font-weight: 500;'>打开小程序</a>");
+        content.append("</div>");
+        
+        content.append("</div>");
         
         return content.toString();
     }
@@ -492,7 +516,7 @@ public class WechatWorkService {
     }
     
     /**
-     * 构建mpnews消息摘要
+     * 构建mpnews消息摘要（微信列表显示的文字）
      */
     private String buildMessageDigest(WechatMessage message, String timeStr) {
         StringBuilder sb = new StringBuilder();
@@ -503,35 +527,22 @@ public class WechatWorkService {
         if (taskName.isEmpty()) {
             taskName = message.getTitle().replaceAll(".*[：:]", "").trim();
         }
-        String assigner = extractOperatorFromLines(lines);
-        if (assigner.isEmpty()) {
-            assigner = "系统";
-        }
+        String assigner = extractFromLines(lines, "指派[人]?[：:]");
+        String executor = extractFromLines(lines, "执行[人]?[：:]");
         String remark = extractFromLines(lines, "备注[:：]");
         
-        switch (message.getType()) {
-            case TASK_ASSIGNED:
-                sb.append("📋 任务：").append(taskName).append("\n");
-                if (!remark.isEmpty()) {
-                    sb.append("📝 备注：").append(remark).append("\n");
-                }
-                sb.append("👤 指派人：").append(assigner).append("\n");
-                sb.append("📅 时间：").append(timeStr).append("\n\n");
-                sb.append("📱 请长按小程序码查看");
-                break;
-            case TASK_ASSIGN_NOTIFY:
-                sb.append("📋 任务：").append(taskName).append("\n");
-                sb.append("👤 执行人：").append(assigner).append("\n");
-                sb.append("📅 时间：").append(timeStr);
-                break;
-            case TASK_COMPLETED:
-                sb.append("📋 任务：").append(taskName).append("\n");
-                sb.append("👤 完成人：").append(assigner).append("\n");
-                sb.append("📅 时间：").append(timeStr);
-                break;
-            default:
-                sb.append(message.getDescription().replaceAll("<[^>]*>", ""));
+        // 统一格式：双方都显示完整信息
+        sb.append("📋 任务：").append(taskName).append("\n");
+        if (!remark.isEmpty()) {
+            sb.append("📝 备注：").append(remark).append("\n");
         }
+        if (!assigner.isEmpty() && !assigner.equals("系统")) {
+            sb.append("👤 指派人：").append(assigner).append("\n");
+        }
+        if (!executor.isEmpty()) {
+            sb.append("👥 执行人：").append(executor).append("\n");
+        }
+        sb.append("📅 时间：").append(timeStr);
         
         return sb.toString();
     }
