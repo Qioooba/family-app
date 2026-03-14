@@ -450,30 +450,51 @@ public class WechatWorkService {
         content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 10px;'>");
         
         // 解析description获取任务信息
-        String[] lines = message.getDescription().split("\n");
+        String desc = message.getDescription();
+        String[] lines = desc.split("\n");
         
         // 任务详情
         String taskName = extractFromLines(lines, "任务[:：]");
         if (taskName.isEmpty()) {
-            // 如果解析失败，尝试从title提取
-            taskName = message.getTitle().replaceAll(".*[：:]", "").trim();
+            // 尝试旧格式: "任务给【xxx】：任务名"
+            java.util.regex.Pattern oldPattern = java.util.regex.Pattern.compile("任务给[【\\[]([^】\\]]+)[】\\]][：:]\\s*(.+?)(?:\\s+时间|$)");
+            java.util.regex.Matcher oldMatcher = oldPattern.matcher(desc);
+            if (oldMatcher.find()) {
+                taskName = oldMatcher.group(2).trim();
+            }
+        }
+        if (taskName.isEmpty()) {
+            // 如果解析失败，尝试从title提取（去掉前面的表情符号）
+            taskName = message.getTitle().replaceAll("^[✅🏠🎉✨📱\\s]+", "").replaceAll(".*[：:]", "").trim();
         }
         content.append("<p><strong style='color: #333; font-size: 16px;'>📋 任务详情：</strong>");
         content.append(escapeHtml(taskName)).append("</p>");
         
-        // 备注
+        // 备注 - 尝试多种格式
         String remark = extractFromLines(lines, "备注[:：]");
+        if (remark.isEmpty()) {
+            remark = extractFromLines(lines, "完成备注[:：]");
+        }
         if (!remark.isEmpty()) {
             content.append("<p><strong style='color: #333;'>📝 备注：</strong>");
             content.append(escapeHtml(remark)).append("</p>");
         }
         
-        // 指派人
+        // 指派人/执行人 - 尝试多种格式
         String assigner = extractFromLines(lines, "指派[人]?[:：]|执行[人]?[:：]");
+        if (assigner.isEmpty()) {
+            // 尝试旧格式: "【xxx】" 或 "任务给【xxx】"
+            java.util.regex.Pattern bracketPattern = java.util.regex.Pattern.compile("[【\\[]([^】\\]]+)[】\\]]");
+            java.util.regex.Matcher bracketMatcher = bracketPattern.matcher(desc);
+            if (bracketMatcher.find()) {
+                assigner = bracketMatcher.group(1).trim();
+            }
+        }
         if (assigner.isEmpty()) {
             assigner = "系统";
         }
-        content.append("<p><strong style='color: #333;'>👤 指派人：</strong>");
+        String operatorLabel = desc.contains("执行") ? "👤 执行人：" : "👤 指派人：";
+        content.append("<p><strong style='color: #333;'>").append(operatorLabel).append("</strong>");
         content.append(escapeHtml(assigner)).append("</p>");
         
         // 时间
@@ -810,15 +831,18 @@ public class WechatWorkService {
     }
 
     public void notifyTaskAssignedToCreator(Long creatorId, String toName, String taskTitle) {
+        // 使用新的统一格式构造消息
+        String timeStr = java.time.LocalDateTime.now().toString().substring(0, 16);
+        StringBuilder desc = new StringBuilder();
+        desc.append("📋 任务：").append(taskTitle).append("\n\n");
+        desc.append("👤 执行人：").append(toName).append("\n");
+        desc.append("📅 时间：").append(timeStr);
+        
         WechatMessage msg = new WechatMessage();
         msg.setType(MessageType.TASK_ASSIGN_NOTIFY);
         msg.setTargetUserId(creatorId);
         msg.setTitle("✅ 任务已指派");
-        msg.setDescription(String.format(
-            "你已指派任务给【%s】：%s  时间：%s",
-            toName, taskTitle,
-            java.time.LocalDateTime.now().toString().substring(0, 16)
-        ));
+        msg.setDescription(desc.toString());
         sendMessageAsync(msg);
     }
 
