@@ -270,7 +270,7 @@ public class WechatWorkService {
      * 发送mpnews图文消息（富媒体，支持内嵌图片）
      */
     private void sendMpnewsMessage(String token, String workUserId, WechatMessage message) throws Exception {
-        // 1. 读取小程序码图片并上传获取media_id
+        // 1. 上传小程序码图片获取media_id（用于封面）
         byte[] imageData = readMiniappQrImage();
         if (imageData == null) {
             throw new Exception("读取小程序码图片失败");
@@ -286,8 +286,8 @@ public class WechatWorkService {
         // 构建图文内容
         String timeStr = java.time.LocalDateTime.now().toString().substring(0, 16);
         String digest = buildMessageDigest(message, timeStr);
-        // content中使用media_id引用图片（企业微信mpnews不支持base64）
-        String content = buildMpnewsContentWithMediaId(message, timeStr, mediaId);
+        // content中使用外部URL引用图片
+        String content = buildMpnewsContentWithImageUrl(message, timeStr);
         
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
@@ -401,25 +401,36 @@ public class WechatWorkService {
     private String buildMessageDigest(WechatMessage message, String timeStr) {
         StringBuilder sb = new StringBuilder();
         
-        String taskTitle = extractRealTaskTitle(message);
-        String operator = extractRealOperator(message);
+        // 解析description获取任务信息
+        String[] lines = message.getDescription().split("\n");
+        String taskName = extractFromLines(lines, "任务[:：]");
+        if (taskName.isEmpty()) {
+            taskName = message.getTitle().replaceAll(".*[：:]", "").trim();
+        }
+        String assigner = extractFromLines(lines, "指派[人]?[:：]|执行[人]?[:：]");
+        if (assigner.isEmpty()) {
+            assigner = "系统";
+        }
+        String remark = extractFromLines(lines, "备注[:：]");
         
         switch (message.getType()) {
             case TASK_ASSIGNED:
-                sb.append("📋 任务：").append(taskTitle).append("\n");
-                sb.append("📝 备注：").append(extractRealTaskContent(message)).append("\n");
-                sb.append("👤 指派人：").append(operator).append("\n");
+                sb.append("📋 任务：").append(taskName).append("\n");
+                if (!remark.isEmpty()) {
+                    sb.append("📝 备注：").append(remark).append("\n");
+                }
+                sb.append("👤 指派人：").append(assigner).append("\n");
                 sb.append("📅 时间：").append(timeStr).append("\n\n");
                 sb.append("📱 请长按小程序码查看");
                 break;
             case TASK_ASSIGN_NOTIFY:
-                sb.append("📋 任务：").append(taskTitle).append("\n");
-                sb.append("👤 执行人：").append(extractRealOperator(message)).append("\n");
+                sb.append("📋 任务：").append(taskName).append("\n");
+                sb.append("👤 执行人：").append(assigner).append("\n");
                 sb.append("📅 时间：").append(timeStr);
                 break;
             case TASK_COMPLETED:
-                sb.append("📋 任务：").append(taskTitle).append("\n");
-                sb.append("👤 完成人：").append(operator).append("\n");
+                sb.append("📋 任务：").append(taskName).append("\n");
+                sb.append("👤 完成人：").append(assigner).append("\n");
                 sb.append("📅 时间：").append(timeStr);
                 break;
             default:
@@ -430,32 +441,40 @@ public class WechatWorkService {
     }
     
     /**
-     * 构建mpnews消息内容（HTML格式，使用media_id引用图片）
+     * 构建mpnews消息内容（HTML格式，使用外部URL引用图片）
      */
-    private String buildMpnewsContentWithMediaId(WechatMessage message, String timeStr, String mediaId) {
+    private String buildMpnewsContentWithImageUrl(WechatMessage message, String timeStr) {
         StringBuilder content = new StringBuilder();
         
         // 添加样式
         content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 10px;'>");
         
-        // 从message中提取真实任务信息
-        String taskTitle = extractRealTaskTitle(message);
-        String taskContent = extractRealTaskContent(message);
-        String operator = extractRealOperator(message);
+        // 解析description获取任务信息
+        String[] lines = message.getDescription().split("\n");
         
         // 任务详情
+        String taskName = extractFromLines(lines, "任务[:：]");
+        if (taskName.isEmpty()) {
+            // 如果解析失败，尝试从title提取
+            taskName = message.getTitle().replaceAll(".*[：:]", "").trim();
+        }
         content.append("<p><strong style='color: #333; font-size: 16px;'>📋 任务详情：</strong>");
-        content.append(escapeHtml(taskTitle)).append("</p>");
+        content.append(escapeHtml(taskName)).append("</p>");
         
         // 备注
-        if (!taskContent.isEmpty() && !taskContent.equals(taskTitle)) {
+        String remark = extractFromLines(lines, "备注[:：]");
+        if (!remark.isEmpty()) {
             content.append("<p><strong style='color: #333;'>📝 备注：</strong>");
-            content.append(escapeHtml(taskContent)).append("</p>");
+            content.append(escapeHtml(remark)).append("</p>");
         }
         
         // 指派人
+        String assigner = extractFromLines(lines, "指派[人]?[:：]|执行[人]?[:：]");
+        if (assigner.isEmpty()) {
+            assigner = "系统";
+        }
         content.append("<p><strong style='color: #333;'>👤 指派人：</strong>");
-        content.append(escapeHtml(operator)).append("</p>");
+        content.append(escapeHtml(assigner)).append("</p>");
         
         // 时间
         content.append("<p><strong style='color: #333;'>📅 时间：</strong>");
@@ -468,9 +487,9 @@ public class WechatWorkService {
         content.append("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>");
         content.append("<strong>📱 请长按下方小程序码，识别后进入小程序查看任务</strong></p>");
         
-        // 小程序码图片（使用media_id引用）
+        // 小程序码图片（使用外部URL引用）
         content.append("<p style='text-align: center;'>");
-        content.append("<img src=\"").append(mediaId).append("\" ");
+        content.append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" ");
         content.append("style='max-width: 200px; width: 80%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'");
         content.append(" alt='小程序码'/></p>");
         
@@ -484,6 +503,20 @@ public class WechatWorkService {
     }
     
     /**
+     * 从行数组中提取指定前缀的内容
+     */
+    private String extractFromLines(String[] lines, String pattern) {
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(".*" + pattern + "\\s*(.+)");
+        for (String line : lines) {
+            java.util.regex.Matcher m = p.matcher(line.trim());
+            if (m.matches()) {
+                return m.group(1).trim();
+            }
+        }
+        return "";
+    }
+    
+    /**
      * HTML转义
      */
     private String escapeHtml(String text) {
@@ -493,99 +526,6 @@ public class WechatWorkService {
                    .replace(">", "&gt;")
                    .replace("\"", "&quot;")
                    .replace("'", "&#x27;");
-    }
-    
-    /**
-     * 提取真实任务标题
-     */
-    private String extractRealTaskTitle(WechatMessage message) {
-        // 优先从extra中获取
-        if (message.getExtra() != null) {
-            Object title = message.getExtra().get("taskTitle");
-            if (title != null) return title.toString();
-        }
-        
-        String desc = message.getDescription();
-        
-        // 尝试匹配 "📋 任务：xxx" 或 "任务：xxx"
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[📋\\s]*任务[：:]\\s*([^\n]+)");
-        java.util.regex.Matcher matcher = pattern.matcher(desc);
-        if (matcher.find()) {
-            String title = matcher.group(1).trim();
-            // 过滤掉表情符号前缀
-            title = title.replaceAll("^[✅📝📋\\s]+", "").trim();
-            if (!title.isEmpty()) return title;
-        }
-        
-        // 尝试从 "任务名" 格式提取
-        if (desc.contains("任务名")) {
-            int start = desc.indexOf("任务名") + 3;
-            int end = desc.indexOf("\n", start);
-            if (end == -1) end = desc.length();
-            String title = desc.substring(start, end).replaceAll("[：:]", "").trim();
-            if (!title.isEmpty()) return title;
-        }
-        
-        // 回退：从标题中提取
-        String title = message.getTitle();
-        if (title.contains("：")) {
-            return title.substring(title.indexOf("：") + 1).trim();
-        }
-        
-        return title;
-    }
-    
-    /**
-     * 提取真实任务内容/备注
-     */
-    private String extractRealTaskContent(WechatMessage message) {
-        // 优先从extra中获取
-        if (message.getExtra() != null) {
-            Object content = message.getExtra().get("taskContent");
-            if (content != null) return content.toString();
-        }
-        
-        String desc = message.getDescription();
-        
-        // 尝试匹配 "📝 备注：xxx" 或 "备注：xxx"
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[📝\\s]*备注[：:]\\s*([^\n]+)");
-        java.util.regex.Matcher matcher = pattern.matcher(desc);
-        if (matcher.find()) {
-            return matcher.group(1).trim();
-        }
-        
-        return "";
-    }
-    
-    /**
-     * 提取真实指派人
-     */
-    private String extractRealOperator(WechatMessage message) {
-        // 优先从extra中获取
-        if (message.getExtra() != null) {
-            Object operator = message.getExtra().get("operatorName");
-            if (operator != null) return operator.toString();
-            Object creator = message.getExtra().get("creatorName");
-            if (creator != null) return creator.toString();
-        }
-        
-        String desc = message.getDescription();
-        
-        // 尝试匹配 "👤 指派人：xxx" 或 "指派人：xxx"
-        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("[👤\\s]*指派[人]?[：:]\\s*([^\n]+)");
-        java.util.regex.Matcher matcher = pattern.matcher(desc);
-        if (matcher.find()) {
-            return matcher.group(1).trim();
-        }
-        
-        // 尝试匹配 "【xxx】"
-        pattern = java.util.regex.Pattern.compile("【([^】]+)】");
-        matcher = pattern.matcher(desc);
-        if (matcher.find()) {
-            return matcher.group(1).trim();
-        }
-        
-        return "系统";
     }
     
     /**
