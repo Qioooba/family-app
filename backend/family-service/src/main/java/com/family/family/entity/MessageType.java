@@ -16,5 +16,8 @@ public enum MessageType {
     
     // 纪念日相关（预留）
     ANNIVERSARY_REMIND, // 纪念日提醒
-    ANNIVERSARY_TODAY   // 今日纪念日
+    ANNIVERSARY_TODAY,   // 今日纪念日
+    
+    // 提醒相关
+    REMINDER             // 定时提醒
 }

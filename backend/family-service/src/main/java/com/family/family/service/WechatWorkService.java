@@ -979,4 +979,24 @@ public class WechatWorkService {
             }
         }
     }
+    
+    /**
+     * 推送提醒消息（供定时任务调用）
+     */
+    public boolean pushReminder(Long userId, String title, String content) {
+        try {
+            WechatMessage msg = new WechatMessage();
+            msg.setType(MessageType.REMINDER);
+            msg.setTargetUserId(userId);
+            msg.setTitle(title);
+            msg.setDescription(content);
+            
+            sendMessageAsync(msg);
+            log.info("提醒推送成功: userId={}, title={}", userId, title);
+            return true;
+        } catch (Exception e) {
+            log.error("提醒推送失败: userId={}, title={}", userId, title, e);
+            return false;
+        }
+    }
 }

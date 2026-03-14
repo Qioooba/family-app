@@ -1,0 +1,25 @@
+-- 提醒配置表
+CREATE TABLE IF NOT EXISTS reminder_config (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    reminder_name VARCHAR(100) NOT NULL COMMENT '提醒名称',
+    reminder_type VARCHAR(30) NOT NULL COMMENT '提醒类型：WATER-喝水 MEDICINE-用药 EXPIRE-保质期 BIRTHDAY-生日 FINANCE-财务 SYSTEM-系统',
+    create_type TINYINT DEFAULT 1 COMMENT '创建类型：1-个人创建 2-系统创建',
+    create_by BIGINT NOT NULL COMMENT '创建人ID',
+    push_scope VARCHAR(20) DEFAULT 'SELF' COMMENT '推送范围：SELF-仅自己 SPECIFIED-指定用户 ALL-全部',
+    target_user_ids TEXT COMMENT '目标用户ID列表（JSON格式）',
+    cron_expression VARCHAR(100) COMMENT 'Cron表达式',
+    remind_time VARCHAR(20) COMMENT '提醒时间：08:00',
+    title_template VARCHAR(200) COMMENT '消息标题模板',
+    content_template VARCHAR(500) COMMENT '消息内容模板',
+    business_data JSON COMMENT '业务数据（JSON格式）',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-停用 1-启用',
+    last_remind_time DATETIME COMMENT '上次提醒时间',
+    last_remind_status VARCHAR(20) COMMENT '上次状态：SUCCESS/FAILED/SKIPPED',
+    next_remind_time DATETIME COMMENT '下次提醒时间',
+    remind_count INT DEFAULT 0 COMMENT '已提醒次数',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_create_by (create_by),
+    INDEX idx_status (status),
+    INDEX idx_reminder_type (reminder_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='提醒配置表';

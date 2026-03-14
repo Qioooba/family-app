@@ -129,6 +129,57 @@
       
     </view>
     
+    <!-- 今日提醒 -->
+    <view class="section-card reminder-card animate-in">
+      <view class="section-header">
+        <view class="title-wrapper">
+          <text class="section-icon">⏰</text>
+          <text class="section-title">今日提醒</text>
+          <view v-if="todayReminders.length > 0" class="reminder-badge">{{ todayReminders.length }}</view>
+        </view>
+        <view class="header-actions">
+          <view class="add-btn" @click="goAddReminder">
+            <text>+</text>
+          </view>
+          <view class="more-btn" @click="goReminderList">
+            <text>管理</text>
+            ›
+          </view>
+        </view>
+      </view>
+      
+      <view v-if="todayReminders.length > 0" class="reminder-list">
+        <view 
+          v-for="(reminder, index) in todayReminders" 
+          :key="reminder.id"
+          class="reminder-item"
+          :style="{ animationDelay: `${index * 0.08}s` }"
+          @click="goReminderDetail(reminder)"
+        >
+          <view class="reminder-icon-wrapper" :style="{ background: reminder.iconBg }">
+            <text class="reminder-icon">{{ reminder.icon }}</text>
+          </view>
+          <view class="reminder-info">
+            <text class="reminder-title">{{ reminder.title }}</text>
+            <text class="reminder-time">{{ reminder.time }}</text>
+          </view>
+          <view class="reminder-status" :class="{ completed: reminder.completed }">
+            <text v-if="reminder.completed">已完成</text>
+            <text v-else-if="reminder.isOverdue">已过期</text>
+            <text v-else>待完成</text>
+          </view>
+        </view>
+      </view>
+      
+      <view v-else class="empty-state">
+        <view class="empty-icon-wrapper">
+          <text class="empty-icon">✨</text>
+        </view>
+        <text class="empty-text">今天没有提醒</text>
+        <text class="empty-subtext">去添加一个吧！</text>
+      </view>
+    </view>
+    
     <!-- 今日概览 -->
     <view class="section-card animate-in">
       <view class="section-header">
@@ -390,6 +441,62 @@ const loadTodayTasks = async () => {
   }
 }
 
+// 加载今日提醒
+const loadTodayReminders = async () => {
+  try {
+    const res = await uni.request({
+      url: '/api/reminder/today',
+      method: 'GET'
+    })
+    if (res.data && res.data.code === 0) {
+      // 格式化提醒数据
+      todayReminders.value = (res.data.data || []).map(reminder => {
+        const iconMap = {
+          'WATER': { icon: '💧', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+          'MEDICINE': { icon: '💊', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+          'EXPIRE': { icon: '📦', bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+          'BIRTHDAY': { icon: '🎂', bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)' },
+          'FINANCE': { icon: '💰', bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)' },
+          'SYSTEM': { icon: '⏰', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
+        }
+        const iconConfig = iconMap[reminder.reminderType] || iconMap['SYSTEM']
+        return {
+          ...reminder,
+          icon: iconConfig.icon,
+          iconBg: iconConfig.bg,
+          time: reminder.remindTime || '',
+          completed: reminder.status === 2,
+          isOverdue: reminder.isOverdue || false
+        }
+      })
+    }
+  } catch (e) {
+    console.error('加载今日提醒失败', e)
+    todayReminders.value = []
+  }
+}
+
+// 跳转到添加提醒
+const goAddReminder = () => {
+  uni.navigateTo({
+    url: '/pages/reminder/add'
+  })
+}
+
+// 跳转到提醒列表
+const goReminderList = () => {
+  uni.navigateTo({
+    url: '/pages/reminder/index'
+  })
+}
+
+// 跳转到提醒详情
+const goReminderDetail = (reminder) => {
+  uni.navigateTo({
+    url: `/pages/reminder/detail?id=${reminder.id}`
+  })
+}
+
 // ========== 添加任务弹窗相关结束 ==========
 
 // 问候语
@@ -424,11 +531,14 @@ const currentFamily = ref({ name: '幸福小家' })
 const quickActions = [
   { name: '纪念日', icon: 'heart', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
   { name: '心愿', icon: 'star', bgColor: '#FFD700', shadow: '0 8rpx 20rpx rgba(255, 215, 0, 0.35)', path: '/pages/wish/index' },
-  { name: '天气', icon: 'sun', bgColor: '#4facfe', shadow: '0 8rpx 20rpx rgba(79, 172, 254, 0.35)', path: '/pages/weather/index' }
+  { name: '提醒', icon: 'bell', bgColor: '#07c160', shadow: '0 8rpx 20rpx rgba(7, 193, 96, 0.35)', path: '/pages/reminder/index' }
 ]
 
 // 今日任务
 const todayTasks = ref([])
+
+// 今日提醒
+const todayReminders = ref([])
 
 // 家庭成员列表（用于显示指派人名称）
 const familyMembers = ref([])
@@ -931,6 +1041,9 @@ onShow(async () => {
   
   // 加载天气数据
   loadWeatherData()
+  
+  // 加载今日提醒
+  loadTodayReminders()
 })
 
 // 获取纪念日图标
@@ -1928,6 +2041,81 @@ const getAnniversaryIcon = (type) => {
   100% {
     left: 100%;
   }
+}
+
+/* 今日提醒样式 */
+.reminder-card {
+  margin-top: 24rpx;
+}
+
+.reminder-badge {
+  background: #07c160;
+  color: #fff;
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 20rpx;
+  margin-left: 12rpx;
+}
+
+.reminder-list {
+  padding: 0 20rpx;
+}
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.reminder-item:last-child {
+  border-bottom: none;
+}
+
+.reminder-icon-wrapper {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.reminder-icon {
+  font-size: 36rpx;
+}
+
+.reminder-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.reminder-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.reminder-time {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.reminder-status {
+  font-size: 24rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 12rpx;
+  background: #f5f5f5;
+  color: #666;
+}
+
+.reminder-status.completed {
+  background: #e8f5e9;
+  color: #07c160;
 }
 
 </style>
