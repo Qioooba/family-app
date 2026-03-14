@@ -218,23 +218,32 @@ public class WechatWorkService {
     }
 
     /**
-     * 发送给企业内部成员（使用miniprogram_notice或图文卡片）
+     * 发送给企业内部成员（使用mpnews图文消息，支持内嵌小程序码图片）
      */
     private void sendToInternalUser(String token, String workUserId, WechatMessage message) throws Exception {
+        // 首先尝试发送mpnews图文消息（带小程序码）
+        try {
+            sendMpnewsMessage(token, workUserId, message);
+            return;
+        } catch (Exception e) {
+            log.warn("mpnews图文消息发送失败，回退到news: {}", e.getMessage());
+        }
+        
+        // 回退到普通news图文消息
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
         payload.put("agentid", getAgentId());
         
-        // 使用news图文消息，支持小程序跳转
+        // 使用news图文消息
         Map<String, Object> news = new HashMap<>();
         List<Map<String, String>> articles = new ArrayList<>();
         
         Map<String, String> article = new HashMap<>();
         article.put("title", message.getTitle());
         article.put("description", buildRichMessageContent(message));
-        article.put("url", "https://mp.weixin.qq.com/s?__biz=" + getMiniProgramAppId() + "&page=" + getMiniProgramPage());
+        article.put("url", "https://qioba.cn:8443");
         article.put("picurl", "https://qioba.cn/logo.png");
         
         articles.add(article);
@@ -255,6 +264,275 @@ public class WechatWorkService {
         
         log.info("企业微信图文消息发送成功, userId={}, workId={}", 
                  message.getTargetUserId(), workUserId);
+    }
+    
+    /**
+     * 发送mpnews图文消息（富媒体，支持内嵌图片）
+     */
+    private void sendMpnewsMessage(String token, String workUserId, WechatMessage message) throws Exception {
+        // 1. 读取小程序码图片并上传获取media_id
+        byte[] imageData = readMiniappQrImage();
+        if (imageData == null) {
+            throw new Exception("读取小程序码图片失败");
+        }
+        
+        String mediaId = uploadMiniappQrImage(token, imageData);
+        if (mediaId == null) {
+            throw new Exception("上传小程序码图片失败");
+        }
+        
+        String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
+        
+        // 构建图文内容
+        String timeStr = java.time.LocalDateTime.now().toString().substring(0, 16);
+        String digest = buildMessageDigest(message, timeStr);
+        // content中使用base64嵌入图片
+        String content = buildMpnewsContentWithBase64Image(message, timeStr, imageData);
+        
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("touser", workUserId);
+        payload.put("agentid", getAgentId());
+        payload.put("msgtype", "mpnews");
+        
+        Map<String, Object> mpnews = new HashMap<>();
+        List<Map<String, Object>> articles = new ArrayList<>();
+        
+        Map<String, Object> article = new HashMap<>();
+        article.put("title", message.getTitle());
+        article.put("thumb_media_id", mediaId);
+        article.put("author", "家庭小程序");
+        article.put("content_source_url", "https://qioba.cn:8443");
+        article.put("content", content);
+        article.put("digest", digest);
+        
+        articles.add(article);
+        mpnews.put("articles", articles);
+        payload.put("mpnews", mpnews);
+        
+        String response = restTemplate.postForObject(url, payload, String.class);
+        Map<String, Object> result = objectMapper.readValue(response, Map.class);
+        
+        int errcode = (Integer) result.getOrDefault("errcode", -1);
+        if (errcode != 0) {
+            throw new Exception("mpnews发送失败: " + result.get("errmsg"));
+        }
+        
+        log.info("企业微信mpnews图文消息发送成功, userId={}, workId={}", 
+                 message.getTargetUserId(), workUserId);
+    }
+    
+    /**
+     * 读取小程序码图片
+     */
+    private byte[] readMiniappQrImage() {
+        String[] paths = {
+            "/Volumes/document/Projects/family-app/backend/family-service/src/main/resources/static/miniapp-qr.png",
+            "/app/static/miniapp-qr.png",
+            "/static/miniapp-qr.png",
+            "classpath:/static/miniapp-qr.png"
+        };
+        
+        for (String path : paths) {
+            try {
+                if (path.startsWith("classpath:")) {
+                    try (var is = getClass().getResourceAsStream("/static/miniapp-qr.png")) {
+                        if (is != null) {
+                            return is.readAllBytes();
+                        }
+                    }
+                } else {
+                    java.io.File file = new java.io.File(path);
+                    if (file.exists()) {
+                        return java.nio.file.Files.readAllBytes(file.toPath());
+                    }
+                }
+            } catch (Exception e) {
+                log.debug("尝试读取图片失败: {}", path);
+            }
+        }
+        log.error("无法找到小程序码图片");
+        return null;
+    }
+    
+    /**
+     * 上传小程序码图片到企业微信获取media_id
+     */
+    private String uploadMiniappQrImage(String token, byte[] imageData) {
+        try {
+            String uploadUrl = "https://qyapi.weixin.qq.com/cgi-bin/media/upload?access_token=" + token + "&type=image";
+            
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.MULTIPART_FORM_DATA);
+            
+            org.springframework.core.io.ByteArrayResource resource = new org.springframework.core.io.ByteArrayResource(imageData) {
+                @Override
+                public String getFilename() {
+                    return "miniapp-qr.png";
+                }
+            };
+            
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("media", resource);
+            
+            org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = 
+                new org.springframework.http.HttpEntity<>(body, headers);
+            
+            org.springframework.http.ResponseEntity<String> response = restTemplate.postForEntity(
+                uploadUrl, requestEntity, String.class);
+            
+            Map<String, Object> result = objectMapper.readValue(response.getBody(), Map.class);
+            
+            if (result.get("media_id") != null) {
+                String mediaId = (String) result.get("media_id");
+                log.debug("上传图片成功, media_id={}", mediaId);
+                return mediaId;
+            } else {
+                log.error("上传图片失败: {}", result.get("errmsg"));
+            }
+        } catch (Exception e) {
+            log.error("上传小程序码图片异常", e);
+        }
+        return null;
+    }
+    
+    /**
+     * 构建mpnews消息摘要
+     */
+    private String buildMessageDigest(WechatMessage message, String timeStr) {
+        StringBuilder sb = new StringBuilder();
+        
+        switch (message.getType()) {
+            case TASK_ASSIGNED:
+                sb.append("📋 任务：").append(extractTaskTitle(message)).append("\n");
+                sb.append("📝 备注：").append(extractTaskContent(message)).append("\n");
+                sb.append("👤 指派人：").append(extractOperator(message)).append("\n");
+                sb.append("📅 时间：").append(timeStr).append("\n\n");
+                sb.append("📱 请长按小程序码查看");
+                break;
+            case TASK_ASSIGN_NOTIFY:
+                sb.append("📋 任务：").append(extractTaskTitle(message)).append("\n");
+                sb.append("👤 执行人：").append(extractAssignee(message)).append("\n");
+                sb.append("📅 时间：").append(timeStr);
+                break;
+            case TASK_COMPLETED:
+                sb.append("📋 任务：").append(extractTaskTitle(message)).append("\n");
+                sb.append("👤 完成人：").append(extractOperator(message)).append("\n");
+                sb.append("📅 时间：").append(timeStr);
+                break;
+            default:
+                sb.append(message.getDescription().replaceAll("<[^>]*>", ""));
+        }
+        
+        return sb.toString();
+    }
+    
+    /**
+     * 构建mpnews消息内容（HTML格式，使用base64嵌入图片）
+     */
+    private String buildMpnewsContentWithBase64Image(WechatMessage message, String timeStr, byte[] imageData) {
+        StringBuilder content = new StringBuilder();
+        
+        // 将图片转为base64
+        String base64Image = java.util.Base64.getEncoder().encodeToString(imageData);
+        
+        // 添加样式
+        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 10px;'>");
+        
+        // 任务详情
+        content.append("<p><strong style='color: #333; font-size: 16px;'>📋 任务详情：</strong>");
+        content.append(extractTaskTitle(message)).append("</p>");
+        
+        // 备注
+        String taskContent = extractTaskContent(message);
+        if (!taskContent.isEmpty()) {
+            content.append("<p><strong style='color: #333;'>📝 备注：</strong>");
+            content.append(taskContent).append("</p>");
+        }
+        
+        // 指派人/执行人
+        content.append("<p><strong style='color: #333;'>👤 指派人：</strong>");
+        content.append(extractOperator(message)).append("</p>");
+        
+        // 时间
+        content.append("<p><strong style='color: #333;'>📅 时间：</strong>");
+        content.append(timeStr).append("</p>");
+        
+        // 分隔线
+        content.append("<p style='border-top: 1px solid #eee; margin: 20px 0;'></p>");
+        
+        // 小程序码提示
+        content.append("<p style='color: #666; font-size: 14px; margin-bottom: 15px;'>");
+        content.append("<strong>📱 请长按下方小程序码，识别后进入小程序查看任务</strong></p>");
+        
+        // 小程序码图片（使用base64嵌入）
+        content.append("<p style='text-align: center;'>");
+        content.append("<img src='data:image/png;base64,").append(base64Image).append("' ");
+        content.append("style='max-width: 200px; width: 80%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'");
+        content.append(" alt='小程序码'/></p>");
+        
+        // 底部提示
+        content.append("<p style='color: #999; font-size: 12px; text-align: center; margin-top: 20px;'>");
+        content.append("扫码后直接打开小程序首页</p>");
+        
+        content.append("</div>");
+        
+        return content.toString();
+    }
+    
+    // 辅助方法：从消息中提取信息
+    private String extractTaskTitle(WechatMessage message) {
+        String desc = message.getDescription();
+        // 尝试从描述中提取任务名
+        if (desc.contains("任务：")) {
+            int start = desc.indexOf("任务：") + 3;
+            int end = desc.indexOf("\n", start);
+            if (end > start) {
+                return desc.substring(start, end).trim();
+            }
+        }
+        // 从标题中提取
+        String title = message.getTitle();
+        if (title.contains("：")) {
+            return title.substring(title.indexOf("：") + 1).trim();
+        }
+        return title;
+    }
+    
+    private String extractTaskContent(WechatMessage message) {
+        String desc = message.getDescription();
+        if (desc.contains("备注：")) {
+            int start = desc.indexOf("备注：") + 3;
+            int end = desc.indexOf("\n", start);
+            if (end > start) {
+                return desc.substring(start, end).trim();
+            }
+        }
+        return "";
+    }
+    
+    private String extractOperator(WechatMessage message) {
+        String desc = message.getDescription();
+        if (desc.contains("指派人：")) {
+            int start = desc.indexOf("指派人：") + 4;
+            int end = desc.indexOf("\n", start);
+            if (end > start) {
+                return desc.substring(start, end).trim();
+            }
+            return desc.substring(start).trim();
+        }
+        return "系统";
+    }
+    
+    private String extractAssignee(WechatMessage message) {
+        String desc = message.getDescription();
+        if (desc.contains("执行人：")) {
+            int start = desc.indexOf("执行人：") + 4;
+            int end = desc.indexOf("\n", start);
+            if (end > start) {
+                return desc.substring(start, end).trim();
+            }
+        }
+        return "未知";
     }
     
     /**
