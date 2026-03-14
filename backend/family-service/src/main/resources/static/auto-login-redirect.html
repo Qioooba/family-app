@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>正在跳转小程序...</title>
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+        }
+        .container { text-align: center; max-width: 320px; }
+        .logo {
+            width: 100px; height: 100px; background: #fff; border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 24px; font-size: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .title { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+        .subtitle { font-size: 14px; opacity: 0.9; margin-bottom: 32px; }
+        .btn {
+            background: #fff; color: #667eea; border: none;
+            padding: 16px 40px; border-radius: 28px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            text-decoration: none; display: inline-block;
+            margin-top: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        .tips { font-size: 12px; opacity: 0.8; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🏠</div>
+        <div class="title">登录成功！</div>
+        <div class="subtitle">正在为您打开小程序...</div>
+        
+        <a id="openMiniBtn" class="btn" href="#">立即打开小程序</a>
+        
+        <div class="tips">如果未自动跳转，请点击上方按钮</div>
+    </div>
+
+    <script>
+        // 获取参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const taskId = urlParams.get('taskId') || '';
+        
+        // 小程序配置
+        const MINIAPP_ID = 'wxbdc70536c5e52b82';
+        
+        // 构建小程序路径
+        const path = taskId ? `pages/task/detail?id=${taskId}` : 'pages/home/index';
+        
+        // 自动执行登录并跳转
+        async function autoLoginAndRedirect() {
+            if (!token) {
+                document.querySelector('.subtitle').textContent = '缺少登录凭证';
+                return;
+            }
+            
+            try {
+                // 调用后端登录API
+                const res = await fetch('/api/auth/auto-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tempToken: token })
+                });
+                
+                const data = await res.json();
+                
+                if (data.code === 200) {
+                    // 保存登录态
+                    localStorage.setItem('token', data.data.token);
+                    
+                    // 跳转到小程序
+                    openMiniProgram();
+                } else {
+                    document.querySelector('.subtitle').textContent = '登录失败：' + data.message;
+                }
+            } catch (e) {
+                console.error(e);
+                document.querySelector('.subtitle').textContent = '网络错误';
+            }
+        }
+        
+        // 打开小程序
+        function openMiniProgram() {
+            const btn = document.getElementById('openMiniBtn');
+            
+            // 方式1: 微信环境使用标签跳转
+            if (navigator.userAgent.includes('MicroMessenger')) {
+                // 使用 location.href 跳转小程序
+                // 格式: https://mp.weixin.qq.com/a/xxxxx (小程序URL Link)
+                // 或使用 weixin:// 协议
+                
+                // 显示提示，让用户手动跳转
+                document.querySelector('.subtitle').textContent = '请点击下方按钮打开小程序';
+                
+                // 按钮点击跳转到小程序
+                btn.onclick = function() {
+                    // 尝试使用微信 JS-SDK
+                    if (typeof wx !== 'undefined') {
+                        wx.miniProgram.navigateTo({
+                            url: '/' + path
+                        });
+                    } else {
+                        // 备用：跳转到小程序首页
+                        window.location.href = `https://mp.weixin.qq.com/mp/profile?action=home__biz=${MINIAPP_ID}`;
+                    }
+                };
+                
+                // 自动尝试跳转
+                setTimeout(() => {
+                    btn.click();
+                }, 500);
+                
+            } else {
+                // 非微信环境，跳转到H5页面
+                btn.textContent = '进入H5版本';
+                btn.href = '/h5/';
+                btn.onclick = null;
+                document.querySelector('.subtitle').textContent = '请在微信中打开';
+            }
+        }
+        
+        // 页面加载执行
+        window.onload = autoLoginAndRedirect;
+    </script>
+</body>
+</html>
