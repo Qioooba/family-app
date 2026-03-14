@@ -319,18 +319,32 @@ public class TaskController {
                 if (task.getAssigneeId() != null && !task.getAssigneeId().equals(userId)) {
                     User assignee = userMapper.selectById(task.getAssigneeId());
                     if (assignee != null) {
-                        // 通知执行人（齐军）
-                        wechatWorkService.notifyTaskAssignedToAssignee(
+                        String assigneeName = assignee.getNickname() != null ? assignee.getNickname() : "家人";
+                        String remark = task.getRemark() != null ? task.getRemark() : "";
+                        String miniProgramPath = "/pages/task/detail?id=" + task.getId();
+                        
+                        // 通知执行人（新任务指派）
+                        wechatWorkService.sendTaskNotification(
                             task.getAssigneeId(),
+                            com.family.family.entity.MessageType.TASK_ASSIGNED,
+                            task.getTitle(),
+                            remark,
                             creatorName,
-                            task.getTitle()
+                            assigneeName,
+                            creatorName,
+                            miniProgramPath
                         );
                         
-                        // 通知指派人（陶陶）
-                        wechatWorkService.notifyTaskAssignedToCreator(
+                        // 通知创建者（任务已指派确认）
+                        wechatWorkService.sendTaskNotification(
                             userId,
-                            assignee.getNickname(),
-                            task.getTitle()
+                            com.family.family.entity.MessageType.TASK_ASSIGN_NOTIFY,
+                            task.getTitle(),
+                            remark,
+                            creatorName,
+                            assigneeName,
+                            creatorName,
+                            miniProgramPath
                         );
                     }
                 }

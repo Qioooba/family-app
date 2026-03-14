@@ -407,7 +407,7 @@ public class WechatWorkService {
         if (taskName.isEmpty()) {
             taskName = message.getTitle().replaceAll(".*[：:]", "").trim();
         }
-        String assigner = extractFromLines(lines, "指派[人]?[:：]|执行[人]?[:：]");
+        String assigner = extractOperatorFromLines(lines);
         if (assigner.isEmpty()) {
             assigner = "系统";
         }
@@ -481,7 +481,7 @@ public class WechatWorkService {
         }
         
         // 指派人/执行人 - 尝试多种格式
-        String assigner = extractFromLines(lines, "指派[人]?[:：]|执行[人]?[:：]");
+        String assigner = extractOperatorFromLines(lines);
         if (assigner.isEmpty()) {
             // 尝试旧格式: "【xxx】" 或 "任务给【xxx】"
             java.util.regex.Pattern bracketPattern = java.util.regex.Pattern.compile("[【\\[]([^】\\]]+)[】\\]]");
@@ -493,7 +493,17 @@ public class WechatWorkService {
         if (assigner.isEmpty()) {
             assigner = "系统";
         }
-        String operatorLabel = desc.contains("执行") ? "👤 执行人：" : "👤 指派人：";
+        // 根据消息类型判断标签
+        String operatorLabel;
+        if (message.getType() == MessageType.TASK_ASSIGNED) {
+            operatorLabel = "👤 指派人：";
+        } else if (message.getType() == MessageType.TASK_ASSIGN_NOTIFY) {
+            operatorLabel = "👤 执行人：";
+        } else if (message.getType() == MessageType.TASK_COMPLETED) {
+            operatorLabel = "👤 完成人：";
+        } else {
+            operatorLabel = desc.contains("执行") ? "👤 执行人：" : "👤 指派人：";
+        }
         content.append("<p><strong style='color: #333;'>").append(operatorLabel).append("</strong>");
         content.append(escapeHtml(assigner)).append("</p>");
         
@@ -527,12 +537,30 @@ public class WechatWorkService {
      * 从行数组中提取指定前缀的内容
      */
     private String extractFromLines(String[] lines, String pattern) {
-        java.util.regex.Pattern p = java.util.regex.Pattern.compile(".*" + pattern + "\\s*(.+)");
         for (String line : lines) {
-            java.util.regex.Matcher m = p.matcher(line.trim());
+            String trimmedLine = line.trim();
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(".*" + pattern + "\\s*(.+)", java.util.regex.Pattern.UNICODE_CHARACTER_CLASS);
+            java.util.regex.Matcher m = p.matcher(trimmedLine);
             if (m.matches()) {
                 return m.group(1).trim();
             }
+        }
+        return "";
+    }
+    
+    /**
+     * 提取操作人（执行人或指派人）
+     */
+    private String extractOperatorFromLines(String[] lines) {
+        // 先尝试匹配"执行人"
+        String operator = extractFromLines(lines, "执行[人]?[：:]");
+        if (!operator.isEmpty()) {
+            return operator;
+        }
+        // 再尝试匹配"指派人"
+        operator = extractFromLines(lines, "指派[人]?[：:]");
+        if (!operator.isEmpty()) {
+            return operator;
         }
         return "";
     }
