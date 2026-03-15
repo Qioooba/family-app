@@ -129,8 +129,8 @@
       
     </view>
     
-    <!-- 今日提醒 -->
-    <view class="section-card reminder-card animate-in">
+    <!-- 今日提醒（无提醒时不显示） -->
+    <view v-if="todayReminders.length > 0" class="section-card reminder-card-small animate-in">
       <view class="section-header">
         <view class="title-wrapper">
           <text class="section-icon">⏰</text>
@@ -322,7 +322,7 @@ import { waterApi } from '../../api/water'
 import { getCurrentLocationWithAddress, getWeatherByCode, getShortLocationName } from '../../utils/weather'
 import { formatDateTime } from '../../utils/dateHelper'
 import { checkAutoLogin, doAutoLogin } from '../../utils/autoLogin'
-import { getAvatarUrl } from '../../utils/request'
+import { getAvatarUrl, request } from '../../utils/request'
 import LazyImage from '@/components/common/LazyImage.vue'
 import TaskModal from '@/components/TaskModal.vue'
 
@@ -444,13 +444,9 @@ const loadTodayTasks = async () => {
 // 加载今日提醒
 const loadTodayReminders = async () => {
   try {
-    const res = await uni.request({
-      url: '/api/reminder/today',
-      method: 'GET'
-    })
-    if (res.data && res.data.code === 0) {
-      // 格式化提醒数据
-      todayReminders.value = (res.data.data || []).map(reminder => {
+    const res = await request.get('/api/reminder/today')
+    // 格式化提醒数据
+    todayReminders.value = (res || []).map(reminder => {
         const iconMap = {
           'WATER': { icon: '💧', bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
           'MEDICINE': { icon: '💊', bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
@@ -469,7 +465,6 @@ const loadTodayReminders = async () => {
           isOverdue: reminder.isOverdue || false
         }
       })
-    }
   } catch (e) {
     console.error('加载今日提醒失败', e)
     todayReminders.value = []
@@ -531,7 +526,7 @@ const currentFamily = ref({ name: '幸福小家' })
 const quickActions = [
   { name: '纪念日', icon: 'heart', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
   { name: '心愿', icon: 'star', bgColor: '#FFD700', shadow: '0 8rpx 20rpx rgba(255, 215, 0, 0.35)', path: '/pages/wish/index' },
-  { name: '提醒', icon: 'bell', bgColor: '#07c160', shadow: '0 8rpx 20rpx rgba(7, 193, 96, 0.35)', path: '/pages/reminder/index' }
+  { name: '提醒', icon: 'bell', bgColor: '#FFD700', shadow: '0 8rpx 20rpx rgba(255, 215, 0, 0.35)', path: '/pages/reminder/index' }
 ]
 
 // 今日任务
@@ -921,12 +916,7 @@ const requestLocationAuth = () => {
 }
 
 const navigateTo = (path) => {
-  // tabBar 页面使用 switchTab
-  if (path && path.startsWith('/pages/task')) {
-    uni.switchTab({ url: '/pages/task/index' })
-  } else {
-    uni.navigateTo({ url: path })
-  }
+  uni.navigateTo({ url: path })
 }
 
 const toggleTask = async (task) => {
@@ -1284,6 +1274,7 @@ const getAnniversaryIcon = (type) => {
   
   .overview-card {
     flex: 1;
+    min-width: 0; // 防止内容溢出挤压
     background: #fff;
     border-radius: 24rpx;
     padding: 24rpx;
@@ -1430,6 +1421,7 @@ const getAnniversaryIcon = (type) => {
         display: flex;
         align-items: center;
         gap: 12rpx;
+        min-width: 0; // 防止溢出
         
         .weather-icon-wrapper {
           width: 52rpx;
@@ -2046,6 +2038,14 @@ const getAnniversaryIcon = (type) => {
 /* 今日提醒样式 */
 .reminder-card {
   margin-top: 24rpx;
+}
+
+.reminder-card-small {
+  margin-top: 16rpx;
+  padding: 16rpx;
+  background: #FFF9E6;
+  border-radius: 12rpx;
+  border-left: 6rpx solid #FFD700;
 }
 
 .reminder-badge {

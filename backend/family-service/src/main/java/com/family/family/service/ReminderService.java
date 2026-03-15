@@ -81,15 +81,18 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
     }
     
     /**
-     * 获取用户的今日提醒
+     * 获取用户的今日提醒（只返回今天需要执行的提醒）
      */
     public List<Reminder> getTodayReminders(Long userId) {
+        // 今天的开始和结束时间
+        LocalDateTime todayStart = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime todayEnd = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59);
+        
         LambdaQueryWrapper<Reminder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Reminder::getCreateBy, userId)
                .eq(Reminder::getStatus, 1)
-               .and(w -> w.isNull(Reminder::getNextExecuteTime)
-                       .or()
-                       .le(Reminder::getNextExecuteTime, LocalDateTime.now().plusDays(1)));
+               .between(Reminder::getNextExecuteTime, todayStart, todayEnd)
+               .orderByAsc(Reminder::getNextExecuteTime);
         return this.list(wrapper);
     }
     

@@ -3,6 +3,8 @@ package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.family.entity.Reminder;
+import com.family.family.entity.User;
+import com.family.family.mapper.UserMapper;
 import com.family.family.service.ReminderScheduleService;
 import com.family.family.service.ReminderService;
 import lombok.extern.slf4j.Slf4j;
@@ -12,13 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 提醒管理 Controller
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/reminder")
+@RequestMapping(value = "/api/reminder", produces = "application/json;charset=UTF-8")
 @SaCheckLogin
 public class FamilyReminderController {
     
@@ -27,6 +30,9 @@ public class FamilyReminderController {
     
     @Autowired
     private ReminderScheduleService reminderScheduleService;
+    
+    @Autowired
+    private UserMapper userMapper;
     
     /**
      * 获取今日提醒
@@ -84,6 +90,17 @@ public class FamilyReminderController {
             Long userId = StpUtil.getLoginIdAsLong();
             reminder.setCreateBy(userId);
             
+            // 设置默认值
+            if (reminder.getStatus() == null) {
+                reminder.setStatus(1);
+            }
+            if (reminder.getPriority() == null) {
+                reminder.setPriority(5);
+            }
+            if (reminder.getPushScope() == null) {
+                reminder.setPushScope("SELF");
+            }
+            
             boolean success = reminderService.createReminder(reminder);
             if (success) {
                 // 初始化下次执行时间
@@ -111,7 +128,8 @@ public class FamilyReminderController {
             boolean success = reminderService.updateReminder(reminder);
             if (success) {
                 // 重新计算下次执行时间
-                reminderScheduleService.initNextExecuteTime(reminder);
+                Reminder updated = reminderService.getById(reminder.getId());
+                reminderScheduleService.initNextExecuteTime(updated);
                 return success(null, "更新成功");
             }
             return error("更新失败");
@@ -125,8 +143,9 @@ public class FamilyReminderController {
      * 删除提醒
      */
     @PostMapping("/delete")
-    public Map<String, Object> deleteReminder(@RequestParam Long id) {
+    public Map<String, Object> deleteReminder(@RequestBody Map<String, Long> params) {
         try {
+            Long id = params.get("id");
             Long userId = StpUtil.getLoginIdAsLong();
             boolean success = reminderService.deleteReminder(id, userId);
             if (success) {
@@ -143,8 +162,9 @@ public class FamilyReminderController {
      * 切换状态
      */
     @PostMapping("/toggle")
-    public Map<String, Object> toggleStatus(@RequestParam Long id) {
+    public Map<String, Object> toggleStatus(@RequestBody Map<String, Long> params) {
         try {
+            Long id = params.get("id");
             Long userId = StpUtil.getLoginIdAsLong();
             boolean success = reminderService.toggleStatus(id, userId);
             if (success) {
@@ -161,8 +181,9 @@ public class FamilyReminderController {
      * 立即执行（测试用）
      */
     @PostMapping("/execute")
-    public Map<String, Object> executeNow(@RequestParam Long id) {
+    public Map<String, Object> executeNow(@RequestBody Map<String, Long> params) {
         try {
+            Long id = params.get("id");
             Long userId = StpUtil.getLoginIdAsLong();
             Reminder reminder = reminderService.getById(id);
             
@@ -212,6 +233,104 @@ public class FamilyReminderController {
         types.put("FINANCE", "财务提醒");
         types.put("SYSTEM", "系统提醒");
         return success(types);
+    }
+    
+    /**
+     * 获取推送范围选项
+     */
+    @GetMapping("/push-scopes")
+    public Map<String, Object> getPushScopes() {
+        Map<String, Object> scopes = new HashMap<>();
+        scopes.put("SELF", "仅自己");
+        scopes.put("ALL", "全部用户");
+        scopes.put("SPECIFIED", "指定用户");
+        return success(scopes);
+    }
+    
+    /**
+     * 获取用户列表（用于指定用户推送）
+     * 返回简化后的用户信息：id, nickname, avatar
+     */
+    @GetMapping("/users")
+    public Map<String, Object> getUserList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "100") Integer limit) {
+        try {
+            Long currentUserId = StpUtil.getLoginIdAsLong();
+            
+            // 限制最大数量
+            int fetchLimit = Math.min(limit, 100);
+            
+            // 查询用户列表
+            List<User> users = userMapper.selectList(null);
+            
+            // 过滤和转换
+            List<Map<String, Object>> userList = users.stream()
+                    .filter(user -> !user.getId().equals(currentUserId)) // 排除当前用户
+                    .filter(user -> {
+                        // 关键词过滤
+                        if (keyword == null || keyword.trim().isEmpty()) {
+                            return true;
+                        }
+                        String searchKey = keyword.toLowerCase();
+                        String nickname = user.getNickname() != null ? user.getNickname().toLowerCase() : "";
+                        String phone = user.getPhone() != null ? user.getPhone() : "";
+                        return nickname.contains(searchKey) || phone.contains(searchKey);
+                    })
+                    .limit(fetchLimit)
+                    .map(user -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", user.getId());
+                        map.put("nickname", user.getNickname());
+                        map.put("avatar", user.getAvatar());
+                        map.put("phone", maskPhone(user.getPhone()));
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("list", userList);
+            result.put("total", userList.size());
+            
+            return success(result);
+        } catch (Exception e) {
+            log.error("获取用户列表失败", e);
+            return error("获取用户列表失败");
+        }
+    }
+    
+    /**
+     * 获取当前登录用户信息
+     */
+    @GetMapping("/current-user")
+    public Map<String, Object> getCurrentUser() {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                return error("用户不存在");
+            }
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("id", user.getId());
+            result.put("nickname", user.getNickname());
+            result.put("avatar", user.getAvatar());
+            
+            return success(result);
+        } catch (Exception e) {
+            log.error("获取当前用户信息失败", e);
+            return error("获取失败");
+        }
+    }
+    
+    /**
+     * 手机号脱敏
+     */
+    private String maskPhone(String phone) {
+        if (phone == null || phone.length() < 7) {
+            return phone;
+        }
+        return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
     }
     
     private Map<String, Object> success(Object data) {

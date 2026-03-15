@@ -11,6 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.MediaType;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import jakarta.annotation.PostConstruct;
 
@@ -41,8 +48,32 @@ public class WechatWorkService {
     @Autowired
     private MiniAppUrlLinkService miniAppUrlLinkService;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    public WechatWorkService() {
+        // 配置 RestTemplate 使用 UTF-8
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        this.restTemplate = new RestTemplate(factory);
+        
+        // 配置消息转换器使用 UTF-8
+        List<HttpMessageConverter<?>> converters = new ArrayList<>();
+        StringHttpMessageConverter stringConverter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
+        stringConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN));
+        converters.add(stringConverter);
+        
+        MappingJackson2HttpMessageConverter jacksonConverter = new MappingJackson2HttpMessageConverter();
+        jacksonConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON));
+        converters.add(jacksonConverter);
+        
+        this.restTemplate.setMessageConverters(converters);
+    }
+    
+    @PostConstruct
+    public void init() {
+        // 确保使用 UTF-8 编码
+        objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
+    }
 
     private String accessToken;
     private long tokenExpireTime;

@@ -50,6 +50,31 @@
       }
     },
     {
+      "path": "pages/reminder/index",
+      "style": {
+        "navigationBarTitleText": "提醒管理",
+        "navigationStyle": "custom",
+        "scrollIndicator": "none",
+        "pageScroll": false,
+        "swipeBack": false,
+        "enablePopGesture": false
+      }
+    },
+    {
+      "path": "pages/reminder/add",
+      "style": {
+        "navigationBarTitleText": "添加提醒",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/reminder/detail",
+      "style": {
+        "navigationBarTitleText": "提醒详情",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/family/index",
       "style": {
         "navigationBarTitleText": "家庭空间",

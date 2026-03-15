@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
+import com.family.family.entity.WechatMessage;
+import com.family.family.entity.MessageType;
 import com.family.family.mapper.ReminderMapper;
 import com.family.family.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -50,8 +52,10 @@ public class ReminderScheduleService {
         
         LocalDateTime now = LocalDateTime.now();
         
-        // 查询所有需要执行的提醒
+        // 查询所有需要执行的提醒（最多100条）
         List<Reminder> dueReminders = reminderMapper.selectDueReminders(now);
+        
+        log.info("扫描到 {} 个需要执行的提醒", dueReminders.size());
         
         for (Reminder reminder : dueReminders) {
             try {
@@ -63,7 +67,7 @@ public class ReminderScheduleService {
     }
     
     /**
-     * 执行单个提醒
+     * 执行单个提醒 - 参考待办任务推送格式
      */
     public void executeReminder(Reminder reminder) {
         log.info("执行提醒: {}", reminder.getReminderName());
@@ -74,21 +78,49 @@ public class ReminderScheduleService {
             return;
         }
         
-        // 2. 获取目标用户列表
+        // 2. 检查节假日跳过逻辑
+        if (shouldSkipHoliday(reminder)) {
+            log.debug("当前是非工作日且设置了仅工作日推送，跳过: {}", reminder.getReminderName());
+            // 更新下次执行时间到下一个工作日
+            skipToNextWorkDay(reminder);
+            return;
+        }
+        
+        // 3. 获取目标用户列表
         List<Long> targetUserIds = getTargetUserIds(reminder);
         
-        // 3. 为每个用户生成个性化内容并推送
+        if (targetUserIds.isEmpty()) {
+            log.warn("提醒没有目标用户: {}", reminder.getReminderName());
+            updateExecuteRecord(reminder, "NO_TARGET", "没有目标用户");
+            return;
+        }
+        
+        // 4. 为每个用户推送（使用模板变量渲染）
         for (Long userId : targetUserIds) {
             try {
-                // 渲染模板
+                // 渲染模板变量
                 String title = renderTemplate(reminder.getTitleTemplate(), userId, reminder);
                 String content = renderTemplate(reminder.getContentTemplate(), userId, reminder);
                 
-                // 企业微信推送
-                boolean pushed = wechatWorkService.pushReminder(userId, title, content);
+                // 构建消息内容
+                String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
+                StringBuilder desc = new StringBuilder();
+                desc.append("📋 ").append(content).append("\n\n");
+                desc.append("⏰ 时间：").append(timeStr).append("\n");
+                desc.append("📅 频率：").append(getFrequencyText(reminder.getFrequencyType()));
+                
+                // 使用与待办任务一致的推送方式
+                WechatMessage msg = new WechatMessage();
+                msg.setType(MessageType.REMINDER);
+                msg.setTargetUserId(userId);
+                msg.setTitle("⏰ " + title);
+                msg.setDescription(desc.toString());
+                msg.setUrl("/pages/reminder/detail?id=" + reminder.getId());
+                
+                wechatWorkService.sendMessageAsync(msg);
                 
                 // 记录日志
-                reminderLogService.saveLog(reminder, userId, title, content, pushed ? "SUCCESS" : "FAILED");
+                reminderLogService.saveLog(reminder, userId, title, desc.toString(), "SUCCESS");
                 
             } catch (Exception e) {
                 log.error("推送提醒给用户失败: userId={}", userId, e);
@@ -96,57 +128,40 @@ public class ReminderScheduleService {
             }
         }
         
-        // 4. 更新执行记录
-        updateExecuteRecord(reminder);
+        // 5. 更新执行记录
+        updateExecuteRecord(reminder, "SUCCESS", null);
         
-        // 5. 计算下次执行时间
+        // 6. 计算下次执行时间
         calculateNextExecuteTime(reminder);
     }
     
     /**
-     * 获取目标用户ID列表
-     */
-    private List<Long> getTargetUserIds(Reminder reminder) {
-        String scope = reminder.getPushScope();
-        
-        if ("SELF".equals(scope)) {
-            // 仅创建者自己
-            return Collections.singletonList(reminder.getCreateBy());
-        } else if ("ALL".equals(scope)) {
-            // 全部用户
-            return userMapper.selectList(null).stream()
-                    .map(User::getId)
-                    .collect(Collectors.toList());
-        } else if ("SPECIFIED".equals(scope)) {
-            // 指定用户列表
-            try {
-                String json = reminder.getTargetUserIds();
-                if (json != null && !json.isEmpty()) {
-                    return objectMapper.readValue(json, new TypeReference<List<Long>>() {});
-                }
-            } catch (Exception e) {
-                log.error("解析目标用户列表失败", e);
-            }
-        }
-        
-        return Collections.emptyList();
-    }
-    
-    /**
      * 渲染模板，替换变量
+     * 支持的变量：
+     * - {userName} 用户名
+     * - {date} 当前日期 (yyyy-MM-dd)
+     * - {time} 当前时间 (HH:mm)
+     * - {weekday} 星期几
+     * - {weather} 天气
+     * - {todoCount} 今日待办数量
+     * - {businessData.key} 业务数据中的字段
      */
     private String renderTemplate(String template, Long userId, Reminder reminder) {
-        if (template == null) return "";
+        if (template == null || template.isEmpty()) {
+            return reminder.getReminderName();
+        }
         
         User user = userMapper.selectById(userId);
         String userName = user != null ? user.getNickname() : "亲爱的用户";
         
+        LocalDateTime now = LocalDateTime.now();
         Map<String, String> variables = new HashMap<>();
         
         // 基础变量
         variables.put("userName", userName);
-        variables.put("date", LocalDate.now().toString());
-        variables.put("time", LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")));
+        variables.put("date", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        variables.put("time", now.format(DateTimeFormatter.ofPattern("HH:mm")));
+        variables.put("weekday", getWeekdayText(now.getDayOfWeek().getValue()));
         
         // 天气（如果有天气服务）
         variables.put("weather", getWeather());
@@ -155,24 +170,187 @@ public class ReminderScheduleService {
         int todoCount = getTodayTodoCount(userId);
         variables.put("todoCount", String.valueOf(todoCount));
         
-        // 业务数据变量
+        // 提醒相关变量
+        variables.put("reminderName", reminder.getReminderName());
+        variables.put("reminderType", getReminderTypeText(reminder.getReminderType()));
+        
+        // 业务数据变量（支持嵌套属性）
         try {
             String businessData = reminder.getBusinessData();
             if (businessData != null && !businessData.isEmpty()) {
                 Map<String, Object> business = objectMapper.readValue(businessData, new TypeReference<Map<String, Object>>() {});
-                business.forEach((k, v) -> variables.put(k, v != null ? v.toString() : ""));
+                flattenMap(business, "", variables);
             }
         } catch (Exception e) {
             log.warn("解析业务数据失败", e);
         }
         
-        // 替换变量
-        String result = template;
-        for (Map.Entry<String, String> entry : variables.entrySet()) {
-            result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+        // 频率配置变量
+        try {
+            String freqConfig = reminder.getFrequencyConfig();
+            if (freqConfig != null && !freqConfig.isEmpty()) {
+                Map<String, Object> config = objectMapper.readValue(freqConfig, new TypeReference<Map<String, Object>>() {});
+                config.forEach((k, v) -> {
+                    if (v != null) {
+                        variables.put("config." + k, v.toString());
+                    }
+                });
+            }
+        } catch (Exception e) {
+            log.warn("解析频率配置失败", e);
         }
         
+        // 替换变量（支持默认值语法 {variable:defaultValue}）
+        String result = template;
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            // 标准格式 {key}
+            result = result.replace("{" + key + "}", value);
+            // 带默认值的格式 {key:default}
+            result = result.replaceAll("\\{" + key + ":([^}]*)\\}", value);
+        }
+        
+        // 清理未匹配的变量（保留默认值或清空）
+        result = result.replaceAll("\\{[^:}]+:([^}]*)\\}", "$1"); // {var:default} -> default
+        result = result.replaceAll("\\{[^}]+\\}", ""); // {var} -> ""
+        
         return result;
+    }
+    
+    /**
+     * 扁平化Map，支持嵌套属性
+     */
+    private void flattenMap(Map<String, Object> map, String prefix, Map<String, String> result) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
+            Object value = entry.getValue();
+            
+            if (value instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedMap = (Map<String, Object>) value;
+                flattenMap(nestedMap, key, result);
+            } else {
+                result.put(key, value != null ? value.toString() : "");
+            }
+        }
+    }
+    
+    /**
+     * 判断是否应跳过节假日
+     */
+    private boolean shouldSkipHoliday(Reminder reminder) {
+        try {
+            String freqConfig = reminder.getFrequencyConfig();
+            if (freqConfig == null || freqConfig.isEmpty()) {
+                return false;
+            }
+            
+            Map<String, Object> config = objectMapper.readValue(freqConfig, new TypeReference<Map<String, Object>>() {});
+            Object workDaysOnly = config.get("workDaysOnly");
+            
+            if (workDaysOnly != null && Boolean.TRUE.equals(workDaysOnly)) {
+                // 设置了仅工作日推送，检查今天是否是工作日
+                LocalDate today = LocalDate.now();
+                return !holidayService.isWorkDay(today);
+            }
+        } catch (Exception e) {
+            log.warn("检查节假日配置失败", e);
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 跳过到下一个工作日
+     */
+    private void skipToNextWorkDay(Reminder reminder) {
+        LocalDateTime nextTime = reminder.getNextExecuteTime();
+        if (nextTime == null) {
+            nextTime = LocalDateTime.now();
+        }
+        
+        // 找到下一个工作日
+        LocalDate nextDate = nextTime.toLocalDate();
+        do {
+            nextDate = nextDate.plusDays(1);
+        } while (!holidayService.isWorkDay(nextDate));
+        
+        // 保持原来的时间
+        LocalDateTime newNextTime = LocalDateTime.of(nextDate, nextTime.toLocalTime());
+        reminder.setNextExecuteTime(newNextTime);
+        reminderMapper.updateById(reminder);
+        
+        log.info("提醒 {} 已跳过到下一个工作日: {}", reminder.getReminderName(), newNextTime);
+    }
+    
+    /**
+     * 获取频率中文文本
+     */
+    private String getFrequencyText(String frequencyType) {
+        Map<String, String> map = new HashMap<>();
+        map.put("ONCE", "一次性");
+        map.put("DAILY", "每天");
+        map.put("HOURLY", "每小时");
+        map.put("WEEKLY", "每周");
+        map.put("MONTHLY", "每月");
+        map.put("YEARLY", "每年");
+        map.put("INTERVAL", "间隔");
+        return map.getOrDefault(frequencyType, frequencyType);
+    }
+    
+    /**
+     * 获取提醒类型中文文本
+     */
+    private String getReminderTypeText(String type) {
+        Map<String, String> map = new HashMap<>();
+        map.put("WATER", "喝水提醒");
+        map.put("MEDICINE", "用药提醒");
+        map.put("EXPIRE", "保质期");
+        map.put("BIRTHDAY", "生日提醒");
+        map.put("FINANCE", "财务提醒");
+        map.put("SYSTEM", "系统提醒");
+        return map.getOrDefault(type, "提醒");
+    }
+    
+    /**
+     * 获取星期中文文本
+     */
+    private String getWeekdayText(int weekday) {
+        String[] weekdays = {"", "周一", "周二", "周三", "周四", "周五", "周六", "周日"};
+        return weekdays[weekday];
+    }
+    
+    /**
+     * 获取目标用户ID列表
+     */
+    private List<Long> getTargetUserIds(Reminder reminder) {
+        String scope = reminder.getPushScope();
+        
+        if (scope == null || "SELF".equals(scope)) {
+            // 仅创建者自己
+            return Collections.singletonList(reminder.getCreateBy());
+        } else if ("ALL".equals(scope)) {
+            // 全部用户（最多100个）
+            return userMapper.selectList(null).stream()
+                    .map(User::getId)
+                    .limit(100)
+                    .collect(Collectors.toList());
+        } else if ("SPECIFIED".equals(scope)) {
+            // 指定用户列表
+            try {
+                String json = reminder.getTargetUserIds();
+                if (json != null && !json.isEmpty()) {
+                    List<Long> ids = objectMapper.readValue(json, new TypeReference<List<Long>>() {});
+                    return ids.stream().limit(100).collect(Collectors.toList());
+                }
+            } catch (Exception e) {
+                log.error("解析目标用户列表失败", e);
+            }
+        }
+        
+        // 默认返回创建者
+        return Collections.singletonList(reminder.getCreateBy());
     }
     
     /**
@@ -182,17 +360,27 @@ public class ReminderScheduleService {
         String start = reminder.getQuietHoursStart();
         String end = reminder.getQuietHoursEnd();
         
-        if (start == null || end == null) return false;
+        if (start == null || start.isEmpty() || end == null || end.isEmpty()) {
+            return false;
+        }
         
         LocalTime now = LocalTime.now();
-        LocalTime startTime = LocalTime.parse(start);
-        LocalTime endTime = LocalTime.parse(end);
+        LocalTime startTime;
+        LocalTime endTime;
+        
+        try {
+            startTime = LocalTime.parse(start);
+            endTime = LocalTime.parse(end);
+        } catch (Exception e) {
+            log.warn("解析免打扰时间失败: start={}, end={}", start, end);
+            return false;
+        }
         
         if (startTime.isBefore(endTime)) {
-            // 正常情况：22:00 - 08:00
+            // 正常情况：如 22:00 - 08:00
             return now.isAfter(startTime) && now.isBefore(endTime);
         } else {
-            // 跨天情况：22:00 - 08:00
+            // 跨天情况：如 22:00 - 08:00
             return now.isAfter(startTime) || now.isBefore(endTime);
         }
     }
@@ -211,13 +399,14 @@ public class ReminderScheduleService {
             switch (frequencyType) {
                 case "ONCE":
                     // 一次性，不计算下次
+                    reminder.setStatus(0); // 停用一次性提醒
                     nextTime = null;
                     break;
                     
                 case "DAILY":
                     // 每天
                     String fixedTime = (String) config.get("fixedTime");
-                    nextTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.parse(fixedTime + ":00"));
+                    nextTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.parse(fixedTime));
                     break;
                     
                 case "HOURLY":
@@ -227,6 +416,7 @@ public class ReminderScheduleService {
                     
                 case "WEEKLY":
                     // 每周指定几天
+                    @SuppressWarnings("unchecked")
                     List<Integer> weekDays = (List<Integer>) config.get("weekDays");
                     nextTime = calculateNextWeekDay(weekDays, config);
                     break;
@@ -250,15 +440,23 @@ public class ReminderScheduleService {
                     
                 default:
                     // 尝试用Cron表达式
-                    if (reminder.getCronExpression() != null) {
+                    if (reminder.getCronExpression() != null && !reminder.getCronExpression().isEmpty()) {
                         nextTime = calculateNextCronTime(reminder.getCronExpression());
                     }
             }
             
             // 检查是否工作日限制
             if (nextTime != null && isWorkDaysOnly(config)) {
-                while (!holidayService.isWorkDay(nextTime.toLocalDate())) {
-                    nextTime = nextTime.plusDays(1);
+                LocalDate checkDate = nextTime.toLocalDate();
+                int maxSkipDays = 30; // 最多跳过30天
+                int skipped = 0;
+                while (!holidayService.isWorkDay(checkDate) && skipped < maxSkipDays) {
+                    checkDate = checkDate.plusDays(1);
+                    skipped++;
+                }
+                if (skipped > 0) {
+                    nextTime = LocalDateTime.of(checkDate, nextTime.toLocalTime());
+                    log.info("提醒 {} 已调整到下一个工作日: {}", reminder.getReminderName(), nextTime);
                 }
             }
             
@@ -297,7 +495,7 @@ public class ReminderScheduleService {
         
         LocalDate nextDate = today.plusDays(daysToAdd);
         String fixedTime = (String) config.getOrDefault("fixedTime", "08:00");
-        return LocalDateTime.of(nextDate, LocalTime.parse(fixedTime + ":00"));
+        return LocalDateTime.of(nextDate, LocalTime.parse(fixedTime));
     }
     
     /**
@@ -307,35 +505,46 @@ public class ReminderScheduleService {
         if (monthDay == null) return null;
         
         LocalDate today = LocalDate.now();
-        LocalDate targetDate = LocalDate.of(today.getYear(), today.getMonth(), monthDay);
+        LocalDate targetDate = LocalDate.of(today.getYear(), today.getMonth(), Math.min(monthDay, today.lengthOfMonth()));
         
         if (targetDate.isBefore(today) || targetDate.isEqual(today)) {
             // 本月已过，取下个月
             targetDate = targetDate.plusMonths(1);
+            // 处理月份天数不一致的情况（如1月31日到2月）
+            if (monthDay > targetDate.lengthOfMonth()) {
+                targetDate = targetDate.withDayOfMonth(targetDate.lengthOfMonth());
+            } else {
+                targetDate = targetDate.withDayOfMonth(monthDay);
+            }
         }
         
         String fixedTime = (String) config.getOrDefault("fixedTime", "08:00");
-        return LocalDateTime.of(targetDate, LocalTime.parse(fixedTime + ":00"));
+        return LocalDateTime.of(targetDate, LocalTime.parse(fixedTime));
     }
     
     /**
      * 计算下次年几月几号
      */
     private LocalDateTime calculateNextYearDay(String yearMonthDay) {
-        if (yearMonthDay == null) return null;
+        if (yearMonthDay == null || yearMonthDay.isEmpty()) return null;
         
-        String[] parts = yearMonthDay.split("-");
-        int month = Integer.parseInt(parts[0]);
-        int day = Integer.parseInt(parts[1]);
-        
-        LocalDate today = LocalDate.now();
-        LocalDate targetDate = LocalDate.of(today.getYear(), month, day);
-        
-        if (targetDate.isBefore(today) || targetDate.isEqual(today)) {
-            targetDate = targetDate.plusYears(1);
+        try {
+            String[] parts = yearMonthDay.split("-");
+            int month = Integer.parseInt(parts[0]);
+            int day = Integer.parseInt(parts[1]);
+            
+            LocalDate today = LocalDate.now();
+            LocalDate targetDate = LocalDate.of(today.getYear(), month, day);
+            
+            if (targetDate.isBefore(today) || targetDate.isEqual(today)) {
+                targetDate = targetDate.plusYears(1);
+            }
+            
+            return LocalDateTime.of(targetDate, LocalTime.of(8, 0));
+        } catch (Exception e) {
+            log.error("解析年月日失败: {}", yearMonthDay, e);
+            return null;
         }
-        
-        return LocalDateTime.of(targetDate, LocalTime.of(8, 0));
     }
     
     /**
@@ -348,11 +557,11 @@ public class ReminderScheduleService {
         
         LocalDateTime now = LocalDateTime.now();
         
-        if (intervalMinutes != null) {
+        if (intervalMinutes != null && intervalMinutes > 0) {
             return now.plusMinutes(intervalMinutes);
-        } else if (intervalHours != null) {
+        } else if (intervalHours != null && intervalHours > 0) {
             return now.plusHours(intervalHours);
-        } else if (intervalDays != null) {
+        } else if (intervalDays != null && intervalDays > 0) {
             return now.plusDays(intervalDays);
         }
         
@@ -373,16 +582,16 @@ public class ReminderScheduleService {
      */
     private boolean isWorkDaysOnly(Map<String, Object> config) {
         Object val = config.get("workDaysOnly");
-        return val != null && (Boolean) val;
+        return val != null && Boolean.TRUE.equals(val);
     }
     
     /**
      * 更新执行记录
      */
-    private void updateExecuteRecord(Reminder reminder) {
+    private void updateExecuteRecord(Reminder reminder, String result, String message) {
         reminder.setLastExecuteTime(LocalDateTime.now());
-        reminder.setLastExecuteResult("SUCCESS");
-        reminder.setExecuteCount(reminder.getExecuteCount() + 1);
+        reminder.setLastExecuteResult(result);
+        reminder.setExecuteCount(reminder.getExecuteCount() != null ? reminder.getExecuteCount() + 1 : 1);
         reminderMapper.updateById(reminder);
     }
     
@@ -391,6 +600,7 @@ public class ReminderScheduleService {
      */
     private int getTodayTodoCount(Long userId) {
         // 实际应该查询 task 表
+        // 这里返回随机数模拟
         return 3;
     }
     
@@ -398,6 +608,7 @@ public class ReminderScheduleService {
      * 获取天气（简化）
      */
     private String getWeather() {
+        // 实际应该调用天气API
         return "☀️ 晴 18°C";
     }
     
@@ -406,5 +617,17 @@ public class ReminderScheduleService {
      */
     public void initNextExecuteTime(Reminder reminder) {
         calculateNextExecuteTime(reminder);
+    }
+    
+    /**
+     * 手动触发提醒执行（用于测试）
+     */
+    public void executeReminderManually(Long reminderId) {
+        Reminder reminder = reminderMapper.selectById(reminderId);
+        if (reminder != null) {
+            executeReminder(reminder);
+        } else {
+            throw new RuntimeException("提醒不存在: " + reminderId);
+        }
     }
 }

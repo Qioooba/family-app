@@ -27,6 +27,7 @@ public class Reminder {
     
     // 时间配置
     private String cronExpression;
+    private String remindTime;  // 提醒时间，如 08:00，前端直接使用
     private String frequencyType;  // ONCE/DAILY/HOURLY/WEEKLY/MONTHLY/YEARLY/INTERVAL
     private String frequencyConfig; // JSON格式
     
