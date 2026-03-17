@@ -102,12 +102,24 @@ public class ReminderScheduleService {
                 String title = renderTemplate(reminder.getTitleTemplate(), userId, reminder);
                 String content = renderTemplate(reminder.getContentTemplate(), userId, reminder);
                 
-                // 构建消息内容
+                // 简化消息格式 - 只保留核心信息
                 String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
+                
+                // 构建简洁的消息描述（去除重复内容）
                 StringBuilder desc = new StringBuilder();
-                desc.append("📋 ").append(content).append("\n\n");
-                desc.append("⏰ 时间：").append(timeStr).append("\n");
-                desc.append("📅 频率：").append(getFrequencyText(reminder.getFrequencyType()));
+                
+                // 如果有内容且内容不等于标题，显示内容
+                if (content != null && !content.trim().isEmpty() && !content.equals(title)) {
+                    desc.append(content).append("\n\n");
+                }
+                
+                // 时间信息（简化，不显示下次执行）
+                desc.append("⏰ ").append(timeStr).append("\n");
+                
+                // 推送范围（可选）
+                if ("ALL".equals(reminder.getPushScope())) {
+                    desc.append("👥 全员推送\n");
+                }
                 
                 // 使用与待办任务一致的推送方式
                 WechatMessage msg = new WechatMessage();
@@ -115,7 +127,8 @@ public class ReminderScheduleService {
                 msg.setTargetUserId(userId);
                 msg.setTitle("⏰ " + title);
                 msg.setDescription(desc.toString());
-                msg.setUrl("/pages/reminder/detail?id=" + reminder.getId());
+                // 设置小程序跳转路径
+                msg.setUrl("/pages/reminder/index");
                 
                 wechatWorkService.sendMessageAsync(msg);
                 

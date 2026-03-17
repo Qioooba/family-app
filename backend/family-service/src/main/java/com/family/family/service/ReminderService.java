@@ -90,7 +90,7 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
         
         LambdaQueryWrapper<Reminder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Reminder::getCreateBy, userId)
-               .eq(Reminder::getStatus, 1)
+               // 查询今天需要执行的提醒，不管状态是启用还是停用
                .between(Reminder::getNextExecuteTime, todayStart, todayEnd)
                .orderByAsc(Reminder::getNextExecuteTime);
         return this.list(wrapper);

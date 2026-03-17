@@ -1,0 +1,26 @@
+Field	Type	Null	Key	Default	Extra
+id	bigint	NO	PRI	NULL	auto_increment
+username	varchar(50)	NO	UNI	NULL	
+password	varchar(100)	NO		NULL	
+nickname	varchar(50)	YES		NULL	
+phone	varchar(20)	YES		NULL	
+email	varchar(100)	YES		NULL	
+avatar	varchar(255)	YES		NULL	
+status	tinyint	YES		1	
+create_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+update_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+gender	tinyint	YES		NULL	
+birthday	date	YES		NULL	
+height	decimal(5,2)	YES		NULL	
+weight	decimal(5,2)	YES		NULL	
+target_weight	decimal(5,2)	YES		NULL	
+daily_calories	int	YES		NULL	
+open_id	varchar(100)	YES		NULL	
+union_id	varchar(100)	YES		NULL	
+login_type	tinyint	YES		NULL	
+last_login_time	date	YES		NULL	
+last_login_ip	varchar(50)	YES		NULL	
+current_family_id	bigint	YES		NULL	
+work_user_id	varchar(100)	YES		NULL	
+external_user_id	varchar(100)	YES		NULL	
+wx_openid	varchar(100)	YES		NULL	

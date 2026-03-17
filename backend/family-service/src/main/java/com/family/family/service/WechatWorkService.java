@@ -274,8 +274,12 @@ public class WechatWorkService {
         Map<String, String> article = new HashMap<>();
         article.put("title", message.getTitle());
         article.put("description", buildRichMessageContent(message));
-        article.put("url", "https://qioba.cn:8443");
-        article.put("picurl", "https://qioba.cn/logo.png");
+        // 根据消息类型设置不同的跳转链接
+        String jumpUrl = message.getUrl() != null ? "https://qioba.cn:8443/h5/index.html#" + message.getUrl() : "https://qioba.cn:8443/h5/index.html";
+        article.put("url", jumpUrl);
+        // 根据消息类型设置不同的背景图
+        String picUrl = getMessagePicUrl(message.getType());
+        article.put("picurl", picUrl);
         
         articles.add(article);
         news.put("articles", articles);
@@ -680,6 +684,22 @@ public class WechatWorkService {
 
         log.info("企业微信外部联系人文本消息发送成功, userId={}, externalId={}, msgId={}",
                 message.getTargetUserId(), externalUserId, result.get("msgid"));
+    }
+
+    /**
+     * 根据消息类型获取对应的背景图URL
+     */
+    private String getMessagePicUrl(MessageType type) {
+        // 使用CDN上的精美图标
+        if (type == MessageType.REMINDER) {
+            return "https://qioba.cn/static/images/reminder-bg.png";
+        } else if (type == MessageType.TASK_ASSIGNED || type == MessageType.TASK_COMPLETED) {
+            return "https://qioba.cn/static/images/task-bg.png";
+        } else if (type == MessageType.ANNIVERSARY_REMIND || type == MessageType.ANNIVERSARY_TODAY) {
+            return "https://qioba.cn/static/images/anniversary-bg.png";
+        } else {
+            return "https://qioba.cn/static/images/default-bg.png";
+        }
     }
 
     /**

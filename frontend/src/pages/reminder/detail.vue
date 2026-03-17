@@ -354,10 +354,7 @@ export default {
     async loadDetail() {
       this.loading = true
       try {
-        const res = await uni.request({
-          url: `/api/reminder/detail/${this.id}`,
-          method: 'GET'
-        })
+        const res = await this.$request.get(`/api/reminder/detail/${this.id}`)
         
         if (res.data?.code === 0) {
           this.reminder = res.data.data || {}
@@ -377,10 +374,7 @@ export default {
     // 加载用户列表
     async loadUserList() {
       try {
-        const res = await uni.request({
-          url: '/api/reminder/users',
-          method: 'GET'
-        })
+        const res = await this.$request.get('/api/reminder/users')
         
         if (res.data?.code === 0) {
           this.userList = res.data.data?.list || []
@@ -488,11 +482,7 @@ export default {
       }
       
       try {
-        const res = await uni.request({
-          url: '/api/reminder/update',
-          method: 'POST',
-          data
-        })
+        const res = await this.$request.post('/api/reminder/update', data)
         
         if (res.data?.code === 0) {
           uni.showToast({ title: '保存成功' })
@@ -515,11 +505,7 @@ export default {
         success: async (res) => {
           if (res.confirm) {
             try {
-              const result = await uni.request({
-                url: '/api/reminder/execute',
-                method: 'POST',
-                data: { id: this.id }
-              })
+              const result = await this.$request.post('/api/reminder/execute', { id: this.id })
               
               if (result.data?.code === 0) {
                 uni.showToast({ title: '执行成功' })
@@ -543,11 +529,7 @@ export default {
         success: async (res) => {
           if (res.confirm) {
             try {
-              const result = await uni.request({
-                url: '/api/reminder/delete',
-                method: 'POST',
-                data: { id: this.id }
-              })
+              const result = await this.$request.post('/api/reminder/delete', { id: this.id })
               
               if (result.data?.code === 0) {
                 uni.showToast({ title: '删除成功' })

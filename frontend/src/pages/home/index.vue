@@ -307,6 +307,145 @@
     
     <!-- 任务弹窗组件 -->
     <TaskModal ref="taskModalRef" :members="familyMembers" @success="onTaskSaved" />
+    
+    <!-- 提醒编辑/新建弹窗 -->
+    <view v-if="showReminderModal" class="modal-mask" @click="closeReminderModal">
+      <view class="modal-content" @click.stop>
+        <!-- 弹窗头部 -->
+        <view class="modal-header">
+          <text class="modal-title">{{ isNewReminder ? '新建提醒' : '编辑提醒' }}</text>
+          <view class="modal-close" @click="closeReminderModal">
+            <text>✕</text>
+          </view>
+        </view>
+        
+        <scroll-view class="modal-body" scroll-y>
+          <!-- 基本信息 -->
+          <view class="form-section">
+            <view class="section-title">基本信息</view>
+            
+            <view class="form-item">
+              <text class="form-label">标题 <text class="required">*</text></text>
+              <input 
+                class="form-input" 
+                v-model="reminderForm.titleTemplate" 
+                placeholder="请输入提醒标题"
+                maxlength="100"
+              />
+            </view>
+            
+            <view class="form-item">
+              <text class="form-label">内容</text>
+              <textarea 
+                class="form-textarea" 
+                v-model="reminderForm.contentTemplate" 
+                placeholder="请输入提醒内容（选填）"
+                maxlength="500"
+              />
+            </view>
+          </view>
+          
+          <!-- 频率设置 -->
+          <view class="form-section">
+            <view class="section-title">频率设置</view>
+            
+            <view class="form-item">
+              <text class="form-label">提醒频率</text>
+              <picker :range="freqOptions" :range-key="'label'" :value="freqIndex" @change="onFreqChange">
+                <view class="picker">
+                  <text>{{ freqOptions[freqIndex]?.label || '请选择' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 每天/一次性：选择时间 -->
+            <view class="form-item" v-if="reminderForm.frequencyType === 'DAILY' || reminderForm.frequencyType === 'ONCE'">
+              <text class="form-label">提醒时间</text>
+              <picker mode="time" :value="reminderForm.remindTime" @change="onTimeChange">
+                <view class="picker">
+                  <text>{{ reminderForm.remindTime || '选择时间' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 一次性：选择日期 -->
+            <view class="form-item" v-if="reminderForm.frequencyType === 'ONCE'">
+              <text class="form-label">提醒日期</text>
+              <picker mode="date" :value="reminderForm.onceDate" @change="onOnceDateChange">
+                <view class="picker">
+                  <text>{{ reminderForm.onceDate || '选择日期' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 每周：选择星期 -->
+            <view class="form-item" v-if="reminderForm.frequencyType === 'WEEKLY'">
+              <text class="form-label">选择星期</text>
+              <view class="week-selector">
+                <view 
+                  v-for="day in weekDays" 
+                  :key="day.value"
+                  class="week-day"
+                  :class="{ active: reminderForm.weekDays.includes(day.value) }"
+                  @click="toggleWeekDay(day.value)"
+                >
+                  {{ day.label }}
+                </view>
+              </view>
+            </view>
+            
+            <!-- 每月：选择日期 -->
+            <view class="form-item" v-if="reminderForm.frequencyType === 'MONTHLY'">
+              <text class="form-label">选择日期</text>
+              <picker :range="dayOptions" :value="reminderForm.monthDay - 1" @change="onMonthDayChange">
+                <view class="picker">
+                  <text>{{ dayOptions[reminderForm.monthDay - 1] || '1日' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 仅工作日 -->
+            <view class="form-item switch-item">
+              <text class="form-label">仅工作日推送</text>
+              <switch :checked="reminderForm.workDaysOnly" @change="reminderForm.workDaysOnly = $event.detail.value" color="#667eea" />
+            </view>
+          </view>
+          
+          <!-- 推送范围 -->
+          <view class="form-section">
+            <view class="section-title">推送范围</view>
+            
+            <view class="form-item">
+              <text class="form-label">推送对象</text>
+              <view class="radio-group">
+                <view 
+                  v-for="scope in scopeOptions" 
+                  :key="scope.value"
+                  class="radio-item"
+                  :class="{ active: reminderForm.pushScope === scope.value }"
+                  @click="reminderForm.pushScope = scope.value"
+                >
+                  <view class="radio-circle">
+                    <view v-if="reminderForm.pushScope === scope.value" class="radio-dot"></view>
+                  </view>
+                  <text>{{ scope.label }}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+        
+        <!-- 弹窗底部 -->
+        <view class="modal-footer">
+          <button class="cancel-btn" @click="closeReminderModal">取消</button>
+          <button class="save-btn" @click="saveReminder">保存</button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -460,7 +599,8 @@ const loadTodayReminders = async () => {
           ...reminder,
           icon: iconConfig.icon,
           iconBg: iconConfig.bg,
-          time: reminder.remindTime || '',
+          title: reminder.titleTemplate || reminder.reminderName || '提醒',
+          time: reminder.remindTime || reminder.nextExecuteTime || '',
           completed: reminder.status === 2,
           isOverdue: reminder.isOverdue || false
         }
@@ -471,11 +611,11 @@ const loadTodayReminders = async () => {
   }
 }
 
-// 跳转到添加提醒
+// 跳转到添加提醒 - 改为打开弹窗
 const goAddReminder = () => {
-  uni.navigateTo({
-    url: '/pages/reminder/add'
-  })
+  isNewReminder.value = true
+  resetReminderForm()
+  showReminderModal.value = true
 }
 
 // 跳转到提醒列表
@@ -485,14 +625,163 @@ const goReminderList = () => {
   })
 }
 
-// 跳转到提醒详情
+// 跳转到提醒详情 - 改为打开弹窗
 const goReminderDetail = (reminder) => {
-  uni.navigateTo({
-    url: `/pages/reminder/detail?id=${reminder.id}`
-  })
+  isNewReminder.value = false
+  // 初始化编辑表单
+  reminderForm.value = {
+    id: reminder.id,
+    reminderType: reminder.reminderType || 'SYSTEM',
+    frequencyType: reminder.frequencyType || 'DAILY',
+    remindTime: reminder.remindTime || '08:00',
+    titleTemplate: reminder.titleTemplate || '',
+    contentTemplate: reminder.contentTemplate || '',
+    pushScope: reminder.pushScope || 'SELF',
+    onceDate: '',
+    yearMonthDay: '',
+    weekDays: [],
+    monthDay: 1,
+    intervalValue: 60,
+    intervalHours: 1,
+    intervalUnit: 'minutes',
+    workDaysOnly: false,
+    targetUserIds: []
+  }
+  showReminderModal.value = true
 }
 
-// ========== 添加任务弹窗相关结束 ==========
+// 关闭提醒弹窗
+const closeReminderModal = () => {
+  showReminderModal.value = false
+  resetReminderForm()
+}
+
+// 重置提醒表单
+const resetReminderForm = () => {
+  reminderForm.value = {
+    id: null,
+    reminderType: 'SYSTEM',
+    frequencyType: 'DAILY',
+    remindTime: '08:00',
+    onceDate: '',
+    yearMonthDay: '',
+    weekDays: [],
+    monthDay: 1,
+    intervalValue: 60,
+    intervalHours: 1,
+    intervalUnit: 'minutes',
+    workDaysOnly: false,
+    pushScope: 'SELF',
+    targetUserIds: [],
+    titleTemplate: '',
+    contentTemplate: ''
+  }
+}
+
+// 弹窗事件处理
+const onFreqChange = (e) => {
+  reminderForm.value.frequencyType = freqOptions[e.detail.value].value
+}
+
+const onTimeChange = (e) => {
+  reminderForm.value.remindTime = e.detail.value
+}
+
+const onOnceDateChange = (e) => {
+  reminderForm.value.onceDate = e.detail.value
+}
+
+const onMonthDayChange = (e) => {
+  reminderForm.value.monthDay = e.detail.value + 1
+}
+
+const toggleWeekDay = (value) => {
+  const index = reminderForm.value.weekDays.indexOf(value)
+  if (index > -1) {
+    reminderForm.value.weekDays.splice(index, 1)
+  } else {
+    reminderForm.value.weekDays.push(value)
+  }
+}
+
+// 保存提醒
+const saveReminder = async () => {
+  if (!reminderForm.value.titleTemplate) {
+    uni.showToast({ title: '请输入提醒标题', icon: 'none' })
+    return
+  }
+  
+  // 构建频率配置
+  const config = {}
+  const f = reminderForm.value
+  
+  if (f.frequencyType === 'ONCE') {
+    if (!f.onceDate) {
+      uni.showToast({ title: '请选择提醒日期', icon: 'none' })
+      return
+    }
+    config.date = f.onceDate
+    config.time = f.remindTime
+  } else if (['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(f.frequencyType)) {
+    config.fixedTime = f.remindTime
+    if (f.frequencyType === 'WEEKLY') {
+      if (f.weekDays.length === 0) {
+        uni.showToast({ title: '请选择星期', icon: 'none' })
+        return
+      }
+      config.weekDays = f.weekDays
+    } else if (f.frequencyType === 'MONTHLY') {
+      config.monthDay = f.monthDay
+    } else if (f.frequencyType === 'YEARLY') {
+      if (!f.yearMonthDay) {
+        uni.showToast({ title: '请选择月日', icon: 'none' })
+        return
+      }
+      config.monthDay = parseInt(f.yearMonthDay.split('-')[0])
+      config.month = parseInt(f.yearMonthDay.split('-')[1])
+    }
+  } else if (f.frequencyType === 'INTERVAL') {
+    const key = f.intervalUnit === 'minutes' ? 'intervalMinutes' : 
+                f.intervalUnit === 'hours' ? 'intervalHours' : 'intervalDays'
+    config[key] = parseInt(f.intervalValue) || 1
+  } else if (f.frequencyType === 'HOURLY') {
+    config.intervalHours = parseInt(f.intervalHours) || 1
+  }
+  config.workDaysOnly = f.workDaysOnly
+  
+  const data = {
+    reminderName: f.titleTemplate,
+    reminderType: f.reminderType || 'SYSTEM',
+    frequencyType: f.frequencyType,
+    frequencyConfig: JSON.stringify(config),
+    pushScope: f.pushScope,
+    targetUserIds: f.pushScope === 'SPECIFIED' ? JSON.stringify(f.targetUserIds) : null,
+    titleTemplate: f.titleTemplate,
+    contentTemplate: f.contentTemplate,
+    remindTime: f.remindTime,
+    status: 1
+  }
+  
+  try {
+    if (isNewReminder.value) {
+      // 新建提醒
+      await request.post('/api/reminder/add', data)
+      uni.showToast({ title: '创建成功' })
+    } else {
+      // 编辑提醒
+      data.id = f.id
+      await request.post('/api/reminder/update', data)
+      uni.showToast({ title: '保存成功' })
+    }
+    closeReminderModal()
+    loadTodayReminders()
+  } catch (e) {
+    console.error('保存失败', e)
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  }
+}
+
+// ========== 提醒弹窗相关结束 ==========
 
 // 问候语
 const greeting = computed(() => {
@@ -534,6 +823,64 @@ const todayTasks = ref([])
 
 // 今日提醒
 const todayReminders = ref([])
+
+// 提醒弹窗相关数据
+const showReminderModal = ref(false)
+const isNewReminder = ref(true)
+
+// 提醒表单数据
+const reminderForm = ref({
+  id: null,
+  reminderType: 'SYSTEM',
+  frequencyType: 'DAILY',
+  remindTime: '08:00',
+  onceDate: '',
+  yearMonthDay: '',
+  weekDays: [],
+  monthDay: 1,
+  intervalValue: 60,
+  intervalHours: 1,
+  intervalUnit: 'minutes',
+  workDaysOnly: false,
+  pushScope: 'SELF',
+  targetUserIds: [],
+  titleTemplate: '',
+  contentTemplate: ''
+})
+
+// 选项配置
+const freqOptions = [
+  { value: 'ONCE', label: '一次性' },
+  { value: 'DAILY', label: '每天' },
+  { value: 'HOURLY', label: '每小时' },
+  { value: 'WEEKLY', label: '每周' },
+  { value: 'MONTHLY', label: '每月' },
+  { value: 'YEARLY', label: '每年' },
+  { value: 'INTERVAL', label: '间隔' }
+]
+
+const scopeOptions = [
+  { value: 'SELF', label: '仅自己' },
+  { value: 'ALL', label: '全部用户' },
+  { value: 'SPECIFIED', label: '指定用户' }
+]
+
+const weekDays = [
+  { value: 1, label: '一' },
+  { value: 2, label: '二' },
+  { value: 3, label: '三' },
+  { value: 4, label: '四' },
+  { value: 5, label: '五' },
+  { value: 6, label: '六' },
+  { value: 7, label: '日' }
+]
+
+const dayOptions = Array.from({ length: 31 }, (_, i) => `${i + 1}日`)
+
+// 计算属性：频率索引
+const freqIndex = computed(() => {
+  return freqOptions.findIndex(f => f.value === reminderForm.value.frequencyType)
+})
 
 // 家庭成员列表（用于显示指派人名称）
 const familyMembers = ref([])
@@ -2042,10 +2389,10 @@ const getAnniversaryIcon = (type) => {
 
 .reminder-card-small {
   margin-top: 16rpx;
-  padding: 16rpx;
-  background: #FFF9E6;
-  border-radius: 12rpx;
-  border-left: 6rpx solid #FFD700;
+  background: #fff;
+  border-radius: 28rpx;
+  padding: 32rpx;
+  // 去掉黄色背景和边框，和今日待办保持一致
 }
 
 .reminder-badge {
@@ -2055,6 +2402,13 @@ const getAnniversaryIcon = (type) => {
   padding: 4rpx 12rpx;
   border-radius: 20rpx;
   margin-left: 12rpx;
+  min-width: 36rpx;
+  text-align: center;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }
 
 .reminder-list {
@@ -2116,6 +2470,224 @@ const getAnniversaryIcon = (type) => {
 .reminder-status.completed {
   background: #e8f5e9;
   color: #07c160;
+}
+
+/* 提醒弹窗样式 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.modal-content {
+  width: 100%;
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.modal-header .modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-header .modal-close {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-header .modal-close text {
+  font-size: 36rpx;
+  color: #999;
+}
+
+.modal-body {
+  flex: 1;
+  max-height: 65vh;
+  padding: 20rpx 0;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 30rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.modal-footer .cancel-btn,
+.modal-footer .save-btn {
+  flex: 1;
+  height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.modal-footer .cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.modal-footer .save-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+/* 表单样式 */
+.form-section {
+  padding: 0 30rpx 30rpx;
+}
+
+.form-section .section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+  padding: 20rpx 0;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-item .form-label {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.form-item .form-label .required {
+  color: #ff4d4f;
+}
+
+.form-item .form-input,
+.form-item .form-textarea,
+.form-item .picker {
+  width: 100%;
+  padding: 20rpx;
+  background: #f5f6fa;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.form-item .form-input {
+  height: 88rpx;
+  line-height: 48rpx;
+}
+
+.form-item .form-textarea {
+  min-height: 160rpx;
+}
+
+.form-item .picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-item .picker text {
+  color: #333;
+}
+
+.form-item .picker .picker-arrow {
+  color: #999;
+  font-size: 32rpx;
+}
+
+/* 星期选择器 */
+.week-selector {
+  display: flex;
+  gap: 12rpx;
+}
+
+.week-selector .week-day {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f6fa;
+  border-radius: 50%;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.week-selector .week-day.active {
+  background: #667eea;
+  color: #fff;
+}
+
+/* 单选按钮组 */
+.radio-group {
+  display: flex;
+  gap: 20rpx;
+}
+
+.radio-group .radio-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: #f5f6fa;
+  border-radius: 12rpx;
+}
+
+.radio-group .radio-item.active {
+  background: #e8f0ff;
+}
+
+.radio-group .radio-item .radio-circle {
+  width: 32rpx;
+  height: 32rpx;
+  border: 2rpx solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radio-group .radio-item .radio-circle .radio-dot {
+  width: 20rpx;
+  height: 20rpx;
+  background: #667eea;
+  border-radius: 50%;
+}
+
+.radio-group .radio-item text {
+  font-size: 26rpx;
+  color: #333;
+}
+
+/* 开关项 */
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 </style>

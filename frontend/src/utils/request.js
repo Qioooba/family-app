@@ -221,9 +221,9 @@ const handleResponse = (res, options) => {
     }
   }
   
-    // 业务错误
+    // 业务错误 - 后端返回 code 0 或 200 都表示成功
     console.log('[Response] data:', JSON.stringify(data))
-    if (data.code !== 200) {
+    if (data.code !== 0 && data.code !== 200) {
     handleBusinessError(data, options)
     return {
       success: false,

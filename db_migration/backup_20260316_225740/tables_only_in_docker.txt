@@ -1,0 +1,12 @@
+anniversary
+anniversary_reminder
+api_log
+family_report
+notification
+stats_cache
+sys_operation_log
+task_category
+task_schedule
+user_activity
+wish_budget
+wish_milestone

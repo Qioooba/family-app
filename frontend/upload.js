@@ -12,8 +12,8 @@ const config = {
 
 // 上传配置
 const uploadConfig = {
-    version: '1.1.0',
-    desc: '提醒功能完整版：支持7种频率类型、推送范围选择、免打扰设置、指定用户推送',
+    version: '1.1.1',
+    desc: '修复首页今日提醒不显示标题的问题',
     setting: {
         es6: true,
         es7: true,

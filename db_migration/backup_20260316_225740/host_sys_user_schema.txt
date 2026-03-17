@@ -1,0 +1,18 @@
+Field	Type	Null	Key	Default	Extra
+id	bigint	NO	PRI	NULL	auto_increment
+username	varchar(50)	YES	UNI	NULL	
+password	varchar(255)	YES		NULL	
+nickname	varchar(50)	YES		NULL	
+avatar	varchar(255)	YES		NULL	
+phone	varchar(20)	YES	UNI	NULL	
+wx_openid	varchar(100)	YES		NULL	
+email	varchar(100)	YES		NULL	
+gender	int	YES		0	
+last_login_time	datetime	YES		NULL	
+status	int	YES		1	
+current_family_id	bigint	YES		NULL	
+create_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED
+update_time	datetime	YES		CURRENT_TIMESTAMP	DEFAULT_GENERATED on update CURRENT_TIMESTAMP
+deleted	int	YES		0	
+work_user_id	varchar(64)	YES		NULL	
+external_user_id	varchar(100)	YES		NULL	

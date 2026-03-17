@@ -17,12 +17,22 @@
         <view class="section-title">基本信息</view>
         
         <view class="form-item">
-          <text class="form-label">提醒名称 <text class="required">*</text></text>
+          <text class="form-label">标题 <text class="required">*</text></text>
           <input 
             class="form-input" 
-            v-model="form.reminderName" 
-            placeholder="请输入提醒名称，例如：喝水提醒"
-            maxlength="50"
+            v-model="form.titleTemplate" 
+            placeholder="请输入提醒标题，例如：该喝水啦"
+            maxlength="100"
+          />
+        </view>
+        
+        <view class="form-item">
+          <text class="form-label">内容</text>
+          <textarea 
+            class="form-textarea" 
+            v-model="form.contentTemplate" 
+            placeholder="请输入提醒内容（选填）"
+            maxlength="500"
           />
         </view>
       </view>
@@ -219,31 +229,6 @@
           </view>
         </view>
       </view>
-      
-      <!-- 消息内容 -->
-      <view class="form-section">
-        <view class="section-title">消息内容</view>
-        
-        <view class="form-item">
-          <text class="form-label">标题 <text class="required">*</text></text>
-          <input 
-            class="form-input" 
-            v-model="form.titleTemplate" 
-            placeholder="请输入提醒标题，例如：该喝水啦"
-            maxlength="100"
-          />
-        </view>
-        
-        <view class="form-item">
-          <text class="form-label">内容</text>
-          <textarea 
-            class="form-textarea" 
-            v-model="form.contentTemplate" 
-            placeholder="请输入提醒内容（选填）"
-            maxlength="500"
-          />
-        </view>
-      </view>
     </scroll-view>
   </view>
 </template>
@@ -253,7 +238,6 @@ export default {
   data() {
     return {
       form: {
-        reminderName: '',
         frequencyType: 'DAILY',
         remindTime: '08:00',
         onceDate: '',
@@ -324,10 +308,7 @@ export default {
       
       this.userLoading = true
       try {
-        const res = await uni.request({
-          url: '/api/reminder/users',
-          method: 'GET'
-        })
+        const res = await this.$request.get('/api/reminder/users')
         
         if (res.data?.code === 0) {
           this.userList = res.data.data?.list || []
@@ -341,13 +322,8 @@ export default {
     
     // 保存提醒
     async saveReminder() {
-      if (!this.form.reminderName) {
-        uni.showToast({ title: '请输入提醒名称', icon: 'none' })
-        return
-      }
-      
       if (!this.form.titleTemplate) {
-        uni.showToast({ title: '请输入标题模板', icon: 'none' })
+        uni.showToast({ title: '请输入提醒标题', icon: 'none' })
         return
       }
       
@@ -379,7 +355,7 @@ export default {
       config.workDaysOnly = f.workDaysOnly
       
       const data = {
-        reminderName: f.reminderName,
+        reminderName: f.titleTemplate,
         frequencyType: f.frequencyType,
         frequencyConfig: JSON.stringify(config),
         pushScope: f.pushScope,
@@ -391,11 +367,7 @@ export default {
       }
       
       try {
-        const res = await uni.request({
-          url: '/api/reminder/add',
-          method: 'POST',
-          data
-        })
+        const res = await this.$request.post('/api/reminder/add', data)
         
         if (res.data?.code === 0) {
           uni.showToast({ title: '创建成功' })
@@ -555,6 +527,11 @@ export default {
   border-radius: 12rpx;
   font-size: 28rpx;
   box-sizing: border-box;
+}
+
+.form-input {
+  height: 88rpx;
+  line-height: 48rpx;
 }
 
 .form-textarea {

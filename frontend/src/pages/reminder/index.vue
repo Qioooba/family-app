@@ -1,10 +1,7 @@
 <template>
   <view class="page">
-    <!-- 顶部导航 -->
+    <!-- 顶部导航 - Tab页面不需要返回按钮 -->
     <view class="nav-bar">
-      <view class="back-btn" @click="goBack">
-        <text class="icon">‹</text>
-      </view>
       <text class="title">提醒管理</text>
       <view class="right-btn" @click="goAdd">
         <text class="icon">+</text>
@@ -67,7 +64,7 @@
           <switch 
             :checked="item.status === 1" 
             color="#667eea"
-            @change="onSwitchChange($event, item)"
+            @change.stop="onSwitchChange($event, item)"
           />
         </view>
       </view>
@@ -92,6 +89,169 @@
         <text>新建提醒</text>
       </button>
     </view>
+    
+    <!-- 编辑/新建提醒弹窗 -->
+    <view v-if="showEditModal" class="modal-mask" @click="closeEditModal">
+      <view class="modal-content" @click.stop>
+        <!-- 弹窗头部 -->
+        <view class="modal-header">
+          <text class="modal-title">{{ isNew ? '新建提醒' : '编辑提醒' }}</text>
+          <view class="modal-close" @click="closeEditModal">
+            <text>✕</text>
+          </view>
+        </view>
+        
+        <scroll-view class="modal-body" scroll-y>
+          <!-- 基本信息 -->
+          <view class="form-section">
+            <view class="section-title">基本信息</view>
+            
+            <view class="form-item">
+              <text class="form-label">标题 <text class="required">*</text></text>
+              <input 
+                class="form-input" 
+                v-model="editForm.titleTemplate" 
+                placeholder="请输入提醒标题"
+                maxlength="100"
+              />
+            </view>
+            
+            <view class="form-item">
+              <text class="form-label">内容</text>
+              <textarea 
+                class="form-textarea" 
+                v-model="editForm.contentTemplate" 
+                placeholder="请输入提醒内容（选填）"
+                maxlength="500"
+              />
+            </view>
+          </view>
+          
+          <!-- 频率设置 -->
+          <view class="form-section">
+            <view class="section-title">频率设置</view>
+            
+            <view class="form-item">
+              <text class="form-label">提醒频率</text>
+              <picker :range="freqOptions" :range-key="'label'" :value="freqIndex" @change="onFreqChange">
+                <view class="picker">
+                  <text>{{ freqOptions[freqIndex]?.label || '请选择' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 每天/一次性：选择时间 -->
+            <view class="form-item" v-if="editForm.frequencyType === 'DAILY' || editForm.frequencyType === 'ONCE'">
+              <text class="form-label">提醒时间</text>
+              <picker mode="time" :value="editForm.remindTime" @change="onTimeChange">
+                <view class="picker">
+                  <text>{{ editForm.remindTime || '选择时间' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 一次性：选择日期 -->
+            <view class="form-item" v-if="editForm.frequencyType === 'ONCE'">
+              <text class="form-label">提醒日期</text>
+              <picker mode="date" :value="editForm.onceDate" @change="onOnceDateChange">
+                <view class="picker">
+                  <text>{{ editForm.onceDate || '选择日期' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 每周：选择星期 -->
+            <view class="form-item" v-if="editForm.frequencyType === 'WEEKLY'">
+              <text class="form-label">选择星期</text>
+              <view class="week-selector">
+                <view 
+                  v-for="day in weekDays" 
+                  :key="day.value"
+                  class="week-day"
+                  :class="{ active: editForm.weekDays.includes(day.value) }"
+                  @click="toggleWeekDay(day.value)"
+                >
+                  {{ day.label }}
+                </view>
+              </view>
+            </view>
+            
+            <!-- 每月：选择日期 -->
+            <view class="form-item" v-if="editForm.frequencyType === 'MONTHLY'">
+              <text class="form-label">选择日期</text>
+              <picker :range="dayOptions" :value="editForm.monthDay - 1" @change="onMonthDayChange">
+                <view class="picker">
+                  <text>{{ dayOptions[editForm.monthDay - 1] || '1日' }}</text>
+                  <text class="picker-arrow">›</text>
+                </view>
+              </picker>
+            </view>
+            
+            <!-- 仅工作日 -->
+            <view class="form-item switch-item">
+              <text class="form-label">仅工作日推送</text>
+              <switch :checked="editForm.workDaysOnly" @change="editForm.workDaysOnly = $event.detail.value" color="#667eea" />
+            </view>
+          </view>
+          
+          <!-- 推送范围 -->
+          <view class="form-section">
+            <view class="section-title">推送范围</view>
+            
+            <view class="form-item">
+              <text class="form-label">推送对象</text>
+              <view class="radio-group">
+                <view 
+                  v-for="scope in scopeOptions" 
+                  :key="scope.value"
+                  class="radio-item"
+                  :class="{ active: editForm.pushScope === scope.value }"
+                  @click="editForm.pushScope = scope.value"
+                >
+                  <view class="radio-circle">
+                    <view v-if="editForm.pushScope === scope.value" class="radio-dot"></view>
+                  </view>
+                  <text>{{ scope.label }}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+        
+        <!-- 弹窗底部 -->
+        <view class="modal-footer">
+          <button class="cancel-btn" @click="closeEditModal">取消</button>
+          <button class="save-btn" @click="saveReminder">保存</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 用户选择弹窗 -->
+    <view v-if="showUserPicker" class="modal-mask" @click="closeUserPicker">
+      <view class="picker-content" @click.stop>
+        <view class="picker-header">
+          <text class="cancel" @click="closeUserPicker">取消</text>
+          <text class="title">选择指定用户</text>
+          <text class="confirm" @click="confirmUserPicker">确定</text>
+        </view>
+        <scroll-view class="picker-body" scroll-y>
+          <view 
+            v-for="user in targetUsers" 
+            :key="user.id"
+            class="user-item"
+            :class="{ selected: selectedUsers.includes(user.id) }"
+            @click="toggleUserSelection(user.id)"
+          >
+            <image class="user-avatar" :src="user.avatar || '/static/default-avatar.png'" mode="aspectFill" />
+            <text class="user-name">{{ user.nickname || user.username }}</text>
+            <view v-if="selectedUsers.includes(user.id)" class="check-icon">✓</view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -103,10 +263,70 @@ export default {
       loading: false,
       page: 1,
       pageSize: 20,
-      hasMore: true
+      hasMore: true,
+      
+      // 弹窗显示状态
+      showEditModal: false,
+      
+      // 是否为新建模式
+      isNew: true,
+      
+      // 当前查看/编辑的提醒
+      currentReminder: null,
+      targetUsers: [],
+      
+      // 统一表单数据
+      editForm: {
+        id: null,
+        reminderType: 'SYSTEM',
+        frequencyType: 'DAILY',
+        remindTime: '08:00',
+        onceDate: '',
+        yearMonthDay: '',
+        weekDays: [],
+        monthDay: 1,
+        intervalValue: 60,
+        intervalHours: 1,
+        intervalUnit: 'minutes',
+        workDaysOnly: false,
+        pushScope: 'SELF',
+        targetUserIds: [],
+        titleTemplate: '',
+        contentTemplate: ''
+      },
+      
+      // 选项
+      freqOptions: [
+        { value: 'ONCE', label: '一次性' },
+        { value: 'DAILY', label: '每天' },
+        { value: 'HOURLY', label: '每小时' },
+        { value: 'WEEKLY', label: '每周' },
+        { value: 'MONTHLY', label: '每月' },
+        { value: 'YEARLY', label: '每年' },
+        { value: 'INTERVAL', label: '间隔' }
+      ],
+      scopeOptions: [
+        { value: 'SELF', label: '仅自己' },
+        { value: 'ALL', label: '全部用户' },
+        { value: 'SPECIFIED', label: '指定用户' }
+      ],
+      weekDays: [
+        { value: 1, label: '一' },
+        { value: 2, label: '二' },
+        { value: 3, label: '三' },
+        { value: 4, label: '四' },
+        { value: 5, label: '五' },
+        { value: 6, label: '六' },
+        { value: 7, label: '日' }
+      ],
+      dayOptions: Array.from({ length: 31 }, (_, i) => `${i + 1}日`),
+      intervalUnits: ['分钟', '小时', '天']
     }
   },
   computed: {
+    freqIndex() {
+      return this.freqOptions.findIndex(f => f.value === this.editForm.frequencyType)
+    },
     activeCount() {
       return this.reminders.filter(r => r.status === 1).length
     },
@@ -118,8 +338,20 @@ export default {
       }).length
     }
   },
-  onLoad() {
+  onLoad(options) {
     this.loadReminders()
+    
+    // 如果从首页点击提醒跳转过来，自动打开编辑弹窗
+    if (options.autoOpen === 'true' && options.editId) {
+      const id = parseInt(options.editId)
+      // 等待列表加载完成后打开编辑
+      setTimeout(() => {
+        const reminder = this.reminders.find(r => r.id === id)
+        if (reminder) {
+          this.goDetail(reminder)
+        }
+      }, 300)
+    }
   },
   onShow() {
     this.loadReminders()
@@ -138,16 +370,8 @@ export default {
       this.loading = true
       
       try {
-        const res = await uni.request({
-          url: '/api/reminder/list',
-          method: 'GET'
-        })
-        
-        if (res.data?.code === 0) {
-          this.reminders = res.data.data || []
-        } else {
-          uni.showToast({ title: res.data?.message || '加载失败', icon: 'none' })
-        }
+        const res = await this.$request.get('/api/reminder/list')
+        this.reminders = res || []
       } catch (e) {
         console.error('加载提醒失败', e)
         uni.showToast({ title: '加载失败', icon: 'none' })
@@ -163,22 +387,16 @@ export default {
     
     // 切换状态
     async toggleStatus(item) {
+      const originalStatus = item.status
+      const newStatus = originalStatus === 1 ? 0 : 1
+      
       try {
-        const res = await uni.request({
-          url: '/api/reminder/toggle',
-          method: 'POST',
-          data: { id: item.id }
+        await this.$request.post('/api/reminder/toggle', { id: item.id })
+        item.status = newStatus
+        uni.showToast({ 
+          title: newStatus === 1 ? '已启用' : '已停用', 
+          icon: 'none' 
         })
-        
-        if (res.data?.code === 0) {
-          item.status = item.status === 1 ? 0 : 1
-          uni.showToast({ 
-            title: item.status === 1 ? '已启用' : '已停用', 
-            icon: 'none' 
-          })
-        } else {
-          uni.showToast({ title: res.data?.message || '操作失败', icon: 'none' })
-        }
       } catch (e) {
         console.error('切换状态失败', e)
         uni.showToast({ title: '操作失败', icon: 'none' })
@@ -187,6 +405,8 @@ export default {
     
     // Switch 组件变更处理
     onSwitchChange(e, item) {
+      e.preventDefault()
+      e.stopPropagation()
       // 阻止默认行为，手动调用 toggle
       this.toggleStatus(item)
     },
@@ -262,20 +482,31 @@ export default {
     },
     
     // 格式化时间
-    formatTime(timeStr) {
-      if (!timeStr) return '-'
-      const date = new Date(timeStr.replace(/-/g, '/'))
+    formatTime(time) {
+      if (!time) return '-'
+      // 处理数组格式 [2026,3,17,0,14,18]
+      if (Array.isArray(time)) {
+        const [year, month, day, hour, minute] = time
+        const date = new Date(year, month - 1, day, hour, minute)
+        const now = new Date()
+        const isToday = date.toDateString() === now.toDateString()
+        const isTomorrow = new Date(now.getTime() + 86400000).toDateString() === date.toDateString()
+        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        if (isToday) return `今天 ${timeStr}`
+        if (isTomorrow) return `明天 ${timeStr}`
+        return `${month}/${day} ${timeStr}`
+      }
+      // 处理字符串格式
+      const date = new Date(time.replace(/-/g, '/'))
       const now = new Date()
       const isToday = date.toDateString() === now.toDateString()
       const isTomorrow = new Date(now.getTime() + 86400000).toDateString() === date.toDateString()
-      
       const hours = date.getHours().toString().padStart(2, '0')
       const minutes = date.getMinutes().toString().padStart(2, '0')
-      const time = `${hours}:${minutes}`
-      
-      if (isToday) return `今天 ${time}`
-      if (isTomorrow) return `明天 ${time}`
-      return `${date.getMonth() + 1}/${date.getDate()} ${time}`
+      const timeStr = `${hours}:${minutes}`
+      if (isToday) return `今天 ${timeStr}`
+      if (isTomorrow) return `明天 ${timeStr}`
+      return `${date.getMonth() + 1}/${date.getDate()} ${timeStr}`
     },
     
     // 显示标签
@@ -302,14 +533,173 @@ export default {
     },
     
     // 导航
-    goBack() {
-      uni.navigateBack()
-    },
     goAdd() {
-      uni.navigateTo({ url: '/pages/reminder/add' })
+      this.isNew = true
+      this.resetForm()
+      this.showEditModal = true
     },
     goDetail(item) {
-      uni.navigateTo({ url: `/pages/reminder/detail?id=${item.id}` })
+      this.isNew = false
+      this.currentReminder = item
+      // 初始化编辑表单
+      this.editForm = {
+        id: item.id,
+        reminderType: item.reminderType || 'SYSTEM',
+        frequencyType: item.frequencyType || 'DAILY',
+        remindTime: item.remindTime || '08:00',
+        titleTemplate: item.titleTemplate || '',
+        contentTemplate: item.contentTemplate || '',
+        pushScope: item.pushScope || 'SELF',
+        onceDate: '',
+        yearMonthDay: '',
+        weekDays: [],
+        monthDay: 1,
+        intervalValue: 60,
+        intervalHours: 1,
+        intervalUnit: 'minutes',
+        workDaysOnly: false,
+        targetUserIds: []
+      }
+      this.showEditModal = true
+    },
+    
+    // 关闭编辑弹窗
+    closeEditModal() {
+      this.showEditModal = false
+      this.currentReminder = null
+    },
+    
+    // 获取推送范围文本
+    getScopeText(scope) {
+      const map = { 'SELF': '仅自己', 'ALL': '全部用户', 'SPECIFIED': '指定用户' }
+      return map[scope] || '仅自己'
+    },
+    
+    // 关闭弹窗
+    closeEditModal() {
+      this.showEditModal = false
+      this.resetForm()
+    },
+    
+    // 重置表单
+    resetForm() {
+      this.editForm = {
+        id: null,
+        reminderType: 'SYSTEM',
+        frequencyType: 'DAILY',
+        remindTime: '08:00',
+        onceDate: '',
+        yearMonthDay: '',
+        weekDays: [],
+        monthDay: 1,
+        intervalValue: 60,
+        intervalHours: 1,
+        intervalUnit: 'minutes',
+        workDaysOnly: false,
+        pushScope: 'SELF',
+        targetUserIds: [],
+        titleTemplate: '',
+        contentTemplate: ''
+      }
+    },
+    
+    // 保存提醒（统一方法）
+    async saveReminder() {
+      if (!this.editForm.titleTemplate) {
+        uni.showToast({ title: '请输入提醒标题', icon: 'none' })
+        return
+      }
+      
+      // 构建频率配置
+      const config = {}
+      const f = this.editForm
+      
+      if (f.frequencyType === 'ONCE') {
+        if (!f.onceDate) {
+          uni.showToast({ title: '请选择提醒日期', icon: 'none' })
+          return
+        }
+        config.date = f.onceDate
+        config.time = f.remindTime
+      } else if (['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(f.frequencyType)) {
+        config.fixedTime = f.remindTime
+        if (f.frequencyType === 'WEEKLY') {
+          if (f.weekDays.length === 0) {
+            uni.showToast({ title: '请选择星期', icon: 'none' })
+            return
+          }
+          config.weekDays = f.weekDays
+        } else if (f.frequencyType === 'MONTHLY') {
+          config.monthDay = f.monthDay
+        } else if (f.frequencyType === 'YEARLY') {
+          if (!f.yearMonthDay) {
+            uni.showToast({ title: '请选择月日', icon: 'none' })
+            return
+          }
+          config.monthDay = parseInt(f.yearMonthDay.split('-')[0])
+          config.month = parseInt(f.yearMonthDay.split('-')[1])
+        }
+      } else if (f.frequencyType === 'INTERVAL') {
+        const key = f.intervalUnit === 'minutes' ? 'intervalMinutes' : 
+                    f.intervalUnit === 'hours' ? 'intervalHours' : 'intervalDays'
+        config[key] = parseInt(f.intervalValue) || 1
+      } else if (f.frequencyType === 'HOURLY') {
+        config.intervalHours = parseInt(f.intervalHours) || 1
+      }
+      config.workDaysOnly = f.workDaysOnly
+      
+      const data = {
+        reminderName: f.titleTemplate,
+        reminderType: f.reminderType || 'SYSTEM',
+        frequencyType: f.frequencyType,
+        frequencyConfig: JSON.stringify(config),
+        pushScope: f.pushScope,
+        targetUserIds: f.pushScope === 'SPECIFIED' ? JSON.stringify(f.targetUserIds) : null,
+        titleTemplate: f.titleTemplate,
+        contentTemplate: f.contentTemplate,
+        remindTime: f.remindTime,
+        status: 1
+      }
+      
+      try {
+        if (this.isNew) {
+          // 新建提醒
+          await this.$request.post('/api/reminder/add', data)
+          uni.showToast({ title: '创建成功' })
+        } else {
+          // 编辑提醒
+          data.id = f.id
+          await this.$request.post('/api/reminder/update', data)
+          uni.showToast({ title: '保存成功' })
+        }
+        this.closeEditModal()
+        this.loadReminders()
+      } catch (e) {
+        console.error('保存失败', e)
+        uni.showToast({ title: '保存失败', icon: 'none' })
+      }
+    },
+    
+    // 弹窗事件处理
+    onFreqChange(e) {
+      this.editForm.frequencyType = this.freqOptions[e.detail.value].value
+    },
+    onTimeChange(e) {
+      this.editForm.remindTime = e.detail.value
+    },
+    onOnceDateChange(e) {
+      this.editForm.onceDate = e.detail.value
+    },
+    onMonthDayChange(e) {
+      this.editForm.monthDay = e.detail.value + 1
+    },
+    toggleWeekDay(value) {
+      const index = this.editForm.weekDays.indexOf(value)
+      if (index > -1) {
+        this.editForm.weekDays.splice(index, 1)
+      } else {
+        this.editForm.weekDays.push(value)
+      }
     }
   }
 }
@@ -572,5 +962,300 @@ export default {
   padding: 30rpx;
   color: #999;
   font-size: 24rpx;
+}
+
+// 弹窗样式
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.modal-content {
+  width: 100%;
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  
+  .modal-title {
+    font-size: 32rpx;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .modal-close {
+    width: 60rpx;
+    height: 60rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    text {
+      font-size: 36rpx;
+      color: #999;
+    }
+  }
+}
+
+.modal-body {
+  flex: 1;
+  max-height: 65vh;
+  padding: 20rpx 0;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 30rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #f0f0f0;
+  
+  .cancel-btn, .save-btn {
+    flex: 1;
+    height: 80rpx;
+    border-radius: 40rpx;
+    font-size: 30rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .cancel-btn {
+    background: #f5f5f5;
+    color: #666;
+  }
+  
+  .save-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+  }
+}
+
+// 表单样式
+.form-section {
+  padding: 0 30rpx 30rpx;
+  
+  .section-title {
+    font-size: 28rpx;
+    font-weight: 600;
+    color: #333;
+    padding: 20rpx 0;
+  }
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+  
+  .form-label {
+    display: block;
+    font-size: 26rpx;
+    color: #666;
+    margin-bottom: 12rpx;
+    
+    .required {
+      color: #ff4d4f;
+    }
+  }
+  
+  .form-input, .form-textarea, .picker {
+    width: 100%;
+    padding: 20rpx;
+    background: #f5f6fa;
+    border-radius: 12rpx;
+    font-size: 28rpx;
+    box-sizing: border-box;
+  }
+  
+  .form-input {
+    height: 88rpx;
+    line-height: 48rpx;
+  }
+  
+  .form-textarea {
+    min-height: 160rpx;
+  }
+  
+  .picker {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    text {
+      color: #333;
+    }
+    
+    .picker-arrow {
+      color: #999;
+      font-size: 32rpx;
+    }
+  }
+}
+
+.week-selector {
+  display: flex;
+  gap: 12rpx;
+  
+  .week-day {
+    width: 64rpx;
+    height: 64rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f6fa;
+    border-radius: 50%;
+    font-size: 24rpx;
+    color: #666;
+    
+    &.active {
+      background: #667eea;
+      color: #fff;
+    }
+  }
+}
+
+.radio-group {
+  display: flex;
+  gap: 20rpx;
+  
+  .radio-item {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+    padding: 16rpx 24rpx;
+    background: #f5f6fa;
+    border-radius: 12rpx;
+    
+    &.active {
+      background: #e8f0ff;
+    }
+    
+    .radio-circle {
+      width: 32rpx;
+      height: 32rpx;
+      border: 2rpx solid #ddd;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      .radio-dot {
+        width: 20rpx;
+        height: 20rpx;
+        background: #667eea;
+        border-radius: 50%;
+      }
+    }
+    
+    text {
+      font-size: 26rpx;
+      color: #333;
+    }
+  }
+}
+
+.switch-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// 详情弹窗样式
+.detail-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 30rpx;
+  
+  .detail-icon {
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 60rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20rpx;
+    
+    text {
+      font-size: 60rpx;
+    }
+  }
+  
+  .detail-title {
+    font-size: 36rpx;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16rpx;
+  }
+  
+  .detail-status {
+    font-size: 24rpx;
+    padding: 8rpx 24rpx;
+    border-radius: 24rpx;
+    background: #f5f5f5;
+    color: #999;
+    
+    &.active {
+      background: #e6f7ff;
+      color: #1890ff;
+    }
+  }
+}
+
+.detail-section {
+  padding: 0 30rpx 30rpx;
+  
+  .section-title {
+    font-size: 28rpx;
+    font-weight: 600;
+    color: #333;
+    padding: 20rpx 0;
+  }
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  .detail-label {
+    font-size: 26rpx;
+    color: #666;
+  }
+  
+  .detail-value {
+    font-size: 28rpx;
+    color: #333;
+    max-width: 400rpx;
+    text-align: right;
+  }
+}
+
+.loading-state {
+  text-align: center;
+  padding: 100rpx;
+  color: #999;
+  font-size: 28rpx;
 }
 </style>

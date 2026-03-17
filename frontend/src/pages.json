@@ -394,7 +394,6 @@
   },
   "tabBar": {
     "custom": false,
-    "midButton": false,
     "color": "#999999",
     "selectedColor": "#ff6b6b",
     "backgroundColor": "#ffffff",
@@ -411,6 +410,12 @@
         "text": "待办",
         "iconPath": "static/tabbar/task.png",
         "selectedIconPath": "static/tabbar/task-active.png"
+      },
+      {
+        "pagePath": "pages/reminder/index",
+        "text": "提醒",
+        "iconPath": "static/tabbar/reminder.png",
+        "selectedIconPath": "static/tabbar/reminder-active.png"
       },
       {
         "pagePath": "pages/family/index",
