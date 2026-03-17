@@ -66,7 +66,8 @@
             <switch 
               :checked="item.status === 1" 
               color="#667eea"
-              @change.stop="onSwitchChange($event, item)"
+              @change="onSwitchChange($event, item)"
+              @click.stop
             />
             <view class="delete-btn" @click.stop="deleteReminder(item)">
               <text>删除</text>
@@ -689,8 +690,27 @@ export default {
       let intervalHours = 1
       let intervalUnit = 'minutes'
       
-      if (item.frequencyType === 'ONCE' && config.date) {
-        onceDate = config.date
+      // 解析 ONCE 类型日期 - 支持多种数据源
+      if (item.frequencyType === 'ONCE') {
+        if (config.date) {
+          onceDate = config.date
+        } else if (config.time) {
+          // 尝试从 time 解析日期（如果 time 包含日期部分）
+          const timeParts = config.time.split('T')
+          if (timeParts.length > 0) {
+            onceDate = timeParts[0]
+          }
+        }
+        // 如果还是没有日期，尝试从 nextExecuteTime 解析
+        if (!onceDate && item.nextExecuteTime) {
+          const nextTime = item.nextExecuteTime
+          if (typeof nextTime === 'string') {
+            onceDate = nextTime.split('T')[0]
+          } else if (Array.isArray(nextTime) && nextTime.length >= 3) {
+            const [year, month, day] = nextTime
+            onceDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+          }
+        }
       } else if (item.frequencyType === 'WEEKLY' && config.weekDays) {
         weekDays = config.weekDays
       } else if (item.frequencyType === 'MONTHLY' && config.monthDay) {
@@ -714,12 +734,19 @@ export default {
         intervalHours = config.intervalHours
       }
       
+      // 解析 remindTime - 支持多种数据源
+      let remindTime = item.remindTime || config.fixedTime || '08:00'
+      // 如果是 ONCE 类型，优先使用 config.time
+      if (item.frequencyType === 'ONCE' && config.time) {
+        remindTime = config.time
+      }
+      
       // 初始化编辑表单
       this.editForm = {
         id: item.id,
         reminderType: item.reminderType || 'SYSTEM',
         frequencyType: item.frequencyType || 'DAILY',
-        remindTime: item.remindTime || config.fixedTime || '08:00',
+        remindTime: remindTime,
         titleTemplate: item.titleTemplate || '',
         contentTemplate: item.contentTemplate || '',
         pushScope: item.pushScope || 'SELF',
@@ -759,12 +786,19 @@ export default {
     
     // 重置表单
     resetForm() {
+      // 获取今天日期 yyyy-MM-dd
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = (today.getMonth() + 1).toString().padStart(2, '0')
+      const day = today.getDate().toString().padStart(2, '0')
+      const todayStr = `${year}-${month}-${day}`
+      
       this.editForm = {
         id: null,
         reminderType: 'SYSTEM',
         frequencyType: 'DAILY',
         remindTime: '08:00',
-        onceDate: '',
+        onceDate: todayStr,  // 默认今天
         yearMonthDay: '',
         weekDays: [],
         monthDay: 1,
