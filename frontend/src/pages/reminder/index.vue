@@ -66,6 +66,7 @@
               :checked="item.status === 1" 
               color="#667eea"
               @change="onSwitchChange($event, item)"
+              @click.stop=""
             />
             <view class="delete-btn" @click="deleteReminder(item)">
               <text>删除</text>
