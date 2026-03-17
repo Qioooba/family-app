@@ -563,12 +563,6 @@ export default {
       this.showEditModal = true
     },
     
-    // 关闭编辑弹窗
-    closeEditModal() {
-      this.showEditModal = false
-      this.currentReminder = null
-    },
-    
     // 获取推送范围文本
     getScopeText(scope) {
       const map = { 'SELF': '仅自己', 'ALL': '全部用户', 'SPECIFIED': '指定用户' }
