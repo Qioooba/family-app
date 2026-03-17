@@ -643,6 +643,9 @@ public class WechatWorkService {
             cleanDesc = cleanDesc.substring(0, 60) + "...";
         }
         
+        log.info("准备推送外部联系人消息, userId={}, externalId={}, title={}", 
+                message.getTargetUserId(), externalUserId, title);
+        
         // 构建payload
         Map<String, Object> payload = new HashMap<>();
         
@@ -650,8 +653,12 @@ public class WechatWorkService {
         List<String> externalUserIds = new ArrayList<>();
         externalUserIds.add(externalUserId);
         payload.put("external_userid", externalUserIds);
-        // 发送者
-        payload.put("sender", getWorkUserId());
+        // 发送者 - 使用企业微信小助手
+        String senderId = getWorkUserId();
+        if (senderId == null || senderId.isEmpty()) {
+            throw new Exception("企业微信小助手UserID未配置，无法发送外部联系人消息");
+        }
+        payload.put("sender", senderId);
         
         // 图文消息
         Map<String, Object> news = new HashMap<>();
@@ -675,13 +682,19 @@ public class WechatWorkService {
 
         int errcode = (Integer) result.getOrDefault("errcode", -1);
         if (errcode != 0) {
+            log.error("外部联系人消息发送失败, errcode={}, errmsg={}, externalId={}", 
+                    errcode, result.get("errmsg"), externalUserId);
             if (errcode == 48002) {
-                throw new Exception("外部联系人48小时内无互动，无法发送消息");
+                throw new Exception("外部联系人48小时内无互动，无法发送消息。请让陶陶先给小助手发消息或点击小程序");
+            } else if (errcode == 40003) {
+                throw new Exception("外部联系人ID无效: " + externalUserId);
+            } else if (errcode == 84061) {
+                throw new Exception("外部联系人未绑定企业微信成员");
             }
             throw new Exception("图文消息发送失败: " + result.get("errmsg"));
         }
 
-        log.info("企业微信外部联系人图文消息发送成功, userId={}, externalId={}",
+        log.info("✅ 企业微信外部联系人图文消息发送成功, userId={}, externalId={}",
                 message.getTargetUserId(), externalUserId);
     }
 
@@ -947,24 +960,20 @@ public class WechatWorkService {
             return;
         }
 
-        // 优先使用内部成员推送（小程序卡片）
-        if (identity.hasWorkUserId()) {
+        // 优先使用外部联系人推送（推送到微信个人号）
+        if (identity.hasExternalUserId()) {
             try {
-                sendReminderMiniappCardToInternalUser(token, identity.workUserId, message);
+                sendToExternalUser(token, identity.externalUserId, message);
                 return;
             } catch (Exception e) {
-                log.warn("内部成员小程序卡片推送失败，尝试外部联系人, userId={}, error={}", message.getTargetUserId(), e.getMessage());
-                if (identity.hasExternalUserId()) {
-                    sendToExternalUser(token, identity.externalUserId, message);
-                    return;
-                }
-                throw e;
+                log.warn("外部联系人推送失败，尝试内部成员, userId={}, error={}", message.getTargetUserId(), e.getMessage());
+                // 外部失败时回退到内部
             }
         }
         
-        // 只有外部联系人ID
-        if (identity.hasExternalUserId()) {
-            sendToExternalUser(token, identity.externalUserId, message);
+        // 使用内部成员推送（企业微信内部）
+        if (identity.hasWorkUserId()) {
+            sendReminderMiniappCardToInternalUser(token, identity.workUserId, message);
         }
     }
     
