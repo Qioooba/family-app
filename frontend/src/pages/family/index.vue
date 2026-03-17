@@ -401,15 +401,15 @@ const generateNewCode = async () => {
   generating.value = true
   try {
     const userInfo = userStore.userInfo || uni.getStorageSync('userInfo')
-    const res = await familyApi.createInviteCode(familyId.value, userInfo.id, 5, 30)
+    const data = await familyApi.createInviteCode(familyId.value, userInfo.id, 5, 30)
     
-    if (res && res.code === 200) {
-      currentInviteCode.value = res.data.code
+    if (data && data.code) {
+      currentInviteCode.value = data.code
       uni.showToast({ title: '邀请码已生成', icon: 'success' })
       // 刷新邀请码列表
       await loadInviteCodes()
     } else {
-      uni.showToast({ title: res.message || '生成失败', icon: 'none' })
+      uni.showToast({ title: '生成失败', icon: 'none' })
     }
   } catch (e) {
     console.error('[Family] 生成邀请码失败:', e)

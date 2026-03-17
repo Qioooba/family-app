@@ -450,28 +450,12 @@ const createWish = async () => {
     console.log('发送数据:', data)
     
     // 调用API
-    const res = await uni.request({
-      url: 'https://qioba.cn:8443/api/wish/create',
-      method: 'POST',
-      header: {
-        'Content-Type': 'application/json'
-      },
-      data: data
-    })
-    
-    console.log('API返回:', res)
+    await uni.$request.post('/api/wish/create', data)
     
     uni.hideLoading()
-    
-    if (res.data && res.data.code === 200) {
-      uni.showToast({ title: '许愿成功', icon: 'success' })
-      closeAddModal()
-      loadWishes()
-    } else {
-      const msg = res.data?.message || '创建失败'
-      uni.showToast({ title: msg, icon: 'none' })
-      console.error('创建失败:', res.data)
-    }
+    uni.showToast({ title: '许愿成功', icon: 'success' })
+    closeAddModal()
+    loadWishes()
   } catch (e) {
     uni.hideLoading()
     console.error('创建失败:', e)
@@ -482,38 +466,22 @@ const createWish = async () => {
 // 认领心愿
 const claimWish = async (wish) => {
   try {
-    const res = await uni.request({
-      url: `https://qioba.cn:8443/api/wish/claim/${wish.id}`,
-      method: 'POST'
-    })
-    
-    if (res.data?.code === 200) {
-      uni.showToast({ title: '认领成功', icon: 'success' })
-      loadWishes()
-    } else {
-      uni.showToast({ title: res.data?.message || '认领失败', icon: 'none' })
-    }
+    await uni.$request.post(`/api/wish/claim/${wish.id}`)
+    uni.showToast({ title: '认领成功', icon: 'success' })
+    loadWishes()
   } catch (e) {
-    uni.showToast({ title: '认领失败', icon: 'none' })
+    uni.showToast({ title: e.message || '认领失败', icon: 'none' })
   }
 }
 
 // 完成心愿
 const completeWish = async (wish) => {
   try {
-    const res = await uni.request({
-      url: `https://qioba.cn:8443/api/wish/complete/${wish.id}`,
-      method: 'POST'
-    })
-    
-    if (res.data?.code === 200) {
-      uni.showToast({ title: '太棒了！', icon: 'success' })
-      loadWishes()
-    } else {
-      uni.showToast({ title: res.data?.message || '操作失败', icon: 'none' })
-    }
+    await uni.$request.post(`/api/wish/complete/${wish.id}`)
+    uni.showToast({ title: '太棒了！', icon: 'success' })
+    loadWishes()
   } catch (e) {
-    uni.showToast({ title: '操作失败', icon: 'none' })
+    uni.showToast({ title: e.message || '操作失败', icon: 'none' })
   }
 }
 
@@ -525,19 +493,11 @@ const deleteWish = (wish) => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          const result = await uni.request({
-            url: `https://qioba.cn:8443/api/wish/${wish.id}`,
-            method: 'DELETE'
-          })
-          
-          if (result.data?.code === 200) {
-            uni.showToast({ title: '删除成功', icon: 'success' })
-            loadWishes()
-          } else {
-            uni.showToast({ title: result.data?.message || '删除失败', icon: 'none' })
-          }
+          await uni.$request.delete(`/api/wish/${wish.id}`)
+          uni.showToast({ title: '删除成功', icon: 'success' })
+          loadWishes()
         } catch (e) {
-          uni.showToast({ title: '删除失败', icon: 'none' })
+          uni.showToast({ title: e.message || '删除失败', icon: 'none' })
         }
       }
     }
@@ -557,19 +517,9 @@ const loadWishes = async () => {
       url += `&status=${currentTab.value}`
     }
     
-    const res = await uni.request({
-      url: url,
-      method: 'GET'
-    })
-    
-    console.log('API返回:', res)
-    
-    if (res.data?.code === 200) {
-      wishes.value = res.data.data || []
-      console.log('心愿列表:', wishes.value)
-    } else {
-      wishes.value = []
-    }
+    const data = await uni.$request.get(url)
+    wishes.value = data || []
+    console.log('心愿列表:', wishes.value)
   } catch (e) {
     console.error('加载失败:', e)
     wishes.value = []
