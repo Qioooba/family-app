@@ -33,17 +33,16 @@
         :key="item.id"
         class="reminder-card"
         :class="{ disabled: item.status !== 1 }"
-        @click="goDetail(item)"
         @longpress="showDeleteMenu(item)"
       >
-        <view class="card-left">
+        <view class="card-left" @click="goDetail(item)">
           <view class="type-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
             <text>✨</text>
           </view>
           <view class="status-dot" v-if="item.status === 1"></view>
         </view>
         
-        <view class="card-body">
+        <view class="card-body" @click="goDetail(item)">
           <view class="card-header">
             <text class="reminder-name">{{ item.reminderName }}</text>
           </view>
@@ -67,9 +66,8 @@
               :checked="item.status === 1" 
               color="#667eea"
               @change="onSwitchChange($event, item)"
-              @click.stop
             />
-            <view class="delete-btn" @click.stop="deleteReminder(item)">
+            <view class="delete-btn" @click="deleteReminder(item)">
               <text>删除</text>
             </view>
           </view>
