@@ -661,10 +661,18 @@ export default {
       this.isNew = false
       this.currentReminder = item
       
+      // 调试日志
+      console.log('=== goDetail 调试 ===')
+      console.log('item:', JSON.stringify(item))
+      console.log('frequencyType:', item.frequencyType)
+      console.log('frequencyConfig:', item.frequencyConfig)
+      console.log('nextExecuteTime:', item.nextExecuteTime)
+      
       // 解析 frequencyConfig
       let config = {}
       try {
         config = JSON.parse(item.frequencyConfig || '{}')
+        console.log('解析后的 config:', config)
       } catch (e) {
         console.error('解析 frequencyConfig 失败', e)
       }
