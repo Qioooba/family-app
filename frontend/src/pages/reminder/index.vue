@@ -681,7 +681,8 @@ export default {
       let targetUsers = []
       try {
         if (item.targetUserIds) {
-          targetUsers = JSON.parse(item.targetUserIds)
+          const parsed = JSON.parse(item.targetUserIds)
+          targetUsers = Array.isArray(parsed) ? parsed : []
         }
       } catch (e) {
         console.error('解析 targetUserIds 失败', e)
@@ -718,7 +719,8 @@ export default {
           }
         }
       } else if (item.frequencyType === 'WEEKLY' && config.weekDays) {
-        weekDays = config.weekDays
+        // 确保weekDays是数组
+        weekDays = Array.isArray(config.weekDays) ? config.weekDays : []
       } else if (item.frequencyType === 'MONTHLY' && config.monthDay) {
         monthDay = config.monthDay
       } else if (item.frequencyType === 'YEARLY') {
@@ -763,7 +765,7 @@ export default {
         intervalValue: intervalValue,
         intervalHours: intervalHours,
         intervalUnit: intervalUnit,
-        workDaysOnly: config.workDaysOnly || false,
+        workDaysOnly: config.workDaysOnly === true || config.workDaysOnly === 'true',
         targetUserIds: targetUsers
       }
       this.selectedUsers = targetUsers
