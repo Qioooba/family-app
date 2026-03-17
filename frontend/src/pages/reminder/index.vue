@@ -661,26 +661,79 @@ export default {
     goDetail(item) {
       this.isNew = false
       this.currentReminder = item
+      
+      // 解析 frequencyConfig
+      let config = {}
+      try {
+        config = JSON.parse(item.frequencyConfig || '{}')
+      } catch (e) {
+        console.error('解析 frequencyConfig 失败', e)
+      }
+      
+      // 解析 targetUserIds
+      let targetUsers = []
+      try {
+        if (item.targetUserIds) {
+          targetUsers = JSON.parse(item.targetUserIds)
+        }
+      } catch (e) {
+        console.error('解析 targetUserIds 失败', e)
+      }
+      
+      // 根据频率类型解析具体配置
+      let onceDate = ''
+      let yearMonthDay = ''
+      let weekDays = []
+      let monthDay = 1
+      let intervalValue = 60
+      let intervalHours = 1
+      let intervalUnit = 'minutes'
+      
+      if (item.frequencyType === 'ONCE' && config.date) {
+        onceDate = config.date
+      } else if (item.frequencyType === 'WEEKLY' && config.weekDays) {
+        weekDays = config.weekDays
+      } else if (item.frequencyType === 'MONTHLY' && config.monthDay) {
+        monthDay = config.monthDay
+      } else if (item.frequencyType === 'YEARLY') {
+        if (config.month && config.monthDay) {
+          yearMonthDay = `${config.month.toString().padStart(2, '0')}-${config.monthDay.toString().padStart(2, '0')}`
+        }
+      } else if (item.frequencyType === 'INTERVAL') {
+        if (config.intervalMinutes) {
+          intervalValue = config.intervalMinutes
+          intervalUnit = 'minutes'
+        } else if (config.intervalHours) {
+          intervalValue = config.intervalHours
+          intervalUnit = 'hours'
+        } else if (config.intervalDays) {
+          intervalValue = config.intervalDays
+          intervalUnit = 'days'
+        }
+      } else if (item.frequencyType === 'HOURLY' && config.intervalHours) {
+        intervalHours = config.intervalHours
+      }
+      
       // 初始化编辑表单
       this.editForm = {
         id: item.id,
         reminderType: item.reminderType || 'SYSTEM',
         frequencyType: item.frequencyType || 'DAILY',
-        remindTime: item.remindTime || '08:00',
+        remindTime: item.remindTime || config.fixedTime || '08:00',
         titleTemplate: item.titleTemplate || '',
         contentTemplate: item.contentTemplate || '',
         pushScope: item.pushScope || 'SELF',
-        onceDate: '',
-        yearMonthDay: '',
-        weekDays: [],
-        monthDay: 1,
-        intervalValue: 60,
-        intervalHours: 1,
-        intervalUnit: 'minutes',
-        workDaysOnly: false,
-        targetUserIds: []
+        onceDate: onceDate,
+        yearMonthDay: yearMonthDay,
+        weekDays: weekDays,
+        monthDay: monthDay,
+        intervalValue: intervalValue,
+        intervalHours: intervalHours,
+        intervalUnit: intervalUnit,
+        workDaysOnly: config.workDaysOnly || false,
+        targetUserIds: targetUsers
       }
-      this.selectedUsers = item.targetUserIds || []
+      this.selectedUsers = targetUsers
       this.showEditModal = true
     },
     

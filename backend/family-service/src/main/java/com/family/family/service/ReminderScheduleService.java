@@ -456,15 +456,29 @@ public class ReminderScheduleService {
             
             switch (frequencyType) {
                 case "ONCE":
-                    // 一次性，不计算下次
-                    reminder.setStatus(0); // 停用一次性提醒
-                    nextTime = null;
+                    // 一次性提醒：使用配置中的日期和时间，或当前时间+1分钟
+                    String onceDate = (String) config.get("date");
+                    String onceTime = (String) config.get("time");
+                    if (onceDate != null && onceTime != null) {
+                        nextTime = LocalDateTime.parse(onceDate + "T" + onceTime);
+                    } else {
+                        // 默认1分钟后执行
+                        nextTime = LocalDateTime.now().plusMinutes(1);
+                    }
                     break;
                     
                 case "DAILY":
                     // 每天
                     String fixedTime = (String) config.get("fixedTime");
-                    nextTime = LocalDateTime.of(LocalDate.now().plusDays(1), LocalTime.parse(fixedTime));
+                    LocalTime dailyTime = LocalTime.parse(fixedTime);
+                    LocalDateTime todayWithTime = LocalDateTime.of(LocalDate.now(), dailyTime);
+                    
+                    // 如果今天的时间还没到，设为今天；否则设为明天
+                    if (todayWithTime.isAfter(LocalDateTime.now())) {
+                        nextTime = todayWithTime;
+                    } else {
+                        nextTime = todayWithTime.plusDays(1);
+                    }
                     break;
                     
                 case "HOURLY":

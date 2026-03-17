@@ -61,6 +61,9 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
         return this.remove(wrapper);
     }
     
+    @Autowired
+    private ReminderScheduleService reminderScheduleService;
+    
     /**
      * 切换状态
      */
@@ -71,7 +74,21 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
         
         Reminder reminder = this.getOne(wrapper);
         if (reminder != null) {
-            reminder.setStatus(reminder.getStatus() == 1 ? 0 : 1);
+            Integer newStatus = reminder.getStatus() == 1 ? 0 : 1;
+            reminder.setStatus(newStatus);
+            
+            // 如果启用提醒，重新计算下次执行时间
+            if (newStatus == 1) {
+                // 对于一次性提醒，如果已经执行过，需要重新设置时间
+                if ("ONCE".equals(reminder.getFrequencyType()) && reminder.getLastExecuteTime() != null) {
+                    // 一次性提醒已执行过，不应再启用，但用户要求启用，设为当前时间
+                    reminder.setNextExecuteTime(LocalDateTime.now().plusMinutes(1));
+                } else {
+                    // 重新计算下次执行时间
+                    reminderScheduleService.calculateNextExecuteTime(reminder);
+                }
+            }
+            
             return this.updateById(reminder);
         }
         return false;
