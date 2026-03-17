@@ -60,13 +60,7 @@
         "enablePopGesture": false
       }
     },
-    {
-      "path": "pages/reminder/add",
-      "style": {
-        "navigationBarTitleText": "添加提醒",
-        "navigationStyle": "custom"
-      }
-    },
+
     {
       "path": "pages/reminder/detail",
       "style": {
@@ -129,13 +123,6 @@
           }
         },
         {
-          "path": "drag-sort",
-          "style": {
-            "navigationBarTitleText": "调整优先级",
-            "navigationStyle": "custom"
-          }
-        },
-        {
           "path": "reminder",
           "style": {
             "navigationBarTitleText": "提醒设置",
@@ -146,83 +133,6 @@
           "path": "calendar",
           "style": {
             "navigationBarTitleText": "任务日历",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "gantt",
-          "style": {
-            "navigationBarTitleText": "任务甘特图",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "board",
-          "style": {
-            "navigationBarTitleText": "任务看板",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "timeline",
-          "style": {
-            "navigationBarTitleText": "任务时间线",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "dependency",
-          "style": {
-            "navigationBarTitleText": "任务依赖图",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "heatmap",
-          "style": {
-            "navigationBarTitleText": "任务热力图",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "quickview",
-          "style": {
-            "navigationBarTitleText": "任务速览",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "voice",
-          "style": {
-            "navigationBarTitleText": "语音创建",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "camera",
-          "style": {
-            "navigationBarTitleText": "拍照创建",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "location",
-          "style": {
-            "navigationBarTitleText": "地理位置",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "weather",
-          "style": {
-            "navigationBarTitleText": "天气关联",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "signature",
-          "style": {
-            "navigationBarTitleText": "电子签名",
             "navigationStyle": "custom"
           }
         }

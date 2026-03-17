@@ -90,7 +90,7 @@
         <view class="section-header">
           <text class="section-icon">🕐</text>
           <text class="section-title">逐小时预报</text>
-          <text class="section-subtitle">未来24小时</text>
+          <text class="section-subtitle">24小时</text>
         </view>
         
         <scroll-view 

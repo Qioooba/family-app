@@ -280,7 +280,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, getCurrentInstance } from 'vue'
+import { request } from '../../utils/request.js'
 
 // 数据
 const loading = ref(false)
@@ -450,7 +451,7 @@ const createWish = async () => {
     console.log('发送数据:', data)
     
     // 调用API
-    await uni.$request.post('/api/wish/create', data)
+    await request.post('/api/wish/create', data)
     
     uni.hideLoading()
     uni.showToast({ title: '许愿成功', icon: 'success' })
@@ -466,7 +467,7 @@ const createWish = async () => {
 // 认领心愿
 const claimWish = async (wish) => {
   try {
-    await uni.$request.post(`/api/wish/claim/${wish.id}`)
+    await request.post(`/api/wish/claim/${wish.id}`)
     uni.showToast({ title: '认领成功', icon: 'success' })
     loadWishes()
   } catch (e) {
@@ -477,7 +478,7 @@ const claimWish = async (wish) => {
 // 完成心愿
 const completeWish = async (wish) => {
   try {
-    await uni.$request.post(`/api/wish/complete/${wish.id}`)
+    await request.post(`/api/wish/complete/${wish.id}`)
     uni.showToast({ title: '太棒了！', icon: 'success' })
     loadWishes()
   } catch (e) {
@@ -493,7 +494,7 @@ const deleteWish = (wish) => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          await uni.$request.delete(`/api/wish/${wish.id}`)
+          await request.delete(`/api/wish/${wish.id}`)
           uni.showToast({ title: '删除成功', icon: 'success' })
           loadWishes()
         } catch (e) {
@@ -512,12 +513,12 @@ const loadWishes = async () => {
   try {
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     // 构建URL，根据当前Tab传入status参数
-    let url = `https://qioba.cn:8443/api/wish/list?familyId=${familyId}`
+    let url = `/api/wish/list?familyId=${familyId}`
     if (currentTab.value !== null) {
       url += `&status=${currentTab.value}`
     }
     
-    const data = await uni.$request.get(url)
+    const data = await request.get(url)
     wishes.value = data || []
     console.log('心愿列表:', wishes.value)
   } catch (e) {

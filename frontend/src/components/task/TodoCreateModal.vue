@@ -627,20 +627,22 @@ const handleConfirm = () => {
 
 .assignee-options {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 16rpx;
   
   .assignee-option {
     display: flex;
     align-items: center;
-    gap: 12rpx;
-    padding: 16rpx 24rpx;
+    gap: 16rpx;
+    padding: 20rpx 24rpx;
     background: #f7fafc;
-    border-radius: 40rpx;
+    border-radius: 16rpx;
     transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
     
     &:active {
-      transform: scale(0.98);
+      background: #edf2f7;
     }
     
     &.active {
@@ -652,15 +654,16 @@ const handleConfirm = () => {
     }
     
     .assignee-avatar {
-      width: 44rpx;
-      height: 44rpx;
+      width: 48rpx;
+      height: 48rpx;
       border-radius: 50%;
     }
     
     .assignee-text {
-      font-size: 26rpx;
+      font-size: 28rpx;
       color: #4a5568;
       font-weight: 500;
+      flex: 1;
     }
   }
 }

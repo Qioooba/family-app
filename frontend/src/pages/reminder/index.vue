@@ -3,7 +3,7 @@
     <!-- 顶部导航 - Tab页面不需要返回按钮 -->
     <view class="nav-bar">
       <text class="title">提醒管理</text>
-      <view class="right-btn" @click="goAdd">
+      <view class="right-btn" style="visibility: hidden;">
         <text class="icon">+</text>
       </view>
     </view>
@@ -36,13 +36,9 @@
         @click="goDetail(item)"
         @longpress="showDeleteMenu(item)"
       >
-        <!-- 删除按钮 -->
-        <view class="delete-icon" @click.stop="deleteReminder(item)">
-          <text>🗑️</text>
-        </view>
         <view class="card-left">
           <view class="type-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
-            <text>⏰</text>
+            <text>✨</text>
           </view>
           <view class="status-dot" v-if="item.status === 1"></view>
         </view>
@@ -65,12 +61,17 @@
           </view>
         </view>
         
-        <view class="card-right" @click.stop="toggleStatus(item)">
-          <switch 
-            :checked="item.status === 1" 
-            color="#667eea"
-            @change.stop="onSwitchChange($event, item)"
-          />
+        <view class="card-right">
+          <view class="right-actions">
+            <switch 
+              :checked="item.status === 1" 
+              color="#667eea"
+              @change.stop="onSwitchChange($event, item)"
+            />
+            <view class="delete-btn" @click.stop="deleteReminder(item)">
+              <text>删除</text>
+            </view>
+          </view>
         </view>
       </view>
       
@@ -214,13 +215,22 @@
                   :key="scope.value"
                   class="radio-item"
                   :class="{ active: editForm.pushScope === scope.value }"
-                  @click="editForm.pushScope = scope.value"
+                  @click="selectPushScope(scope.value)"
                 >
                   <view class="radio-circle">
                     <view v-if="editForm.pushScope === scope.value" class="radio-dot"></view>
                   </view>
                   <text>{{ scope.label }}</text>
                 </view>
+              </view>
+            </view>
+            
+            <!-- 已选择的用户显示 -->
+            <view class="form-item" v-if="editForm.pushScope === 'SPECIFIED' && editForm.targetUserIds.length > 0">
+              <text class="form-label">已选择用户</text>
+              <view class="selected-users">
+                <text class="selected-count">{{ editForm.targetUserIds.length }} 人</text>
+                <text class="change-btn" @click="openUserPicker">修改</text>
               </view>
             </view>
           </view>
@@ -245,14 +255,14 @@
         <scroll-view class="picker-body" scroll-y>
           <view 
             v-for="user in targetUsers" 
-            :key="user.id"
+            :key="user.userId"
             class="user-item"
-            :class="{ selected: selectedUsers.includes(user.id) }"
-            @click="toggleUserSelection(user.id)"
+            :class="{ selected: selectedUsers.includes(user.userId) }"
+            @click="toggleUserSelection(user.userId)"
           >
-            <image class="user-avatar" :src="user.avatar || '/static/default-avatar.png'" mode="aspectFill" />
-            <text class="user-name">{{ user.nickname || user.username }}</text>
-            <view v-if="selectedUsers.includes(user.id)" class="check-icon">✓</view>
+            <image class="user-avatar" :src="getAvatarUrl(user.avatar)" mode="aspectFill" />
+            <text class="user-name">{{ user.nickname || user.username || '用户' }}</text>
+            <view v-if="selectedUsers.includes(user.userId)" class="check-icon">✓</view>
           </view>
         </scroll-view>
       </view>
@@ -272,6 +282,10 @@ export default {
       
       // 弹窗显示状态
       showEditModal: false,
+      showUserPicker: false,
+      
+      // 用户选择
+      selectedUsers: [],
       
       // 是否为新建模式
       isNew: true,
@@ -312,7 +326,6 @@ export default {
       ],
       scopeOptions: [
         { value: 'SELF', label: '仅自己' },
-        { value: 'ALL', label: '全部用户' },
         { value: 'SPECIFIED', label: '指定用户' }
       ],
       weekDays: [
@@ -357,6 +370,11 @@ export default {
         }
       }, 300)
     }
+    
+    // 监听首页添加提醒事件
+    uni.$on('openAddReminder', () => {
+      this.goAdd()
+    })
   },
   onShow() {
     this.loadReminders()
@@ -369,6 +387,61 @@ export default {
     })
   },
   methods: {
+    // 选择推送范围
+    selectPushScope(value) {
+      this.editForm.pushScope = value
+      if (value === 'SPECIFIED') {
+        this.openUserPicker()
+      }
+    },
+    
+    // 打开用户选择弹窗
+    async openUserPicker() {
+      this.showUserPicker = true
+      // 加载用户列表 - 使用和待办一样的接口
+      try {
+        const familyId = uni.getStorageSync('currentFamilyId') || 1
+        const res = await this.$request.get(`/api/family/${familyId}/members`)
+        
+        // 处理响应数据
+        let members = []
+        if (res && res.data && Array.isArray(res.data)) {
+          members = res.data
+        } else if (Array.isArray(res)) {
+          members = res
+        } else if (res && res.list && Array.isArray(res.list)) {
+          members = res.list
+        }
+        
+        // 排除当前用户自己
+        const currentUserId = uni.getStorageSync('userId')
+        this.targetUsers = members.filter(m => m.userId != currentUserId)
+      } catch (e) {
+        console.error('加载用户列表失败', e)
+      }
+    },
+    
+    // 关闭用户选择弹窗
+    closeUserPicker() {
+      this.showUserPicker = false
+    },
+    
+    // 确认用户选择
+    confirmUserPicker() {
+      this.editForm.targetUserIds = [...this.selectedUsers]
+      this.closeUserPicker()
+    },
+    
+    // 切换用户选择
+    toggleUserSelection(userId) {
+      const index = this.selectedUsers.indexOf(userId)
+      if (index > -1) {
+        this.selectedUsers.splice(index, 1)
+      } else {
+        this.selectedUsers.push(userId)
+      }
+    },
+    
     // 加载提醒列表
     async loadReminders() {
       if (this.loading) return
@@ -396,12 +469,15 @@ export default {
       const newStatus = originalStatus === 1 ? 0 : 1
       
       try {
-        await this.$request.post('/api/reminder/toggle', { id: item.id })
-        item.status = newStatus
+        const res = await this.$request.post('/api/reminder/toggle', { id: item.id })
+        // 从响应中获取新状态，如果没有则取反
+        item.status = res?.status !== undefined ? res.status : newStatus
         uni.showToast({ 
-          title: newStatus === 1 ? '已启用' : '已停用', 
+          title: item.status === 1 ? '已启用' : '已停用', 
           icon: 'none' 
         })
+        // 强制刷新视图
+        this.$forceUpdate()
       } catch (e) {
         console.error('切换状态失败', e)
         uni.showToast({ title: '操作失败', icon: 'none' })
@@ -462,7 +538,7 @@ export default {
         EXPIRE: '📦',
         BIRTHDAY: '🎂',
         FINANCE: '💰',
-        SYSTEM: '⏰'
+        SYSTEM: '✨'
       }
       return map[type] || '⏰'
     },
@@ -537,7 +613,7 @@ export default {
         const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
         if (isToday) return `今天 ${timeStr}`
         if (isTomorrow) return `明天 ${timeStr}`
-        return `${month}/${day} ${timeStr}`
+        return `${month}月${day}日 ${timeStr}`
       }
       // 处理字符串格式
       const date = new Date(time.replace(/-/g, '/'))
@@ -549,7 +625,7 @@ export default {
       const timeStr = `${hours}:${minutes}`
       if (isToday) return `今天 ${timeStr}`
       if (isTomorrow) return `明天 ${timeStr}`
-      return `${date.getMonth() + 1}/${date.getDate()} ${timeStr}`
+      return `${date.getMonth() + 1}月${date.getDate()}日 ${timeStr}`
     },
     
     // 显示标签
@@ -579,6 +655,7 @@ export default {
     goAdd() {
       this.isNew = true
       this.resetForm()
+      this.selectedUsers = []
       this.showEditModal = true
     },
     goDetail(item) {
@@ -603,6 +680,7 @@ export default {
         workDaysOnly: false,
         targetUserIds: []
       }
+      this.selectedUsers = item.targetUserIds || []
       this.showEditModal = true
     },
     
@@ -610,6 +688,14 @@ export default {
     getScopeText(scope) {
       const map = { 'SELF': '仅自己', 'ALL': '全部用户', 'SPECIFIED': '指定用户' }
       return map[scope] || '仅自己'
+    },
+    
+    // 获取头像URL
+    getAvatarUrl(avatar) {
+      if (!avatar) return '/static/avatar-default.png'
+      if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar
+      if (avatar.startsWith('/api/avatars')) return 'https://qioba.cn:8443' + avatar
+      return avatar
     },
     
     // 关闭弹窗
@@ -830,23 +916,24 @@ export default {
   position: relative;
   
   // 删除按钮
-  .delete-icon {
-    position: absolute;
-    top: 12rpx;
-    right: 12rpx;
-    width: 48rpx;
-    height: 48rpx;
+  .delete-btn {
+    padding: 10rpx 24rpx;
+    background: #ff4d4f;
+    border-radius: 24rpx;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28rpx;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-    z-index: 10;
+    transition: all 0.2s ease;
     
     &:active {
-      opacity: 1;
-      transform: scale(1.1);
+      transform: scale(0.95);
+      opacity: 0.8;
+    }
+    
+    text {
+      color: #fff;
+      font-size: 24rpx;
+      font-weight: 500;
     }
   }
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
@@ -959,6 +1046,12 @@ export default {
 
 .card-right {
   margin-left: 16rpx;
+  
+  .right-actions {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+  }
 }
 
 // 空状态
@@ -1023,26 +1116,42 @@ export default {
   font-size: 24rpx;
 }
 
-// 弹窗样式
+// 弹窗样式 - 居中显示
 .modal-mask {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1000;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
 }
 
 .modal-content {
   width: 100%;
-  max-height: 90vh;
+  max-width: 680rpx;
+  max-height: 85vh;
   background: #fff;
-  border-radius: 32rpx 32rpx 0 0;
+  border-radius: 24rpx;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  animation: modalShow 0.3s ease;
+}
+
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-header {
@@ -1316,5 +1425,105 @@ export default {
   padding: 100rpx;
   color: #999;
   font-size: 28rpx;
+}
+
+// 用户选择弹窗样式
+.picker-content {
+  width: 100%;
+  max-height: 70vh;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  
+  .cancel, .confirm {
+    font-size: 30rpx;
+    color: #667eea;
+    padding: 10rpx 20rpx;
+  }
+  
+  .title {
+    font-size: 32rpx;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+.picker-body {
+  flex: 1;
+  padding: 20rpx 30rpx;
+  max-height: 50vh;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  background: #f8f9fa;
+  
+  &.selected {
+    background: #e8f0ff;
+    border: 2rpx solid #667eea;
+  }
+  
+  .user-avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+    margin-right: 24rpx;
+    background: #e0e0e0;
+  }
+  
+  .user-name {
+    flex: 1;
+    font-size: 30rpx;
+    color: #333;
+  }
+  
+  .check-icon {
+    width: 48rpx;
+    height: 48rpx;
+    border-radius: 50%;
+    background: #667eea;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28rpx;
+  }
+}
+
+// 已选择用户显示
+.selected-users {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: #f0f7ff;
+  border-radius: 12rpx;
+  
+  .selected-count {
+    font-size: 28rpx;
+    color: #667eea;
+    font-weight: 500;
+  }
+  
+  .change-btn {
+    font-size: 26rpx;
+    color: #667eea;
+    padding: 8rpx 20rpx;
+    background: #fff;
+    border-radius: 8rpx;
+  }
 }
 </style>

@@ -102,8 +102,11 @@ public class ReminderScheduleService {
         }
     }
     
+    // 白名单：只允许这些用户接收提醒推送（调试期间限制）
+    private static final Set<Long> REMINDER_PUSH_WHITELIST = Set.of(7L); // 齐老大
+    
     /**
-     * 执行单个提醒 - 参考待办任务推送格式
+     * 执行单个提醒 - 参考待办任务推送格式，带小程序码
      */
     @Transactional(rollbackFor = Exception.class)
     public void executeReminder(Reminder reminder) {
@@ -134,6 +137,12 @@ public class ReminderScheduleService {
         
         // 4. 为每个用户推送（使用模板变量渲染）
         for (Long userId : targetUserIds) {
+            // 白名单检查 - 只允许齐老大接收推送
+            if (!REMINDER_PUSH_WHITELIST.contains(userId)) {
+                log.debug("用户{}不在提醒推送白名单中，跳过", userId);
+                continue;
+            }
+            
             try {
                 // 渲染模板变量
                 String title = renderTemplate(reminder.getTitleTemplate(), userId, reminder);
@@ -158,16 +167,14 @@ public class ReminderScheduleService {
                     desc.append("👥 全员推送\n");
                 }
                 
-                // 使用与待办任务一致的推送方式
-                WechatMessage msg = new WechatMessage();
-                msg.setType(MessageType.REMINDER);
-                msg.setTargetUserId(userId);
-                msg.setTitle("⏰ " + title);
-                msg.setDescription(desc.toString());
-                // 设置小程序跳转路径
-                msg.setUrl("/pages/reminder/index");
-                
-                wechatWorkService.sendMessageAsync(msg);
+                // 使用专门的提醒推送方法（带小程序码）
+                wechatWorkService.sendReminderNotification(
+                    userId, 
+                    title, 
+                    desc.toString(), 
+                    reminder.getReminderType(),
+                    "/pages/reminder/index"
+                );
                 
                 // 记录日志
                 reminderLogService.saveLog(reminder, userId, title, desc.toString(), "SUCCESS");
@@ -511,12 +518,17 @@ public class ReminderScheduleService {
             }
             
         } catch (Exception e) {
-            log.error("计算下次执行时间失败", e);
+            log.error("计算下次执行时间失败, reminderId={}, frequencyType={}", reminder.getId(), reminder.getFrequencyType(), e);
         }
         
-        // 更新数据库
-        reminder.setNextExecuteTime(nextTime);
-        reminderMapper.updateById(reminder);
+        // 更新数据库（只有成功计算出下次执行时间时才更新）
+        if (nextTime != null) {
+            reminder.setNextExecuteTime(nextTime);
+            reminderMapper.updateById(reminder);
+            log.info("提醒[{}]下次执行时间已更新: {}", reminder.getReminderName(), nextTime);
+        } else {
+            log.warn("无法计算提醒[{}]的下次执行时间", reminder.getReminderName());
+        }
     }
     
     /**
@@ -601,18 +613,19 @@ public class ReminderScheduleService {
      * 计算间隔时间
      */
     private LocalDateTime calculateIntervalTime(Map<String, Object> config) {
-        Integer intervalMinutes = (Integer) config.get("intervalMinutes");
-        Integer intervalHours = (Integer) config.get("intervalHours");
-        Integer intervalDays = (Integer) config.get("intervalDays");
+        // 使用 Number 类型避免 Long/Integer 转换问题
+        Number intervalMinutes = (Number) config.get("intervalMinutes");
+        Number intervalHours = (Number) config.get("intervalHours");
+        Number intervalDays = (Number) config.get("intervalDays");
         
         LocalDateTime now = LocalDateTime.now();
         
-        if (intervalMinutes != null && intervalMinutes > 0) {
-            return now.plusMinutes(intervalMinutes);
-        } else if (intervalHours != null && intervalHours > 0) {
-            return now.plusHours(intervalHours);
-        } else if (intervalDays != null && intervalDays > 0) {
-            return now.plusDays(intervalDays);
+        if (intervalMinutes != null && intervalMinutes.intValue() > 0) {
+            return now.plusMinutes(intervalMinutes.intValue());
+        } else if (intervalHours != null && intervalHours.intValue() > 0) {
+            return now.plusHours(intervalHours.intValue());
+        } else if (intervalDays != null && intervalDays.intValue() > 0) {
+            return now.plusDays(intervalDays.intValue());
         }
         
         return now.plusDays(1); // 默认1天

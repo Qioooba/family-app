@@ -482,6 +482,7 @@ defineExpose({
   padding: 0 24rpx;
   background: #f8f9fa;
   border-radius: 12rpx;
+  box-sizing: border-box;
 }
 
 .picker-value {
@@ -592,20 +593,17 @@ defineExpose({
 
 .member-list {
   max-height: 400rpx;
-  padding: 0 32rpx;
 }
 
 .member-item {
   display: flex;
   align-items: center;
-  padding: 24rpx 0;
+  padding: 24rpx 32rpx;
   border-bottom: 1rpx solid #f5f5f5;
 }
 
 .member-item.active {
   background: #f0f4ff;
-  margin: 0 -32rpx;
-  padding: 24rpx 32rpx;
 }
 
 .member-avatar {

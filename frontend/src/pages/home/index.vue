@@ -133,9 +133,9 @@
     <view class="section-card reminder-card-small animate-in">
       <view class="section-header">
         <view class="title-wrapper">
-          <text class="section-icon">⏰</text>
+          <text class="section-icon">✨</text>
           <text class="section-title">今日提醒</text>
-          <view v-if="todayReminders.length > 0" class="reminder-badge">{{ todayReminders.length }}</view>
+
         </view>
         <view class="header-actions">
           <view class="add-btn" @click="goAddReminder">
@@ -175,7 +175,7 @@
         
         <view v-else class="empty-state" @click="goAddReminder">
           <view class="empty-icon-wrapper">
-            <text class="empty-icon">⏰</text>
+            <text class="empty-icon">✨</text>
           </view>
           <text class="empty-text">暂无提醒</text>
           <text class="empty-subtext">点击添加提醒</text>
@@ -417,6 +417,41 @@
               </picker>
             </view>
             
+            <!-- 间隔：每N分钟/小时/天 -->
+            <view class="form-item" v-if="reminderForm.frequencyType === 'INTERVAL'">
+              <text class="form-label">间隔时间</text>
+              <view class="interval-input-group">
+                <text class="interval-label">每</text>
+                <input 
+                  class="interval-input" 
+                  type="number" 
+                  v-model="reminderForm.intervalValue"
+                  placeholder="60"
+                />
+                <picker :range="['分钟', '小时', '天']" :value="['minutes', 'hours', 'days'].indexOf(reminderForm.intervalUnit)" @change="onIntervalUnitChange">
+                  <view class="interval-unit-picker">
+                    <text>{{ intervalUnitText }}</text>
+                    <text class="picker-arrow">›</text>
+                  </view>
+                </picker>
+              </view>
+            </view>
+            
+            <!-- 每小时：间隔几小时 -->
+            <view class="form-item" v-if="reminderForm.frequencyType === 'HOURLY'">
+              <text class="form-label">间隔小时</text>
+              <view class="interval-input-group">
+                <text class="interval-label">每</text>
+                <input 
+                  class="interval-input" 
+                  type="number" 
+                  v-model="reminderForm.intervalHours"
+                  placeholder="1"
+                />
+                <text class="interval-label">小时</text>
+              </view>
+            </view>
+            
             <!-- 仅工作日 -->
             <view class="form-item switch-item">
               <text class="form-label">仅工作日推送</text>
@@ -436,7 +471,7 @@
                   :key="scope.value"
                   class="radio-item"
                   :class="{ active: reminderForm.pushScope === scope.value }"
-                  @click="reminderForm.pushScope = scope.value"
+                  @click="selectPushScope(scope.value)"
                 >
                   <view class="radio-circle">
                     <view v-if="reminderForm.pushScope === scope.value" class="radio-dot"></view>
@@ -444,6 +479,17 @@
                   <text>{{ scope.label }}</text>
                 </view>
               </view>
+            </view>
+            
+            <!-- 已选择的用户显示 -->
+            <view class="form-item" v-if="reminderForm.pushScope === 'SPECIFIED'">
+              <text class="form-label">选择用户 ({{ targetUsers.length }}人)</text>
+              <view v-if="targetUsers.length === 0" class="loading-text" @click="openUserPicker">点击选择用户</view>
+              <view v-else class="selected-users" @click="openUserPicker">
+                <text class="selected-count">{{ reminderForm.targetUserIds.length }} 人</text>
+                <text class="change-btn">修改</text>
+              </view>
+              <button style="margin-top: 20rpx; padding: 20rpx; background: #ff6b6b; color: white;" @click="testOpenPicker">测试打开用户选择</button>
             </view>
           </view>
         </scroll-view>
@@ -453,6 +499,35 @@
           <button class="cancel-btn" @click="closeReminderModal">取消</button>
           <button class="save-btn" @click="saveReminder">保存</button>
         </view>
+      </view>
+    </view>
+    
+    <!-- 用户选择弹窗 -->
+    <view v-if="showUserPicker" class="user-picker-mask" @click="closeUserPicker">
+      <view class="user-picker-content" @click.stop>
+        <view class="user-picker-header">
+          <text class="cancel" @click="closeUserPicker">取消</text>
+          <text class="title">选择指定用户 ({{ targetUsers.length }})</text>
+          <text class="confirm" @click="confirmUserPicker">确定</text>
+        </view>
+        <scroll-view class="user-picker-body" scroll-y>
+          <view v-if="targetUsers.length === 0" style="text-align: center; padding: 100rpx; color: #999;">
+            暂无用户数据
+          </view>
+          <block v-else>
+            <view 
+              v-for="(user, index) in targetUsers" 
+              :key="index"
+              class="user-item"
+              :class="{ selected: selectedUsers.includes(user.userId) }"
+              @click="toggleUserSelection(user.userId)"
+            >
+              <image class="user-avatar" :src="getAvatarUrl(user.avatar)" mode="aspectFill" />
+              <text class="user-name">{{ user.nickname || '用户' }}</text>
+              <view v-if="selectedUsers.includes(user.userId)" class="check-icon">✓</view>
+            </view>
+          </block>
+        </scroll-view>
       </view>
     </view>
   </view>
@@ -615,24 +690,38 @@ const loadTodayReminders = async () => {
           'EXPIRE': { icon: '📦', bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
           'BIRTHDAY': { icon: '🎂', bg: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)' },
           'FINANCE': { icon: '💰', bg: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)' },
-          'SYSTEM': { icon: '⏰', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
+          'SYSTEM': { icon: '✨', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }
         }
         const iconConfig = iconMap[reminder.reminderType] || iconMap['SYSTEM']
+        // 优先使用下次执行时间，特别是间隔类型
+        let displayTime = reminder.nextExecuteTime || reminder.remindTime || ''
+        // 如果是数组格式，转换为字符串
+        if (Array.isArray(displayTime)) {
+          const [year, month, day, hour, minute] = displayTime
+          displayTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        }
         return {
           ...reminder,
           icon: iconConfig.icon,
           iconBg: iconConfig.bg,
           title: reminder.titleTemplate || reminder.reminderName || '提醒',
-          time: reminder.remindTime || reminder.nextExecuteTime || ''
+          time: displayTime
         }
       })
+    
+    // 如果没有提醒内容，默认折叠起来
+    if (todayReminders.value.length === 0) {
+      isReminderCollapsed.value = true
+    }
   } catch (e) {
     console.error('加载今日提醒失败', e)
     todayReminders.value = []
+    // 加载失败也默认折叠
+    isReminderCollapsed.value = true
   }
 }
 
-// 跳转到添加提醒 - 改为打开弹窗
+// 跳转到添加提醒 - 直接在首页打开弹窗
 const goAddReminder = () => {
   isNewReminder.value = true
   resetReminderForm()
@@ -641,7 +730,7 @@ const goAddReminder = () => {
 
 // 跳转到提醒列表
 const goReminderList = () => {
-  uni.navigateTo({
+  uni.switchTab({
     url: '/pages/reminder/index'
   })
 }
@@ -714,6 +803,11 @@ const onOnceDateChange = (e) => {
 
 const onMonthDayChange = (e) => {
   reminderForm.value.monthDay = e.detail.value + 1
+}
+
+const onIntervalUnitChange = (e) => {
+  const units = ['minutes', 'hours', 'days']
+  reminderForm.value.intervalUnit = units[e.detail.value]
 }
 
 const toggleWeekDay = (value) => {
@@ -795,7 +889,9 @@ const saveReminder = async () => {
       uni.showToast({ title: '保存成功' })
     }
     closeReminderModal()
-    loadTodayReminders()
+    // 先展开提醒列表，再加载数据
+    isReminderCollapsed.value = false
+    await loadTodayReminders()
   } catch (e) {
     console.error('保存失败', e)
     uni.showToast({ title: '保存失败', icon: 'none' })
@@ -882,6 +978,85 @@ const reminderForm = ref({
   contentTemplate: ''
 })
 
+// 用户选择相关
+const showUserPicker = ref(false)
+const targetUsers = ref([])
+const selectedUsers = ref([])
+
+// 选择推送范围
+const selectPushScope = (value) => {
+  reminderForm.value.pushScope = value
+  if (value === 'SPECIFIED') {
+    openUserPicker()
+  }
+}
+
+// 测试打开弹窗
+const testOpenPicker = () => {
+  console.log('测试按钮点击')
+  showUserPicker.value = true
+  // 模拟2个用户数据
+  targetUsers.value = [
+    { userId: 7, nickname: '齐老大', avatar: null },
+    { userId: 16, nickname: '陶陶', avatar: '/api/avatars/test.jpg' }
+  ]
+}
+
+// 打开用户选择弹窗
+const openUserPicker = async () => {
+  showUserPicker.value = true
+  try {
+    // 使用和待办一样的接口：/api/family/{familyId}/members
+    const familyId = uni.getStorageSync('currentFamilyId') || 1
+    const res = await request.get(`/api/family/${familyId}/members`)
+    console.log('家庭成员接口返回:', res)
+    
+    // 处理响应数据 - 可能是 res.data 或直接是数组
+    let members = []
+    if (res && res.data && Array.isArray(res.data)) {
+      members = res.data
+    } else if (Array.isArray(res)) {
+      members = res
+    } else if (res && res.list && Array.isArray(res.list)) {
+      members = res.list
+    }
+    
+    console.log('解析的成员列表:', members)
+    
+    // 排除当前用户自己
+    const currentUserId = uni.getStorageSync('userId')
+    targetUsers.value = members.filter(m => m.userId != currentUserId)
+    console.log('过滤后的用户列表:', targetUsers.value)
+    
+    // 初始化已选择状态
+    selectedUsers.value = [...reminderForm.value.targetUserIds]
+  } catch (e) {
+    console.error('加载用户列表失败', e)
+    uni.showToast({ title: '加载失败', icon: 'none' })
+  }
+}
+
+// 关闭用户选择弹窗
+const closeUserPicker = () => {
+  showUserPicker.value = false
+}
+
+// 确认用户选择
+const confirmUserPicker = () => {
+  reminderForm.value.targetUserIds = [...selectedUsers.value]
+  closeUserPicker()
+}
+
+// 切换用户选择
+const toggleUserSelection = (userId) => {
+  const index = selectedUsers.value.indexOf(userId)
+  if (index > -1) {
+    selectedUsers.value.splice(index, 1)
+  } else {
+    selectedUsers.value.push(userId)
+  }
+}
+
 // 选项配置
 const freqOptions = [
   { value: 'ONCE', label: '一次性' },
@@ -895,7 +1070,6 @@ const freqOptions = [
 
 const scopeOptions = [
   { value: 'SELF', label: '仅自己' },
-  { value: 'ALL', label: '全部用户' },
   { value: 'SPECIFIED', label: '指定用户' }
 ]
 
@@ -914,6 +1088,16 @@ const dayOptions = Array.from({ length: 31 }, (_, i) => `${i + 1}日`)
 // 计算属性：频率索引
 const freqIndex = computed(() => {
   return freqOptions.findIndex(f => f.value === reminderForm.value.frequencyType)
+})
+
+// 间隔单位显示文本
+const intervalUnitText = computed(() => {
+  const unitMap = {
+    'minutes': '分钟',
+    'hours': '小时',
+    'days': '天'
+  }
+  return unitMap[reminderForm.value.intervalUnit] || '分钟'
 })
 
 // 家庭成员列表（用于显示指派人名称）
@@ -1318,7 +1502,13 @@ const requestLocationAuth = () => {
 }
 
 const navigateTo = (path) => {
-  uni.navigateTo({ url: path })
+  // tabBar 页面需要用 switchTab
+  const tabBarPages = ['/pages/reminder/index', '/pages/task/index', '/pages/home/index', '/pages/family/index', '/pages/profile/index']
+  if (tabBarPages.includes(path)) {
+    uni.switchTab({ url: path })
+  } else {
+    uni.navigateTo({ url: path })
+  }
 }
 
 const toggleTask = async (task) => {
@@ -1970,8 +2160,6 @@ const getAnniversaryIcon = (type) => {
       .section-icon {
         font-size: 36rpx;
         margin-right: 12rpx;
-        display: inline-flex;
-        align-items: center;
         line-height: 1;
       }
       
@@ -1980,9 +2168,8 @@ const getAnniversaryIcon = (type) => {
         font-weight: 600;
         color: #2d3748;
         letter-spacing: -0.3rpx;
-        display: inline-flex;
-        align-items: center;
         line-height: 1;
+        margin-top: 20rpx;
       }
     }
     
@@ -2050,19 +2237,18 @@ const getAnniversaryIcon = (type) => {
       justify-content: center;
       width: 56rpx;
       height: 56rpx;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: rgba(107, 141, 214, 0.08);
       border-radius: 50%;
-      box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.4);
       transition: all 0.2s ease;
       
       &:active {
         transform: scale(0.9);
-        box-shadow: 0 2rpx 8rpx rgba(102, 126, 234, 0.3);
+        background: rgba(107, 141, 214, 0.15);
       }
       
       text {
         font-size: 36rpx;
-        color: #fff;
+        color: #6B8DD6;
         font-weight: 400;
         line-height: 1;
       }
@@ -2499,22 +2685,6 @@ const getAnniversaryIcon = (type) => {
   // 去掉黄色背景和边框，和今日待办保持一致
 }
 
-.reminder-badge {
-  background: #07c160;
-  color: #fff;
-  font-size: 22rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 20rpx;
-  margin-left: 12rpx;
-  min-width: 36rpx;
-  text-align: center;
-  line-height: 1.2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-}
-
 .reminder-list {
   padding: 0 20rpx;
 }
@@ -2563,6 +2733,41 @@ const getAnniversaryIcon = (type) => {
   color: #999;
 }
 
+.reminder-tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  background: #f0f4ff;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.reminder-tag.daily {
+  background: #e8f5e9;
+  color: #07c160;
+}
+
+.reminder-tag.weekly {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
+.reminder-tag.monthly {
+  background: #fce4ec;
+  color: #e91e63;
+}
+
+.reminder-tag.interval,
+.reminder-tag.hourly {
+  background: #f3e5f5;
+  color: #9c27b0;
+}
+
+.reminder-tag.once {
+  background: #e3f2fd;
+  color: #2196f3;
+}
+
 .reminder-status {
   font-size: 24rpx;
   padding: 8rpx 16rpx;
@@ -2583,19 +2788,35 @@ const getAnniversaryIcon = (type) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1000;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
 }
 
 .modal-content {
   width: 100%;
-  max-height: 90vh;
+  max-width: 680rpx;
+  max-height: 85vh;
   background: #fff;
-  border-radius: 32rpx 32rpx 0 0;
+  border-radius: 24rpx;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+  animation: modalShow 0.3s ease;
+}
+
+@keyframes modalShow {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-header {
@@ -2661,6 +2882,126 @@ const getAnniversaryIcon = (type) => {
   color: #fff;
 }
 
+// 已选择用户显示
+.selected-users {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  background: #f0f7ff;
+  border-radius: 12rpx;
+}
+
+.selected-users .selected-count {
+  font-size: 28rpx;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.selected-users .change-btn {
+  font-size: 26rpx;
+  color: #667eea;
+  padding: 8rpx 20rpx;
+  background: #fff;
+  border-radius: 8rpx;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #999;
+  padding: 20rpx;
+  text-align: center;
+}
+
+// 用户选择弹窗样式
+.user-picker-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.user-picker-content {
+  width: 100%;
+  max-width: 600rpx;
+  max-height: 70vh;
+  background: #fff;
+  border-radius: 24rpx;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.3);
+}
+
+.user-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.user-picker-header .cancel,
+.user-picker-header .confirm {
+  font-size: 30rpx;
+  color: #667eea;
+  padding: 10rpx 20rpx;
+}
+
+.user-picker-header .title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-picker-body {
+  flex: 1;
+  max-height: 50vh;
+}
+
+.user-picker-body .user-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 30rpx;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.user-picker-body .user-item.selected {
+  background: #f0f4ff;
+}
+
+.user-picker-body .user-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-right: 24rpx;
+  background: #e0e0e0;
+}
+
+.user-picker-body .user-name {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333;
+}
+
+.user-picker-body .check-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #667eea;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+}
+
 /* 表单样式 */
 .form-section {
   padding: 0 30rpx 30rpx;
@@ -2721,6 +3062,46 @@ const getAnniversaryIcon = (type) => {
 .form-item .picker .picker-arrow {
   color: #999;
   font-size: 32rpx;
+}
+
+/* 间隔输入组 */
+.interval-input-group {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 0 20rpx;
+  background: #f5f6fa;
+  border-radius: 12rpx;
+  height: 88rpx;
+}
+
+.interval-input-group .interval-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.interval-input-group .interval-input {
+  flex: 1;
+  height: 60rpx;
+  background: transparent;
+  border: none;
+  font-size: 32rpx;
+  color: #333;
+  text-align: center;
+}
+
+.interval-input-group .interval-unit-picker {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 16rpx;
+  background: #fff;
+  border-radius: 8rpx;
+}
+
+.interval-input-group .interval-unit-picker text {
+  font-size: 28rpx;
+  color: #667eea;
 }
 
 /* 星期选择器 */

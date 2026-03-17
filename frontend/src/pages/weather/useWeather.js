@@ -182,15 +182,10 @@ const loadHourlyForecast = async () => {
     )
     
     if (hourlyRes && hourlyRes.forecasts) {
-      const currentHour = new Date().getHours()
+      // 显示完整的24小时数据（包括过去和未来）
+      const fullForecasts = hourlyRes.forecasts.slice(0, 24)
       
-      // 过滤掉已经过去的小时，从当前时间开始
-      const filteredForecasts = hourlyRes.forecasts.filter(item => {
-        const itemHour = parseInt(item.hour.split(':')[0])
-        return itemHour >= currentHour
-      }).slice(0, 24)  // 只取24小时
-      
-      hourlyForecast.value = filteredForecasts.map(item => ({
+      hourlyForecast.value = fullForecasts.map(item => ({
         time: item.time,
         hour: item.hour,
         temperature: Math.round(item.temperature),

@@ -2,15 +2,19 @@ package com.family.family.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import com.family.family.entity.FamilyMember;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
+import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.mapper.UserMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.family.family.service.ReminderScheduleService;
 import com.family.family.service.ReminderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,9 @@ public class FamilyReminderController {
     
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private FamilyMemberMapper familyMemberMapper;
     
     /**
      * 获取今日提醒
@@ -252,7 +259,7 @@ public class FamilyReminderController {
     
     /**
      * 获取用户列表（用于指定用户推送）
-     * 返回简化后的用户信息：id, nickname, avatar
+     * 只返回当前家庭的成员，使用用户昵称
      */
     @GetMapping("/users")
     public Map<String, Object> getUserList(
@@ -261,35 +268,68 @@ public class FamilyReminderController {
         try {
             Long currentUserId = StpUtil.getLoginIdAsLong();
             
-            // 限制最大数量
-            int fetchLimit = Math.min(limit, 100);
+            // 获取当前用户所在的家庭ID
+            User currentUser = userMapper.selectById(currentUserId);
+            Long familyId = currentUser != null ? currentUser.getCurrentFamilyId() : null;
+            if (familyId == null) {
+                Map<String, Object> emptyResult = new HashMap<>();
+                emptyResult.put("list", List.of());
+                emptyResult.put("total", 0);
+                return success(emptyResult);
+            }
             
-            // 查询用户列表
-            List<User> users = userMapper.selectList(null);
+            // 查询家庭成员（包含自己，前端过滤）
+            List<FamilyMember> members = familyMemberMapper.selectList(
+                    new LambdaQueryWrapper<FamilyMember>()
+                            .eq(FamilyMember::getFamilyId, familyId)
+            );
             
-            // 过滤和转换
-            List<Map<String, Object>> userList = users.stream()
-                    .filter(user -> !user.getId().equals(currentUserId)) // 排除当前用户
-                    .filter(user -> {
-                        // 关键词过滤
-                        if (keyword == null || keyword.trim().isEmpty()) {
-                            return true;
+            // 组装成员信息，和 /api/family/{id}/members 保持一致
+            List<Map<String, Object>> userList = new ArrayList<>();
+            for (FamilyMember member : members) {
+                // 排除当前用户自己
+                if (member.getUserId().equals(currentUserId)) {
+                    continue;
+                }
+                
+                // 关键词过滤
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                    String searchKey = keyword.toLowerCase();
+                    String memberNickname = member.getNickname() != null ? member.getNickname().toLowerCase() : "";
+                    if (!memberNickname.contains(searchKey)) {
+                        // 获取用户昵称再判断
+                        User user = userMapper.selectById(member.getUserId());
+                        String userNickname = user != null && user.getNickname() != null ? user.getNickname().toLowerCase() : "";
+                        if (!userNickname.contains(searchKey)) {
+                            continue;
                         }
-                        String searchKey = keyword.toLowerCase();
-                        String nickname = user.getNickname() != null ? user.getNickname().toLowerCase() : "";
-                        String phone = user.getPhone() != null ? user.getPhone() : "";
-                        return nickname.contains(searchKey) || phone.contains(searchKey);
-                    })
-                    .limit(fetchLimit)
-                    .map(user -> {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("id", user.getId());
-                        map.put("nickname", user.getNickname());
-                        map.put("avatar", user.getAvatar());
-                        map.put("phone", maskPhone(user.getPhone()));
-                        return map;
-                    })
-                    .collect(Collectors.toList());
+                    }
+                }
+                
+                Map<String, Object> memberInfo = new HashMap<>();
+                memberInfo.put("id", member.getUserId());  // 使用 userId 作为 id
+                memberInfo.put("userId", member.getUserId());
+                
+                // 获取用户最新信息（头像、昵称等）
+                User user = userMapper.selectById(member.getUserId());
+                if (user != null) {
+                    // 优先使用 User 表的最新昵称
+                    String displayNickname = user.getNickname();
+                    if (displayNickname == null || displayNickname.trim().isEmpty()) {
+                        displayNickname = member.getNickname();
+                    }
+                    memberInfo.put("nickname", displayNickname);
+                    memberInfo.put("avatar", user.getAvatar());
+                } else {
+                    memberInfo.put("nickname", member.getNickname());
+                }
+                
+                userList.add(memberInfo);
+                
+                if (userList.size() >= limit) {
+                    break;
+                }
+            }
             
             Map<String, Object> result = new HashMap<>();
             result.put("list", userList);

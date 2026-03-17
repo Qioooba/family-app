@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>提醒详情</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-right: 16px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .header-text h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .header-text .time {
+            font-size: 14px;
+            color: #999;
+        }
+        
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .content {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .content p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 8px;
+        }
+        
+        .content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .qr-section {
+            text-align: center;
+            padding: 28px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            border-radius: 16px;
+        }
+        
+        .qr-section img {
+            width: 200px;
+            height: 200px;
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+            margin-bottom: 16px;
+        }
+        
+        .qr-tip {
+            font-size: 15px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .qr-subtip {
+            font-size: 13px;
+            color: #888;
+            margin-top: 8px;
+        }
+        
+        .open-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .open-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #fff;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="content">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getUrlParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+        
+        // 格式化时间
+        function formatTime() {
+            const now = new Date();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            return `${month}-${day} ${hours}:${minutes}`;
+        }
+        
+        // 页面加载
+        window.onload = function() {
+            const token = getUrlParam('token');
+            const title = getUrlParam('title') || '提醒通知';
+            
+            if (!token) {
+                document.getElementById('content').innerHTML = `
+                    <div class="error">
+                        <div class="card">
+                            <p>无效的访问链接</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 显示详情页面
+            document.getElementById('content').innerHTML = `
+                <div class="card">
+                    <div class="header">
+                        <div class="icon">✨</div>
+                        <div class="header-text">
+                            <h1>提醒详情</h1>
+                            <div class="time">${formatTime()}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="title">${decodeURIComponent(title)}</div>
+                    
+                    <div class="content">
+                        <p>您有一条定时提醒，请查看详情。</p>
+                    </div>
+                    
+                    <div class="qr-section">
+                        <img src="/miniapp-qr.png" alt="小程序码">
+                        <div class="qr-tip">👆 长按识别小程序码</div>
+                        <div class="qr-subtip">进入家庭小程序查看完整提醒</div>
+                    </div>
+                    
+                    <a href="/auto-login.html?token=${token}" class="open-btn">
+                        一键打开小程序
+                    </a>
+                </div>
+            `;
+        };
+    </script>
+</body>
+</html>

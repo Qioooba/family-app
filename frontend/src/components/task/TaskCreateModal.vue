@@ -317,12 +317,13 @@ watch(() => props.visible, (newVal) => {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
   z-index: 1000;
   animation: fadeIn 0.2s ease;
 }
@@ -335,8 +336,9 @@ watch(() => props.visible, (newVal) => {
 .modal-content {
   background: #fff;
   border-radius: 32rpx 32rpx 0 0;
-  width: 100%;
+  width: 100vw;
   max-height: 80vh;
+  box-sizing: border-box;
   animation: slideUp 0.3s ease;
 }
 
@@ -347,6 +349,7 @@ watch(() => props.visible, (newVal) => {
 
 .task-modal {
   padding: 32rpx;
+  box-sizing: border-box;
   
   .modal-top {
     display: flex;
@@ -397,6 +400,7 @@ watch(() => props.visible, (newVal) => {
       border: none;
       border-bottom: 2rpx solid #e2e8f0;
       padding: 0;
+      box-sizing: border-box;
       
       &::placeholder {
         color: #a0aec0;
@@ -476,19 +480,21 @@ watch(() => props.visible, (newVal) => {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
   z-index: 1001;
 }
 
 .picker-container {
   background: #fff;
-  width: 100%;
+  width: 100vw;
   border-radius: 32rpx 32rpx 0 0;
   padding: 32rpx;
+  box-sizing: border-box;
   
   .picker-header {
     display: flex;
@@ -529,10 +535,11 @@ watch(() => props.visible, (newVal) => {
 // 成员选择器
 .member-picker-container {
   background: #fff;
-  width: 100%;
+  width: 100vw;
   border-radius: 32rpx 32rpx 0 0;
   padding: 32rpx;
   max-height: 60vh;
+  box-sizing: border-box;
   
   .picker-header {
     text-align: center;
@@ -546,13 +553,17 @@ watch(() => props.visible, (newVal) => {
   }
   
   .member-list {
+    width: 100%;
+    
     .member-item {
       display: flex;
       align-items: center;
-      padding: 24rpx;
+      width: 100%;
+      padding: 20rpx;
       border-radius: 16rpx;
-      margin-bottom: 16rpx;
+      margin-bottom: 12rpx;
       transition: all 0.2s ease;
+      box-sizing: border-box;
       
       &.active {
         background: #f0f4ff;
@@ -564,16 +575,12 @@ watch(() => props.visible, (newVal) => {
       }
       
       .member-avatar {
-        width: 80rpx;
-        height: 80rpx;
+        width: 72rpx;
+        height: 72rpx;
         border-radius: 50%;
-        margin-right: 24rpx;
+        margin-right: 20rpx;
         background: linear-gradient(135deg, #6B8DD6, #8B5CF6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 28rpx;
+        flex-shrink: 0;
         
         &.default {
           background: linear-gradient(135deg, #68d391, #48bb78);
@@ -583,6 +590,30 @@ watch(() => props.visible, (newVal) => {
       .member-name {
         font-size: 30rpx;
         color: #2d3748;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .check-icon {
+        width: 40rpx;
+        height: 40rpx;
+        border-radius: 50%;
+        background: #6B8DD6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-left: auto;
+        
+        .check-mark {
+          color: #fff;
+          font-size: 26rpx;
+          font-weight: bold;
+          line-height: 1;
+        }
       }
     }
   }

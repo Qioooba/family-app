@@ -664,13 +664,46 @@ export default {
       try {
         const config = JSON.parse(item.frequencyConfig || '{}')
         if (config.fixedTime) text += ` ${config.fixedTime}`
+        // 每周：显示选择的星期几
+        if (item.frequencyType === 'WEEKLY' && config.weekDays && config.weekDays.length > 0) {
+          const weekDayMap = { 1: '一', 2: '二', 3: '三', 4: '四', 5: '五', 6: '六', 7: '日' }
+          const days = config.weekDays.map(d => weekDayMap[d] || d).join('、')
+          text += ` (周${days})`
+        }
+        // 每月：显示几号
+        if (item.frequencyType === 'MONTHLY' && config.monthDay) {
+          text += ` (${config.monthDay}日)`
+        }
+        // 每年：显示月日
+        if (item.frequencyType === 'YEARLY' && config.month && config.monthDay) {
+          text += ` (${config.month}月${config.monthDay}日)`
+        }
       } catch (e) {}
       return text
     },
     formatDateTime(timeStr) {
       if (!timeStr) return '-'
+      // 处理数组格式 [2026,3,17,0,14,18]
+      if (Array.isArray(timeStr)) {
+        const [year, month, day, hour, minute] = timeStr
+        const date = new Date(year, month - 1, day, hour, minute)
+        const now = new Date()
+        const isToday = date.toDateString() === now.toDateString()
+        const isTomorrow = new Date(now.getTime() + 86400000).toDateString() === date.toDateString()
+        const timeFormatted = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        if (isToday) return `今天 ${timeFormatted}`
+        if (isTomorrow) return `明天 ${timeFormatted}`
+        return `${month}月${day}日 ${timeFormatted}`
+      }
+      // 处理字符串格式
       const date = new Date(timeStr.replace(/-/g, '/'))
-      return `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+      const now = new Date()
+      const isToday = date.toDateString() === now.toDateString()
+      const isTomorrow = new Date(now.getTime() + 86400000).toDateString() === date.toDateString()
+      const timeFormatted = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+      if (isToday) return `今天 ${timeFormatted}`
+      if (isTomorrow) return `明天 ${timeFormatted}`
+      return `${date.getMonth() + 1}月${date.getDate()}日 ${timeFormatted}`
     },
     goBack() {
       uni.navigateBack()
