@@ -199,17 +199,43 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const currentVersion = ref('1.1.1')
-const currentDate = ref('2026-03-17')
-const buildNumber = ref('20260317.1')
+const currentVersion = ref('1.2.0')
+const currentDate = ref('2026-03-18')
+const buildNumber = ref('20260318.1')
 const updateStatus = ref('已是最新版本')
 const isChecking = ref(false)
 const showUpdateModal = ref(false)
 const newVersion = ref('')
-const expandedVersion = ref('1.0.3')
+const expandedVersion = ref('v1.2.0')
 
 // 版本数据
 const versions = ref([
+  {
+    version: 'v1.2.0',
+    date: '2026-03-18',
+    type: 'major',
+    slogan: '提醒升级，推送无忧',
+    features: [
+      '提醒推送白名单机制 - 仅指定用户接收推送，避免打扰家人休息',
+      '企业微信推送带小程序码 - 支持长按识别直接进入小程序',
+      '新增提醒详情H5页面 - 优雅的详情展示，小程序码一键跳转',
+      '首页提醒创建后自动展开 - 创建提醒后立即展示在列表中',
+      '间隔提醒时间显示优化 - 正确显示下次执行时间而非默认时间'
+    ],
+    optimizations: [
+      '提醒图标更换为闪光效果✨ - 更醒目的视觉提醒',
+      '提醒管理页面布局优化 - 删除按钮移至开关右侧',
+      '家庭页面头像显示优化 - 添加mode防止图片变形',
+      '底部tab栏颜色统一 - 提醒图标颜色与其他保持一致',
+      '待办指派人员选项宽度修复 - 与表单输入框对齐',
+      '清理未使用页面 - 将task-sub未使用页面移至backup目录'
+    ],
+    fixes: [
+      '修复提醒推送范围 - 移除"全部用户"选项，避免误推送',
+      '修复提醒详情页周几显示 - 正确展示每周选择的星期',
+      '修复时间格式一致性 - 列表和详情页时间格式统一'
+    ]
+  },
   {
     version: 'v1.1.1',
     date: '2026-03-17',
@@ -474,7 +500,7 @@ const contactDev = () => {
 
 onMounted(() => {
   // 默认展开最新版本
-  expandedVersion.value = 'v1.0.3'
+  expandedVersion.value = 'v1.2.0'
 })
 </script>
 

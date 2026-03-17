@@ -614,6 +614,7 @@ public class WechatWorkService {
     /**
      * 发送给外部联系人（客户）
      * 使用企业微信客户联系消息接口
+     * 优先使用小程序卡片，点击直接打开小程序
      */
     private void sendToExternalUser(String token, String externalUserId, WechatMessage message) throws Exception {
         String url = "https://qyapi.weixin.qq.com/cgi-bin/externalcontact/add_msg_template?access_token=" + token;
@@ -629,38 +630,84 @@ public class WechatWorkService {
         // 发送者 - 使用企业微信小助手
         payload.put("sender", getWorkUserId());
 
-        // 尝试使用小程序卡片消息
-        try {
-            Map<String, Object> miniprogram = new HashMap<>();
-            miniprogram.put("title", message.getTitle());
-            miniprogram.put("pic_media_id", ""); // 可以用默认图片或上传图片获取media_id
-            miniprogram.put("appid", getMiniProgramAppId());
-            miniprogram.put("page", message.getUrl() != null ? message.getUrl() : getMiniProgramPage());
+        // 使用图文消息 + 小程序URL Link（点击直接打开小程序）
+        sendNewsToExternalUser(token, externalUserId, message, payload);
+    }
+    
+    /**
+     * 发送图文消息给外部联系人
+     * 点击进入H5详情页，页面内有小程序码可长按识别
+     */
+    private void sendNewsToExternalUser(String token, String externalUserId, WechatMessage message, 
+                                        Map<String, Object> payload) throws Exception {
+        String url = "https://qyapi.weixin.qq.com/cgi-bin/externalcontact/add_msg_template?access_token=" + token;
+        
+        String timeStr = java.time.LocalDateTime.now().toString().substring(0, 16);
+        
+        Map<String, Object> news = new HashMap<>();
+        List<Map<String, String>> articles = new ArrayList<>();
+        
+        Map<String, String> article = new HashMap<>();
+        article.put("title", message.getTitle());
+        article.put("description", "⏰ " + timeStr + "\n👇 点击查看详情，长按小程序码进入小程序");
+        // 封面图使用小程序码（用户可长按识别）
+        article.put("picurl", "https://qioba.cn:8443/miniapp-qr.png");
+        // 点击进入H5详情页
+        String detailUrl = buildReminderDetailUrl(message);
+        article.put("url", detailUrl);
+        
+        articles.add(article);
+        news.put("articles", articles);
+        payload.put("news", news);
+        payload.put("msgtype", "news");
 
-            payload.put("msgtype", "miniprogram");
-            payload.put("miniprogram", miniprogram);
+        String response = restTemplate.postForObject(url, payload, String.class);
+        Map<String, Object> result = objectMapper.readValue(response, Map.class);
 
-            String response = restTemplate.postForObject(url, payload, String.class);
-            Map<String, Object> result = objectMapper.readValue(response, Map.class);
-
-            int errcode = (Integer) result.getOrDefault("errcode", -1);
-            if (errcode == 0) {
-                log.info("企业微信外部联系人小程序消息发送成功, userId={}, externalId={}, msgId={}",
-                        message.getTargetUserId(), externalUserId, result.get("msgid"));
-                return;
-            } else {
-                log.warn("小程序消息发送失败，回退到文本消息: {}", result.get("errmsg"));
+        int errcode = (Integer) result.getOrDefault("errcode", -1);
+        if (errcode != 0) {
+            if (errcode == 48002) {
+                throw new Exception("外部联系人48小时内无互动，无法发送消息");
             }
-        } catch (Exception e) {
-            log.warn("小程序消息发送异常，回退到文本消息", e);
+            // 如果news失败，回退到文本消息
+            sendTextToExternalUser(token, externalUserId, message, payload);
+            return;
         }
 
-        // 回退到文本消息
-        String content = buildRichMessageContent(message);
+        log.info("企业微信外部联系人图文消息发送成功, userId={}, externalId={}",
+                message.getTargetUserId(), externalUserId);
+    }
+    
+    /**
+     * 构建外部联系人图文消息描述
+     */
+    private String buildExternalNewsDescription(WechatMessage message, String timeStr) {
+        StringBuilder desc = new StringBuilder();
+        desc.append("⏰ ").append(timeStr).append("\n");
+        if (message.getDescription() != null && !message.getDescription().isEmpty()) {
+            // 清理HTML标签，取前50字
+            String cleanDesc = message.getDescription().replaceAll("<[^>]*>", "").replaceAll("\\s+", " ").trim();
+            if (cleanDesc.length() > 50) {
+                cleanDesc = cleanDesc.substring(0, 50) + "...";
+            }
+            desc.append(cleanDesc).append("\n");
+        }
+        desc.append("👇 点击进入查看详情，长按小程序码进入小程序");
+        return desc.toString();
+    }
+    
+    /**
+     * 外部联系人文本消息回退
+     */
+    private void sendTextToExternalUser(String token, String externalUserId, WechatMessage message, 
+                                        Map<String, Object> payload) throws Exception {
+        String url = "https://qyapi.weixin.qq.com/cgi-bin/externalcontact/add_msg_template?access_token=" + token;
+        
+        payload.remove("news");
         payload.put("msgtype", "text");
-
+        
         Map<String, String> text = new HashMap<>();
-        text.put("content", content);
+        text.put("content", buildRichMessageContent(message));
         payload.put("text", text);
 
         String response = restTemplate.postForObject(url, payload, String.class);
@@ -668,22 +715,11 @@ public class WechatWorkService {
 
         int errcode = (Integer) result.getOrDefault("errcode", -1);
         if (errcode != 0) {
-            // 特殊错误处理
-            if (errcode == 48002) {
-                throw new Exception("外部联系人48小时内无互动，无法发送消息");
-            }
-            throw new Exception("发送失败: " + result.get("errmsg"));
+            throw new Exception("文本消息发送失败: " + result.get("errmsg"));
         }
 
-        // 检查是否有失败的用户
-        @SuppressWarnings("unchecked")
-        List<String> failList = (List<String>) result.get("fail_list");
-        if (failList != null && !failList.isEmpty()) {
-            log.warn("外部联系人消息部分发送失败: {}", failList);
-        }
-
-        log.info("企业微信外部联系人文本消息发送成功, userId={}, externalId={}, msgId={}",
-                message.getTargetUserId(), externalUserId, result.get("msgid"));
+        log.info("企业微信外部联系人文本消息发送成功, userId={}, externalId={}",
+                message.getTargetUserId(), externalUserId);
     }
 
     /**
@@ -972,11 +1008,18 @@ public class WechatWorkService {
      * 发送提醒mpnews图文消息（带小程序码，美观排版）
      */
     private void sendReminderMpnewsToInternalUser(String token, String workUserId, WechatMessage message) throws Exception {
-        // 1. 上传小程序码图片获取media_id
+        // 尝试上传小程序码图片获取media_id
         byte[] imageData = readMiniappQrImage();
         String mediaId = null;
         if (imageData != null) {
             mediaId = uploadMiniappQrImage(token, imageData);
+        }
+        
+        // 如果media_id获取失败，使用普通news消息（外部图片URL）
+        if (mediaId == null) {
+            log.warn("无法获取media_id，回退到普通news消息");
+            sendReminderNewsToInternalUser(token, workUserId, message);
+            return;
         }
         
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
@@ -996,13 +1039,11 @@ public class WechatWorkService {
         
         Map<String, Object> article = new HashMap<>();
         article.put("title", message.getTitle());
-        if (mediaId != null) {
-            article.put("thumb_media_id", mediaId);
-        }
+        article.put("thumb_media_id", mediaId);
         article.put("author", "家庭小程序");
-        // 使用详情页面URL
-        String detailUrl = buildReminderDetailUrl(message);
-        article.put("content_source_url", detailUrl);
+        // 使用小程序跳转链接（点击直接打开小程序）
+        String miniappLink = buildReminderMiniappLink(message);
+        article.put("content_source_url", miniappLink);
         article.put("content", content);
         article.put("digest", digest);
         
@@ -1015,7 +1056,10 @@ public class WechatWorkService {
         
         int errcode = (Integer) result.getOrDefault("errcode", -1);
         if (errcode != 0) {
-            throw new Exception("mpnews发送失败: " + result.get("errmsg"));
+            // 如果mpnews失败，尝试普通news消息
+            log.warn("mpnews发送失败: {}，尝试news消息", result.get("errmsg"));
+            sendReminderNewsToInternalUser(token, workUserId, message);
+            return;
         }
         
         log.info("提醒mpnews图文消息发送成功, userId={}, workId={}", 
@@ -1023,9 +1067,81 @@ public class WechatWorkService {
     }
     
     /**
-     * 构建提醒详情页URL（带临时token）
+     * 发送提醒news图文消息（使用外部图片URL，不需要media_id）
+     */
+    private void sendReminderNewsToInternalUser(String token, String workUserId, WechatMessage message) throws Exception {
+        String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
+        
+        String timeStr = java.time.LocalDateTime.now().toString().substring(0, 16);
+        
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("touser", workUserId);
+        payload.put("agentid", getAgentId());
+        payload.put("msgtype", "news");
+        
+        Map<String, Object> news = new HashMap<>();
+        List<Map<String, String>> articles = new ArrayList<>();
+        
+        Map<String, String> article = new HashMap<>();
+        article.put("title", message.getTitle());
+        article.put("description", buildReminderDigest(message, timeStr));
+        // 使用外部图片URL（小程序码）
+        article.put("picurl", "https://qioba.cn:8443/miniapp-qr.png");
+        // 点击直接跳转小程序
+        article.put("url", buildReminderMiniappLink(message));
+        
+        articles.add(article);
+        news.put("articles", articles);
+        payload.put("news", news);
+        
+        String response = restTemplate.postForObject(url, payload, String.class);
+        Map<String, Object> result = objectMapper.readValue(response, Map.class);
+        
+        int errcode = (Integer) result.getOrDefault("errcode", -1);
+        if (errcode != 0) {
+            throw new Exception("news发送失败: " + result.get("errmsg"));
+        }
+        
+        log.info("提醒news图文消息发送成功, userId={}, workId={}", 
+                 message.getTargetUserId(), workUserId);
+    }
+    
+    /**
+     * 构建提醒H5详情页URL（带临时token）
+     * 用于外部联系人推送，点击进入H5详情页可长按识别小程序码
      */
     private String buildReminderDetailUrl(WechatMessage message) {
+        String tempToken = tempTokenUtil.generateTempToken(message.getTargetUserId());
+        String title = message.getTitle() != null ? message.getTitle() : "提醒通知";
+        return String.format("https://qioba.cn:8443/reminder-detail.html?token=%s&title=%s", 
+            tempToken, 
+            java.net.URLEncoder.encode(title, java.nio.charset.StandardCharsets.UTF_8));
+    }
+    
+    /**
+     * 构建提醒小程序跳转链接（URL Link）
+     */
+    private String buildReminderMiniappLink(WechatMessage message) {
+        // 生成小程序 URL Link，点击直接打开小程序
+        String path = message.getUrl() != null ? message.getUrl() : "pages/reminder/index";
+        String query = "";
+        
+        // 分离路径和参数
+        if (path.contains("?")) {
+            int queryIndex = path.indexOf("?");
+            query = path.substring(queryIndex + 1);
+            path = path.substring(0, queryIndex);
+        }
+        
+        // 生成 URL Link（有效期7天）
+        String urlLink = miniAppUrlLinkService.generateUrlLink(path, query, 7 * 24 * 3600);
+        if (urlLink != null && !urlLink.isEmpty()) {
+            log.debug("生成提醒小程序URL Link成功: {}", urlLink);
+            return urlLink;
+        }
+        
+        // 如果 URL Link 生成失败，使用H5详情页作为fallback
+        log.warn("生成小程序URL Link失败，使用H5详情页");
         String tempToken = tempTokenUtil.generateTempToken(message.getTargetUserId());
         return String.format("https://qioba.cn:8443/reminder-detail.html?token=%s&title=%s", 
             tempToken, 
@@ -1033,39 +1149,33 @@ public class WechatWorkService {
     }
     
     /**
-     * 构建提醒mpnews内容（美观排版）
+     * 构建提醒mpnews内容（点击直接跳转小程序）
      */
     private String buildReminderMpnewsContent(WechatMessage message, String timeStr) {
         StringBuilder content = new StringBuilder();
-        
-        // 解析描述内容
         String desc = message.getDescription();
         
-        // 整洁卡片设计
-        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; border-radius: 16px; max-width: 500px; margin: 0 auto;'>");
+        // 简洁的提醒内容，因为点击后会直接跳转小程序
+        content.append("<div style='font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px;'>");
         
-        // 内部白色卡片
-        content.append("<div style='background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);'>");
-        
-        // 头部：提醒图标+标题
-        content.append("<div style='display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #f0f0f0;'>");
-        content.append("<div style='width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 16px; font-size: 24px;'>✨</div>");
+        // 头部
+        content.append("<div style='display: flex; align-items: center; margin-bottom: 16px;'>");
+        content.append("<div style='width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 20px;'>✨</div>");
         content.append("<div>");
-        content.append("<div style='font-size: 20px; font-weight: 700; color: #333;'>提醒通知</div>");
-        content.append("<div style='font-size: 13px; color: #999; margin-top: 4px;'>").append(timeStr).append("</div>");
+        content.append("<div style='font-size: 18px; font-weight: 600; color: #333;'>提醒通知</div>");
+        content.append("<div style='font-size: 12px; color: #999;'>").append(timeStr).append("</div>");
         content.append("</div>");
         content.append("</div>");
         
         // 提醒标题
-        content.append("<div style='font-size: 18px; font-weight: 600; color: #333; margin-bottom: 16px; line-height: 1.5;'>");
+        content.append("<div style='font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; line-height: 1.5;'>");
         content.append(escapeHtml(message.getTitle()));
         content.append("</div>");
         
         // 提醒内容（如果有）
         if (desc != null && !desc.trim().isEmpty()) {
-            content.append("<div style='background: #f8f9ff; padding: 16px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #667eea;'>");
+            content.append("<div style='background: #f5f6fa; padding: 12px; border-radius: 8px; margin-bottom: 16px;'>");
             content.append("<div style='font-size: 14px; color: #666; line-height: 1.6;'>");
-            // 将换行符转换为<br>
             String[] lines = desc.split("\n");
             for (String line : lines) {
                 if (!line.trim().isEmpty()) {
@@ -1076,14 +1186,12 @@ public class WechatWorkService {
             content.append("</div>");
         }
         
-        // 小程序码区域
-        content.append("<div style='text-align: center; padding: 24px; background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%); border-radius: 12px; margin-top: 8px;'>");
-        content.append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" style='width: 180px; height: 180px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);' alt='小程序码'/>");
-        content.append("<div style='margin-top: 16px; font-size: 14px; color: #667eea; font-weight: 500;'>👆 长按识别小程序码查看详情</div>");
+        // 提示点击跳转
+        content.append("<div style='text-align: center; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: #fff; font-size: 15px; font-weight: 500;'>");
+        content.append("👆 点击进入小程序查看详情");
         content.append("</div>");
         
-        content.append("</div>"); // 结束白色卡片
-        content.append("</div>"); // 结束外层容器
+        content.append("</div>");
         
         return content.toString();
     }
