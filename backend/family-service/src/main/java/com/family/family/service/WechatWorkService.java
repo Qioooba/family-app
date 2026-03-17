@@ -15,6 +15,8 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.FormHttpMessageConverter;
+import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.MediaType;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -58,6 +60,10 @@ public class WechatWorkService {
         
         // 配置消息转换器使用 UTF-8
         List<HttpMessageConverter<?>> converters = new ArrayList<>();
+        
+        // 添加表单转换器（支持文件上传）
+        converters.add(new FormHttpMessageConverter());
+        
         StringHttpMessageConverter stringConverter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
         stringConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN));
         converters.add(stringConverter);
@@ -65,6 +71,9 @@ public class WechatWorkService {
         MappingJackson2HttpMessageConverter jacksonConverter = new MappingJackson2HttpMessageConverter();
         jacksonConverter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON));
         converters.add(jacksonConverter);
+        
+        // 添加资源转换器（支持multipart）
+        converters.add(new ResourceHttpMessageConverter());
         
         this.restTemplate.setMessageConverters(converters);
     }
@@ -960,50 +969,65 @@ public class WechatWorkService {
     }
     
     /**
-     * 发送提醒图文消息给内部成员
-     * 点击封面图进入H5详情页，可长按识别小程序码
+     * 发送提醒mpnews图文消息给内部成员（微信内置文章页面）
+     * 点击后在微信内置页面查看，类似公众号文章
      */
     private void sendReminderMiniappCardToInternalUser(String token, String workUserId, WechatMessage message) throws Exception {
+        // 先上传封面图片获取media_id
+        byte[] imageData = readMiniappQrImage();
+        String mediaId = null;
+        if (imageData != null) {
+            mediaId = uploadMiniappQrImage(token, imageData);
+        }
+        
+        // 如果上传失败，尝试使用默认封面图URL
+        if (mediaId == null) {
+            log.warn("封面图上传失败，尝试使用URL方式...");
+            // 回退到news方式
+            sendReminderNewsToInternalUser(token, workUserId, message);
+            return;
+        }
+        
         String url = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=" + token;
         
         String timeStr = java.time.LocalDateTime.now().toString().substring(0, 16);
         String title = message.getTitle();
-        String cleanDesc = message.getDescription() != null ? 
-            message.getDescription().replaceAll("<[^>]*>", "").trim() : "";
-        if (cleanDesc.length() > 60) {
-            cleanDesc = cleanDesc.substring(0, 60) + "...";
-        }
-
+        
         Map<String, Object> payload = new HashMap<>();
         payload.put("touser", workUserId);
         payload.put("agentid", getAgentId());
+        payload.put("msgtype", "mpnews");
         
-        // 使用news图文消息（不需要media_id）
-        Map<String, Object> news = new HashMap<>();
-        List<Map<String, String>> articles = new ArrayList<>();
+        // mpnews图文消息（微信内置文章）
+        Map<String, Object> mpnews = new HashMap<>();
+        List<Map<String, Object>> articles = new ArrayList<>();
         
-        Map<String, String> article = new HashMap<>();
+        Map<String, Object> article = new HashMap<>();
         article.put("title", title);
-        article.put("description", "⏰ " + timeStr + "\n" + cleanDesc + "\n\n👇 点击查看详情");
-        // 封面图使用小程序码图片（可长按识别）
-        article.put("picurl", "https://qioba.cn:8443/miniapp-qr.png");
-        // 点击进入H5详情页
-        article.put("url", "https://qioba.cn:8443/reminder-detail.html?t=" + System.currentTimeMillis());
+        article.put("thumb_media_id", mediaId);  // 封面图media_id
+        article.put("author", "家庭小程序");
+        article.put("content_source_url", "");  // 空表示不跳转外部链接
+        // 构建微信文章页面内容
+        article.put("content", buildReminderMpnewsContent(message, timeStr));
+        article.put("digest", message.getDescription() != null ? 
+            message.getDescription().replaceAll("<[^>]*>", "").trim() : "");
         
         articles.add(article);
-        news.put("articles", articles);
-        payload.put("news", news);
-        payload.put("msgtype", "news");
+        mpnews.put("articles", articles);
+        payload.put("mpnews", mpnews);
 
         String response = restTemplate.postForObject(url, payload, String.class);
         Map<String, Object> result = objectMapper.readValue(response, Map.class);
         
         int errcode = (Integer) result.getOrDefault("errcode", -1);
         if (errcode != 0) {
-            throw new Exception("图文消息发送失败: " + result.get("errmsg"));
+            log.warn("mpnews发送失败: {}，尝试news方式", result.get("errmsg"));
+            // 回退到news方式
+            sendReminderNewsToInternalUser(token, workUserId, message);
+            return;
         }
         
-        log.info("提醒图文消息发送成功, userId={}, workId={}", 
+        log.info("提醒mpnews文章发送成功, userId={}, workId={}", 
                  message.getTargetUserId(), workUserId);
     }
     
