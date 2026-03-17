@@ -354,18 +354,13 @@ export default {
     async loadDetail() {
       this.loading = true
       try {
-        const res = await this.$request.get(`/api/reminder/detail/${this.id}`)
-        
-        if (res.data?.code === 0) {
-          this.reminder = res.data.data || {}
-          this.parseTargetUsers()
-          this.initEditForm()
-        } else {
-          uni.showToast({ title: res.data?.message || '加载失败', icon: 'none' })
-        }
+        const data = await this.$request.get(`/api/reminder/detail/${this.id}`)
+        this.reminder = data || {}
+        this.parseTargetUsers()
+        this.initEditForm()
       } catch (e) {
         console.error('加载详情失败', e)
-        uni.showToast({ title: '加载失败', icon: 'none' })
+        uni.showToast({ title: e.message || '加载失败', icon: 'none' })
       } finally {
         this.loading = false
       }
@@ -374,11 +369,8 @@ export default {
     // 加载用户列表
     async loadUserList() {
       try {
-        const res = await this.$request.get('/api/reminder/users')
-        
-        if (res.data?.code === 0) {
-          this.userList = res.data.data?.list || []
-        }
+        const data = await this.$request.get('/api/reminder/users')
+        this.userList = data?.list || []
       } catch (e) {
         console.error('加载用户列表失败', e)
       }
@@ -482,18 +474,13 @@ export default {
       }
       
       try {
-        const res = await this.$request.post('/api/reminder/update', data)
-        
-        if (res.data?.code === 0) {
-          uni.showToast({ title: '保存成功' })
-          this.isEditing = false
-          this.loadDetail()
-        } else {
-          uni.showToast({ title: res.data?.message || '保存失败', icon: 'none' })
-        }
+        await this.$request.post('/api/reminder/update', data)
+        uni.showToast({ title: '保存成功' })
+        this.isEditing = false
+        this.loadDetail()
       } catch (e) {
         console.error('保存失败', e)
-        uni.showToast({ title: '保存失败', icon: 'none' })
+        uni.showToast({ title: e.message || '保存失败', icon: 'none' })
       }
     },
     
@@ -505,15 +492,10 @@ export default {
         success: async (res) => {
           if (res.confirm) {
             try {
-              const result = await this.$request.post('/api/reminder/execute', { id: this.id })
-              
-              if (result.data?.code === 0) {
-                uni.showToast({ title: '执行成功' })
-              } else {
-                uni.showToast({ title: result.data?.message || '执行失败', icon: 'none' })
-              }
+              await this.$request.post('/api/reminder/execute', { id: this.id })
+              uni.showToast({ title: '执行成功' })
             } catch (e) {
-              uni.showToast({ title: '执行失败', icon: 'none' })
+              uni.showToast({ title: e.message || '执行失败', icon: 'none' })
             }
           }
         }
@@ -529,16 +511,11 @@ export default {
         success: async (res) => {
           if (res.confirm) {
             try {
-              const result = await this.$request.post('/api/reminder/delete', { id: this.id })
-              
-              if (result.data?.code === 0) {
-                uni.showToast({ title: '删除成功' })
-                setTimeout(() => uni.navigateBack(), 1000)
-              } else {
-                uni.showToast({ title: result.data?.message || '删除失败', icon: 'none' })
-              }
+              await this.$request.post('/api/reminder/delete', { id: this.id })
+              uni.showToast({ title: '删除成功' })
+              setTimeout(() => uni.navigateBack(), 1000)
             } catch (e) {
-              uni.showToast({ title: '删除失败', icon: 'none' })
+              uni.showToast({ title: e.message || '删除失败', icon: 'none' })
             }
           }
         }

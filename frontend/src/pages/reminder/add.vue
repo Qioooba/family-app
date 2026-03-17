@@ -308,11 +308,8 @@ export default {
       
       this.userLoading = true
       try {
-        const res = await this.$request.get('/api/reminder/users')
-        
-        if (res.data?.code === 0) {
-          this.userList = res.data.data?.list || []
-        }
+        const data = await this.$request.get('/api/reminder/users')
+        this.userList = data?.list || []
       } catch (e) {
         console.error('加载用户列表失败', e)
       } finally {
@@ -367,17 +364,12 @@ export default {
       }
       
       try {
-        const res = await this.$request.post('/api/reminder/add', data)
-        
-        if (res.data?.code === 0) {
-          uni.showToast({ title: '创建成功' })
-          setTimeout(() => uni.navigateBack(), 1500)
-        } else {
-          uni.showToast({ title: res.data?.message || '创建失败', icon: 'none' })
-        }
+        await this.$request.post('/api/reminder/add', data)
+        uni.showToast({ title: '创建成功' })
+        setTimeout(() => uni.navigateBack(), 1500)
       } catch (e) {
         console.error('创建提醒失败', e)
-        uni.showToast({ title: '创建失败', icon: 'none' })
+        uni.showToast({ title: e.message || '创建失败', icon: 'none' })
       }
     },
     

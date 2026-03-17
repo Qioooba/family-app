@@ -33,6 +33,9 @@ public class ReminderScheduleService {
     private UserMapper userMapper;
     
     @Autowired
+    private TaskMapper taskMapper;
+    
+    @Autowired
     private WechatWorkService wechatWorkService;
     
     @Autowired
@@ -609,20 +612,24 @@ public class ReminderScheduleService {
     }
     
     /**
-     * 获取今日待办数量（简化）
+     * 获取今日待办数量
      */
     private int getTodayTodoCount(Long userId) {
-        // 实际应该查询 task 表
-        // 这里返回随机数模拟
-        return 3;
+        try {
+            return taskMapper.countTodayTodos(userId);
+        } catch (Exception e) {
+            log.warn("查询今日待办数量失败: userId={}", userId, e);
+            return 0;
+        }
     }
     
     /**
-     * 获取天气（简化）
+     * 获取天气（简化版，后续可接入天气API）
      */
     private String getWeather() {
-        // 实际应该调用天气API
-        return "☀️ 晴 18°C";
+        // TODO: 接入天气API，如和风天气、OpenWeatherMap等
+        // 临时返回简化天气，避免模板变量为空
+        return "☀️";
     }
     
     /**
