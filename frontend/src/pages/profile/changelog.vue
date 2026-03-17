@@ -199,9 +199,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const currentVersion = ref('1.0.3')
-const currentDate = ref('2026-03-13')
-const buildNumber = ref('20260313.1')
+const currentVersion = ref('1.1.1')
+const currentDate = ref('2026-03-17')
+const buildNumber = ref('20260317.1')
 const updateStatus = ref('已是最新版本')
 const isChecking = ref(false)
 const showUpdateModal = ref(false)
@@ -210,6 +210,36 @@ const expandedVersion = ref('1.0.3')
 
 // 版本数据
 const versions = ref([
+  {
+    version: 'v1.1.1',
+    date: '2026-03-17',
+    type: 'major',
+    slogan: '智能提醒，贴心守护',
+    features: [
+      '全新定时提醒系统 - 支持每天/每小时/每周/每月/每年/一次性等多种频率',
+      '提醒推送范围设置 - 支持推送给所有人、仅自己或指定成员',
+      '智能安静时段 - 支持设置免打扰时间段，深夜不打扰',
+      '节假日智能跳过 - 可选择节假日不发送提醒',
+      '雨天预警提醒 - 基于实时天气数据，自动推送带伞提醒',
+      '提醒模板变量 - 支持日期、天气等动态变量',
+      '分布式锁机制 - 防止定时任务重复执行，确保推送准确性',
+      '任务分配优化 - 成员选择器样式优化，选中状态更清晰'
+    ],
+    optimizations: [
+      '天气地址显示优化 - 长地址自动缩小字号，完整展示不截断',
+      '小时级天气预报 - 仅展示当前时间之后的预报数据',
+      '首页提醒/任务区域 - 支持折叠展开，页面更简洁',
+      'UI配色统一优化 - 心愿图标改为粉色礼盒，提醒按钮改为紫色',
+      'API响应处理标准化 - 统一前后端数据交互格式'
+    ],
+    fixes: [
+      '修复提醒功能SQL条件问题 - 修复AND/OR优先级导致的查询错误',
+      '修复Cron表达式计算 - 使用Spring CronExpression准确计算下次执行时间',
+      '修复日期解析问题 - 正确处理ONCE和YEARLY类型的日期配置',
+      '修复提醒类型默认值 - 解决reminderType为空的问题',
+      '修复任务成员选择器布局 - 选中图标正常显示'
+    ]
+  },
   {
     version: 'v1.0.3',
     date: '2026-03-13',

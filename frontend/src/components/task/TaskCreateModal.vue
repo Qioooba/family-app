@@ -105,6 +105,9 @@
                 mode="aspectFill" 
               />
               <text class="member-name">{{ member.nickname || member.name || '家人' }}</text>
+              <view v-if="formData.assigneeId === member.userId" class="check-icon">
+                <text class="check-mark">✓</text>
+              </view>
             </view>
           </view>
         </view>

@@ -170,6 +170,28 @@
           </picker>
         </view>
         
+        <!-- 一次性：选择日期 -->
+        <view class="form-item" v-if="editForm.frequencyType === 'ONCE'">
+          <text class="form-label">提醒日期 <text class="required">*</text></text>
+          <picker mode="date" :value="editForm.onceDate" @change="onOnceDateChange">
+            <view class="picker">
+              <text>{{ editForm.onceDate || '选择日期' }}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+        
+        <!-- 每年：选择月日 -->
+        <view class="form-item" v-if="editForm.frequencyType === 'YEARLY'">
+          <text class="form-label">每年日期 <text class="required">*</text></text>
+          <picker mode="date" :value="editForm.yearMonthDay" fields="month" @change="onYearMonthChange">
+            <view class="picker">
+              <text>{{ editForm.yearMonthDay || '选择月-日' }}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+        
         <!-- 间隔模式 -->
         <view class="form-item" v-if="editForm.frequencyType === 'INTERVAL'">
           <text class="form-label">间隔设置</text>
@@ -294,7 +316,9 @@ export default {
         pushScope: 'SELF',
         targetUserIds: [],
         titleTemplate: '',
-        contentTemplate: ''
+        contentTemplate: '',
+        onceDate: '',
+        yearMonthDay: ''
       },
       
       // 选项
@@ -395,6 +419,24 @@ export default {
         config = JSON.parse(r.frequencyConfig || '{}')
       } catch (e) {}
       
+      // 解析一次性提醒日期
+      let onceDate = ''
+      if (config.date) {
+        onceDate = config.date
+      } else if (config.fixedDate) {
+        onceDate = config.fixedDate
+      }
+      
+      // 解析每年提醒的月日
+      let yearMonthDay = ''
+      if (config.yearMonthDay) {
+        yearMonthDay = config.yearMonthDay
+      } else if (config.month && config.monthDay) {
+        const month = String(config.month).padStart(2, '0')
+        const day = String(config.monthDay).padStart(2, '0')
+        yearMonthDay = `${month}-${day}`
+      }
+      
       this.editForm = {
         reminderName: r.reminderName || '',
         reminderType: r.reminderType || 'SYSTEM',
@@ -408,7 +450,9 @@ export default {
         pushScope: r.pushScope || 'SELF',
         targetUserIds: [],
         titleTemplate: r.titleTemplate || '',
-        contentTemplate: r.contentTemplate || ''
+        contentTemplate: r.contentTemplate || '',
+        onceDate: onceDate,
+        yearMonthDay: yearMonthDay
       }
       
       // 解析targetUserIds
@@ -452,6 +496,20 @@ export default {
         config.fixedTime = f.remindTime
       } else if (f.frequencyType === 'MONTHLY') {
         config.monthDay = f.monthDay
+        config.fixedTime = f.remindTime
+      } else if (f.frequencyType === 'ONCE') {
+        if (!f.onceDate) {
+          uni.showToast({ title: '请选择提醒日期', icon: 'none' })
+          return
+        }
+        config.date = f.onceDate
+        config.time = f.remindTime
+      } else if (f.frequencyType === 'YEARLY') {
+        if (!f.yearMonthDay) {
+          uni.showToast({ title: '请选择日期', icon: 'none' })
+          return
+        }
+        config.yearMonthDay = f.yearMonthDay
         config.fixedTime = f.remindTime
       } else if (f.frequencyType === 'INTERVAL') {
         const key = f.intervalUnit === 'minutes' ? 'intervalMinutes' : 
@@ -531,6 +589,14 @@ export default {
     },
     onMonthDayChange(e) {
       this.editForm.monthDay = e.detail.value + 1
+    },
+    onOnceDateChange(e) {
+      this.editForm.onceDate = e.detail.value
+    },
+    onYearMonthChange(e) {
+      // 提取月-日
+      const date = e.detail.value // 格式: YYYY-MM-DD
+      this.editForm.yearMonthDay = date.substring(5) // 取 MM-DD 部分
     },
     onIntervalUnitChange(e) {
       const units = ['minutes', 'hours', 'days']

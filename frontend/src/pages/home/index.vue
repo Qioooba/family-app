@@ -129,8 +129,8 @@
       
     </view>
     
-    <!-- 今日提醒（无提醒时不显示） -->
-    <view v-if="todayReminders.length > 0" class="section-card reminder-card-small animate-in">
+    <!-- 今日提醒 -->
+    <view class="section-card reminder-card-small animate-in">
       <view class="section-header">
         <view class="title-wrapper">
           <text class="section-icon">⏰</text>
@@ -145,36 +145,41 @@
             <text>更多</text>
             ›
           </view>
-        </view>
-      </view>
-      
-      <view v-if="todayReminders.length > 0" class="reminder-list">
-        <view 
-          v-for="(reminder, index) in todayReminders" 
-          :key="reminder.id"
-          class="reminder-item"
-          :style="{ animationDelay: `${index * 0.08}s` }"
-          @click="goReminderDetail(reminder)"
-        >
-          <view class="reminder-icon-wrapper" :style="{ background: reminder.iconBg }">
-            <text class="reminder-icon">{{ reminder.icon }}</text>
-          </view>
-          <view class="reminder-info">
-            <text class="reminder-title">{{ reminder.title }}</text>
-            <text class="reminder-time">{{ reminder.time }}</text>
-          </view>
-          <view class="reminder-tag" :class="reminder.frequencyType?.toLowerCase()">
-            <text>{{ formatFrequencyType(reminder.frequencyType) }}</text>
+          <view class="collapse-btn" @click="toggleReminderCollapse">
+            <text class="collapse-icon" :class="{ 'collapsed': isReminderCollapsed }">⌄</text>
           </view>
         </view>
       </view>
       
-      <view v-else class="empty-state">
-        <view class="empty-icon-wrapper">
-          <text class="empty-icon">✨</text>
+      <view v-if="!isReminderCollapsed" class="section-content">
+        <view v-if="todayReminders.length > 0" class="reminder-list">
+          <view 
+            v-for="(reminder, index) in todayReminders" 
+            :key="reminder.id"
+            class="reminder-item"
+            :style="{ animationDelay: `${index * 0.08}s` }"
+            @click="goReminderDetail(reminder)"
+          >
+            <view class="reminder-icon-wrapper" :style="{ background: reminder.iconBg }">
+              <text class="reminder-icon">{{ reminder.icon }}</text>
+            </view>
+            <view class="reminder-info">
+              <text class="reminder-title">{{ reminder.title }}</text>
+              <text class="reminder-time">{{ reminder.time }}</text>
+            </view>
+            <view class="reminder-tag" :class="reminder.frequencyType?.toLowerCase()">
+              <text>{{ formatFrequencyType(reminder.frequencyType) }}</text>
+            </view>
+          </view>
         </view>
-        <text class="empty-text">今天没有提醒</text>
-        <text class="empty-subtext">去添加一个吧！</text>
+        
+        <view v-else class="empty-state" @click="goAddReminder">
+          <view class="empty-icon-wrapper">
+            <text class="empty-icon">⏰</text>
+          </view>
+          <text class="empty-text">暂无提醒</text>
+          <text class="empty-subtext">点击添加提醒</text>
+        </view>
       </view>
     </view>
     
@@ -193,8 +198,13 @@
             <text>更多</text>
             ›
           </view>
+          <view class="collapse-btn" @click="toggleTaskCollapse">
+            <text class="collapse-icon" :class="{ 'collapsed': isTaskCollapsed }">⌄</text>
+          </view>
         </view>
       </view>
+      
+      <view v-if="!isTaskCollapsed" class="section-content">
       
       <view v-if="todayTasks.length > 0" class="task-list">
         <view 
@@ -255,12 +265,13 @@
         </view>
       </view>
       
-      <view v-else class="empty-state">
-        <view class="empty-icon-wrapper">
-          <text class="empty-icon">✨</text>
+        <view v-else class="empty-state">
+          <view class="empty-icon-wrapper">
+            <text class="empty-icon">✨</text>
+          </view>
+          <text class="empty-text">今天没有待办事项</text>
+          <text class="empty-subtext">享受生活吧！</text>
         </view>
-        <text class="empty-text">今天没有待办事项</text>
-        <text class="empty-subtext">享受生活吧！</text>
       </view>
     </view>
     
@@ -833,6 +844,19 @@ const todayTasks = ref([])
 
 // 今日提醒
 const todayReminders = ref([])
+
+// 折叠状态
+const isReminderCollapsed = ref(false)
+const isTaskCollapsed = ref(false)
+
+// 切换折叠状态
+const toggleReminderCollapse = () => {
+  isReminderCollapsed.value = !isReminderCollapsed.value
+}
+
+const toggleTaskCollapse = () => {
+  isTaskCollapsed.value = !isTaskCollapsed.value
+}
 
 // 提醒弹窗相关数据
 const showReminderModal = ref(false)
@@ -1792,6 +1816,8 @@ const getAnniversaryIcon = (type) => {
         display: flex;
         flex-direction: column;
         gap: 12rpx;
+        width: 100%; // 确保内容区占满卡片
+        box-sizing: border-box;
       }
       
       // 第一行：图标 + 位置
@@ -1800,6 +1826,7 @@ const getAnniversaryIcon = (type) => {
         align-items: center;
         gap: 12rpx;
         min-width: 0; // 防止溢出
+        width: 100%; // 确保占满容器宽度
         
         .weather-icon-wrapper {
           width: 52rpx;
@@ -1821,9 +1848,13 @@ const getAnniversaryIcon = (type) => {
           font-weight: 600;
           color: #2d3748;
           flex: 1;
+          line-height: 1.3;
+          word-break: break-all; // 允许在任何位置换行
+          white-space: normal; // 允许换行
+          display: -webkit-box;
+          -webkit-line-clamp: 2; // 最多显示两行
+          -webkit-box-orient: vertical;
           overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
           
           &.location-name-long {
             font-size: 24rpx;
@@ -1973,6 +2004,37 @@ const getAnniversaryIcon = (type) => {
         color: #6B8DD6;
         font-weight: 500;
         margin-right: 6rpx;
+      }
+    }
+    
+    .collapse-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 56rpx;
+      height: 56rpx;
+      background: rgba(0, 0, 0, 0.04);
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      margin-left: 4rpx;
+      
+      &:active {
+        background: rgba(0, 0, 0, 0.08);
+        transform: scale(0.9);
+      }
+      
+      .collapse-icon {
+        font-size: 36rpx;
+        color: #718096;
+        line-height: 1;
+        transform: rotate(0deg);
+        transition: transform 0.3s ease;
+        margin-top: -8rpx;
+        
+        &.collapsed {
+          transform: rotate(-180deg);
+          margin-top: 4rpx;
+        }
       }
     }
     
