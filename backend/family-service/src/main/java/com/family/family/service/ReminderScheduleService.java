@@ -102,8 +102,9 @@ public class ReminderScheduleService {
         }
     }
     
-    // 白名单：只允许这些用户接收提醒推送（调试期间限制）
-    private static final Set<Long> REMINDER_PUSH_WHITELIST = Set.of(7L); // 齐老大
+    // 白名单：允许这些用户接收提醒推送（调试期间限制）
+    // 齐老大(userId=7)、陶陶(userId=16)
+    private static final Set<Long> REMINDER_PUSH_WHITELIST = Set.of(7L, 16L);
     
     /**
      * 执行单个提醒 - 参考待办任务推送格式，带小程序码
@@ -521,11 +522,16 @@ public class ReminderScheduleService {
             log.error("计算下次执行时间失败, reminderId={}, frequencyType={}", reminder.getId(), reminder.getFrequencyType(), e);
         }
         
-        // 更新数据库（只有成功计算出下次执行时间时才更新）
+        // 更新数据库
         if (nextTime != null) {
             reminder.setNextExecuteTime(nextTime);
             reminderMapper.updateById(reminder);
             log.info("提醒[{}]下次执行时间已更新: {}", reminder.getReminderName(), nextTime);
+        } else if ("ONCE".equals(frequencyType)) {
+            // 一次性提醒：nextTime为null是正常的，但需要更新status=0
+            reminder.setNextExecuteTime(null);
+            reminderMapper.updateById(reminder);
+            log.info("一次性提醒[{}]已执行完成并停用", reminder.getReminderName());
         } else {
             log.warn("无法计算提醒[{}]的下次执行时间", reminder.getReminderName());
         }
