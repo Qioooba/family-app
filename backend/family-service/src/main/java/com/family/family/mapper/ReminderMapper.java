@@ -32,8 +32,9 @@ public interface ReminderMapper extends BaseMapper<Reminder> {
     /**
      * 查询指定用户作为目标的提醒列表
      * 限制最多100条
+     * 使用 JSON_CONTAINS 精确匹配用户ID
      */
-    @Select("SELECT * FROM reminder_config WHERE status = 1 AND push_scope = 'ALL' OR (push_scope = 'SPECIFIED' AND target_user_ids LIKE CONCAT('%', #{userId}, '%')) ORDER BY next_execute_time ASC LIMIT 100")
+    @Select("SELECT * FROM reminder_config WHERE status = 1 AND (push_scope = 'ALL' OR (push_scope = 'SPECIFIED' AND JSON_CONTAINS(target_user_ids, CAST(#{userId} AS JSON)))) ORDER BY next_execute_time ASC LIMIT 100")
     List<Reminder> selectByTargetUserId(@Param("userId") Long userId);
     
     /**

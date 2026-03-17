@@ -7,15 +7,20 @@ import com.family.family.entity.User;
 import com.family.family.entity.WechatMessage;
 import com.family.family.entity.MessageType;
 import com.family.family.mapper.ReminderMapper;
+import com.family.family.mapper.TaskMapper;
 import com.family.family.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +44,9 @@ public class ReminderScheduleService {
     private WechatWorkService wechatWorkService;
     
     @Autowired
+    private StringRedisTemplate redisTemplate;
+    
+    @Autowired
     private ReminderLogService reminderLogService;
     
     @Autowired
@@ -48,23 +56,48 @@ public class ReminderScheduleService {
     
     /**
      * 每分钟扫描一次需要执行的提醒
+     * 使用分布式锁防止多实例重复执行
      */
     @Scheduled(cron = "0 * * * * ?")
     public void scanAndExecuteReminders() {
-        log.debug("开始扫描定时提醒任务...");
+        // 分布式锁键
+        String lockKey = "reminder:schedule:lock";
+        String lockValue = UUID.randomUUID().toString();
         
-        LocalDateTime now = LocalDateTime.now();
-        
-        // 查询所有需要执行的提醒（最多100条）
-        List<Reminder> dueReminders = reminderMapper.selectDueReminders(now);
-        
-        log.info("扫描到 {} 个需要执行的提醒", dueReminders.size());
-        
-        for (Reminder reminder : dueReminders) {
+        try {
+            // 尝试获取锁，有效期2分钟
+            Boolean locked = redisTemplate.opsForValue().setIfAbsent(lockKey, lockValue, 2, TimeUnit.MINUTES);
+            if (!Boolean.TRUE.equals(locked)) {
+                log.debug("未获取到分布式锁，跳过本次执行");
+                return;
+            }
+            
+            log.debug("获取到分布式锁，开始扫描定时提醒任务...");
+            
+            LocalDateTime now = LocalDateTime.now();
+            
+            // 查询所有需要执行的提醒（最多100条）
+            List<Reminder> dueReminders = reminderMapper.selectDueReminders(now);
+            
+            log.info("扫描到 {} 个需要执行的提醒", dueReminders.size());
+            
+            for (Reminder reminder : dueReminders) {
+                try {
+                    executeReminder(reminder);
+                } catch (Exception e) {
+                    log.error("执行提醒失败: id={}, name={}", reminder.getId(), reminder.getReminderName(), e);
+                }
+            }
+        } finally {
+            // 释放锁（只释放自己加的锁）
             try {
-                executeReminder(reminder);
+                String currentValue = redisTemplate.opsForValue().get(lockKey);
+                if (lockValue.equals(currentValue)) {
+                    redisTemplate.delete(lockKey);
+                    log.debug("释放分布式锁");
+                }
             } catch (Exception e) {
-                log.error("执行提醒失败: id={}, name={}", reminder.getId(), reminder.getReminderName(), e);
+                log.warn("释放分布式锁失败", e);
             }
         }
     }
@@ -72,6 +105,7 @@ public class ReminderScheduleService {
     /**
      * 执行单个提醒 - 参考待办任务推送格式
      */
+    @Transactional(rollbackFor = Exception.class)
     public void executeReminder(Reminder reminder) {
         log.info("执行提醒: {}", reminder.getReminderName());
         
@@ -585,11 +619,20 @@ public class ReminderScheduleService {
     }
     
     /**
-     * 计算Cron下次执行时间（简化版）
+     * 计算Cron下次执行时间（使用Spring的CronExpression）
      */
     private LocalDateTime calculateNextCronTime(String cron) {
-        // 实际项目中可以使用 CronExpression 类
-        // 这里简化处理：默认1小时后
+        try {
+            CronExpression cronExpression = CronExpression.parse(cron);
+            // 获取下次执行时间（从当前时间开始）
+            ZonedDateTime nextExecution = cronExpression.next(ZonedDateTime.now());
+            if (nextExecution != null) {
+                return nextExecution.toLocalDateTime();
+            }
+        } catch (Exception e) {
+            log.error("解析Cron表达式失败: {}", cron, e);
+        }
+        // 解析失败时默认1小时后
         return LocalDateTime.now().plusHours(1);
     }
     

@@ -178,11 +178,19 @@ const loadHourlyForecast = async () => {
     const hourlyRes = await weatherApi.getHourlyForecast(
       currentPosition.latitude,
       currentPosition.longitude,
-      24
+      48  // 获取更多小时数据，确保有足够数据从当前时间开始
     )
     
     if (hourlyRes && hourlyRes.forecasts) {
-      hourlyForecast.value = hourlyRes.forecasts.map(item => ({
+      const currentHour = new Date().getHours()
+      
+      // 过滤掉已经过去的小时，从当前时间开始
+      const filteredForecasts = hourlyRes.forecasts.filter(item => {
+        const itemHour = parseInt(item.hour.split(':')[0])
+        return itemHour >= currentHour
+      }).slice(0, 24)  // 只取24小时
+      
+      hourlyForecast.value = filteredForecasts.map(item => ({
         time: item.time,
         hour: item.hour,
         temperature: Math.round(item.temperature),

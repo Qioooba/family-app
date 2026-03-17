@@ -10,6 +10,8 @@ import com.family.family.service.TaskReminderService;
 import com.family.family.vo.TaskReminderVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,8 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -31,6 +35,9 @@ public class TaskReminderServiceImpl implements TaskReminderService {
     
     private final TaskReminderMapper taskReminderMapper;
     private final TaskMapper taskMapper;
+    
+    @Autowired
+    private StringRedisTemplate redisTemplate;
     
     // 地球半径(米)
     private static final double EARTH_RADIUS = 6371000;
@@ -110,33 +117,60 @@ public class TaskReminderServiceImpl implements TaskReminderService {
     
     /**
      * 每分钟检查一次时间提醒
+     * 使用分布式锁防止多实例重复执行
      */
     @Override
     @Scheduled(cron = "0 * * * * ?")
     @Transactional
     public void processTimeReminders() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime start = now.withSecond(0).withNano(0);
-        LocalDateTime end = start.plusMinutes(1);
+        // 分布式锁键
+        String lockKey = "task:reminder:schedule:lock";
+        String lockValue = UUID.randomUUID().toString();
         
-        // 查询当前时间需要触发的提醒
-        List<TaskReminder> reminders = taskReminderMapper.selectList(
-            new LambdaQueryWrapper<TaskReminder>()
-                .eq(TaskReminder::getReminderType, "time")
-                .eq(TaskReminder::getIsTriggered, 0)
-                .between(TaskReminder::getReminderTime, start, end)
-        );
-        
-        for (TaskReminder reminder : reminders) {
-            try {
-                triggerReminder(reminder);
-            } catch (Exception e) {
-                log.error("触发时间提醒失败, reminderId={}, error={}", reminder.getId(), e.getMessage());
+        try {
+            // 尝试获取锁，有效期2分钟
+            Boolean locked = redisTemplate.opsForValue().setIfAbsent(lockKey, lockValue, 2, TimeUnit.MINUTES);
+            if (!Boolean.TRUE.equals(locked)) {
+                log.debug("未获取到分布式锁，跳过本次任务提醒执行");
+                return;
             }
-        }
-        
-        if (!reminders.isEmpty()) {
-            log.info("处理时间提醒完成, 触发数量={}", reminders.size());
+            
+            log.debug("获取到分布式锁，开始处理任务时间提醒...");
+            
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime start = now.withSecond(0).withNano(0);
+            LocalDateTime end = start.plusMinutes(1);
+            
+            // 查询当前时间需要触发的提醒
+            List<TaskReminder> reminders = taskReminderMapper.selectList(
+                new LambdaQueryWrapper<TaskReminder>()
+                    .eq(TaskReminder::getReminderType, "time")
+                    .eq(TaskReminder::getIsTriggered, 0)
+                    .between(TaskReminder::getReminderTime, start, end)
+            );
+            
+            for (TaskReminder reminder : reminders) {
+                try {
+                    triggerReminder(reminder);
+                } catch (Exception e) {
+                    log.error("触发时间提醒失败, reminderId={}, error={}", reminder.getId(), e.getMessage());
+                }
+            }
+            
+            if (!reminders.isEmpty()) {
+                log.info("处理时间提醒完成, 触发数量={}", reminders.size());
+            }
+        } finally {
+            // 释放锁（只释放自己加的锁）
+            try {
+                String currentValue = redisTemplate.opsForValue().get(lockKey);
+                if (lockValue.equals(currentValue)) {
+                    redisTemplate.delete(lockKey);
+                    log.debug("释放任务提醒分布式锁");
+                }
+            } catch (Exception e) {
+                log.warn("释放任务提醒分布式锁失败", e);
+            }
         }
     }
     

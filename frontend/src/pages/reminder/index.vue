@@ -34,7 +34,12 @@
         class="reminder-card"
         :class="{ disabled: item.status !== 1 }"
         @click="goDetail(item)"
+        @longpress="showDeleteMenu(item)"
       >
+        <!-- 删除按钮 -->
+        <view class="delete-icon" @click.stop="deleteReminder(item)">
+          <text>🗑️</text>
+        </view>
         <view class="card-left">
           <view class="type-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
             <text>⏰</text>
@@ -411,6 +416,44 @@ export default {
       this.toggleStatus(item)
     },
     
+    // 长按显示删除菜单
+    showDeleteMenu(item) {
+      uni.showActionSheet({
+        itemList: ['删除提醒'],
+        itemColor: '#ff4d4f',
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            this.deleteReminder(item)
+          }
+        }
+      })
+    },
+    
+    // 删除提醒
+    async deleteReminder(item) {
+      uni.showModal({
+        title: '确认删除',
+        content: `确定要删除「${item.reminderName || '提醒'}」吗？`,
+        confirmColor: '#ff4d4f',
+        success: async (res) => {
+          if (res.confirm) {
+            try {
+              await this.$request.post('/api/reminder/delete', { id: item.id })
+              uni.showToast({ title: '删除成功' })
+              // 从列表中移除
+              const index = this.reminders.findIndex(r => r.id === item.id)
+              if (index > -1) {
+                this.reminders.splice(index, 1)
+              }
+            } catch (e) {
+              console.error('删除失败', e)
+              uni.showToast({ title: e.message || '删除失败', icon: 'none' })
+            }
+          }
+        }
+      })
+    },
+    
     // 获取图标
     getIcon(type) {
       const map = {
@@ -784,6 +827,28 @@ export default {
   padding: 24rpx;
   border-radius: 16rpx;
   margin-bottom: 16rpx;
+  position: relative;
+  
+  // 删除按钮
+  .delete-icon {
+    position: absolute;
+    top: 12rpx;
+    right: 12rpx;
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28rpx;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    z-index: 10;
+    
+    &:active {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
   box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
   
   &.disabled {

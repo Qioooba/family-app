@@ -100,6 +100,9 @@ public class FamilyReminderController {
             if (reminder.getPushScope() == null) {
                 reminder.setPushScope("SELF");
             }
+            if (reminder.getReminderType() == null || reminder.getReminderType().trim().isEmpty()) {
+                reminder.setReminderType("SYSTEM");
+            }
             
             boolean success = reminderService.createReminder(reminder);
             if (success) {

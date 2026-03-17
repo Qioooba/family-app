@@ -8,18 +8,18 @@ CREATE TABLE IF NOT EXISTS reminder_config (
     
     -- 推送范围
     push_scope VARCHAR(20) DEFAULT 'SELF' COMMENT '推送范围：SELF-仅自己 ALL-全部用户 SPECIFIED-指定用户',
-    target_user_ids TEXT COMMENT '目标用户ID列表(JSON格式)',
+    target_user_ids JSON COMMENT '目标用户ID列表(JSON格式)',
     
     -- 时间配置
     cron_expression VARCHAR(50) COMMENT 'Cron表达式（兼容旧版）',
     remind_time VARCHAR(10) COMMENT '提醒时间，如 08:00',
     frequency_type VARCHAR(20) COMMENT '频率类型：ONCE/DAILY/HOURLY/WEEKLY/MONTHLY/YEARLY/INTERVAL',
-    frequency_config TEXT COMMENT '频率配置(JSON格式)',
+    frequency_config JSON COMMENT '频率配置(JSON格式)',
     
     -- 内容配置
     title_template VARCHAR(200) COMMENT '标题模板',
     content_template TEXT COMMENT '内容模板',
-    business_data TEXT COMMENT '业务数据(JSON格式)',
+    business_data JSON COMMENT '业务数据(JSON格式)',
     
     -- 执行配置
     next_execute_time DATETIME COMMENT '下次执行时间',

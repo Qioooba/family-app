@@ -83,7 +83,7 @@
             <view class="weather-icon-wrapper" :style="{ background: weatherData.iconBg }">
               <text class="weather-icon">{{ weatherData.icon }}</text>
             </view>
-            <text class="location-name">{{ weatherData.locationName }}</text>
+            <text class="location-name" :class="{ 'location-name-long': weatherData.locationName && weatherData.locationName.length > 8 }">{{ weatherData.locationName }}</text>
           </view>
           
           <!-- 第二行：温度 + 天气描述 -->
@@ -142,7 +142,7 @@
             <text>+</text>
           </view>
           <view class="more-btn" @click="goReminderList">
-            <text>管理</text>
+            <text>更多</text>
             ›
           </view>
         </view>
@@ -163,10 +163,8 @@
             <text class="reminder-title">{{ reminder.title }}</text>
             <text class="reminder-time">{{ reminder.time }}</text>
           </view>
-          <view class="reminder-status" :class="{ completed: reminder.completed }">
-            <text v-if="reminder.completed">已完成</text>
-            <text v-else-if="reminder.isOverdue">已过期</text>
-            <text v-else>待完成</text>
+          <view class="reminder-tag" :class="reminder.frequencyType?.toLowerCase()">
+            <text>{{ formatFrequencyType(reminder.frequencyType) }}</text>
           </view>
         </view>
       </view>
@@ -580,6 +578,20 @@ const loadTodayTasks = async () => {
   }
 }
 
+// 格式化频率类型为中文
+const formatFrequencyType = (type) => {
+  const typeMap = {
+    'ONCE': '一次性',
+    'DAILY': '每天',
+    'HOURLY': '每小时',
+    'WEEKLY': '每周',
+    'MONTHLY': '每月',
+    'YEARLY': '每年',
+    'INTERVAL': '间隔'
+  }
+  return typeMap[type] || type || '定时'
+}
+
 // 加载今日提醒
 const loadTodayReminders = async () => {
   try {
@@ -600,9 +612,7 @@ const loadTodayReminders = async () => {
           icon: iconConfig.icon,
           iconBg: iconConfig.bg,
           title: reminder.titleTemplate || reminder.reminderName || '提醒',
-          time: reminder.remindTime || reminder.nextExecuteTime || '',
-          completed: reminder.status === 2,
-          isOverdue: reminder.isOverdue || false
+          time: reminder.remindTime || reminder.nextExecuteTime || ''
         }
       })
   } catch (e) {
@@ -814,8 +824,8 @@ const currentFamily = ref({ name: '幸福小家' })
 // 快捷功能 - 添加阴影
 const quickActions = [
   { name: '纪念日', icon: 'heart', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
-  { name: '心愿', icon: 'star', bgColor: '#FFD700', shadow: '0 8rpx 20rpx rgba(255, 215, 0, 0.35)', path: '/pages/wish/index' },
-  { name: '提醒', icon: 'bell', bgColor: '#FFD700', shadow: '0 8rpx 20rpx rgba(255, 215, 0, 0.35)', path: '/pages/reminder/index' }
+  { name: '心愿', icon: 'gift', bgColor: '#FF6B9D', shadow: '0 8rpx 20rpx rgba(255, 107, 157, 0.35)', path: '/pages/wish/index' },
+  { name: '提醒', icon: 'bell', bgColor: '#8B5CF6', shadow: '0 8rpx 20rpx rgba(139, 92, 246, 0.35)', path: '/pages/reminder/index' }
 ]
 
 // 今日任务
@@ -991,21 +1001,42 @@ const analyzeRainAlert = (hourlyData) => {
     const isStorm = [95, 96, 99].includes(weatherCode)
     
     if (isRain || isSnow || isStorm) {
-      // 判断强度
+      // 判断强度 - 根据气象标准（单位：mm/h）
+      // 小雨: < 2.5, 中雨: 2.5-8, 大雨: 8-16, 暴雨: >= 16
       let intensity = '小'
-      if (precipitation >= 10 || precipitationProbability >= 70) {
+      
+      // 优先根据天气代码判断强度
+      if (isStorm) {
         intensity = '暴'
-      } else if (precipitation >= 5 || precipitationProbability >= 50) {
+      } else if ([65, 67, 82].includes(weatherCode)) {
+        // 大雨、冻雨、大阵雨
         intensity = '大'
-      } else if (precipitation >= 2 || precipitationProbability >= 30) {
+      } else if ([63, 81].includes(weatherCode)) {
+        // 中雨、中阵雨
         intensity = '中'
+      } else if ([61, 80].includes(weatherCode) || precipitation >= 2.5) {
+        // 小雨、小阵雨 或 降水量 >= 2.5mm/h
+        intensity = '小'
+      } else if (precipitation >= 8) {
+        intensity = '中'
+      } else if (precipitation >= 16) {
+        intensity = '大'
+      } else if (precipitation >= 30) {
+        intensity = '暴'
+      }
+      
+      // 降水概率辅助判断（仅当降水量较低时）
+      if (precipitation < 2.5 && precipitationProbability >= 80) {
+        // 高概率但降水量小，仍为小
+        intensity = '小'
       }
       
       alerts.push({
         hoursLater: hoursDiff,
         type: isStorm ? '雷暴' : (isSnow ? '雪' : '雨'),
         intensity: intensity,
-        weatherCode: weatherCode
+        weatherCode: weatherCode,
+        precipitation: precipitation
       })
     }
   }
@@ -1793,6 +1824,10 @@ const getAnniversaryIcon = (type) => {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          
+          &.location-name-long {
+            font-size: 24rpx;
+          }
         }
       }
       
@@ -1899,10 +1934,14 @@ const getAnniversaryIcon = (type) => {
     .title-wrapper {
       display: flex;
       align-items: center;
+      flex-wrap: nowrap;
       
       .section-icon {
         font-size: 36rpx;
         margin-right: 12rpx;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
       }
       
       .section-title {
@@ -1910,6 +1949,9 @@ const getAnniversaryIcon = (type) => {
         font-weight: 600;
         color: #2d3748;
         letter-spacing: -0.3rpx;
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
       }
     }
     

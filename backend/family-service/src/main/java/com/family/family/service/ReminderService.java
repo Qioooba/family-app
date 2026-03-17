@@ -31,6 +31,11 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
         reminder.setExecuteCount(0);
         reminder.setPriority(5);
         
+        // 如果没有设置提醒类型，默认为系统提醒
+        if (reminder.getReminderType() == null || reminder.getReminderType().trim().isEmpty()) {
+            reminder.setReminderType("SYSTEM");
+        }
+        
         // 如果没有设置下次执行时间，初始化为现在（这样调度器会立即处理它）
         if (reminder.getNextExecuteTime() == null) {
             reminder.setNextExecuteTime(LocalDateTime.now());
@@ -90,7 +95,8 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
         
         LambdaQueryWrapper<Reminder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Reminder::getCreateBy, userId)
-               // 查询今天需要执行的提醒，不管状态是启用还是停用
+               .eq(Reminder::getStatus, 1)  // 只查询启用的提醒
+               .isNotNull(Reminder::getNextExecuteTime)  // 确保下次执行时间不为空
                .between(Reminder::getNextExecuteTime, todayStart, todayEnd)
                .orderByAsc(Reminder::getNextExecuteTime);
         return this.list(wrapper);

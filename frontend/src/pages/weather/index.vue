@@ -93,13 +93,19 @@
           <text class="section-subtitle">未来24小时</text>
         </view>
         
-        <scroll-view scroll-x class="hourly-scroll" :scroll-with-animation="true">
+        <scroll-view 
+          scroll-x 
+          class="hourly-scroll" 
+          :scroll-with-animation="true"
+          :scroll-left="0"
+        >
           <view class="hourly-list">
             <view 
               v-for="(item, index) in hourlyForecast" 
               :key="index"
               class="hourly-item"
               :class="{ 'current': index === 0 }"
+              :id="'hour-' + index"
             >
               <text class="hourly-time">{{ index === 0 ? '现在' : item.hour }}</text>
               <view class="hourly-icon-wrapper">
