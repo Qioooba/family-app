@@ -533,12 +533,16 @@ public class ReminderScheduleService {
     
     /**
      * 计算下次周几
+     * 修复：确保找到下一个执行日期，避免当天重复执行
      */
     private LocalDateTime calculateNextWeekDay(List<Integer> weekDays, Map<String, Object> config) {
         if (weekDays == null || weekDays.isEmpty()) return null;
         
         LocalDate today = LocalDate.now();
         int todayWeekDay = today.getDayOfWeek().getValue();
+        String fixedTimeStr = (String) config.getOrDefault("fixedTime", "08:00");
+        LocalTime fixedTime = LocalTime.parse(fixedTimeStr);
+        LocalTime nowTime = LocalTime.now();
         
         // 找到下一个匹配的周几
         int daysToAdd = 0;
@@ -547,17 +551,39 @@ public class ReminderScheduleService {
         for (int i = 1; i <= 7; i++) {
             int checkDay = ((todayWeekDay - 1 + i) % 7) + 1;
             if (weekDays.contains(checkDay)) {
-                daysToAdd = i;
+                // 如果是今天，检查时间是否已过
+                if (i == 7) { // i=7表示一周后的同一天（今天）
+                    // 如果今天的固定时间还没到，可以今天执行
+                    if (nowTime.isBefore(fixedTime)) {
+                        daysToAdd = 0;
+                    } else {
+                        // 今天时间已过，找下一个周期
+                        continue;
+                    }
+                } else {
+                    daysToAdd = i;
+                }
                 found = true;
                 break;
+            }
+        }
+        
+        // 如果没找到（比如所有配置的时间今天都已过），找下一周的同一天
+        if (!found) {
+            for (int i = 1; i <= 7; i++) {
+                int checkDay = ((todayWeekDay - 1 + i) % 7) + 1;
+                if (weekDays.contains(checkDay)) {
+                    daysToAdd = i;
+                    found = true;
+                    break;
+                }
             }
         }
         
         if (!found) return null;
         
         LocalDate nextDate = today.plusDays(daysToAdd);
-        String fixedTime = (String) config.getOrDefault("fixedTime", "08:00");
-        return LocalDateTime.of(nextDate, LocalTime.parse(fixedTime));
+        return LocalDateTime.of(nextDate, fixedTime);
     }
     
     /**
