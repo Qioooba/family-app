@@ -489,7 +489,6 @@
                 <text class="selected-count">{{ reminderForm.targetUserIds.length }} 人</text>
                 <text class="change-btn">修改</text>
               </view>
-              <button style="margin-top: 20rpx; padding: 20rpx; background: #ff6b6b; color: white;" @click="testOpenPicker">测试打开用户选择</button>
             </view>
           </view>
         </scroll-view>
@@ -721,11 +720,17 @@ const loadTodayReminders = async () => {
   }
 }
 
-// 跳转到添加提醒 - 直接在首页打开弹窗
+// 跳转到提醒管理页面新增 - 统一使用提醒管理页面的代码
 const goAddReminder = () => {
-  isNewReminder.value = true
-  resetReminderForm()
-  showReminderModal.value = true
+  uni.switchTab({
+    url: '/pages/reminder/index',
+    success: () => {
+      // 延迟打开新增弹窗
+      setTimeout(() => {
+        uni.$emit('openAddReminder')
+      }, 100)
+    }
+  })
 }
 
 // 跳转到提醒列表

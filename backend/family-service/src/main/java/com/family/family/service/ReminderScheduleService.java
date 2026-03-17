@@ -543,6 +543,7 @@ public class ReminderScheduleService {
             log.info("提醒[{}]下次执行时间已更新: {}", reminder.getReminderName(), nextTime);
         } else if ("ONCE".equals(frequencyType)) {
             // 一次性提醒：nextTime为null是正常的，但需要更新status=0
+            reminder.setStatus(0);  // 立即停用，防止重复执行
             reminder.setNextExecuteTime(null);
             reminderMapper.updateById(reminder);
             log.info("一次性提醒[{}]已执行完成并停用", reminder.getReminderName());
