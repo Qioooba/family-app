@@ -960,20 +960,24 @@ public class WechatWorkService {
             return;
         }
 
-        // 优先使用外部联系人推送（推送到微信个人号）
-        if (identity.hasExternalUserId()) {
+        // 优先使用内部成员推送（企业微信插件）
+        if (identity.hasWorkUserId()) {
             try {
-                sendToExternalUser(token, identity.externalUserId, message);
+                sendReminderMiniappCardToInternalUser(token, identity.workUserId, message);
                 return;
             } catch (Exception e) {
-                log.warn("外部联系人推送失败，尝试内部成员, userId={}, error={}", message.getTargetUserId(), e.getMessage());
-                // 外部失败时回退到内部
+                log.warn("内部成员推送失败，尝试外部联系人, userId={}, error={}", message.getTargetUserId(), e.getMessage());
+                if (identity.hasExternalUserId()) {
+                    sendToExternalUser(token, identity.externalUserId, message);
+                    return;
+                }
+                throw e;
             }
         }
         
-        // 使用内部成员推送（企业微信内部）
-        if (identity.hasWorkUserId()) {
-            sendReminderMiniappCardToInternalUser(token, identity.workUserId, message);
+        // 只有外部联系人ID
+        if (identity.hasExternalUserId()) {
+            sendToExternalUser(token, identity.externalUserId, message);
         }
     }
     
