@@ -111,19 +111,11 @@ export default {
       this.loading = true
       
       try {
-        const res = await uni.request({
-          url: '/api/reminder/list',
-          method: 'GET'
-        })
-        
-        if (res.data?.code === 0) {
-          this.reminders = res.data.data || []
-        } else {
-          uni.showToast({ title: res.data?.message || '加载失败', icon: 'none' })
-        }
+        const data = await this.$request.get('/api/reminder/list')
+        this.reminders = data || []
       } catch (e) {
         console.error('加载提醒失败', e)
-        uni.showToast({ title: '加载失败', icon: 'none' })
+        uni.showToast({ title: e.message || '加载失败', icon: 'none' })
       } finally {
         this.loading = false
       }
@@ -132,24 +124,15 @@ export default {
     // 切换状态
     async toggleStatus(item) {
       try {
-        const res = await uni.request({
-          url: '/api/reminder/toggle',
-          method: 'POST',
-          data: { id: item.id }
+        await this.$request.post('/api/reminder/toggle', { id: item.id })
+        item.status = item.status === 1 ? 0 : 1
+        uni.showToast({ 
+          title: item.status === 1 ? '已启用' : '已停用', 
+          icon: 'none' 
         })
-        
-        if (res.data?.code === 0) {
-          item.status = item.status === 1 ? 0 : 1
-          uni.showToast({ 
-            title: item.status === 1 ? '已启用' : '已停用', 
-            icon: 'none' 
-          })
-        } else {
-          uni.showToast({ title: res.data?.message || '操作失败', icon: 'none' })
-        }
       } catch (e) {
         console.error('切换状态失败', e)
-        uni.showToast({ title: '操作失败', icon: 'none' })
+        uni.showToast({ title: e.message || '操作失败', icon: 'none' })
       }
     },
     
