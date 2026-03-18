@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "心愿墙",
+  "navigationStyle": "custom",
+  "scrollIndicator": "none",
+  "pageScroll": false,
+  "swipeBack": false,
+  "enablePopGesture": false,
+  "usingComponents": {}
+}

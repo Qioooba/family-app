@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "猜谜语",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../../node-modules/uview-plus/components/u-icon/u-icon"
+  }
+}

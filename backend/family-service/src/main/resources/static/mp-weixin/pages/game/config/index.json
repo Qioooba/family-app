@@ -1,0 +1,17 @@
+{
+  "navigationBarTitleText": "游戏设置",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../../node-modules/uview-plus/components/u-icon/u-icon",
+    "u-button": "../../../node-modules/uview-plus/components/u-button/u-button",
+    "u-slider": "../../../node-modules/uview-plus/components/u-slider/u-slider",
+    "u-form-item": "../../../node-modules/uview-plus/components/u-form-item/u-form-item",
+    "u-number-box": "../../../node-modules/uview-plus/components/u-number-box/u-number-box",
+    "u-radio": "../../../node-modules/uview-plus/components/u-radio/u-radio",
+    "u-radio-group": "../../../node-modules/uview-plus/components/u-radio-group/u-radio-group",
+    "u-form": "../../../node-modules/uview-plus/components/u-form/u-form",
+    "u-switch": "../../../node-modules/uview-plus/components/u-switch/u-switch",
+    "u-checkbox": "../../../node-modules/uview-plus/components/u-checkbox/u-checkbox",
+    "u-checkbox-group": "../../../node-modules/uview-plus/components/u-checkbox-group/u-checkbox-group"
+  }
+}

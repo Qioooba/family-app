@@ -1,0 +1,1 @@
+<view class="app-container"><router-view u-i="11580810-0" bind:__l="__l"/><u-tabbar wx:if="{{c}}" bindchange="{{a}}" u-i="11580810-1" bind:__l="__l" bindupdateModelValue="{{b}}" u-p="{{c}}"/></view>

@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "成语接龙",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../../node-modules/uview-plus/components/u-icon/u-icon",
+    "u-popup": "../../../node-modules/uview-plus/components/u-popup/u-popup"
+  }
+}

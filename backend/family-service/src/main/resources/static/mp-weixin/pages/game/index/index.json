@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "游戏大厅",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../../node-modules/uview-plus/components/u-icon/u-icon"
+  }
+}

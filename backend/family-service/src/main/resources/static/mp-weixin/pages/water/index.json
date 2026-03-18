@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "喝水记录",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../node-modules/uview-plus/components/u-icon/u-icon"
+  }
+}

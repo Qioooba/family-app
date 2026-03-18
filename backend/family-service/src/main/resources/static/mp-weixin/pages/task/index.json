@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "待办事项",
+  "navigationStyle": "custom",
+  "scrollIndicator": "none",
+  "pageScroll": false,
+  "swipeBack": false,
+  "enablePopGesture": false,
+  "usingComponents": {
+    "task-modal": "../../components/TaskModal"
+  }
+}

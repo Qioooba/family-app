@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "谁是卧底",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../../node-modules/uview-plus/components/u-icon/u-icon"
+  }
+}

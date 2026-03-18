@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "家庭寻宝",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../../node-modules/uview-plus/components/u-icon/u-icon",
+    "u-button": "../../../node-modules/uview-plus/components/u-button/u-button",
+    "u-popup": "../../../node-modules/uview-plus/components/u-popup/u-popup"
+  }
+}

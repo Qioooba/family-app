@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "任务日历",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "page-header": "../../components/common/PageHeader",
+    "task-stats-cards": "../../components/task/TaskStatsCards",
+    "month-navigator": "../../components/calendar/MonthNavigator"
+  }
+}

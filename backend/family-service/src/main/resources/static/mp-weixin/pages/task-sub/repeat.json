@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "重复设置",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "u-icon": "../../node-modules/uview-plus/components/u-icon/u-icon"
+  }
+}

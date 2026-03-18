@@ -1,0 +1,1 @@
+"use strict";const t=require("../utils/request.js"),s={create:e=>t.request.post("/api/schedule/create",e),getList:e=>t.request.get(`/api/schedule/list/${e}`),getToday:e=>t.request.get(`/api/schedule/today/${e}`),delete:e=>t.request.delete(`/api/schedule/${e}`)};exports.scheduleApi=s;

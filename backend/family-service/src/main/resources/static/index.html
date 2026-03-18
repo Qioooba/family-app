@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=/h5/index.html">
-    <title>家庭小程序</title>
-</head>
-<body>
-    <p>正在跳转到H5页面...</p>
-    <a href="/h5/index.html">点击进入</a>
-</body>
+<html lang="zh-CN">
+  <head>
+    <link rel="stylesheet" href="/assets/uni.b86f90d3.css">
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover" />
+    <title>family-app</title>
+    
+    <!-- IntersectionObserver polyfill for lazy-load -->
+    <script>
+      if (!window.IntersectionObserver) {
+        window.IntersectionObserver = function(callback) {
+          this.observe = function() {}
+          this.unobserve = function() {}
+          this.disconnect = function() {}
+        }
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-4632874d.js"></script>
+    <link rel="stylesheet" href="/assets/index-5c69b859.css">
+  </head>
+  <body>
+    <div id="app"></div>
+    
+  </body>
 </html>
