@@ -744,10 +744,21 @@ const goReminderList = () => {
 const goReminderDetail = (reminder) => {
   isNewReminder.value = false
   
+  // 调试日志：查看传入的reminder对象
+  console.log('首页查看提醒详情:', {
+    id: reminder.id,
+    frequencyType: reminder.frequencyType,
+    frequencyConfig: reminder.frequencyConfig,
+    targetUserIds: reminder.targetUserIds,
+    pushScope: reminder.pushScope,
+    remindTime: reminder.remindTime
+  })
+  
   // 解析 frequencyConfig
   let config = {}
   try {
     config = JSON.parse(reminder.frequencyConfig || '{}')
+    console.log('解析后的config:', config)
   } catch (e) {
     console.error('解析 frequencyConfig 失败', e)
   }
