@@ -369,8 +369,10 @@ export default {
   onLoad(options) {
     if (options.id) {
       this.id = options.id
-      this.loadDetail()
-      this.loadUserList()
+      // 先加载用户列表，再加载详情，确保能匹配用户昵称
+      this.loadUserList().then(() => {
+        this.loadDetail()
+      })
     }
   },
   methods: {
@@ -405,9 +407,19 @@ export default {
       if (this.reminder.pushScope === 'SPECIFIED' && this.reminder.targetUserIds) {
         try {
           const ids = JSON.parse(this.reminder.targetUserIds)
-          // 这里简化处理，实际应该从userList中匹配
-          this.targetUsers = ids.map(id => ({ id, nickname: `用户${id}` }))
-        } catch (e) {}
+          // 从userList中匹配用户昵称
+          this.targetUsers = ids.map(id => {
+            const user = this.userList.find(u => u.userId === id || u.id === id)
+            return { 
+              id, 
+              nickname: user ? (user.nickname || user.username || `用户${id}`) : `用户${id}` 
+            }
+          })
+        } catch (e) {
+          console.error('解析目标用户失败', e)
+        }
+      } else {
+        this.targetUsers = []
       }
     },
     
@@ -418,6 +430,14 @@ export default {
       try {
         config = JSON.parse(r.frequencyConfig || '{}')
       } catch (e) {}
+      
+      // 调试日志
+      console.log('详情页初始化:', {
+        frequencyType: r.frequencyType,
+        frequencyConfig: r.frequencyConfig,
+        config: config,
+        targetUserIds: r.targetUserIds
+      })
       
       // 解析一次性提醒日期
       let onceDate = ''
@@ -437,6 +457,16 @@ export default {
         yearMonthDay = `${month}-${day}`
       }
       
+      // 解析targetUserIds
+      let targetUserIds = []
+      if (r.targetUserIds) {
+        try {
+          targetUserIds = JSON.parse(r.targetUserIds)
+        } catch (e) {
+          console.error('解析targetUserIds失败', e)
+        }
+      }
+      
       this.editForm = {
         reminderName: r.reminderName || '',
         reminderType: r.reminderType || 'SYSTEM',
@@ -448,7 +478,7 @@ export default {
         intervalUnit: config.intervalMinutes ? 'minutes' : config.intervalHours ? 'hours' : 'days',
         workDaysOnly: config.workDaysOnly || false,
         pushScope: r.pushScope || 'SELF',
-        targetUserIds: [],
+        targetUserIds: targetUserIds,
         titleTemplate: r.titleTemplate || '',
         contentTemplate: r.contentTemplate || '',
         onceDate: onceDate,
