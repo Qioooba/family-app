@@ -80,24 +80,58 @@ public class WeatherRainHandler implements SceneReminderHandler {
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
             String location = (String) config.getOrDefault("location", "auto");
             
+            // 如果是auto，尝试获取用户定位信息
+            if ("auto".equals(location)) {
+                String userLocation = getUserLocation(reminder.getCreateBy());
+                if (userLocation != null) {
+                    location = userLocation;
+                    log.info("使用用户定位位置: {}", location);
+                } else {
+                    // 默认使用南京
+                    location = "南京";
+                    log.info("用户无定位信息，使用默认城市: 南京");
+                }
+            }
+            
             // 获取天气信息
             WeatherInfo weather = getWeatherInfo(location);
             if (weather == null) {
-                log.warn("获取天气信息失败");
+                log.warn("获取天气信息失败，位置: {}", location);
                 return false;
             }
             
             // 判断是否有雨
             boolean hasRain = checkHasRain(weather);
             
-            log.info("下雨提醒检查 - 位置: {}, 天气: {}, 有雨: {}", 
-                location, weather.getText(), hasRain);
+            log.info("下雨提醒检查 - 位置: {}, 天气: {}, 温度: {}, 有雨: {}", 
+                location, weather.getText(), weather.getTemperature(), hasRain);
             
             return hasRain;
             
         } catch (Exception e) {
             log.error("检查下雨提醒失败: {}", reminder.getId(), e);
             return false;
+        }
+    }
+    
+    /**
+     * 获取用户定位信息
+     * 从Redis或数据库中获取用户最近一次定位
+     */
+    private String getUserLocation(Long userId) {
+        try {
+            // 尝试从Redis获取用户定位
+            String locationKey = String.format("user:location:%d", userId);
+            String location = redisTemplate.opsForValue().get(locationKey);
+            if (location != null && !location.isEmpty()) {
+                return location;
+            }
+            
+            // 如果Redis没有，返回null（使用默认值）
+            return null;
+        } catch (Exception e) {
+            log.warn("获取用户定位失败: {}", userId, e);
+            return null;
         }
     }
     
@@ -111,11 +145,18 @@ public class WeatherRainHandler implements SceneReminderHandler {
         }
         
         String location = (String) config.getOrDefault("location", "auto");
+        
+        // 处理自动定位
+        if ("auto".equals(location)) {
+            String userLocation = getUserLocation(reminder.getCreateBy());
+            location = userLocation != null ? userLocation : "南京";
+        }
+        
         WeatherInfo weather = getWeatherInfo(location);
         
         return template
             .replace("{userName}", user.getNickname() != null ? user.getNickname() : "亲爱的")
-            .replace("{location}", weather != null ? weather.getLocation() : "您所在地区");
+            .replace("{location}", weather != null ? weather.getLocation() : location);
     }
     
     @Override
@@ -128,6 +169,13 @@ public class WeatherRainHandler implements SceneReminderHandler {
         }
         
         String location = (String) config.getOrDefault("location", "auto");
+        
+        // 处理自动定位
+        if ("auto".equals(location)) {
+            String userLocation = getUserLocation(reminder.getCreateBy());
+            location = userLocation != null ? userLocation : "南京";
+        }
+        
         WeatherInfo weather = getWeatherInfo(location);
         
         if (weather == null) {
@@ -151,15 +199,15 @@ public class WeatherRainHandler implements SceneReminderHandler {
     public SceneTemplate getDefaultTemplate() {
         return SceneTemplate.builder()
             .sceneType(SCENE_TYPE)
-            .reminderName("🌧️ 下雨提醒")
+            .reminderName("🌧️ 南京下雨提醒")
             .reminderType("WEATHER_RAIN")
             .frequencyType("DAILY")
             .frequencyConfig("{\"fixedTime\": \"07:00\"}")
-            .titleTemplate("🌧️ 今天有雨，记得带伞！")
-            .contentTemplate("{userName}，预计{rainStartTime}开始下雨，气温{temperature}，出门记得带{umbrellaIcon}哦！")
-            .businessData("{\"sceneType\": \"WEATHER_RAIN\", \"location\": \"auto\", \"remindBeforeRain\": 30, \"remindWhenStop\": true}")
+            .titleTemplate("🌧️ 南京今天有雨，记得带伞！")
+            .contentTemplate("{userName}，南京预计{rainStartTime}开始下雨，气温{temperature}，出门记得带{umbrellaIcon}哦！")
+            .businessData("{\"sceneType\": \"WEATHER_RAIN\", \"location\": \"南京\", \"remindBeforeRain\": 30, \"remindWhenStop\": true, \"useUserLocation\": true}")
             .icon(ICON)
-            .description("每天早上检查天气，有雨时自动提醒带伞")
+            .description("每天早上7点检查南京天气，有雨时自动提醒带伞（优先使用您的定位）")
             .bgColor(BG_COLOR)
             .build();
     }
@@ -180,19 +228,39 @@ public class WeatherRainHandler implements SceneReminderHandler {
     
     /**
      * 获取天气信息
+     * 实际项目中应该调用 WeatherService 或天气API
+     * 当前使用模拟数据，根据位置返回不同结果
      */
     private WeatherInfo getWeatherInfo(String location) {
         try {
-            // 这里调用实际的天气服务
-            // 简化实现，实际项目中应该调用 WeatherService
             WeatherInfo info = new WeatherInfo();
-            info.setLocation("北京");
-            info.setText("小雨");
-            info.setTemperature("22");
-            info.setRainStartTime("09:00");
+            info.setLocation(location);
+            
+            // 根据城市模拟不同天气（实际应调用天气API）
+            if (location.contains("南京")) {
+                // 南京天气（模拟下雨）
+                info.setText("小雨");
+                info.setTemperature("18");
+                info.setRainStartTime("09:00");
+            } else if (location.contains("北京")) {
+                info.setText("晴");
+                info.setTemperature("25");
+                info.setRainStartTime(null);
+            } else if (location.contains("上海")) {
+                info.setText("多云转小雨");
+                info.setTemperature("20");
+                info.setRainStartTime("14:00");
+            } else {
+                // 其他城市默认下雨（便于测试）
+                info.setText("阵雨");
+                info.setTemperature("22");
+                info.setRainStartTime("今天晚些时候");
+            }
+            
+            log.debug("获取{}天气: {}, 温度: {}", location, info.getText(), info.getTemperature());
             return info;
         } catch (Exception e) {
-            log.error("获取天气信息失败", e);
+            log.error("获取天气信息失败: {}", location, e);
             return null;
         }
     }

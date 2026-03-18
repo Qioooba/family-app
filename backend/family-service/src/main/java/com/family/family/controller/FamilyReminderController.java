@@ -19,6 +19,7 @@ import com.family.family.service.scene.SceneTemplate;
 import com.family.family.vo.SceneTemplateVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,6 +55,9 @@ public class FamilyReminderController {
     
     @Autowired
     private ReminderMapper reminderMapper;
+    
+    @Autowired
+    private StringRedisTemplate redisTemplate;
     
     /**
      * 获取今日提醒
@@ -668,6 +672,53 @@ public class FamilyReminderController {
         } catch (Exception e) {
             log.error("更新场景配置失败", e);
             return error("更新失败");
+        }
+    }
+    
+    /**
+     * 保存用户定位信息（用于天气提醒）
+     */
+    @PostMapping("/scene/location")
+    public Map<String, Object> saveUserLocation(@RequestBody Map<String, String> params) {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            String location = params.get("location");
+            
+            if (location == null || location.isEmpty()) {
+                return error("位置不能为空");
+            }
+            
+            // 保存到Redis，有效期7天
+            String locationKey = String.format("user:location:%d", userId);
+            redisTemplate.opsForValue().set(locationKey, location, 7, java.util.concurrent.TimeUnit.DAYS);
+            
+            log.info("保存用户定位: userId={}, location={}", userId, location);
+            
+            return success(null, "定位已保存");
+        } catch (Exception e) {
+            log.error("保存用户定位失败", e);
+            return error("保存失败");
+        }
+    }
+    
+    /**
+     * 获取用户定位信息
+     */
+    @GetMapping("/scene/location")
+    public Map<String, Object> getUserLocation() {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            String locationKey = String.format("user:location:%d", userId);
+            String location = redisTemplate.opsForValue().get(locationKey);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("location", location);
+            result.put("hasLocation", location != null);
+            
+            return success(result);
+        } catch (Exception e) {
+            log.error("获取用户定位失败", e);
+            return error("获取失败");
         }
     }
 }
