@@ -645,7 +645,7 @@ export default {
     isWorkDaysOnly(item) {
       try {
         const config = JSON.parse(item.frequencyConfig || '{}')
-        return config.workDaysOnly === true
+        return config.workDaysOnly === true || config.workDaysOnly === 'true'
       } catch (e) {
         return false
       }
