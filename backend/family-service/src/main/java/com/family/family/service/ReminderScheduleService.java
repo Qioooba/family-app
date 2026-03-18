@@ -130,6 +130,13 @@ public class ReminderScheduleService {
         // 3. 获取目标用户列表
         List<Long> targetUserIds = getTargetUserIds(reminder);
         
+        // 调试日志
+        log.info("提醒[{}]推送范围: scope={}, targetUserIds={}, 实际目标用户: {}", 
+                reminder.getReminderName(), 
+                reminder.getPushScope(),
+                reminder.getTargetUserIds(),
+                targetUserIds);
+        
         if (targetUserIds.isEmpty()) {
             log.warn("提醒没有目标用户: {}", reminder.getReminderName());
             updateExecuteRecord(reminder, "NO_TARGET", "没有目标用户");
@@ -137,12 +144,14 @@ public class ReminderScheduleService {
         }
         
         // 4. 为每个用户推送（使用模板变量渲染）
+        log.info("开始推送提醒[{}]给{}个用户", reminder.getReminderName(), targetUserIds.size());
         for (Long userId : targetUserIds) {
-            // 白名单检查 - 只允许齐老大接收推送
+            // 白名单检查 - 只允许齐老大和陶陶接收推送
             if (!REMINDER_PUSH_WHITELIST.contains(userId)) {
-                log.debug("用户{}不在提醒推送白名单中，跳过", userId);
+                log.warn("用户{}不在提醒推送白名单中，跳过", userId);
                 continue;
             }
+            log.info("正在推送提醒[{}]给用户{}", reminder.getReminderName(), userId);
             
             try {
                 // 渲染模板变量
