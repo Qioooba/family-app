@@ -129,6 +129,38 @@
       
     </view>
     
+    <!-- 智能场景提醒 -->
+    <view class="section-card scene-reminders animate-in">
+      <view class="section-header">
+        <view class="title-wrapper">
+          <text class="section-icon">🎯</text>
+          <text class="section-title">智能场景</text>
+        </view>
+        <view class="header-actions">
+          <view class="more-btn" @click="goSceneManage">
+            <text>管理</text>
+            <text class="arrow">›</text>
+          </view>
+        </view>
+      </view>
+      <view class="scene-grid">
+        <view 
+          v-for="(scene, index) in sceneReminders" 
+          :key="scene.sceneType"
+          class="scene-item"
+          :class="{ 'active': scene.enabled }"
+          :style="{ animationDelay: `${index * 0.1}s` }"
+          @click="toggleScene(scene)"
+        >
+          <view class="scene-icon-box" :style="{ background: scene.bgColor }">
+            <text class="scene-icon-emoji">{{ scene.icon }}</text>
+          </view>
+          <text class="scene-name-text">{{ scene.name }}</text>
+          <view class="scene-status-dot" :class="{ 'on': scene.enabled }"></view>
+        </view>
+      </view>
+    </view>
+    
     <!-- 今日提醒 -->
     <view class="section-card reminder-card-small animate-in">
       <view class="section-header">
@@ -1000,6 +1032,98 @@ const todayReminders = ref([])
 const isReminderCollapsed = ref(false)
 const isTaskCollapsed = ref(false)
 
+// ========== 场景化提醒 ==========
+const sceneReminders = ref([
+  {
+    sceneType: 'WATER',
+    name: '喝水提醒',
+    icon: '💧',
+    bgColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    enabled: false,
+    description: '每小时提醒您喝水',
+    loading: false
+  },
+  {
+    sceneType: 'WEATHER_RAIN',
+    name: '下雨提醒',
+    icon: '🌧️',
+    bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    enabled: false,
+    description: '雨天自动提醒带伞',
+    loading: false
+  },
+  {
+    sceneType: 'SEDENTARY',
+    name: '久坐提醒',
+    icon: '🪑',
+    bgColor: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    enabled: false,
+    description: '久坐1小时提醒活动',
+    loading: false
+  },
+  {
+    sceneType: 'EYE_REST',
+    name: '护眼提醒',
+    icon: '👁️',
+    bgColor: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+    enabled: false,
+    description: '用眼45分钟提醒休息',
+    loading: false
+  }
+])
+
+// 加载场景提醒状态
+const loadSceneReminders = async () => {
+  try {
+    const res = await request.get('/api/reminder/scene-templates')
+    if (res && Array.isArray(res)) {
+      res.forEach(scene => {
+        const existing = sceneReminders.value.find(s => s.sceneType === scene.sceneType)
+        if (existing) {
+          existing.enabled = scene.enabled
+          existing.reminderId = scene.reminderId
+        }
+      })
+    }
+  } catch (e) {
+    console.error('加载场景提醒失败', e)
+  }
+}
+
+// 切换场景开关
+const toggleScene = async (scene) => {
+  if (scene.loading) return
+  
+  scene.loading = true
+  try {
+    const res = await request.post('/api/reminder/scene/toggle', {
+      sceneType: scene.sceneType
+    })
+    
+    if (res && res.code === 0) {
+      scene.enabled = !scene.enabled
+      uni.showToast({
+        title: scene.enabled ? `${scene.name}已开启` : `${scene.name}已关闭`,
+        icon: 'none'
+      })
+    } else {
+      uni.showToast({ title: res?.message || '操作失败', icon: 'none' })
+    }
+  } catch (e) {
+    console.error('切换场景失败', e)
+    uni.showToast({ title: '操作失败', icon: 'none' })
+  } finally {
+    scene.loading = false
+  }
+}
+
+// 跳转场景管理
+const goSceneManage = () => {
+  uni.navigateTo({
+    url: '/pages/reminder/scene-manage'
+  })
+}
+
 // 切换折叠状态
 const toggleReminderCollapse = () => {
   isReminderCollapsed.value = !isReminderCollapsed.value
@@ -1670,6 +1794,9 @@ onShow(async () => {
   
   // 加载今日提醒
   loadTodayReminders()
+  
+  // 加载场景提醒
+  loadSceneReminders()
 })
 
 // 获取纪念日图标
@@ -3219,4 +3346,94 @@ const getAnniversaryIcon = (type) => {
   justify-content: space-between;
 }
 
+/* ========== 场景化提醒样式 ========== */
+.scene-reminders {
+  background: linear-gradient(135deg, #fff 0%, #f8f9fc 100%);
+}
+
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20rpx;
+  padding: 20rpx 10rpx;
+}
+
+.scene-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 10rpx;
+  border-radius: 20rpx;
+  background: #f8f9fc;
+  transition: all 0.3s ease;
+  position: relative;
+  animation: fadeInUp 0.5s ease forwards;
+  opacity: 0;
+  transform: translateY(20rpx);
+}
+
+.scene-item:active {
+  transform: scale(0.95);
+}
+
+.scene-item.active {
+  background: linear-gradient(135deg, #fff 0%, #f0f4ff 100%);
+  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.15);
+}
+
+.scene-item.active .scene-name-text {
+  color: #667eea;
+  font-weight: 600;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scene-icon-box {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.scene-icon-emoji {
+  font-size: 44rpx;
+}
+
+.scene-name-text {
+  font-size: 24rpx;
+  color: #666;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.scene-status-dot {
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #ddd;
+  border: 2rpx solid #fff;
+  transition: all 0.3s ease;
+}
+
+.scene-status-dot.on {
+  background: #52c41a;
+  box-shadow: 0 0 8rpx rgba(82, 196, 26, 0.5);
+}
+
+.more-btn .arrow {
+  margin-left: 4rpx;
+  font-size: 24rpx;
+}
 </style>

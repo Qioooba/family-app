@@ -2,16 +2,24 @@ package com.family.family.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.json.JSONUtil;
+import com.family.family.dto.request.SceneCreateRequest;
 import com.family.family.entity.FamilyMember;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
 import com.family.family.mapper.FamilyMemberMapper;
+import com.family.family.mapper.ReminderMapper;
 import com.family.family.mapper.UserMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.family.family.service.ReminderScheduleService;
 import com.family.family.service.ReminderService;
+import com.family.family.service.scene.SceneHandlerFactory;
+import com.family.family.service.scene.SceneReminderHandler;
+import com.family.family.service.scene.SceneTemplate;
+import com.family.family.vo.SceneTemplateVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -40,6 +48,12 @@ public class FamilyReminderController {
     
     @Autowired
     private FamilyMemberMapper familyMemberMapper;
+    
+    @Autowired
+    private SceneHandlerFactory sceneHandlerFactory;
+    
+    @Autowired
+    private ReminderMapper reminderMapper;
     
     /**
      * 获取今日提醒
@@ -393,5 +407,267 @@ public class FamilyReminderController {
         result.put("code", 500);
         result.put("message", message);
         return result;
+    }
+    
+    // ==================== 场景化提醒 API ====================
+    
+    /**
+     * 获取所有场景模板
+     */
+    @GetMapping("/scene-templates")
+    public Map<String, Object> getSceneTemplates() {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            
+            List<SceneTemplateVO> templates = new ArrayList<>();
+            
+            for (SceneReminderHandler handler : sceneHandlerFactory.getAllHandlers()) {
+                // 检查用户是否已创建该场景提醒
+                Reminder existing = reminderMapper.selectOne(
+                    new LambdaQueryWrapper<Reminder>()
+                        .eq(Reminder::getCreateBy, userId)
+                        .eq(Reminder::getReminderType, handler.getSceneType())
+                        .last("LIMIT 1")
+                );
+                
+                SceneTemplateVO vo = SceneTemplateVO.builder()
+                    .sceneType(handler.getSceneType())
+                    .name(handler.getSceneName())
+                    .description(handler.getDefaultTemplate().getDescription())
+                    .icon(handler.getIcon())
+                    .bgColor(handler.getBgColor())
+                    .created(existing != null)
+                    .reminderId(existing != null ? existing.getId() : null)
+                    .enabled(existing != null && existing.getStatus() == 1)
+                    .build();
+                
+                templates.add(vo);
+            }
+            
+            return success(templates);
+        } catch (Exception e) {
+            log.error("获取场景模板失败", e);
+            return error("获取失败");
+        }
+    }
+    
+    /**
+     * 一键创建场景提醒
+     */
+    @PostMapping("/scene/create")
+    public Map<String, Object> createSceneReminder(@RequestBody @Validated SceneCreateRequest request) {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            
+            // 获取场景处理器
+            SceneReminderHandler handler = sceneHandlerFactory.getHandler(request.getSceneType());
+            if (handler == null) {
+                return error("不支持的提醒场景: " + request.getSceneType());
+            }
+            
+            // 获取默认模板
+            SceneTemplate template = handler.getDefaultTemplate();
+            
+            // 创建提醒
+            Reminder reminder = new Reminder();
+            reminder.setReminderName(request.getCustomName() != null ? 
+                request.getCustomName() : template.getReminderName());
+            reminder.setReminderType(template.getReminderType());
+            reminder.setFrequencyType(template.getFrequencyType());
+            reminder.setFrequencyConfig(template.getFrequencyConfig());
+            reminder.setTitleTemplate(template.getTitleTemplate());
+            reminder.setContentTemplate(template.getContentTemplate());
+            
+            // 合并业务数据
+            String businessData = template.getBusinessData();
+            if (request.getCustomConfig() != null && !request.getCustomConfig().isEmpty()) {
+                Map<String, Object> defaultConfig = JSONUtil.parseObj(businessData);
+                defaultConfig.putAll(request.getCustomConfig());
+                businessData = JSONUtil.toJsonStr(defaultConfig);
+            }
+            reminder.setBusinessData(businessData);
+            
+            reminder.setPushScope(request.getPushScope() != null ? request.getPushScope() : "SELF");
+            reminder.setTargetUserIds(request.getTargetUserIds() != null ? 
+                JSONUtil.toJsonStr(request.getTargetUserIds()) : null);
+            reminder.setCreateBy(userId);
+            reminder.setStatus(1);
+            reminder.setPriority(5);
+            
+            boolean success = reminderService.createReminder(reminder);
+            if (success) {
+                // 计算下次执行时间
+                reminderScheduleService.initNextExecuteTime(reminder);
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("id", reminder.getId());
+                result.put("sceneType", handler.getSceneType());
+                result.put("name", reminder.getReminderName());
+                
+                return success(result, "创建成功");
+            }
+            return error("创建失败");
+        } catch (Exception e) {
+            log.error("创建场景提醒失败", e);
+            return error("创建失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 切换场景提醒开关（快速启用/停用）
+     * 如果不存在则自动创建
+     */
+    @PostMapping("/scene/toggle")
+    public Map<String, Object> toggleSceneReminder(@RequestBody Map<String, String> params) {
+        try {
+            String sceneType = params.get("sceneType");
+            if (sceneType == null || sceneType.isEmpty()) {
+                return error("场景类型不能为空");
+            }
+            
+            Long userId = StpUtil.getLoginIdAsLong();
+            
+            // 查询是否已存在该场景提醒
+            Reminder existing = reminderMapper.selectOne(
+                new LambdaQueryWrapper<Reminder>()
+                    .eq(Reminder::getCreateBy, userId)
+                    .eq(Reminder::getReminderType, sceneType)
+                    .last("LIMIT 1")
+            );
+            
+            if (existing != null) {
+                // 切换状态
+                existing.setStatus(existing.getStatus() == 1 ? 0 : 1);
+                reminderMapper.updateById(existing);
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("enabled", existing.getStatus() == 1);
+                result.put("reminderId", existing.getId());
+                
+                return success(result, existing.getStatus() == 1 ? "已开启" : "已关闭");
+            } else {
+                // 自动创建默认场景提醒
+                SceneReminderHandler handler = sceneHandlerFactory.getHandler(sceneType);
+                if (handler == null) {
+                    return error("不支持的提醒场景: " + sceneType);
+                }
+                
+                SceneTemplate template = handler.getDefaultTemplate();
+                
+                Reminder reminder = new Reminder();
+                reminder.setReminderName(template.getReminderName());
+                reminder.setReminderType(template.getReminderType());
+                reminder.setFrequencyType(template.getFrequencyType());
+                reminder.setFrequencyConfig(template.getFrequencyConfig());
+                reminder.setTitleTemplate(template.getTitleTemplate());
+                reminder.setContentTemplate(template.getContentTemplate());
+                reminder.setBusinessData(template.getBusinessData());
+                reminder.setPushScope("SELF");
+                reminder.setCreateBy(userId);
+                reminder.setStatus(1);
+                reminder.setPriority(5);
+                
+                reminderService.createReminder(reminder);
+                reminderScheduleService.initNextExecuteTime(reminder);
+                
+                Map<String, Object> result = new HashMap<>();
+                result.put("enabled", true);
+                result.put("reminderId", reminder.getId());
+                
+                return success(result, "已开启");
+            }
+        } catch (Exception e) {
+            log.error("切换场景提醒失败", e);
+            return error("操作失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取场景提醒配置
+     */
+    @GetMapping("/scene/config/{sceneType}")
+    public Map<String, Object> getSceneConfig(@PathVariable String sceneType) {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            
+            SceneReminderHandler handler = sceneHandlerFactory.getHandler(sceneType);
+            if (handler == null) {
+                return error("不支持的提醒场景");
+            }
+            
+            // 查询用户是否已配置
+            Reminder existing = reminderMapper.selectOne(
+                new LambdaQueryWrapper<Reminder>()
+                    .eq(Reminder::getCreateBy, userId)
+                    .eq(Reminder::getReminderType, sceneType)
+                    .last("LIMIT 1")
+            );
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("sceneType", sceneType);
+            result.put("sceneName", handler.getSceneName());
+            result.put("icon", handler.getIcon());
+            result.put("bgColor", handler.getBgColor());
+            result.put("defaultTemplate", handler.getDefaultTemplate());
+            result.put("exists", existing != null);
+            
+            if (existing != null) {
+                result.put("reminder", existing);
+                result.put("enabled", existing.getStatus() == 1);
+            }
+            
+            return success(result);
+        } catch (Exception e) {
+            log.error("获取场景配置失败", e);
+            return error("获取失败");
+        }
+    }
+    
+    /**
+     * 更新场景提醒配置
+     */
+    @PostMapping("/scene/update")
+    public Map<String, Object> updateSceneReminder(@RequestBody Map<String, Object> params) {
+        try {
+            Long userId = StpUtil.getLoginIdAsLong();
+            String sceneType = (String) params.get("sceneType");
+            
+            if (sceneType == null || sceneType.isEmpty()) {
+                return error("场景类型不能为空");
+            }
+            
+            // 查询现有提醒
+            Reminder existing = reminderMapper.selectOne(
+                new LambdaQueryWrapper<Reminder>()
+                    .eq(Reminder::getCreateBy, userId)
+                    .eq(Reminder::getReminderType, sceneType)
+                    .last("LIMIT 1")
+            );
+            
+            if (existing == null) {
+                return error("该场景提醒不存在");
+            }
+            
+            // 更新配置
+            if (params.containsKey("businessData")) {
+                existing.setBusinessData(JSONUtil.toJsonStr(params.get("businessData")));
+            }
+            if (params.containsKey("frequencyConfig")) {
+                existing.setFrequencyConfig(JSONUtil.toJsonStr(params.get("frequencyConfig")));
+            }
+            if (params.containsKey("pushScope")) {
+                existing.setPushScope((String) params.get("pushScope"));
+            }
+            
+            reminderMapper.updateById(existing);
+            
+            // 重新计算下次执行时间
+            reminderScheduleService.initNextExecuteTime(existing);
+            
+            return success(null, "更新成功");
+        } catch (Exception e) {
+            log.error("更新场景配置失败", e);
+            return error("更新失败");
+        }
     }
 }

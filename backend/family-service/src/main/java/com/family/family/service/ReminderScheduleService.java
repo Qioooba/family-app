@@ -9,6 +9,8 @@ import com.family.family.entity.MessageType;
 import com.family.family.mapper.ReminderMapper;
 import com.family.family.mapper.TaskMapper;
 import com.family.family.mapper.UserMapper;
+import com.family.family.service.scene.SceneHandlerFactory;
+import com.family.family.service.scene.SceneReminderHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -51,6 +53,9 @@ public class ReminderScheduleService {
     
     @Autowired
     private HolidayService holidayService;
+    
+    @Autowired
+    private SceneHandlerFactory sceneHandlerFactory;
     
     private final ObjectMapper objectMapper = new ObjectMapper();
     
@@ -764,5 +769,143 @@ public class ReminderScheduleService {
         } else {
             throw new RuntimeException("提醒不存在: " + reminderId);
         }
+    }
+    
+    // ==================== 场景化提醒调度 ====================
+    
+    /**
+     * 场景化提醒调度（每天早上7/8点执行）
+     * 用于天气类、需要动态判断的提醒
+     */
+    @Scheduled(cron = "0 0 7,8,12,18 * * ?")
+    public void triggerSceneReminders() {
+        log.info("开始检查场景化提醒...");
+        
+        // 场景化提醒类型列表
+        List<String> sceneTypes = Arrays.asList(
+            "WEATHER_RAIN", "WEATHER_TEMP", "SEDENTARY", "EYE_REST", "WATER"
+        );
+        
+        for (String sceneType : sceneTypes) {
+            try {
+                triggerSceneReminderByType(sceneType);
+            } catch (Exception e) {
+                log.error("触发场景提醒失败: {}", sceneType, e);
+            }
+        }
+        
+        log.info("场景化提醒检查完成");
+    }
+    
+    /**
+     * 触发指定类型的场景提醒
+     */
+    private void triggerSceneReminderByType(String sceneType) {
+        SceneReminderHandler handler = sceneHandlerFactory.getHandler(sceneType);
+        if (handler == null) {
+            log.warn("未找到场景处理器: {}", sceneType);
+            return;
+        }
+        
+        // 查询该类型的所有启用提醒
+        List<Reminder> reminders = reminderMapper.selectList(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Reminder>()
+                .eq(Reminder::getReminderType, sceneType)
+                .eq(Reminder::getStatus, 1)
+        );
+        
+        if (reminders.isEmpty()) {
+            return;
+        }
+        
+        log.info("检查场景提醒[{}]: 找到{}个提醒", sceneType, reminders.size());
+        
+        for (Reminder reminder : reminders) {
+            try {
+                // 使用场景处理器判断是否触发
+                if (handler.shouldTrigger(reminder)) {
+                    log.info("场景提醒[{}]触发执行: {}", sceneType, reminder.getReminderName());
+                    executeSceneReminder(reminder, handler);
+                }
+            } catch (Exception e) {
+                log.error("执行场景提醒失败: id={}, type={}", reminder.getId(), sceneType, e);
+            }
+        }
+    }
+    
+    /**
+     * 执行场景化提醒
+     */
+    private void executeSceneReminder(Reminder reminder, SceneReminderHandler handler) {
+        // 1. 检查免打扰时间
+        if (isInQuietHours(reminder)) {
+            log.debug("当前在免打扰时间，跳过场景提醒: {}", reminder.getReminderName());
+            return;
+        }
+        
+        // 2. 获取目标用户
+        List<Long> targetUserIds = getTargetUserIds(reminder);
+        if (targetUserIds.isEmpty()) {
+            log.warn("场景提醒没有目标用户: {}", reminder.getReminderName());
+            return;
+        }
+        
+        // 3. 为每个用户推送
+        log.info("开始推送场景提醒[{}]给{}个用户", reminder.getReminderName(), targetUserIds.size());
+        
+        for (Long userId : targetUserIds) {
+            // 白名单检查
+            if (!REMINDER_PUSH_WHITELIST.contains(userId)) {
+                continue;
+            }
+            
+            try {
+                User user = userMapper.selectById(userId);
+                if (user == null) continue;
+                
+                // 使用场景处理器渲染内容
+                String title = handler.renderTitle(reminder, user);
+                String content = handler.renderContent(reminder, user);
+                
+                // 构建消息
+                String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
+                StringBuilder desc = new StringBuilder();
+                if (content != null && !content.trim().isEmpty()) {
+                    desc.append(content).append("\n\n");
+                }
+                desc.append("⏰ ").append(timeStr).append("\n");
+                
+                // 发送推送
+                wechatWorkService.sendReminderNotification(
+                    userId, 
+                    title, 
+                    desc.toString(), 
+                    reminder.getReminderType(),
+                    "/pages/reminder/index"
+                );
+                
+                // 记录日志
+                reminderLogService.saveLog(reminder, userId, title, desc.toString(), "SUCCESS");
+                
+            } catch (Exception e) {
+                log.error("推送场景提醒给用户失败: userId={}", userId, e);
+                reminderLogService.saveLog(reminder, userId, null, null, "FAILED");
+            }
+        }
+        
+        // 4. 更新执行记录
+        updateExecuteRecord(reminder, "SUCCESS", null);
+        
+        // 5. 标记已提醒（防止重复）
+        markSceneReminded(reminder.getId(), reminder.getReminderType());
+    }
+    
+    /**
+     * 标记场景提醒已执行（防重复）
+     */
+    private void markSceneReminded(Long reminderId, String sceneType) {
+        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+        String cacheKey = String.format("scene:%s:%d:%s", sceneType, reminderId, today);
+        redisTemplate.opsForValue().set(cacheKey, "1", 24, TimeUnit.HOURS);
     }
 }

@@ -69,6 +69,13 @@
       }
     },
     {
+      "path": "pages/reminder/scene-manage",
+      "style": {
+        "navigationBarTitleText": "场景提醒",
+        "navigationStyle": "custom"
+      }
+    },
+    {
       "path": "pages/family/index",
       "style": {
         "navigationBarTitleText": "家庭空间",
