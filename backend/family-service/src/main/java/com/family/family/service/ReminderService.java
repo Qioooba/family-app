@@ -25,11 +25,20 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
      * 创建提醒
      */
     public boolean createReminder(Reminder reminder) {
-        reminder.setStatus(1);
+        // 设置默认值（只在为null时）
+        if (reminder.getStatus() == null) {
+            reminder.setStatus(1);
+        }
         reminder.setCreateType(1);
-        reminder.setPushScope("SELF");
-        reminder.setExecuteCount(0);
-        reminder.setPriority(5);
+        if (reminder.getPushScope() == null || reminder.getPushScope().isEmpty()) {
+            reminder.setPushScope("SELF");
+        }
+        if (reminder.getExecuteCount() == null) {
+            reminder.setExecuteCount(0);
+        }
+        if (reminder.getPriority() == null) {
+            reminder.setPriority(5);
+        }
         
         // 如果没有设置提醒类型，默认为系统提醒
         if (reminder.getReminderType() == null || reminder.getReminderType().trim().isEmpty()) {
