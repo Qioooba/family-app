@@ -456,15 +456,18 @@ public class ReminderScheduleService {
             
             switch (frequencyType) {
                 case "ONCE":
-                    // 一次性提醒：使用配置中的日期和时间，或当前时间+1分钟
-                    String onceDate = (String) config.get("date");
-                    String onceTime = (String) config.get("time");
-                    if (onceDate != null && onceTime != null) {
-                        nextTime = LocalDateTime.parse(onceDate + "T" + onceTime);
-                    } else {
-                        // 默认1分钟后执行
-                        nextTime = LocalDateTime.now().plusMinutes(1);
+                    // 一次性提醒：如果是新建（未执行过），设置执行时间；已执行过则保持null
+                    if (reminder.getLastExecuteTime() == null) {
+                        // 新建提醒，设置下次执行时间
+                        String onceDate = (String) config.get("date");
+                        String onceTime = (String) config.get("time");
+                        if (onceDate != null && onceTime != null) {
+                            nextTime = LocalDateTime.parse(onceDate + "T" + onceTime);
+                        } else {
+                            nextTime = LocalDateTime.now().plusMinutes(1);
+                        }
                     }
+                    // 已执行过的ONCE提醒，nextTime保持null，后面会设置status=0
                     break;
                     
                 case "DAILY":
