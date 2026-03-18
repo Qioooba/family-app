@@ -740,85 +740,79 @@ const goReminderList = () => {
   })
 }
 
-// 跳转到提醒详情 - 调用接口获取完整数据
-const goReminderDetail = async (reminder) => {
+// 跳转到提醒详情 - 使用列表数据（不再调用接口）
+const goReminderDetail = (reminder) => {
   isNewReminder.value = false
   
-  // 调用详情接口获取完整数据
+  // 调试：查看列表数据
+  console.log('首页提醒详情（列表数据）:', reminder)
+  
+  // 解析 frequencyConfig
+  let config = {}
   try {
-    const detail = await request.get(`/api/reminder/detail/${reminder.id}`)
-    console.log('获取提醒详情:', detail)
-    
-    // 解析 frequencyConfig
-    let config = {}
-    try {
-      config = JSON.parse(detail.frequencyConfig || '{}')
-    } catch (e) {
-      console.error('解析 frequencyConfig 失败', e)
-    }
-    
-    // 解析日期和配置
-    let onceDate = ''
-    let yearMonthDay = ''
-    let weekDays = []
-    let monthDay = 1
-    let intervalValue = 60
-    let intervalHours = 1
-    let intervalUnit = 'minutes'
-    
-    if (detail.frequencyType === 'ONCE' && config.date) {
-      onceDate = config.date
-    } else if (detail.frequencyType === 'WEEKLY' && config.weekDays) {
-      weekDays = config.weekDays
-    } else if (detail.frequencyType === 'MONTHLY' && config.monthDay) {
-      monthDay = config.monthDay
-    } else if (detail.frequencyType === 'INTERVAL') {
-      if (config.intervalMinutes) {
-        intervalValue = config.intervalMinutes
-        intervalUnit = 'minutes'
-      } else if (config.intervalHours) {
-        intervalValue = config.intervalHours
-        intervalUnit = 'hours'
-      } else if (config.intervalDays) {
-        intervalValue = config.intervalDays
-        intervalUnit = 'days'
-      }
-    } else if (detail.frequencyType === 'HOURLY' && config.intervalHours) {
-      intervalHours = config.intervalHours
-    }
-    
-    // 解析 targetUserIds
-    let targetUserIds = []
-    if (detail.targetUserIds) {
-      try {
-        targetUserIds = JSON.parse(detail.targetUserIds)
-      } catch (e) {}
-    }
-    
-    // 初始化编辑表单
-    reminderForm.value = {
-      id: detail.id,
-      reminderType: detail.reminderType || 'SYSTEM',
-      frequencyType: detail.frequencyType || 'DAILY',
-      remindTime: config.fixedTime || detail.remindTime || '08:00',
-      titleTemplate: detail.titleTemplate || '',
-      contentTemplate: detail.contentTemplate || '',
-      pushScope: detail.pushScope || 'SELF',
-      onceDate: onceDate,
-      yearMonthDay: yearMonthDay,
-      weekDays: weekDays,
-      monthDay: monthDay,
-      intervalValue: intervalValue,
-      intervalHours: intervalHours,
-      intervalUnit: intervalUnit,
-      workDaysOnly: config.workDaysOnly || false,
-      targetUserIds: targetUserIds
-    }
-    showReminderModal.value = true
+    config = JSON.parse(reminder.frequencyConfig || '{}')
   } catch (e) {
-    console.error('获取提醒详情失败', e)
-    uni.showToast({ title: '获取详情失败', icon: 'none' })
+    console.error('解析 frequencyConfig 失败', e)
   }
+  
+  // 解析日期和配置
+  let onceDate = ''
+  let yearMonthDay = ''
+  let weekDays = []
+  let monthDay = 1
+  let intervalValue = 60
+  let intervalHours = 1
+  let intervalUnit = 'minutes'
+  
+  if (reminder.frequencyType === 'ONCE' && config.date) {
+    onceDate = config.date
+  } else if (reminder.frequencyType === 'WEEKLY' && config.weekDays) {
+    weekDays = config.weekDays
+  } else if (reminder.frequencyType === 'MONTHLY' && config.monthDay) {
+    monthDay = config.monthDay
+  } else if (reminder.frequencyType === 'INTERVAL') {
+    if (config.intervalMinutes) {
+      intervalValue = config.intervalMinutes
+      intervalUnit = 'minutes'
+    } else if (config.intervalHours) {
+      intervalValue = config.intervalHours
+      intervalUnit = 'hours'
+    } else if (config.intervalDays) {
+      intervalValue = config.intervalDays
+      intervalUnit = 'days'
+    }
+  } else if (reminder.frequencyType === 'HOURLY' && config.intervalHours) {
+    intervalHours = config.intervalHours
+  }
+  
+  // 解析 targetUserIds
+  let targetUserIds = []
+  if (reminder.targetUserIds) {
+    try {
+      targetUserIds = JSON.parse(reminder.targetUserIds)
+    } catch (e) {}
+  }
+  
+  // 初始化编辑表单
+  reminderForm.value = {
+    id: reminder.id,
+    reminderType: reminder.reminderType || 'SYSTEM',
+    frequencyType: reminder.frequencyType || 'DAILY',
+    remindTime: config.fixedTime || reminder.remindTime || '08:00',
+    titleTemplate: reminder.titleTemplate || '',
+    contentTemplate: reminder.contentTemplate || '',
+    pushScope: reminder.pushScope || 'SELF',
+    onceDate: onceDate,
+    yearMonthDay: yearMonthDay,
+    weekDays: weekDays,
+    monthDay: monthDay,
+    intervalValue: intervalValue,
+    intervalHours: intervalHours,
+    intervalUnit: intervalUnit,
+    workDaysOnly: config.workDaysOnly || false,
+    targetUserIds: targetUserIds
+  }
+  showReminderModal.value = true
 }
 
 // 关闭提醒弹窗
