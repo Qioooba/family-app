@@ -743,24 +743,71 @@ const goReminderList = () => {
 // 跳转到提醒详情 - 改为打开弹窗
 const goReminderDetail = (reminder) => {
   isNewReminder.value = false
+  
+  // 解析 frequencyConfig
+  let config = {}
+  try {
+    config = JSON.parse(reminder.frequencyConfig || '{}')
+  } catch (e) {
+    console.error('解析 frequencyConfig 失败', e)
+  }
+  
+  // 解析日期和配置
+  let onceDate = ''
+  let yearMonthDay = ''
+  let weekDays = []
+  let monthDay = 1
+  let intervalValue = 60
+  let intervalHours = 1
+  let intervalUnit = 'minutes'
+  
+  if (reminder.frequencyType === 'ONCE' && config.date) {
+    onceDate = config.date
+  } else if (reminder.frequencyType === 'WEEKLY' && config.weekDays) {
+    weekDays = config.weekDays
+  } else if (reminder.frequencyType === 'MONTHLY' && config.monthDay) {
+    monthDay = config.monthDay
+  } else if (reminder.frequencyType === 'INTERVAL') {
+    if (config.intervalMinutes) {
+      intervalValue = config.intervalMinutes
+      intervalUnit = 'minutes'
+    } else if (config.intervalHours) {
+      intervalValue = config.intervalHours
+      intervalUnit = 'hours'
+    } else if (config.intervalDays) {
+      intervalValue = config.intervalDays
+      intervalUnit = 'days'
+    }
+  } else if (reminder.frequencyType === 'HOURLY' && config.intervalHours) {
+    intervalHours = config.intervalHours
+  }
+  
+  // 解析 targetUserIds
+  let targetUserIds = []
+  if (reminder.targetUserIds) {
+    try {
+      targetUserIds = JSON.parse(reminder.targetUserIds)
+    } catch (e) {}
+  }
+  
   // 初始化编辑表单
   reminderForm.value = {
     id: reminder.id,
     reminderType: reminder.reminderType || 'SYSTEM',
     frequencyType: reminder.frequencyType || 'DAILY',
-    remindTime: reminder.remindTime || '08:00',
+    remindTime: config.fixedTime || reminder.remindTime || '08:00',
     titleTemplate: reminder.titleTemplate || '',
     contentTemplate: reminder.contentTemplate || '',
     pushScope: reminder.pushScope || 'SELF',
-    onceDate: '',
-    yearMonthDay: '',
-    weekDays: [],
-    monthDay: 1,
-    intervalValue: 60,
-    intervalHours: 1,
-    intervalUnit: 'minutes',
-    workDaysOnly: false,
-    targetUserIds: []
+    onceDate: onceDate,
+    yearMonthDay: yearMonthDay,
+    weekDays: weekDays,
+    monthDay: monthDay,
+    intervalValue: intervalValue,
+    intervalHours: intervalHours,
+    intervalUnit: intervalUnit,
+    workDaysOnly: config.workDaysOnly || false,
+    targetUserIds: targetUserIds
   }
   showReminderModal.value = true
 }
