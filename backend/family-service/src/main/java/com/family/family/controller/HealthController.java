@@ -1,4 +1,5 @@
 package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.family.entity.WaterRecord;
@@ -15,6 +16,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/health")
+@SaCheckLogin
 public class HealthController {
     
     private final StatsService statsService;

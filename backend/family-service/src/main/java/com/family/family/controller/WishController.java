@@ -1,4 +1,5 @@
 package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 
 import com.family.family.entity.User;
 import com.family.family.entity.Wish;
@@ -15,6 +16,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/wish")
+@SaCheckLogin
 public class WishController {
 
     @Autowired

@@ -117,9 +117,19 @@ public class SystemConfigService {
         return getValue("wechat.work.userid", "XIAOXHUSHOU");
     }
     
+    public String getWechatWorkToken() {
+        return getValue("wechat.work.token", "");
+    }
+    
+    public String getWechatWorkAesKey() {
+        return getValue("wechat.work.aeskey", "");
+    }
+    
     public boolean isWechatWorkConfigured() {
         return !getWechatWorkCorpId().isEmpty() 
             && !getWechatWorkAgentId().isEmpty()
-            && !getWechatWorkSecret().isEmpty();
+            && !getWechatWorkSecret().isEmpty()
+            && !getWechatWorkToken().isEmpty()
+            && !getWechatWorkAesKey().isEmpty();
     }
 }

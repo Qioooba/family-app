@@ -43,12 +43,10 @@ export const waterApi = {
    * @returns {Promise<object>} {userId, targetAmount, success}
    */
   setTarget: (targetAmount, userId) => {
-    console.log('[WaterAPI] setTarget 被调用，参数:', targetAmount, userId, '类型:', typeof targetAmount)
     const data = { 
       targetAmount: parseInt(targetAmount) || 2000,
       userId: userId || 1
     }
-    console.log('[WaterAPI] 请求体:', data)
     return request.post('/api/health/water/target', data)
   },
 

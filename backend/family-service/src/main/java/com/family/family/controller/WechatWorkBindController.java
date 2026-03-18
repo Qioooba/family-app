@@ -1,4 +1,5 @@
 package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
@@ -17,6 +18,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/user/wechat-work")
+@SaCheckLogin
 public class WechatWorkBindController {
 
     @Autowired

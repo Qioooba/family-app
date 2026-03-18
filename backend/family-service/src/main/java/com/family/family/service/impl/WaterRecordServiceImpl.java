@@ -6,6 +6,7 @@ import com.family.family.entity.WaterRecord;
 import com.family.family.mapper.UserWaterGoalMapper;
 import com.family.family.mapper.WaterRecordMapper;
 import com.family.family.service.WaterRecordService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+@Slf4j
 
 @Service
 public class WaterRecordServiceImpl implements WaterRecordService {
@@ -47,9 +50,9 @@ public class WaterRecordServiceImpl implements WaterRecordService {
                     "UNIQUE KEY uk_user_id (user_id)" +
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户饮水目标设置表'";
             jdbcTemplate.execute(sql);
-            System.out.println("user_water_goal 表初始化完成");
+            log.info("user_water_goal 表初始化完成");
         } catch (Exception e) {
-            System.out.println("user_water_goal 表初始化: " + e.getMessage());
+            log.warn("user_water_goal 表初始化失败: {}", e.getMessage());
         }
     }
     

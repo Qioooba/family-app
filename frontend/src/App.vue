@@ -40,16 +40,11 @@ const logVersionInfo = () => {
   try {
     // 使用 uni.getAccountInfoSync 替代 wx.getAccountInfoSync
     const accountInfo = uni.getAccountInfoSync()
-    console.log('accountInfo:', accountInfo)
     
     if (accountInfo && accountInfo.miniProgram) {
       const env = accountInfo.miniProgram.envVersion
       const version = accountInfo.miniProgram.version
       
-      console.log('========== 小程序版本信息 ==========')
-      console.log('环境类型:', env || 'unknown')  // develop-开发版 trial-体验版 release-正式版
-      console.log('版本号:', version || 'unknown')
-      console.log('====================================')
       
       // 存到全局方便调试
       uni.setStorageSync('app_version_info', {
@@ -58,18 +53,15 @@ const logVersionInfo = () => {
         time: new Date().toLocaleString()
       })
     } else {
-      console.log('无法获取版本信息，accountInfo格式:', accountInfo)
     }
   } catch (e) {
     console.error('获取版本信息失败:', e)
     // 备用方案：从 manifest.json 读取
     const manifest = uni.getStorageSync('__UNI_MANIFEST__')
-    console.log('manifest:', manifest)
   }
   // #endif
   
   // #ifndef MP-WEIXIN
-  console.log('非微信小程序环境，跳过版本检测')
   // #endif
 }
 
@@ -83,7 +75,6 @@ const checkUpdate = () => {
   
   updateManager.onCheckForUpdate(function (res) {
     // 请求完新版本信息的回调
-    console.log('[Update] 检测更新:', res.hasUpdate)
     
     // 如果有更新，先记录下来
     if (res.hasUpdate) {
@@ -92,7 +83,6 @@ const checkUpdate = () => {
   })
   
   updateManager.onUpdateReady(function () {
-    console.log('[Update] 新版本已下载完成')
     
     // 强制应用更新 - 不给用户拒绝的机会
     wx.showModal({
@@ -114,7 +104,6 @@ const checkUpdate = () => {
   
   updateManager.onUpdateFailed(function () {
     // 新版本下载失败
-    console.log('[Update] 新版本下载失败')
     uni.showModal({
       title: '更新失败',
       content: '新版本下载失败，请检查网络后重试',
@@ -141,14 +130,12 @@ const checkVersionMismatch = () => {
     
     // 如果版本不匹配，强制清理缓存
     if (lastVersion && lastVersion !== currentBuildVersion) {
-      console.log('[Version] 版本不匹配:', lastVersion, '->', currentBuildVersion)
       forceClearCache('版本已更新，正在清理缓存...')
       return
     }
     
     // 如果构建时间不一致（同一天多次构建）
     if (buildTime && buildTime !== currentBuildTime) {
-      console.log('[Version] 构建时间不一致:', buildTime, '->', currentBuildTime)
       forceClearCache('应用已更新，正在清理缓存...')
       return
     }
@@ -164,7 +151,6 @@ const checkVersionMismatch = () => {
 
 // 强制清理缓存
 const forceClearCache = (message) => {
-  console.log('[Cache] 强制清理缓存')
   
   // 显示提示
   uni.showToast({
@@ -208,7 +194,6 @@ const clearExpiredCache = () => {
     
     // 如果超过1小时或强制清理标志存在，则清理
     if (!timestamp || (now - timestamp > 3600000) || uni.getStorageSync('force_clear')) {
-      console.log('[App] 清理本地缓存...')
       
       // 保留邀请码等配置，只清理用户相关
       const keepKeys = ['family_invite_code', 'cache_clear_time']
@@ -223,7 +208,6 @@ const clearExpiredCache = () => {
       uni.setStorageSync('cache_clear_time', now)
       uni.removeStorageSync('force_clear')
       
-      console.log('[App] 缓存清理完成')
     }
   } catch (e) {
     console.error('[App] 清理缓存失败:', e)

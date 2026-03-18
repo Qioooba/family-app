@@ -1,4 +1,5 @@
 package com.family.family.controller;
+import cn.dev33.satoken.annotation.SaCheckLogin;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -9,6 +10,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/milestone")
+@SaCheckLogin
 public class MilestoneController {
 
     @PutMapping("/{milestoneId}/complete")

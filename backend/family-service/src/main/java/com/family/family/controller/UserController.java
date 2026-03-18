@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -211,19 +212,7 @@ public class UserController {
                 return result;
             }
 
-            // DEBUG: 打印调试信息
-            System.out.println("===== DEBUG LOG =====");
-            System.out.println("Input username: " + username);
-            System.out.println("Input phone: " + phone);
-            System.out.println("Input password: " + password);
-            System.out.println("DB user id: " + user.getId());
-            System.out.println("DB username: " + user.getUsername());
-            System.out.println("DB phone: " + user.getPhone());
-            System.out.println("DB password: " + user.getPassword());
-            System.out.println("DB status: " + user.getStatus());
-            System.out.println("BCrypt matches: " + passwordEncoder.matches(password, user.getPassword()));
-            System.out.println("=====================");
-
+            // 验证密码
             if (!passwordEncoder.matches(password, user.getPassword())) {
                 result.put("code", 401);
                 result.put("message", "用户名或密码错误");
@@ -427,13 +416,71 @@ public class UserController {
             return result;
         }
         
-        // 限制文件类型
+        // ========== 文件安全验证 ==========
+        
+        // 1. MIME Type 验证
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             result.put("code", 400);
             result.put("message", "只能上传图片文件");
             return result;
         }
+        
+        // 2. 扩展名白名单验证
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        }
+        Set<String> allowedExtensions = Set.of(".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp");
+        if (!allowedExtensions.contains(extension)) {
+            result.put("code", 400);
+            result.put("message", "不支持的图片格式，仅支持：JPG、PNG、GIF、WebP、BMP");
+            return result;
+        }
+        
+        // 3. 文件魔数 (Magic Bytes) 验证 - 防止 polyglot 文件
+        try {
+            byte[] header = new byte[12];
+            file.getInputStream().read(header);
+            
+            // 图片魔数定义
+            boolean validMagic = false;
+            // JPEG: FF D8 FF
+            if (header[0] == (byte)0xFF && header[1] == (byte)0xD8 && header[2] == (byte)0xFF) {
+                validMagic = true;
+            }
+            // PNG: 89 50 4E 47 0D 0A 1A 0A
+            else if (header[0] == (byte)0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47) {
+                validMagic = true;
+            }
+            // GIF: 47 49 46 38 (GIF8)
+            else if (header[0] == 0x47 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x38) {
+                validMagic = true;
+            }
+            // BMP: 42 4D (BM)
+            else if (header[0] == 0x42 && header[1] == 0x4D) {
+                validMagic = true;
+            }
+            // WebP: 52 49 46 46 ... 57 45 42 50 (RIFF....WEBP)
+            else if (header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 
+                     && header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50) {
+                validMagic = true;
+            }
+            
+            if (!validMagic) {
+                result.put("code", 400);
+                result.put("message", "文件内容无效，不是合法的图片文件");
+                return result;
+            }
+        } catch (IOException e) {
+            result.put("code", 500);
+            result.put("message", "文件读取失败");
+            return result;
+        }
+        
+        // 4. 生成安全的随机文件名（不使用用户提供的扩展名直接拼接）
+        String newFileName = UUID.randomUUID().toString().replace("-", "") + extension;
         
         try {
             // 创建上传目录
@@ -442,14 +489,6 @@ public class UserController {
             if (!dir.exists()) {
                 dir.mkdirs();
             }
-            
-            // 生成唯一文件名
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String newFileName = UUID.randomUUID().toString().replace("-", "") + extension;
             
             // 保存文件
             Path filePath = Paths.get(avatarDir, newFileName);

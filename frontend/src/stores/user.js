@@ -20,7 +20,6 @@ export const useUserStore = defineStore('user', () => {
       try {
         window.__APP_TOKEN__ = tokenValue
       } catch (e) {
-        console.log('[Store] window.__APP_TOKEN__ 设置失败:', e)
       }
     }
     uni.setStorageSync('token', tokenValue)
@@ -42,7 +41,6 @@ export const useUserStore = defineStore('user', () => {
     const familyId = res?.currentFamilyId
     if (familyId) {
       uni.setStorageSync('currentFamilyId', familyId)
-      console.log('[Store] 保存 currentFamilyId:', familyId)
     }
     await getUserInfo()
     return res
@@ -54,7 +52,6 @@ export const useUserStore = defineStore('user', () => {
     const familyId = res?.currentFamilyId
     if (familyId) {
       uni.setStorageSync('currentFamilyId', familyId)
-      console.log('[Store] 注册后保存 currentFamilyId:', familyId)
     }
     return res
   }
@@ -62,7 +59,6 @@ export const useUserStore = defineStore('user', () => {
   // 微信登录
   const wxLogin = async (wxLoginData) => {
     const res = await request.post('/api/user/wx-login', wxLoginData)
-    console.log('[Store] wxLogin 原始响应:', JSON.stringify(res))
     
     // 处理响应格式
     let loginData = res
@@ -83,7 +79,6 @@ export const useUserStore = defineStore('user', () => {
   const getUserInfo = async () => {
     try {
       const res = await request.get('/api/user/info')
-      console.log('[Store] getUserInfo result:', JSON.stringify(res))
       
       // request.js 已经解包了响应，res 直接是用户数据对象
       // 检查 res 是否是用户对象（有 phone 或 nickname 字段）

@@ -1,5 +1,6 @@
 package com.family.calendar.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaIgnore;
 import com.family.common.core.Result;
 import com.family.calendar.dto.request.ReminderRequest;
 import com.family.calendar.dto.response.ReminderResponse;
@@ -11,11 +12,14 @@ import java.util.List;
 /**
  * 提醒管理控制器
  * 用于管理各类提醒事项
+ * 
+ * 注意：此控制器已被 FamilyReminderController 替代，所有方法均为空实现
+ * 仅用于保持接口兼容性，已标记为 @SaIgnore 不加载
  */
 @RestController
 @RequestMapping("/api/calendar/reminder")
 @RequiredArgsConstructor
-@SaCheckLogin
+@SaIgnore
 public class ReminderController {
     
     /**

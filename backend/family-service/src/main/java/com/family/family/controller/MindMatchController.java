@@ -17,6 +17,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/game/mindmatch")
+@SaCheckLogin
 public class MindMatchController {
     
     @Autowired

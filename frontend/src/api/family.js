@@ -27,7 +27,7 @@ export const familyApi = {
    * @param {string} code - 邀请码
    * @returns {Promise<object>} 验证结果
    */
-  verifyCode: (code) => request.post('/api/family/verify-code', { code }),
+  verifyCode: (code) => request.post('/api/invite-code/verify-code', { code }),
   
   /**
    * 创建邀请码（家长/管理员）

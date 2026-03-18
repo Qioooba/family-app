@@ -2,19 +2,12 @@ package com.family.common.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -24,6 +17,11 @@ import java.time.format.DateTimeParseException;
 /**
  * Jackson 配置类
  * 用于处理 Java 8 日期时间类型的序列化和反序列化
+ * 
+ * 安全配置：
+ * 1. 禁用默认类型信息（防止反序列化攻击）
+ * 2. 忽略未知属性
+ * 3. 不序列化 null 值
  */
 @Configuration
 public class JacksonConfig {
@@ -36,7 +34,7 @@ public class JacksonConfig {
             DateTimeFormatter.ISO_LOCAL_DATE_TIME,                    // 2026-03-08T15:00:00
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),       // 2026-03-08 15:00:00
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),          // 2026-03-08 15:00
-            DateTimeFormatter.ofPattern("yyyy-MM-dd")                 // 2026-03-08
+            DateTimeFormatter.ofPattern("yyyy-MM-dd")                  // 2026-03-08
         };
         
         @Override
@@ -57,7 +55,11 @@ public class JacksonConfig {
             throw new IOException("无法解析日期时间: " + text + "，支持的格式: yyyy-MM-ddTHH:mm:ss, yyyy-MM-dd HH:mm:ss, yyyy-MM-dd HH:mm, yyyy-MM-dd");
         }
     }
-
+    
+    /**
+     * 安全的 ObjectMapper Bean
+     * 禁用不安全的配置防止反序列化攻击
+     */
     @Bean
     @Primary
     public ObjectMapper objectMapper() {
@@ -75,11 +77,23 @@ public class JacksonConfig {
         
         mapper.registerModule(javaTimeModule);
         
-        // 禁用将日期写入为时间戳的形式
+        // ========== 安全配置 ==========
+        
+        // 1. 禁用将日期写入为时间戳的形式
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         
-        // 忽略未知属性
+        // 2. 忽略未知属性（防止因前端字段变化导致反序列化失败）
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        
+        // 3. 不序列化 null 值（减少响应大小）
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        
+        // 5. 禁用 Jackson 的类型信息（防止反序列化攻击）
+        // 重要：关闭 default typing 防止通过 @class 字段执行任意类
+        mapper.deactivateDefaultTyping();
+        
+        // 6. 不允许单引号作为属性名
+        mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, false);
         
         return mapper;
     }

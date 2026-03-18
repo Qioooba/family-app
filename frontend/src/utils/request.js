@@ -69,7 +69,7 @@ const setNavigatingLock = (value) => {
       uni.removeStorageSync('__navigatingToLogin')
     }
   } catch (e) {
-    console.error('设置跳转锁失败:', e)
+    // 忽略跳转锁设置错误
   }
 }
 
@@ -117,15 +117,15 @@ const getToken = () => {
         }
       } catch (e) {
         // window.__APP_TOKEN__ 访问失败，忽略错误
-        console.log('[Token] window.__APP_TOKEN__ 访问失败:', e)
+        // 忽略全局token访问错误
       }
     }
     
     // 简化 token 日志（生产环境只显示是否存在，不显示内容）
-    console.log('[Token] 读取token:', token ? '存在' : '空')
+    // Token读取日志
     return token || ''
   } catch (e) {
-    console.log('[Token] 读取token失败:', e)
+    // 忽略token读取错误
     return ''
   }
 }
@@ -138,7 +138,7 @@ const baseRequest = async (options, retryCount = 0) => {
   const baseUrl = getBaseUrl(options.url)
   
   // 简化的请求日志（不打印敏感信息）
-  console.log(`[Request] ${options.method || 'GET'} ${options.url}`)
+  // Request日志
   
   return new Promise((resolve, reject) => {
     const requestHeaders = {
@@ -164,7 +164,7 @@ const baseRequest = async (options, retryCount = 0) => {
           resolve(result.data)
         } else if (result.retryable && retryCount < CONFIG.RETRY_TIMES) {
           // 可重试的错误
-          console.warn(`请求失败，${CONFIG.RETRY_DELAY}ms后重试(${retryCount + 1}/${CONFIG.RETRY_TIMES})`)
+          // 重试警告
           await delay(CONFIG.RETRY_DELAY * (retryCount + 1))
           resolve(baseRequest(options, retryCount + 1))
         } else {
@@ -174,7 +174,7 @@ const baseRequest = async (options, retryCount = 0) => {
       fail: async (err) => {
         // 网络错误，尝试重试
         if (retryCount < CONFIG.RETRY_TIMES) {
-          console.warn(`网络错误，${CONFIG.RETRY_DELAY}ms后重试(${retryCount + 1}/${CONFIG.RETRY_TIMES})`)
+          // 网络错误警告
           await delay(CONFIG.RETRY_DELAY * (retryCount + 1))
           resolve(baseRequest(options, retryCount + 1))
         } else {
@@ -222,7 +222,7 @@ const handleResponse = (res, options) => {
   }
   
     // 业务错误 - 后端返回 code 0 或 200 都表示成功
-    console.log('[Response] data:', JSON.stringify(data))
+    // Response日志
     if (data.code !== 0 && data.code !== 200) {
     handleBusinessError(data, options)
     return {
@@ -250,13 +250,13 @@ const handleBusinessError = (data, options) => {
   
   // 如果设置了 silent 选项，不显示错误提示，也不处理跳转
   if (options.silent) {
-    console.log(`[Silent Mode] 错误码: ${code}, 消息: ${message}`)
+    // Silent mode日志
     return
   }
   
   // 4010 是自定义的"未登录但不跳转"错误码，静默处理
   if (code === 4010) {
-    console.log(`[4010] 需要登录: ${message}`)
+    // 登录提示日志
     // 只显示提示，不自动跳转
     uni.showToast({ title: message || '请先登录', icon: 'none' })
     return
