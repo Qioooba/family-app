@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+
 /**
  * 提醒调度服务（核心）
  * 每分钟扫描需要执行的提醒任务
@@ -58,6 +60,14 @@ public class ReminderScheduleService {
     private SceneHandlerFactory sceneHandlerFactory;
     
     private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    // Lua脚本：原子性释放分布式锁（只有锁值匹配时才删除）
+    private static final String RELEASE_LOCK_SCRIPT = 
+        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+        "    return redis.call('del', KEYS[1]) " +
+        "else " +
+        "    return 0 " +
+        "end";
     
     /**
      * 每分钟扫描一次需要执行的提醒
@@ -94,22 +104,18 @@ public class ReminderScheduleService {
                 }
             }
         } finally {
-            // 释放锁（只释放自己加的锁）
+            // 使用Lua脚本原子性释放锁
             try {
-                String currentValue = redisTemplate.opsForValue().get(lockKey);
-                if (lockValue.equals(currentValue)) {
-                    redisTemplate.delete(lockKey);
-                    log.debug("释放分布式锁");
+                DefaultRedisScript<Long> script = new DefaultRedisScript<>(RELEASE_LOCK_SCRIPT, Long.class);
+                Long result = redisTemplate.execute(script, Collections.singletonList(lockKey), lockValue);
+                if (result != null && result > 0) {
+                    log.debug("释放分布式锁成功");
                 }
             } catch (Exception e) {
                 log.warn("释放分布式锁失败", e);
             }
         }
     }
-    
-    // 白名单：允许这些用户接收提醒推送（调试期间限制）
-    // 齐老大(userId=7)、陶陶(userId=16)
-    private static final Set<Long> REMINDER_PUSH_WHITELIST = Set.of(7L, 16L);
     
     /**
      * 执行单个提醒 - 参考待办任务推送格式，带小程序码
@@ -150,13 +156,7 @@ public class ReminderScheduleService {
         
         // 4. 为每个用户推送（使用模板变量渲染）
         log.info("开始推送提醒[{}]给{}个用户", reminder.getReminderName(), targetUserIds.size());
-        for (Long userId : targetUserIds) {
-            // 白名单检查 - 只允许齐老大和陶陶接收推送
-            if (!REMINDER_PUSH_WHITELIST.contains(userId)) {
-                log.warn("用户{}不在提醒推送白名单中，跳过", userId);
-                continue;
-            }
-            log.info("正在推送提醒[{}]给用户{}", reminder.getReminderName(), userId);
+        for (Long userId : targetUserIds) {            log.info("正在推送提醒[{}]给用户{}", reminder.getReminderName(), userId);
             
             try {
                 // 渲染模板变量
@@ -853,12 +853,7 @@ public class ReminderScheduleService {
         // 3. 为每个用户推送
         log.info("开始推送场景提醒[{}]给{}个用户", reminder.getReminderName(), targetUserIds.size());
         
-        for (Long userId : targetUserIds) {
-            // 白名单检查
-            if (!REMINDER_PUSH_WHITELIST.contains(userId)) {
-                continue;
-            }
-            
+        for (Long userId : targetUserIds) {            
             try {
                 User user = userMapper.selectById(userId);
                 if (user == null) continue;

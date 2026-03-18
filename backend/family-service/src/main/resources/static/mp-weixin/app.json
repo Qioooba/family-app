@@ -7,6 +7,7 @@
     "pages/wish/index",
     "pages/reminder/index",
     "pages/reminder/detail",
+    "pages/reminder/scene-manage",
     "pages/family/index",
     "pages/profile/index",
     "pages/profile/changelog",

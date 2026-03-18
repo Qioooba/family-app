@@ -19,7 +19,7 @@ public interface ReminderMapper extends BaseMapper<Reminder> {
      * 查询需要执行的提醒（下次执行时间<=当前时间）
      * 限制最多100条，防止一次性处理过多任务
      */
-    @Select("SELECT * FROM reminder_config WHERE status = 1 AND next_execute_time <= #{now} ORDER BY priority DESC, next_execute_time ASC LIMIT 100")
+    @Select("SELECT * FROM reminder_config WHERE status = 1 AND next_remind_time <= #{now} ORDER BY priority DESC, next_remind_time ASC LIMIT 100")
     List<Reminder> selectDueReminders(@Param("now") LocalDateTime now);
     
     /**
@@ -32,9 +32,9 @@ public interface ReminderMapper extends BaseMapper<Reminder> {
     /**
      * 查询指定用户作为目标的提醒列表
      * 限制最多100条
-     * 使用 JSON_CONTAINS 精确匹配用户ID
+     * 使用 FIND_IN_SET 兼容 BigInt 类型
      */
-    @Select("SELECT * FROM reminder_config WHERE status = 1 AND (push_scope = 'ALL' OR (push_scope = 'SPECIFIED' AND JSON_CONTAINS(target_user_ids, CAST(#{userId} AS JSON)))) ORDER BY next_execute_time ASC LIMIT 100")
+    @Select("SELECT * FROM reminder_config WHERE status = 1 AND (push_scope = 'ALL' OR (push_scope = 'SPECIFIED' AND target_user_ids IS NOT NULL AND target_user_ids != '' AND (FIND_IN_SET(CAST(#{userId} AS CHAR), target_user_ids) > 0 OR JSON_CONTAINS(target_user_ids, CAST(#{userId} AS JSON)))) ORDER BY next_remind_time ASC LIMIT 100")
     List<Reminder> selectByTargetUserId(@Param("userId") Long userId);
     
     /**

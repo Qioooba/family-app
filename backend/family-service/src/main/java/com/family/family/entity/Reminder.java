@@ -37,9 +37,16 @@ public class Reminder {
     private String businessData;   // JSON格式
     
     // 执行配置
+    @TableField("next_remind_time")
     private LocalDateTime nextExecuteTime;
+    
+    @TableField("last_remind_time")
     private LocalDateTime lastExecuteTime;
+    
+    @TableField("last_remind_status")
     private String lastExecuteResult;
+    
+    @TableField("remind_count")
     private Integer executeCount;
     private Integer maxExecuteCount;
     
