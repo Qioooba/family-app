@@ -1100,14 +1100,16 @@ const toggleScene = async (scene) => {
       sceneType: scene.sceneType
     })
     
-    if (res && res.code === 0) {
-      scene.enabled = !scene.enabled
+    // request.js 已提取 data 字段，res 直接包含 {enabled, reminderId}
+    if (res && typeof res.enabled === 'boolean') {
+      scene.enabled = res.enabled
+      scene.reminderId = res.reminderId
       uni.showToast({
         title: scene.enabled ? `${scene.name}已开启` : `${scene.name}已关闭`,
         icon: 'none'
       })
     } else {
-      uni.showToast({ title: res?.message || '操作失败', icon: 'none' })
+      uni.showToast({ title: '操作失败', icon: 'none' })
     }
   } catch (e) {
     console.error('切换场景失败', e)

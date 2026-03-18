@@ -274,16 +274,17 @@ const toggleScene = async (scene) => {
       sceneType: scene.sceneType
     })
     
-    if (res && res.code === 0) {
-      scene.enabled = !scene.enabled
-      scene.reminderId = res.data?.reminderId
+    // request.js 已提取 data 字段，res 直接包含 {enabled, reminderId}
+    if (res && typeof res.enabled === 'boolean') {
+      scene.enabled = res.enabled
+      scene.reminderId = res.reminderId
       
       uni.showToast({
         title: scene.enabled ? '已开启' : '已关闭',
         icon: 'none'
       })
     } else {
-      uni.showToast({ title: res?.message || '操作失败', icon: 'none' })
+      uni.showToast({ title: '操作失败', icon: 'none' })
     }
   } catch (e) {
     console.error('切换场景失败', e)
@@ -315,10 +316,11 @@ const saveSceneConfig = async (scene) => {
       businessData: scene.config
     })
     
-    if (res && res.code === 0) {
+    // request.js 已提取 data 字段，成功时 res 为 null 或空对象
+    if (res !== undefined && res !== null) {
       uni.showToast({ title: '保存成功', icon: 'success' })
     } else {
-      uni.showToast({ title: res?.message || '保存失败', icon: 'none' })
+      uni.showToast({ title: '保存失败', icon: 'none' })
     }
   } catch (e) {
     console.error('保存配置失败', e)
