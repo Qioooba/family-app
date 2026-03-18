@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +34,14 @@ import java.util.stream.Collectors;
 public class TaskReminderServiceImpl implements TaskReminderService {
     
     private static final Logger log = LoggerFactory.getLogger(TaskReminderServiceImpl.class);
+    
+    // Lua脚本：原子性释放分布式锁
+    private static final String RELEASE_LOCK_SCRIPT = 
+        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+        "    return redis.call('del', KEYS[1]) " +
+        "else " +
+        "    return 0 " +
+        "end";
     
     private final TaskReminderMapper taskReminderMapper;
     private final TaskMapper taskMapper;
@@ -161,12 +171,12 @@ public class TaskReminderServiceImpl implements TaskReminderService {
                 log.info("处理时间提醒完成, 触发数量={}", reminders.size());
             }
         } finally {
-            // 释放锁（只释放自己加的锁）
+            // 使用Lua脚本原子性释放锁
             try {
-                String currentValue = redisTemplate.opsForValue().get(lockKey);
-                if (lockValue.equals(currentValue)) {
-                    redisTemplate.delete(lockKey);
-                    log.debug("释放任务提醒分布式锁");
+                DefaultRedisScript<Long> script = new DefaultRedisScript<>(RELEASE_LOCK_SCRIPT, Long.class);
+                Long result = redisTemplate.execute(script, Collections.singletonList(lockKey), lockValue);
+                if (result != null && result > 0) {
+                    log.debug("释放任务提醒分布式锁成功");
                 }
             } catch (Exception e) {
                 log.warn("释放任务提醒分布式锁失败", e);

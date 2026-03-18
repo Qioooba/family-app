@@ -29,6 +29,16 @@ public interface ScheduleService {
     void delete(Long scheduleId, Long userId);
 
     /**
+     * 根据ID获取排班
+     */
+    Schedule getById(Long scheduleId);
+
+    /**
+     * 获取今日排班
+     */
+    List<Schedule> getTodaySchedule(Long familyId, Long userId);
+
+    /**
      * 获取我的排班
      */
     List<Schedule> mySchedule(Long userId, String startDate, String endDate);
