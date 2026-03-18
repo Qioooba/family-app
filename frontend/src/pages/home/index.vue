@@ -996,17 +996,6 @@ const selectPushScope = (value) => {
   }
 }
 
-// 测试打开弹窗
-const testOpenPicker = () => {
-  console.log('测试按钮点击')
-  showUserPicker.value = true
-  // 模拟2个用户数据
-  targetUsers.value = [
-    { userId: 7, nickname: '齐老大', avatar: null },
-    { userId: 16, nickname: '陶陶', avatar: '/api/avatars/test.jpg' }
-  ]
-}
-
 // 打开用户选择弹窗
 const openUserPicker = async () => {
   showUserPicker.value = true
