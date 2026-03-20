@@ -4,6 +4,7 @@
  */
 
 import { weatherApi } from '../api/weather'
+import { TENCENT_MAP_KEY } from '../config/keys'
 
 /**
  * 天气代码映射表 (WMO Weather interpretation codes)
@@ -80,8 +81,8 @@ export const reverseGeocode = (latitude, longitude) => {
  */
 export const getLocationByTencentMap = (latitude, longitude) => {
   return new Promise((resolve) => {
-    const TENCENT_MAP_KEY = 'QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY'
-    const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${TENCENT_MAP_KEY}&get_poi=1&poi_options=address_format=short`
+    const key = TENCENT_MAP_KEY
+    const url = `https://apis.map.qq.com/ws/geocoder/v1/?location=${latitude},${longitude}&key=${key}&get_poi=1&poi_options=address_format=short`
     
     uni.request({
       url,
@@ -286,7 +287,7 @@ export const getCurrentLocationWithAddress = () => {
         locationInfo
       })
     } catch (error) {
-      console.error('获取位置失败:', error)
+       // console.error('获取位置失败:', error)
       // 默认返回北京位置
       resolve({
         latitude: 39.9042,
@@ -315,7 +316,7 @@ export const getCurrentLocation = () => {
         })
       },
       fail: (err) => {
-        console.error('获取位置失败:', err)
+         // console.error('获取位置失败:', err)
         resolve({
           latitude: 39.9042,
           longitude: 116.4074,
@@ -335,7 +336,7 @@ export const getCurrentLocation = () => {
           })
         },
         (err) => {
-          console.error('获取位置失败:', err)
+           // console.error('获取位置失败:', err)
           resolve({
             latitude: 39.9042,
             longitude: 116.4074,

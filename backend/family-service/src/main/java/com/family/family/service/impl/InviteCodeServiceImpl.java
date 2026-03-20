@@ -165,11 +165,33 @@ public class InviteCodeServiceImpl extends ServiceImpl<InviteCodeMapper, InviteC
         wrapper.eq(FamilyMember::getFamilyId, familyId)
                .eq(FamilyMember::getUserId, userId)
                .in(FamilyMember::getRole, "owner", "admin");
-        
+
         FamilyMember member = familyMemberMapper.selectOne(wrapper);
         return member != null;
     }
-    
+
+    @Override
+    public boolean isFamilyMember(Long familyId, Long userId) {
+        LambdaQueryWrapper<FamilyMember> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FamilyMember::getFamilyId, familyId)
+               .eq(FamilyMember::getUserId, userId);
+
+        FamilyMember member = familyMemberMapper.selectOne(wrapper);
+        return member != null;
+    }
+
+    @Override
+    public boolean canManageInviteCode(Long codeId, Long userId) {
+        // 获取邀请码信息
+        InviteCode inviteCode = this.getById(codeId);
+        if (inviteCode == null) {
+            return false;
+        }
+
+        // 检查用户是否是该家庭的管理员
+        return isAdmin(inviteCode.getFamilyId(), userId);
+    }
+
     /**
      * 生成唯一邀请码（8位字母数字组合）
      */

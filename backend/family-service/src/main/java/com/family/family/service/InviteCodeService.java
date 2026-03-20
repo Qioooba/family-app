@@ -41,4 +41,14 @@ public interface InviteCodeService extends IService<InviteCode> {
      * 检查用户是否为家长/管理员
      */
     boolean isAdmin(Long familyId, Long userId);
+
+    /**
+     * 检查用户是否为家庭成员
+     */
+    boolean isFamilyMember(Long familyId, Long userId);
+
+    /**
+     * 检查用户是否有权限管理邀请码
+     */
+    boolean canManageInviteCode(Long codeId, Long userId);
 }

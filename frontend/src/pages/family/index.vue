@@ -219,7 +219,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { familyApi } from '@/api/family.js'
-import { statsApi } from '@/api/stats.js'
 import { getDefaultFamily } from '@/utils/defaultFamily.js'
 import { useUserStore } from '@/stores/user.js'
 import { getAvatarUrl } from '@/utils/request.js'
@@ -291,7 +290,7 @@ const checkAdminStatus = async () => {
     const res = await familyApi.checkAdmin(familyId.value, userInfo.id)
     isAdmin.value = res.isAdmin || false
   } catch (e) {
-    console.error('[Family] 检查管理员状态失败:', e)
+     // console.error('[Family] 检查管理员状态失败:', e)
     isAdmin.value = false
   }
 }
@@ -303,7 +302,7 @@ const loadFamilyData = async () => {
     try {
       await familyApi.ensureFamily()
     } catch (e) {
-      console.log('[Family] 确保家庭:', e)
+       // console.log('[Family] 确保家庭:', e)
     }
     
     // 优先使用用户信息中的 currentFamilyId
@@ -314,17 +313,17 @@ const loadFamilyData = async () => {
       // 使用默认家庭
       const defaultFamily = await getDefaultFamily()
       if (!defaultFamily || !defaultFamily.id) {
-        console.warn('[Family] 未找到默认家庭')
+         // console.warn('[Family] 未找到默认家庭')
         return
       }
       familyId.value = defaultFamily.id
     }
     
-    console.log('[Family] 开始加载家庭数据, familyId:', familyId.value)
+     // console.log('[Family] 开始加载家庭数据, familyId:', familyId.value)
     
     // 获取家庭详情
     const familyRes = await familyApi.getById(familyId.value)
-    console.log('[Family] 家庭详情:', familyRes)
+     // console.log('[Family] 家庭详情:', familyRes)
     
     if (familyRes) {
       family.value = {
@@ -333,12 +332,12 @@ const loadFamilyData = async () => {
         inviteCode: familyRes.inviteCode || '',
         memberCount: familyRes.memberCount || 0
       }
-      console.log('[Family] 家庭信息更新成功:', family.value)
+       // console.log('[Family] 家庭信息更新成功:', family.value)
     }
     
     // 获取家庭成员
     const membersRes = await familyApi.getMembers(familyId.value)
-    console.log('[Family] 成员列表:', membersRes)
+     // console.log('[Family] 成员列表:', membersRes)
     
     if (membersRes && Array.isArray(membersRes)) {
       members.value = membersRes.map(m => ({
@@ -349,7 +348,7 @@ const loadFamilyData = async () => {
         role: m.role || 'member',
         isOnline: m.isOnline || false
       }))
-      console.log('[Family] 成员数据更新成功:', members.value)
+       // console.log('[Family] 成员数据更新成功:', members.value)
     }
     
     // 检查管理员状态
@@ -360,7 +359,7 @@ const loadFamilyData = async () => {
       await loadInviteCodes()
     }
   } catch (error) {
-    console.error('[Family] 加载家庭数据失败:', error)
+     // console.error('[Family] 加载家庭数据失败:', error)
   }
 }
 
@@ -377,7 +376,7 @@ const loadInviteCodes = async () => {
       }
     }
   } catch (e) {
-    console.error('[Family] 加载邀请码失败:', e)
+     // console.error('[Family] 加载邀请码失败:', e)
   }
 }
 
@@ -413,7 +412,7 @@ const generateNewCode = async () => {
       uni.showToast({ title: '生成失败', icon: 'none' })
     }
   } catch (e) {
-    console.error('[Family] 生成邀请码失败:', e)
+     // console.error('[Family] 生成邀请码失败:', e)
     uni.showToast({ title: '生成失败', icon: 'none' })
   } finally {
     generating.value = false
@@ -434,15 +433,15 @@ const loadFamilyStats = async () => {
     // 使用默认家庭
     const defaultFamily = await getDefaultFamily()
     if (!defaultFamily || !defaultFamily.id) {
-      console.warn('[Family] 未找到默认家庭，使用默认值')
+       // console.warn('[Family] 未找到默认家庭，使用默认值')
       familyId.value = 1
     } else {
       familyId.value = defaultFamily.id
     }
     
-    console.log('[Family] 开始加载家庭统计, familyId:', familyId.value)
-    const res = await statsApi.getFamilyMonthlyStats(familyId.value)
-    console.log('[Family] 统计接口返回:', res)
+     // console.log('[Family] 开始加载家庭统计, familyId:', familyId.value)
+    const res = await familyApi.getStatistics(familyId.value)
+     // console.log('[Family] 统计接口返回:', res)
     
     if (res) {
       stats.value = {
@@ -451,10 +450,10 @@ const loadFamilyStats = async () => {
         mealsCooked: res.mealsCooked || 24,
         checkinDays: res.checkinDays || 15
       }
-      console.log('[Family] 统计数据更新成功:', stats.value)
+       // console.log('[Family] 统计数据更新成功:', stats.value)
     }
   } catch (error) {
-    console.error('[Family] 加载家庭统计失败:', error)
+     // console.error('[Family] 加载家庭统计失败:', error)
     // 使用默认值
     stats.value = {
       tasksCompleted: 12,
@@ -540,7 +539,7 @@ const goFamilyManage = () => {
 // 下拉刷新
 const onRefresh = async () => {
   refreshing.value = true
-  console.log('[Family] 下拉刷新')
+   // console.log('[Family] 下拉刷新')
   await loadFamilyData()
   await loadFamilyStats()
   refreshing.value = false
@@ -561,7 +560,7 @@ onMounted(async () => {
   const userFamilyId = userStore.userInfo?.currentFamilyId || uni.getStorageSync('currentFamilyId')
   if (userFamilyId) {
     familyId.value = userFamilyId
-    console.log('[Family] 从用户信息获取到 familyId:', familyId.value)
+     // console.log('[Family] 从用户信息获取到 familyId:', familyId.value)
   }
   
   loadFamilyData()

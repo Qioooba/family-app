@@ -1,10 +1,11 @@
 import { ref, onMounted } from 'vue'
 import { weatherApi } from '../../api/weather'
-import { 
-  getCurrentLocation, 
+import { TENCENT_MAP_KEY } from '../../config/keys'
+import {
+  getCurrentLocation,
   getCurrentLocationWithAddress,
-  requestLocationPermission, 
-  getLifeIndex, 
+  requestLocationPermission,
+  getLifeIndex,
   formatDate,
   formatDateWithWeekday,
   formatHour,
@@ -229,13 +230,13 @@ const onSearchInput = async () => {
   }
   
   const keyword = searchKeyword.value.trim()
-  const key = 'QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY'
-  
+  const key = TENCENT_MAP_KEY
+
   try {
     // 第1步：使用 search 接口搜索城市（获取坐标）
     const searchUrl = `https://apis.map.qq.com/ws/place/v1/search?keyword=${encodeURIComponent(keyword)}&boundary=region(中国)&page_size=10&key=${key}`
     
-    console.log('1. 搜索城市:', searchUrl)
+     // console.log('1. 搜索城市:', searchUrl)
     const [searchErr, searchRes] = await uni.request({ url: searchUrl, method: 'GET' })
     
     if (searchErr || !searchRes || searchRes.statusCode !== 200) {
@@ -267,7 +268,7 @@ const onSearchInput = async () => {
             province = addressComp?.province || ''
           }
         } catch (e) {
-          console.log('获取省份失败，不显示省份')
+           // console.log('获取省份失败，不显示省份')
         }
         
         return {
@@ -287,11 +288,11 @@ const onSearchInput = async () => {
       throw new Error('没有有效结果')
     }
     
-    console.log('搜索结果:', validCities)
+     // console.log('搜索结果:', validCities)
     searchResults.value = sortCitiesByPriority(validCities)
     
   } catch (error) {
-    console.error('腾讯地图搜索失败:', error)
+    // console.error('腾讯地图搜索失败:', error)
     // 只用后端作为最后备选
     try {
       const res = await weatherApi.searchCities(keyword)

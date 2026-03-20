@@ -59,10 +59,10 @@ export const useUserStore = defineStore('user', () => {
   // 微信登录
   const wxLogin = async (wxLoginData) => {
     const res = await request.post('/api/user/wx-login', wxLoginData)
-    
-    // 处理响应格式
+
+    // 处理响应格式 - 同时接受 code=0 和 code=200
     let loginData = res
-    if (res && res.code === 200 && res.data) {
+    if (res && (res.code === 200 || res.code === 0) && res.data) {
       loginData = res.data
     }
     

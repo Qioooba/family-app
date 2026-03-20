@@ -8,10 +8,10 @@ import com.family.family.entity.User;
 import com.family.family.entity.FamilyMember;
 import com.family.family.mapper.UserMapper;
 import com.family.family.mapper.FamilyMemberMapper;
+import com.family.family.service.SystemConfigService;
 import com.family.family.utils.WxDecryptUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -32,11 +32,8 @@ public class WxLoginController {
     @Autowired
     private FamilyMemberMapper familyMemberMapper;
 
-    @Value("${weixin.appId}")
-    private String wxAppId;
-
-    @Value("${weixin.appSecret}")
-    private String wxAppSecret;
+    @Autowired
+    private SystemConfigService configService;
 
     // 默认家庭ID - 所有用户自动加入这个家庭
     private static final Long DEFAULT_FAMILY_ID = 1L;
@@ -65,6 +62,9 @@ public class WxLoginController {
             }
             
             // 检查微信配置
+            String wxAppId = configService.getWeixinAppId();
+            String wxAppSecret = configService.getWeixinAppSecret();
+
             if (wxAppId == null || wxAppId.isEmpty()) {
                 log.error("微信登录失败: 未配置 wxAppId");
                 result.put("code", 500);
@@ -77,7 +77,7 @@ public class WxLoginController {
                 result.put("message", "服务器配置错误：未配置微信 AppSecret");
                 return result;
             }
-            
+
             // 1. 用 code 换取 openid 和 session_key
             log.info("开始调用微信接口换取 openid...");
             String wxResponse = WxDecryptUtil.getOpenidAndSessionKey(wxAppId, wxAppSecret, code);

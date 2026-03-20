@@ -125,7 +125,7 @@ onShow(async () => {
   try {
     await userStore.getUserInfo()
   } catch (e) {
-    console.log('获取用户信息失败', e)
+     // console.log('获取用户信息失败', e)
   }
   
   // 如果已登录，刷新用户信息和积分
@@ -155,7 +155,7 @@ const loadUserData = async () => {
       badgeCount.value = achievementsRes.filter(a => a.earned).length
     }
   } catch (e) {
-    console.error('加载用户数据失败:', e)
+     // console.error('加载用户数据失败:', e)
   }
 }
 
@@ -232,8 +232,8 @@ const uploadAvatar = async (filePath) => {
     const uploadUrl = 'https://qioba.cn:8443/api/user/avatar'
     const token = uni.getStorageSync('token') || ''
     
-    console.log('上传头像, URL:', uploadUrl)
-    console.log('文件路径:', filePath)
+     // console.log('上传头像, URL:', uploadUrl)
+     // console.log('文件路径:', filePath)
     
     // 这里调用上传接口
     const uploadRes = await new Promise((resolve, reject) => {
@@ -245,23 +245,23 @@ const uploadAvatar = async (filePath) => {
           'Authorization': token
         },
         success: (res) => {
-          console.log('上传成功, 响应:', res)
+           // console.log('上传成功, 响应:', res)
           try {
             const data = JSON.parse(res.data)
             resolve(data)
           } catch (e) {
-            console.error('解析响应失败:', e)
+             // console.error('解析响应失败:', e)
             reject(e)
           }
         },
         fail: (err) => {
-          console.error('上传失败:', err)
+           // console.error('上传失败:', err)
           reject(err)
         }
       })
     })
     
-    console.log('上传结果:', uploadRes)
+     // console.log('上传结果:', uploadRes)
     
     if (uploadRes.code === 200 && uploadRes.data?.url) {
       await userStore.updateUserInfo({
@@ -275,7 +275,7 @@ const uploadAvatar = async (filePath) => {
       throw new Error(uploadRes.message || '上传失败')
     }
   } catch (e) {
-    console.error('上传头像失败:', e)
+     // console.error('上传头像失败:', e)
     uni.showToast({
       title: e.message || '上传失败，请重试',
       icon: 'none'

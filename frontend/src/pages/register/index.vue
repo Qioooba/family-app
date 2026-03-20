@@ -203,7 +203,7 @@ const handleRegister = async () => {
         uni.showToast({ title: `注册成功，已加入家庭`, icon: 'success' })
       } catch (joinError) {
         // 加入家庭失败但不影响注册成功
-        console.error('加入家庭失败:', joinError)
+         // console.error('加入家庭失败:', joinError)
         uni.showToast({ title: '注册成功', icon: 'success' })
       }
     } else {
@@ -223,7 +223,7 @@ const handleRegister = async () => {
       }
     }, 1500)
   } catch (e) {
-    console.error('注册失败:', e)
+     // console.error('注册失败:', e)
     uni.showToast({ title: e.message || '注册失败', icon: 'none' })
   } finally {
     loading.value = false

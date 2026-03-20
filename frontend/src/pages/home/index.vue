@@ -585,20 +585,20 @@ const taskModalRef = ref(null)
 
 // ========== 任务弹窗操作 ==========
 const goAddTask = () => {
-  console.log('点击添加按钮', taskModalRef.value)
+   // console.log('点击添加按钮', taskModalRef.value)
   // 添加延迟确保组件已挂载
   setTimeout(async () => {
     if (!taskModalRef.value) {
-      console.error('TaskModal 组件未加载')
+       // console.error('TaskModal 组件未加载')
       uni.showToast({ title: '组件未加载，请重试', icon: 'none' })
       return
     }
-    console.log('准备打开弹窗')
+     // console.log('准备打开弹窗')
     try {
       await taskModalRef.value.open()
-      console.log('弹窗打开成功')
+       // console.log('弹窗打开成功')
     } catch (err) {
-      console.error('弹窗打开失败:', err)
+       // console.error('弹窗打开失败:', err)
     }
   }, 100)
 }
@@ -617,21 +617,21 @@ const getMemberName = (userId) => {
 // 获取成员头像
 const getMemberAvatar = (userId) => {
   if (!userId) {
-    console.log('getMemberAvatar: userId is empty')
+     // console.log('getMemberAvatar: userId is empty')
     return '/static/avatar-default.png'
   }
   try {
     const userIdNum = Number(userId)
     const member = familyMembers.value?.find(m => Number(m?.userId) === userIdNum)
     if (!member) {
-      console.log('getMemberAvatar: member not found for userId:', userId)
+       // console.log('getMemberAvatar: member not found for userId:', userId)
       return '/static/avatar-default.png'
     }
     const avatarUrl = getAvatarUrl(member.avatar)
-    console.log('getMemberAvatar: found for userId:', userId, 'avatar:', avatarUrl)
+     // console.log('getMemberAvatar: found for userId:', userId, 'avatar:', avatarUrl)
     return avatarUrl || '/static/avatar-default.png'
   } catch (e) {
-    console.error('getMemberAvatar error:', e)
+     // console.error('getMemberAvatar error:', e)
     return '/static/avatar-default.png'
   }
 }
@@ -668,7 +668,7 @@ const loadTodayTasks = async () => {
       const membersRes = await familyApi.getMembers(familyId)
       familyMembers.value = membersRes || []
     } catch (e) {
-      console.error('加载家庭成员失败', e)
+       // console.error('加载家庭成员失败', e)
       familyMembers.value = []
     }
     
@@ -690,7 +690,7 @@ const loadTodayTasks = async () => {
       todayTasks.value = []
     }
   } catch (e) {
-    console.error('加载待办数据失败', e)
+     // console.error('加载待办数据失败', e)
     todayTasks.value = []
   }
 }
@@ -745,7 +745,7 @@ const loadTodayReminders = async () => {
       isReminderCollapsed.value = true
     }
   } catch (e) {
-    console.error('加载今日提醒失败', e)
+     // console.error('加载今日提醒失败', e)
     todayReminders.value = []
     // 加载失败也默认折叠
     isReminderCollapsed.value = true
@@ -777,14 +777,14 @@ const goReminderDetail = (reminder) => {
   isNewReminder.value = false
   
   // 调试：查看列表数据
-  console.log('首页提醒详情（列表数据）:', reminder)
+   // console.log('首页提醒详情（列表数据）:', reminder)
   
   // 解析 frequencyConfig
   let config = {}
   try {
     config = JSON.parse(reminder.frequencyConfig || '{}')
   } catch (e) {
-    console.error('解析 frequencyConfig 失败', e)
+     // console.error('解析 frequencyConfig 失败', e)
   }
   
   // 解析日期和配置
@@ -980,7 +980,7 @@ const saveReminder = async () => {
     isReminderCollapsed.value = false
     await loadTodayReminders()
   } catch (e) {
-    console.error('保存失败', e)
+     // console.error('保存失败', e)
     uni.showToast({ title: '保存失败', icon: 'none' })
   }
 }
@@ -1086,7 +1086,7 @@ const loadSceneReminders = async () => {
       })
     }
   } catch (e) {
-    console.error('加载场景提醒失败', e)
+     // console.error('加载场景提醒失败', e)
   }
 }
 
@@ -1112,7 +1112,7 @@ const toggleScene = async (scene) => {
       uni.showToast({ title: '操作失败', icon: 'none' })
     }
   } catch (e) {
-    console.error('切换场景失败', e)
+     // console.error('切换场景失败', e)
     uni.showToast({ title: '操作失败', icon: 'none' })
   } finally {
     scene.loading = false
@@ -1179,7 +1179,7 @@ const openUserPicker = async () => {
     // 使用和待办一样的接口：/api/family/{familyId}/members
     const familyId = uni.getStorageSync('currentFamilyId') || 1
     const res = await request.get(`/api/family/${familyId}/members`)
-    console.log('家庭成员接口返回:', res)
+     // console.log('家庭成员接口返回:', res)
     
     // 处理响应数据 - 可能是 res.data 或直接是数组
     let members = []
@@ -1191,17 +1191,17 @@ const openUserPicker = async () => {
       members = res.list
     }
     
-    console.log('解析的成员列表:', members)
+     // console.log('解析的成员列表:', members)
     
     // 排除当前用户自己
     const currentUserId = uni.getStorageSync('userId')
     targetUsers.value = members.filter(m => m.userId != currentUserId)
-    console.log('过滤后的用户列表:', targetUsers.value)
+     // console.log('过滤后的用户列表:', targetUsers.value)
     
     // 初始化已选择状态
     selectedUsers.value = [...reminderForm.value.targetUserIds]
   } catch (e) {
-    console.error('加载用户列表失败', e)
+     // console.error('加载用户列表失败', e)
     uni.showToast({ title: '加载失败', icon: 'none' })
   }
 }
@@ -1300,7 +1300,7 @@ const loadWaterData = async () => {
       waterData.value.percent = res.percent || 0
     }
   } catch (e) {
-    console.error('加载喝水数据失败', e)
+     // console.error('加载喝水数据失败', e)
   }
 }
 
@@ -1459,7 +1459,7 @@ const loadWeatherData = async () => {
     try {
       locationAuth = await checkLocationAuth()
     } catch (e) {
-      console.log('检查位置授权失败:', e)
+       // console.log('检查位置授权失败:', e)
     }
     
     if (!locationAuth.authorized) {
@@ -1486,7 +1486,7 @@ const loadWeatherData = async () => {
     try {
       location = await getCurrentLocationWithAddress()
     } catch (e) {
-      console.log('获取位置失败:', e)
+       // console.log('获取位置失败:', e)
     }
     
     // 如果位置获取失败，使用默认位置（北京）
@@ -1522,7 +1522,7 @@ const loadWeatherData = async () => {
             method: 'GET',
             success: (res) => resolve(res.data?.hourly || null),
             fail: (err) => {
-              console.log('获取逐小时预报失败:', err)
+               // console.log('获取逐小时预报失败:', err)
               resolve(null)
             }
           })
@@ -1531,7 +1531,7 @@ const loadWeatherData = async () => {
       weatherJson = weatherRes
       hourlyData = hourlyRes
     } catch (e) {
-      console.log('获取天气API失败:', e)
+       // console.log('获取天气API失败:', e)
     }
     
     // 分析降雨提醒
@@ -1577,7 +1577,7 @@ const loadWeatherData = async () => {
       }
     }
   } catch (error) {
-    console.error('加载天气失败:', error)
+     // console.error('加载天气失败:', error)
     // 使用默认天气数据，而不是显示失败
     weatherData.value = {
       locationName: '当前位置',
@@ -1628,7 +1628,7 @@ const getUserLocation = () => {
         resolve({ lat: res.latitude, lon: res.longitude })
       },
       fail: (err) => {
-        console.error('获取位置失败:', err)
+         // console.error('获取位置失败:', err)
         resolve(null)
       }
     })
@@ -1704,7 +1704,7 @@ const toggleTask = async (task) => {
   } catch (error) {
     // API 调用失败，回滚状态
     task.status = originalStatus
-    console.error('切换任务状态失败:', error)
+     // console.error('切换任务状态失败:', error)
     uni.showToast({
       title: isCompleting ? '完成任务失败' : '取消任务失败',
       icon: 'none'
@@ -1750,7 +1750,7 @@ const refreshHomeData = async () => {
   try {
     await userStore.getUserInfo()
   } catch (e) {
-    console.log('获取用户信息失败', e)
+     // console.log('获取用户信息失败', e)
   }
   
   // 重新加载家庭成员
@@ -1759,7 +1759,7 @@ const refreshHomeData = async () => {
     const membersRes = await familyApi.getMembers(familyId)
     familyMembers.value = membersRes || []
   } catch (e) {
-    console.error('加载家庭成员失败', e)
+     // console.error('加载家庭成员失败', e)
   }
   
   // 加载今日待办

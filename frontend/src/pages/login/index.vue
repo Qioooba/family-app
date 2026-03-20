@@ -140,7 +140,7 @@ const handleLogin = async () => {
       uni.reLaunch({ url: '/pages/home/index' })
     }, 500)
   } catch (e) {
-    console.error('登录失败:', e)
+     // console.error('登录失败:', e)
     uni.showToast({
       title: e.message || '登录失败，请检查网络或账号密码',
       icon: 'none',
@@ -196,7 +196,7 @@ const handleWxLogin = async () => {
       code = loginRes.code
     }
     
-    console.log('[WxLogin] 获取 code 成功:', code)
+     // console.log('[WxLogin] 获取 code 成功:', code)
     
     // 调用后端微信登录接口
     await userStore.wxLogin({ code })
@@ -207,7 +207,7 @@ const handleWxLogin = async () => {
       uni.reLaunch({ url: '/pages/home/index' })
     }, 500)
   } catch (e) {
-    console.error('微信登录失败:', e)
+     // console.error('微信登录失败:', e)
     uni.showToast({
       title: e.message || '微信登录失败，请重试',
       icon: 'none',

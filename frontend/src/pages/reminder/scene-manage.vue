@@ -75,24 +75,23 @@
           <!-- 下雨提醒配置 -->
           <template v-if="scene.sceneType === 'WEATHER_RAIN'">
             <view class="config-section">
-              <text class="config-section-title">🌧️ 天气监控</text>
+              <text class="config-section-title">🌧️ 下雨提醒</text>
               <view class="config-item">
-                <text class="config-label">监控位置</text>
-                <picker mode="selector" :range="locationOptions" :value="0">
-                  <view class="picker-value">
-                    <text>{{ scene.config.location === 'auto' ? '📍 自动定位' : scene.config.location }}</text>
-                    <text class="picker-arrow">›</text>
-                  </view>
+                <text class="config-label">提醒时间</text>
+                <picker mode="time" :value="scene.config.reminderTime || '07:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
+                  <view class="picker"><text>{{ scene.config.reminderTime || '07:00' }}</text></view>
                 </picker>
               </view>
               <view class="config-item">
-                <text class="config-label">提醒选项</text>
-                <view class="checkbox-list">
-                  <label class="checkbox-item">
-                    <checkbox :checked="scene.config.remindWhenStop" color="#667eea" />
-                    <text>雨停后提醒收伞</text>
-                  </label>
-                </view>
+                <text class="config-label">监控位置</text>
+                <picker mode="selector" :range="locationOptions" :value="0">
+                  <view class="picker-value"><text>{{ scene.config.location === 'auto' ? '📍 自动定位' : scene.config.location }}</text></view>
+                </picker>
+              </view>
+              <view class="config-item">
+                <text class="config-label">降雨概率阈值: {{ scene.config.rainProbability || 30 }}%</text>
+                <slider :value="scene.config.rainProbability || 30" min="10" max="80" show-value activeColor="#667eea" block-size="20" @change="(e) => updateConfig(scene, 'rainProbability', e.detail.value)" />
+                <text class="config-hint">超过此概率时提醒</text>
               </view>
             </view>
           </template>
@@ -167,10 +166,16 @@
             <view class="config-section">
               <text class="config-section-title">🌡️ 温度监控</text>
               <view class="config-item">
+                <text class="config-label">提醒时间</text>
+                <picker mode="time" :value="scene.config.reminderTime || '08:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
+                  <view class="picker"><text>{{ scene.config.reminderTime || '08:00' }}</text></view>
+                </picker>
+              </view>
+              <view class="config-item">
                 <text class="config-label">提醒类型</text>
                 <view class="alert-type-options">
-                  <view 
-                    v-for="type in alertTypes" 
+                  <view
+                    v-for="type in alertTypes"
                     :key="type.value"
                     class="alert-type-option"
                     :class="{ 'active': scene.config.alertType === type.value }"
@@ -182,9 +187,9 @@
               </view>
               <view class="config-item">
                 <text class="config-label">温度阈值 (°C)</text>
-                <slider 
-                  :value="scene.config.tempThreshold" 
-                  min="-10" max="45" 
+                <slider
+                  :value="scene.config.tempThreshold"
+                  min="-10" max="45"
                   show-value
                   activeColor="#f5576c"
                   block-size="20"
@@ -193,7 +198,146 @@
               </view>
             </view>
           </template>
-          
+
+          <!-- 空气质量提醒配置 -->
+          <template v-if="scene.sceneType === 'AIR_QUALITY'">
+            <view class="config-section">
+              <text class="config-section-title">🌫️ 空气质量监控</text>
+              <view class="config-item">
+                <text class="config-label">提醒时间</text>
+                <picker mode="time" :value="scene.config.reminderTime || '07:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
+                  <view class="picker"><text>{{ scene.config.reminderTime || '07:00' }}</text></view>
+                </picker>
+              </view>
+              <view class="config-item">
+                <text class="config-label">监控位置</text>
+                <input
+                  class="config-input"
+                  :value="scene.config.location === 'auto' ? '自动定位' : scene.config.location"
+                  placeholder="输入城市名称或使用自动定位"
+                  @input="(e) => handleLocationInput(scene, e.detail.value)"
+                />
+                <view class="location-auto-btn" @click="setAutoLocation(scene)">
+                  <text>自动定位</text>
+                </view>
+              </view>
+              <view class="config-item">
+                <text class="config-label">PM2.5 阈值 (μg/m³)</text>
+                <view class="slider-wrapper">
+                  <slider
+                    :value="scene.config.pm25Threshold || 75"
+                    min="35" max="150"
+                    show-value
+                    activeColor="#434343"
+                    block-size="20"
+                    @change="(e) => updateConfig(scene, 'pm25Threshold', e.detail.value)"
+                  />
+                </view>
+                <text class="config-hint">超过此值提醒，默认75（轻度污染）</text>
+              </view>
+              <view class="config-item">
+                <text class="config-label">AQI 阈值</text>
+                <view class="slider-wrapper">
+                  <slider
+                    :value="scene.config.aqiThreshold || 100"
+                    min="50" max="200"
+                    show-value
+                    activeColor="#434343"
+                    block-size="20"
+                    @change="(e) => updateConfig(scene, 'aqiThreshold', e.detail.value)"
+                  />
+                </view>
+                <text class="config-hint">美国AQI指数，超过此值提醒</text>
+              </view>
+            </view>
+          </template>
+
+          <!-- 紫外线提醒配置 -->
+          <template v-if="scene.sceneType === 'UV_INDEX'">
+            <view class="config-section">
+              <text class="config-section-title">☀️ 紫外线监控</text>
+              <view class="config-item">
+                <text class="config-label">提醒时间</text>
+                <picker mode="time" :value="scene.config.reminderTime || '10:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
+                  <view class="picker"><text>{{ scene.config.reminderTime || '10:00' }}</text></view>
+                </picker>
+              </view>
+              <view class="config-item">
+                <text class="config-label">监控位置</text>
+                <input
+                  class="config-input"
+                  :value="scene.config.location === 'auto' ? '自动定位' : scene.config.location"
+                  placeholder="输入城市名称或使用自动定位"
+                  @input="(e) => handleLocationInput(scene, e.detail.value)"
+                />
+                <view class="location-auto-btn" @click="setAutoLocation(scene)">
+                  <text>自动定位</text>
+                </view>
+              </view>
+              <view class="config-item">
+                <text class="config-label">紫外线指数阈值</text>
+                <view class="slider-wrapper">
+                  <slider
+                    :value="scene.config.uvThreshold || 3"
+                    min="1" max="10"
+                    show-value
+                    activeColor="#f6d365"
+                    block-size="20"
+                    @change="(e) => updateConfig(scene, 'uvThreshold', e.detail.value)"
+                  />
+                </view>
+                <text class="config-hint">UV≥3需要防晒，建议设置为3-5</text>
+              </view>
+            </view>
+          </template>
+
+          <!-- 早安晚安提醒配置 -->
+          <template v-if="scene.sceneType === 'MORNING'">
+            <view class="config-section">
+              <text class="config-section-title">🌅 早安晚安</text>
+              <view class="config-item">
+                <text class="config-label">提醒类型</text>
+                <view class="type-selector">
+                  <view class="type-option" :class="{ 'active': scene.config.type === 'morning' }" @click="updateConfig(scene, 'type', 'morning')"><text>☀️ 早安</text></view>
+                  <view class="type-option" :class="{ 'active': scene.config.type === 'evening' }" @click="updateConfig(scene, 'type', 'evening')"><text>🌙 晚安</text></view>
+                </view>
+              </view>
+              <view class="config-item"><text class="config-label">提醒时间</text><picker mode="time" :value="scene.config.reminderTime || '07:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)"><view class="picker"><text>{{ scene.config.reminderTime || '07:00' }}</text></view></picker></view>
+            </view>
+          </template>
+
+          <!-- 签到提醒配置 -->
+          <template v-if="scene.sceneType === 'CHECKIN'">
+            <view class="config-section"><text class="config-section-title">✅ 每日签到</text><view class="config-item"><text class="config-label">签到提醒时间</text><picker mode="time" :value="scene.config.reminderTime || '08:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)"><view class="picker"><text>{{ scene.config.reminderTime || '08:00' }}</text></view></picker></view></view>
+          </template>
+
+          <!-- 今日日程提醒配置 -->
+          <template v-if="scene.sceneType === 'SCHEDULE'">
+            <view class="config-section"><text class="config-section-title">📅 今日日程</text><view class="config-item"><text class="config-label">日程提醒时间</text><picker mode="time" :value="scene.config.reminderTime || '07:30'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)"><view class="picker"><text>{{ scene.config.reminderTime || '07:30' }}</text></view></picker></view></view>
+          </template>
+
+          <!-- 早睡提醒配置 -->
+          <template v-if="scene.sceneType === 'SLEEP'">
+            <view class="config-section"><text class="config-section-title">🌙 早睡提醒</text><view class="config-item"><text class="config-label">提醒时间</text><picker mode="time" :value="scene.config.reminderTime || '22:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)"><view class="picker"><text>{{ scene.config.reminderTime || '22:00' }}</text></view></picker></view></view>
+          </template>
+
+          <!-- 纪念日提醒配置 -->
+          <template v-if="scene.sceneType === 'ANNIVERSARY'">
+            <view class="config-section">
+              <text class="config-section-title">🎂 纪念日提醒</text>
+              <view class="config-item">
+                <text class="config-label">提醒时间</text>
+                <picker mode="time" :value="scene.config.reminderTime || '09:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
+                  <view class="picker"><text>{{ scene.config.reminderTime || '09:00' }}</text></view>
+                </picker>
+              </view>
+              <view class="config-item">
+                <text class="config-label">提前提醒天数</text>
+                <slider :value="scene.config.advanceDays || 3" min="1" max="7" show-value activeColor="#ff9a9e" block-size="20" @change="(e) => updateConfig(scene, 'advanceDays', e.detail.value)" />
+              </view>
+            </view>
+          </template>
+
           <!-- 保存按钮 -->
           <view class="config-actions">
             <button class="save-btn" @click="saveSceneConfig(scene)">
@@ -259,10 +403,17 @@ const loadScenes = async () => {
 const getDefaultConfig = (sceneType) => {
   const configs = {
     WATER: { targetTimes: 8, cupSize: 200, workHours: ['09:00', '18:00'] },
-    WEATHER_RAIN: { location: 'auto', remindBeforeRain: 30, remindWhenStop: true },
+    WEATHER_RAIN: { location: 'auto', reminderTime: '07:00', rainProbability: 30, rainHoursAhead: 3 },
     SEDENTARY: { sitDuration: 60, breakDuration: 5, workHours: ['09:00', '18:00'], postureTips: true },
     EYE_REST: { screenTime: 45, restDuration: 10, eyeExercise: true, blinkReminder: true },
-    WEATHER_TEMP: { location: 'auto', tempThreshold: 35, alertType: 'high' }
+    WEATHER_TEMP: { location: 'auto', reminderTime: '08:00', tempThreshold: 35, alertType: 'high' },
+    AIR_QUALITY: { location: 'auto', reminderTime: '07:00', pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100 },
+    UV_INDEX: { location: 'auto', reminderTime: '10:00', uvThreshold: 3 },
+    MORNING: { type: 'morning', location: 'auto', reminderTime: '07:00' },
+    CHECKIN: { reminderTime: '08:00' },
+    SCHEDULE: { reminderTime: '07:30' },
+    SLEEP: { reminderTime: '22:00' },
+    ANNIVERSARY: { reminderTime: '09:00', advanceDays: 3 }
   }
   return configs[sceneType] || {}
 }
@@ -306,6 +457,21 @@ const toggleExpand = (scene) => {
 // 更新配置
 const updateConfig = (scene, key, value) => {
   scene.config[key] = value
+}
+
+// 处理位置输入
+const handleLocationInput = (scene, value) => {
+  if (value === '自动定位' || value === 'auto') {
+    scene.config.location = 'auto'
+  } else {
+    scene.config.location = value
+  }
+}
+
+// 设置自动定位
+const setAutoLocation = (scene) => {
+  scene.config.location = 'auto'
+  uni.showToast({ title: '已设置为自动定位', icon: 'none' })
 }
 
 // 保存配置
@@ -503,6 +669,13 @@ onShow(() => {
 
 .config-item {
   margin-bottom: 24rpx;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.config-item .config-label {
+  width: 100%;
 }
 
 .config-label {
@@ -510,6 +683,31 @@ onShow(() => {
   color: #666;
   margin-bottom: 16rpx;
   display: block;
+}
+
+.config-hint {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.config-input {
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 26rpx;
+  background: #fff;
+  flex: 1;
+}
+
+.location-auto-btn {
+  background: #667eea;
+  color: #fff;
+  padding: 12rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  margin-left: 16rpx;
 }
 
 // 滑块样式

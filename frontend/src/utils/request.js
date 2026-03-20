@@ -149,7 +149,7 @@ const baseRequest = async (options, retryCount = 0) => {
     }
     
     // 简化请求头日志
-    // console.log(`[Request] 请求头:`, Object.keys(requestHeaders))
+    //  // console.log(`[Request] 请求头:`, Object.keys(requestHeaders))
     
     const requestTask = uni.request({
       url: baseUrl + options.url,

@@ -3,6 +3,8 @@ package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import com.family.family.entity.Family;
 import com.family.family.entity.FamilyMember;
 import com.family.family.entity.User;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping(value = "/api/family", produces = "application/json;charset=UTF-8")
 @SaCheckLogin
@@ -91,9 +94,26 @@ public class FamilyController {
                     .eq(FamilyMember::getUserId, userId)
             );
 
+            if (memberships.isEmpty()) {
+                result.put("code", 200);
+                result.put("message", "success");
+                result.put("data", new ArrayList<>());
+                return result;
+            }
+
+            // 批量查询家庭信息，避免 N+1 问题
+            List<Long> familyIds = memberships.stream()
+                .map(FamilyMember::getFamilyId)
+                .collect(java.util.stream.Collectors.toList());
+
+            List<Family> families = familyMapper.selectBatchIds(familyIds);
+            Map<Long, Family> familyMap = families.stream()
+                .collect(java.util.stream.Collectors.toMap(Family::getId, f -> f));
+
+            // 组装返回数据
             List<Map<String, Object>> familyList = new ArrayList<>();
             for (FamilyMember membership : memberships) {
-                Family family = familyMapper.selectById(membership.getFamilyId());
+                Family family = familyMap.get(membership.getFamilyId());
                 if (family != null) {
                     Map<String, Object> familyData = new HashMap<>();
                     familyData.put("id", family.getId());
@@ -110,6 +130,7 @@ public class FamilyController {
             result.put("message", "success");
             result.put("data", familyList);
         } catch (Exception e) {
+            log.error("获取家庭列表失败", e);
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }
@@ -179,10 +200,9 @@ public class FamilyController {
             result.put("code", 200);
             result.put("message", "success");
         } catch (Exception e) {
-            e.printStackTrace(); // 打印详细错误
+            log.error("系统错误", e);
             result.put("code", 500);
-            result.put("message", "系统繁忙: " + e.getMessage());
-            result.put("error", e.getClass().getName());
+            result.put("message", "系统繁忙，请稍后重试");
         }
         
         return result;
@@ -234,9 +254,9 @@ public class FamilyController {
             result.put("message", "success");
             result.put("data", data);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("获取家庭信息失败", e);
             result.put("code", 500);
-            result.put("message", "系统繁忙: " + e.getMessage());
+            result.put("message", "系统繁忙，请稍后重试");
         }
 
         return result;

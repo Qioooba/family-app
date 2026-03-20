@@ -92,7 +92,7 @@ public class SystemConfigService {
             config = new SystemConfig();
             config.setConfigKey(key);
             config.setConfigValue(value);
-            config.setCategory("general");
+            config.setConfigType("string");
             configMapper.insert(config);
         }
         // 更新缓存
@@ -100,36 +100,56 @@ public class SystemConfigService {
     }
     
     // ==================== 企业微信配置快捷方法 ====================
-    
+
     public String getWechatWorkCorpId() {
-        return getValue("wechat.work.corpid", "");
+        return getValue("wechat_work_corpid", "");
     }
-    
+
     public String getWechatWorkAgentId() {
-        return getValue("wechat.work.agentid", "");
+        return getValue("wechat_work_agentid", "");
     }
-    
+
     public String getWechatWorkSecret() {
-        return getValue("wechat.work.secret", "");
+        return getValue("wechat_work_secret", "");
     }
-    
+
     public String getWechatWorkUserId() {
-        return getValue("wechat.work.userid", "XIAOXHUSHOU");
+        return getValue("wechat_work_userid", "XIAOXHUSHOU");
     }
-    
+
     public String getWechatWorkToken() {
-        return getValue("wechat.work.token", "");
+        return getValue("wechat_work_token", "");
     }
-    
+
     public String getWechatWorkAesKey() {
-        return getValue("wechat.work.aeskey", "");
+        return getValue("wechat_work_aeskey", "");
     }
-    
+
     public boolean isWechatWorkConfigured() {
-        return !getWechatWorkCorpId().isEmpty() 
+        return !getWechatWorkCorpId().isEmpty()
             && !getWechatWorkAgentId().isEmpty()
-            && !getWechatWorkSecret().isEmpty()
-            && !getWechatWorkToken().isEmpty()
-            && !getWechatWorkAesKey().isEmpty();
+            && !getWechatWorkSecret().isEmpty();
+    }
+
+    // ==================== 微信小程序配置快捷方法 ====================
+
+    public String getWeixinAppId() {
+        return getValue("weixin_appid", "");
+    }
+
+    public String getWeixinAppSecret() {
+        return getValue("weixin_appsecret", "");
+    }
+
+    // ==================== 腾讯地图配置快捷方法 ====================
+
+    public String getTencentMapKey() {
+        return getValue("tencent_map_key", "");
+    }
+
+    // ==================== SSL配置快捷方法 ====================
+
+    public String getSslKeystorePassword() {
+        return getValue("ssl_keystore_password", "");
     }
 }

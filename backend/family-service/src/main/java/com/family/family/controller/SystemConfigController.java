@@ -1,6 +1,7 @@
 package com.family.family.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
 import com.family.family.entity.SystemConfig;
@@ -21,8 +22,20 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/config")
+@RequestMapping("/api")
 public class SystemConfigController {
+
+    /**
+     * 获取公开配置（需要登录）
+     * 返回非敏感的公开配置，如腾讯地图 Key
+     */
+    @GetMapping("/public/config")
+    @SaCheckLogin
+    public Result getPublicConfig() {
+        Map<String, String> config = new HashMap<>();
+        config.put("tencentMapKey", configService.getTencentMapKey());
+        return Result.success(config);
+    }
 
     @Autowired
     private SystemConfigService configService;
@@ -59,30 +72,30 @@ public class SystemConfigController {
         if (!isAdmin()) {
             return Result.error("无权限");
         }
-        
+
         String corpId = params.get("corpId");
         String agentId = params.get("agentId");
         String secret = params.get("secret");
         String userId = params.get("userId");
-        
+
         if (corpId != null) {
-            configService.setValue("wechat.work.corpid", corpId);
+            configService.setValue("wechat_work_corpid", corpId);
         }
         if (agentId != null) {
-            configService.setValue("wechat.work.agentid", agentId);
+            configService.setValue("wechat_work_agentid", agentId);
         }
         if (secret != null) {
-            configService.setValue("wechat.work.secret", secret);
+            configService.setValue("wechat_work_secret", secret);
         }
         if (userId != null) {
-            configService.setValue("wechat.work.userid", userId);
+            configService.setValue("wechat_work_userid", userId);
         }
-        
+
         // 刷新缓存
         configService.refreshCache();
-        
+
         log.info("用户{}更新了企业微信配置", StpUtil.getLoginIdAsLong());
-        
+
         return Result.success("配置已更新");
     }
 
@@ -112,21 +125,22 @@ public class SystemConfigController {
         if (!isAdmin()) {
             return Result.error("无权限");
         }
-        
+
         List<SystemConfig> configs;
         if (category != null && !category.isEmpty()) {
-            configs = configMapper.selectByCategory(category);
+            // 按 category 查询需要自定义 SQL，这里简化为查询所有非系统配置
+            configs = configMapper.selectUserConfig();
         } else {
             configs = configMapper.selectList(null);
         }
-        
+
         // 敏感字段脱敏
         for (SystemConfig config : configs) {
-            if (config.getConfigKey().contains("secret") || config.getConfigKey().contains("password")) {
+            if (config.getConfigKey().contains("secret") || config.getConfigKey().contains("password") || config.getIsEncrypted() == 1) {
                 config.setConfigValue(maskString(config.getConfigValue()));
             }
         }
-        
+
         return Result.success(configs);
     }
 

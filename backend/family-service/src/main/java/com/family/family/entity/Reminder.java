@@ -1,6 +1,7 @@
 package com.family.family.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -9,8 +10,11 @@ import java.time.LocalDateTime;
  * 提醒配置实体（完整版）
  */
 @Data
+@JsonIgnoreProperties(value = {"handler", "handlerClass", "fieldHandler"})
 @TableName("reminder_config")
 public class Reminder {
+
+    public Reminder() {}
     
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -37,16 +41,16 @@ public class Reminder {
     private String businessData;   // JSON格式
     
     // 执行配置
-    @TableField("next_remind_time")
+    @TableField("next_execute_time")
     private LocalDateTime nextExecuteTime;
     
-    @TableField("last_remind_time")
+    @TableField("last_execute_time")
     private LocalDateTime lastExecuteTime;
-    
-    @TableField("last_remind_status")
+
+    @TableField("last_execute_result")
     private String lastExecuteResult;
-    
-    @TableField("remind_count")
+
+    @TableField("execute_count")
     private Integer executeCount;
     private Integer maxExecuteCount;
     

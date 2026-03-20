@@ -12,16 +12,16 @@ import java.util.List;
  */
 @Mapper
 public interface SystemConfigMapper extends BaseMapper<SystemConfig> {
-    
+
     /**
      * 根据key查询配置
      */
-    @Select("SELECT * FROM sys_config WHERE config_key = #{key}")
+    @Select("SELECT * FROM system_config WHERE config_key = #{key}")
     SystemConfig selectByKey(String key);
-    
+
     /**
-     * 根据分类查询配置
+     * 获取所有非系统配置（用户可编辑的配置）
      */
-    @Select("SELECT * FROM sys_config WHERE category = #{category}")
-    List<SystemConfig> selectByCategory(String category);
+    @Select("SELECT * FROM system_config WHERE is_system = 0")
+    List<SystemConfig> selectUserConfig();
 }

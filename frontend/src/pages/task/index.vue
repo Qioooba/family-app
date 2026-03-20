@@ -184,7 +184,7 @@ const filteredTasks = computed(() => {
     }
     return result
   } catch(e) {
-    console.error('filteredTasks error:', e)
+    uni.showToast({title: "加载失败", icon: "none"}); console.error('filteredTasks error:', e)
     return []
   }
 })
@@ -269,7 +269,7 @@ async function loadTasks(force = false, loadMore = false) {
     hasMore.value = page.value < pages
     
   } catch (e) {
-    console.error('加载任务失败', e)
+    uni.showToast({title: "加载失败", icon: "none"}); console.error('加载任务失败', e)
     uni.showToast({ title: '加载任务失败', icon: 'none' })
   } finally {
     loading.value = false
@@ -283,7 +283,7 @@ async function loadFamilyMembers() {
     const members = await familyApi.getMembers(familyId)
     familyMembers.value = members || []
   } catch (e) {
-    console.error('加载家庭成员失败', e)
+    uni.showToast({title: "加载失败", icon: "none"}); console.error('加载家庭成员失败', e)
     familyMembers.value = []
   }
 }
@@ -296,7 +296,7 @@ function loadMoreTasks() {
 
 // ========== 弹窗操作 ==========
 function openTaskModal(task = null) {
-  console.log('打开任务弹窗', task, 'ref:', taskModalRef.value)
+   // console.log('打开任务弹窗', task, 'ref:', taskModalRef.value)
   
   // 已完成的任务只能查看详情，不能编辑
   if (task && task.status === 2) {
@@ -310,9 +310,9 @@ function openTaskModal(task = null) {
   }
   
   setTimeout(() => {
-    console.log('延迟后 ref:', taskModalRef.value)
+     // console.log('延迟后 ref:', taskModalRef.value)
     if (!taskModalRef.value) {
-      console.error('TaskModal 组件未加载')
+      uni.showToast({title: "加载失败", icon: "none"}); console.error('TaskModal 组件未加载')
       uni.showToast({ title: '组件加载中，请重试', icon: 'none' })
       return
     }
@@ -352,7 +352,7 @@ async function toggleTask(task) {
     task.status = newStatus
     uni.showToast({ title: newStatus === 2 ? '任务已完成' : '任务已恢复', icon: 'none' })
   } catch (e) {
-    console.error('更新任务状态失败', e)
+    uni.showToast({title: "加载失败", icon: "none"}); console.error('更新任务状态失败', e)
     uni.showToast({ title: '操作失败', icon: 'none' })
   }
 }

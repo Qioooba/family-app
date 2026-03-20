@@ -27,7 +27,7 @@ export const familyApi = {
    * @param {string} code - 邀请码
    * @returns {Promise<object>} 验证结果
    */
-  verifyCode: (code) => request.post('/api/invite-code/verify-code', { code }),
+  verifyCode: (code) => request.post('/api/family/verify-code', { code }),
   
   /**
    * 创建邀请码（家长/管理员）
@@ -60,7 +60,7 @@ export const familyApi = {
    * @param {number} userId - 用户ID
    * @returns {Promise<boolean>} 是否为管理员
    */
-  checkAdmin: (familyId, userId) => request.get(`/api/family/${familyId}/check-admin/${userId}`),
+  checkAdmin: (familyId, userId) => request.get(`/api/family/${familyId}/is-admin/${userId}`),
   
   /**
    * 获取家庭详情

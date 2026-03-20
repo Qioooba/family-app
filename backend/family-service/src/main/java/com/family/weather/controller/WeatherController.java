@@ -2,8 +2,10 @@ package com.family.weather.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
+import com.family.family.service.SystemConfigService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -23,17 +25,27 @@ import java.util.Map;
 @RequestMapping("/api/weather")
 public class WeatherController {
 
+    @Autowired
+    private SystemConfigService configService;
+
     private final RestTemplate restTemplate = new RestTemplate();
-    
+
     // Open-Meteo API 基础地址
     private static final String OPEN_METEO_API = "https://api.open-meteo.com/v1/forecast";
-    
+
     // 地理编码API (用于城市名称转坐标) - Open-Meteo
     private static final String GEOCODING_API = "https://geocoding-api.open-meteo.com/v1/search";
-    
+
     // 腾讯地图 API (用于城市搜索，解决中文城市名识别问题)
     private static final String QQ_MAP_API = "https://apis.map.qq.com/ws/place/v1/suggestion";
-    private static final String QQ_MAP_KEY = "QCEBZ-25QC3-SCE3O-O557W-SS4VJ-KYFZY"; // 腾讯地图 Key
+
+    /**
+     * 获取腾讯地图Key
+     */
+    private String getTencentMapKey() {
+        String key = configService.getTencentMapKey();
+        return key != null && !key.isEmpty() ? key : "";
+    }
     
     /**
      * 根据经纬度获取当前天气
@@ -224,12 +236,12 @@ public class WeatherController {
             String encodedKeyword = java.net.URLEncoder.encode(keyword, "UTF-8");
             
             // 使用腾讯地图智能提示API
-            String url = String.format("%s?keyword=%s&region=%s&region_fix=1&page_size=20&key=%s", 
-                QQ_MAP_API, encodedKeyword, 
-                java.net.URLEncoder.encode("中国", "UTF-8"), 
-                QQ_MAP_KEY);
-            
-            log.info("腾讯地图API请求: {}", url.replace(QQ_MAP_KEY, "***"));
+            String url = String.format("%s?keyword=%s&region=%s&region_fix=1&page_size=20&key=%s",
+                QQ_MAP_API, encodedKeyword,
+                java.net.URLEncoder.encode("中国", "UTF-8"),
+                getTencentMapKey());
+
+            log.info("腾讯地图API请求: {}", url.replace(getTencentMapKey(), "***"));
             
             // 创建请求头，添加Referer
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();

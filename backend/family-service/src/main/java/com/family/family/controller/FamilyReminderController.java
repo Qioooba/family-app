@@ -78,14 +78,39 @@ public class FamilyReminderController {
      * 获取我的提醒列表
      */
     @GetMapping("/list")
-    public Map<String, Object> getMyReminders() {
+    public String getMyReminders() {
         try {
             Long userId = StpUtil.getLoginIdAsLong();
             List<Reminder> reminders = reminderService.getUserReminders(userId);
-            return success(reminders);
+
+            // 转换为简单的Map列表，避免序列化问题
+            List<Map<String, Object>> resultList = new ArrayList<>();
+            if (reminders != null) {
+                for (Reminder r : reminders) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", r.getId());
+                    map.put("reminderName", r.getReminderName());
+                    map.put("reminderType", r.getReminderType());
+                    map.put("status", r.getStatus());
+                    map.put("frequencyType", r.getFrequencyType());
+                    map.put("frequencyConfig", r.getFrequencyConfig());
+                    map.put("titleTemplate", r.getTitleTemplate());
+                    map.put("contentTemplate", r.getContentTemplate());
+                    map.put("businessData", r.getBusinessData());
+                    map.put("createTime", r.getCreateTime());
+                    resultList.add(map);
+                }
+            }
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("code", 0);
+            result.put("message", "success");
+            result.put("data", resultList);
+
+            return JSONUtil.toJsonStr(result);
         } catch (Exception e) {
             log.error("获取提醒列表失败", e);
-            return error("获取失败");
+            return "{\"code\":500,\"message\":\"获取失败\"}";
         }
     }
     

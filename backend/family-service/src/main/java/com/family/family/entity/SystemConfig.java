@@ -9,17 +9,18 @@ import java.time.LocalDateTime;
 /**
  * 系统配置实体
  */
-@TableName("sys_config")
+@TableName("system_config")
 public class SystemConfig {
-    
+
     @TableId(type = IdType.AUTO)
     private Long id;
-    
+
     private String configKey;
     private String configValue;
+    private String configType;
     private String description;
-    private String category;
     private Integer isEncrypted;
+    private Integer isSystem;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     
@@ -35,16 +36,19 @@ public class SystemConfig {
     
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-    
+
+    public String getConfigType() { return configType; }
+    public void setConfigType(String configType) { this.configType = configType; }
+
     public Integer getIsEncrypted() { return isEncrypted; }
     public void setIsEncrypted(Integer isEncrypted) { this.isEncrypted = isEncrypted; }
-    
+
+    public Integer getIsSystem() { return isSystem; }
+    public void setIsSystem(Integer isSystem) { this.isSystem = isSystem; }
+
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
-    
+
     public LocalDateTime getUpdateTime() { return updateTime; }
     public void setUpdateTime(LocalDateTime updateTime) { this.updateTime = updateTime; }
 }

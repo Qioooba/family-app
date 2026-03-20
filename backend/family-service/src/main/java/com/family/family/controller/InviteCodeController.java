@@ -1,5 +1,7 @@
 package com.family.family.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 import com.family.family.entity.Family;
 import com.family.family.entity.InviteCode;
 import com.family.family.service.InviteCodeService;
@@ -15,37 +17,39 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
+@SaCheckLogin
 @RequestMapping("/api/family")
 public class InviteCodeController {
-    
+
     private final InviteCodeService inviteCodeService;
-    
+
     public InviteCodeController(InviteCodeService inviteCodeService) {
         this.inviteCodeService = inviteCodeService;
     }
-    
+
     /**
      * 创建邀请码
      */
     @PostMapping("/invite-code")
     public Map<String, Object> createInviteCode(@RequestBody Map<String, Object> data) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
+            // 使用当前登录用户ID，而不是请求参数中的creatorId
+            Long creatorId = StpUtil.getLoginIdAsLong();
             Long familyId = Long.valueOf(data.get("familyId").toString());
-            Long creatorId = Long.valueOf(data.get("creatorId").toString());
             Integer maxUses = data.get("maxUses") != null ? Integer.valueOf(data.get("maxUses").toString()) : 1;
             Integer expireDays = data.get("expireDays") != null ? Integer.valueOf(data.get("expireDays").toString()) : 7;
-            
+
             // 检查权限
             if (!inviteCodeService.isAdmin(familyId, creatorId)) {
                 result.put("code", 403);
                 result.put("message", "只有家长/管理员才能创建邀请码");
                 return result;
             }
-            
+
             InviteCode inviteCode = inviteCodeService.createInviteCode(familyId, creatorId, maxUses, expireDays);
-            
+
             result.put("code", 200);
             result.put("message", "success");
             result.put("data", Map.of(
@@ -56,20 +60,21 @@ public class InviteCodeController {
                 "expiresAt", inviteCode.getExpiresAt() != null ? inviteCode.getExpiresAt().toString() : null
             ));
         } catch (Exception e) {
+            log.error("创建邀请码失败", e);
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }
-        
+
         return result;
     }
-    
+
     /**
-     * 验证邀请码
+     * 验证邀请码（无需登录）
      */
     @PostMapping("/verify-code")
     public Map<String, Object> verifyInviteCode(@RequestBody Map<String, Object> data) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
             // 检查 code 参数是否存在
             if (data == null || data.get("code") == null) {
@@ -78,10 +83,10 @@ public class InviteCodeController {
                 result.put("message", "邀请码不能为空");
                 return result;
             }
-            
+
             String code = data.get("code").toString();
             log.info("收到验证邀请码请求: code={}", code);
-            
+
             // 检查 code 是否为空字符串
             if (code == null || code.trim().isEmpty()) {
                 log.warn("验证邀请码失败: code 为空字符串");
@@ -89,18 +94,18 @@ public class InviteCodeController {
                 result.put("message", "邀请码不能为空");
                 return result;
             }
-            
+
             InviteCode inviteCode = inviteCodeService.verifyInviteCode(code);
-            
+
             if (inviteCode == null) {
                 log.warn("验证邀请码失败: 邀请码无效或已过期, code={}", code);
                 result.put("code", 404);
                 result.put("message", "邀请码无效或已过期");
                 return result;
             }
-            
+
             log.info("验证邀请码成功: code={}, familyId={}", code, inviteCode.getFamilyId());
-            
+
             result.put("code", 200);
             result.put("message", "success");
             result.put("data", Map.of(
@@ -112,17 +117,17 @@ public class InviteCodeController {
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }
-        
+
         return result;
     }
-    
+
     /**
      * 使用邀请码加入家庭
      */
     @PostMapping("/join-by-code")
     public Map<String, Object> joinFamilyByCode(@RequestBody Map<String, Object> data) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
             // 检查必要参数
             if (data.get("code") == null || data.get("code").toString().isEmpty()) {
@@ -130,23 +135,20 @@ public class InviteCodeController {
                 result.put("message", "邀请码不能为空");
                 return result;
             }
-            
+
             String code = data.get("code").toString();
-            
-            // 如果没有提供userId，使用当前登录用户
-            Long userId = null;
-            if (data.get("userId") != null && !data.get("userId").toString().isEmpty()) {
-                userId = Long.valueOf(data.get("userId").toString());
-            }
-            
+
+            // 使用当前登录用户ID，而不是请求参数中的userId
+            Long userId = StpUtil.getLoginIdAsLong();
+
             if (userId == null) {
                 result.put("code", 400);
                 result.put("message", "用户ID不能为空");
                 return result;
             }
-            
+
             Family family = inviteCodeService.joinFamilyByInviteCode(code, userId);
-            
+
             result.put("code", 200);
             result.put("message", "success");
             result.put("data", Map.of(
@@ -154,72 +156,100 @@ public class InviteCodeController {
                 "familyName", family.getName()
             ));
         } catch (Exception e) {
+            log.error("使用邀请码加入家庭失败", e);
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }
-        
+
         return result;
     }
-    
+
     /**
      * 获取家庭邀请码列表
      */
     @GetMapping("/{familyId}/invite-codes")
     public Map<String, Object> getInviteCodes(@PathVariable Long familyId) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
+            // 验证用户是否属于该家庭
+            Long userId = StpUtil.getLoginIdAsLong();
+            if (!inviteCodeService.isFamilyMember(familyId, userId)) {
+                result.put("code", 403);
+                result.put("message", "无权限访问该家庭的邀请码");
+                return result;
+            }
+
             List<InviteCode> codes = inviteCodeService.getFamilyInviteCodes(familyId);
-            
+
             result.put("code", 200);
             result.put("message", "success");
             result.put("data", codes);
         } catch (Exception e) {
+            log.error("获取邀请码列表失败", e);
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }
-        
+
         return result;
     }
-    
+
     /**
      * 禁用邀请码
      */
     @DeleteMapping("/invite-code/{codeId}")
     public Map<String, Object> disableInviteCode(@PathVariable Long codeId) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
+            // 验证用户是否有权限禁用邀请码
+            Long userId = StpUtil.getLoginIdAsLong();
+            if (!inviteCodeService.canManageInviteCode(codeId, userId)) {
+                result.put("code", 403);
+                result.put("message", "无权限操作");
+                return result;
+            }
+
             inviteCodeService.disableInviteCode(codeId);
-            
+
             result.put("code", 200);
             result.put("message", "success");
         } catch (Exception e) {
+            log.error("禁用邀请码失败", e);
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }
-        
+
         return result;
     }
-    
+
     /**
      * 检查用户是否为管理员
      */
     @GetMapping("/{familyId}/is-admin/{userId}")
     public Map<String, Object> isAdmin(@PathVariable Long familyId, @PathVariable Long userId) {
         Map<String, Object> result = new HashMap<>();
-        
+
         try {
+            // 验证当前用户是否有权限查询
+            Long currentUserId = StpUtil.getLoginIdAsLong();
+            if (!currentUserId.equals(userId) && !inviteCodeService.isAdmin(familyId, currentUserId)) {
+                result.put("code", 403);
+                result.put("message", "无权限查询");
+                return result;
+            }
+
             boolean isAdmin = inviteCodeService.isAdmin(familyId, userId);
-            
+
             result.put("code", 200);
             result.put("message", "success");
             result.put("data", Map.of("isAdmin", isAdmin));
         } catch (Exception e) {
+            log.error("检查管理员权限失败", e);
             result.put("code", 500);
             result.put("message", "系统繁忙，请稍后重试");
         }
-        
+
         return result;
     }
 }

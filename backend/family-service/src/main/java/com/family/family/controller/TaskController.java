@@ -3,6 +3,8 @@ package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
 import com.family.family.entity.FamilyMember;
 import com.family.family.entity.Task;
 import com.family.family.entity.User;
@@ -17,12 +19,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 任务控制器
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/task")
 @SaCheckLogin
@@ -87,6 +92,9 @@ public class TaskController {
         }
 
         try {
+            // 使用分页查询
+            Page<Task> pageParam = new Page<>(page, size);
+
             // 查询当前状态的任务列表（指派人和被指派人都能看到）
             LambdaQueryWrapper<Task> query = new LambdaQueryWrapper<Task>()
                 .eq(Task::getFamilyId, familyId)
@@ -94,13 +102,14 @@ public class TaskController {
                 .and(q -> q.eq(Task::getAssigneeId, userId)
                           .or()
                           .eq(Task::getCreatorId, userId));
-            
+
             if (status != null) {
                 query.eq(Task::getStatus, status);
             }
-            
-            // 不在这里排序，后面会自定义排序
-            List<Task> tasks = taskMapper.selectList(query);
+
+            // 使用分页查询
+            Page<Task> taskPage = taskMapper.selectPage(pageParam, query);
+            List<Task> tasks = taskPage.getRecords();
             
             // 智能排序：
             // 1. 已完成的待办排最后
@@ -160,8 +169,21 @@ public class TaskController {
                           .eq(Task::getCreatorId, userId));
             Long doneCount = taskMapper.selectCount(doneQuery);
 
+            // 批量查询用户信息，避免 N+1 问题
             Map<String, Object> data = new HashMap<>();
-            
+            Set<Long> userIds = new HashSet<>();
+            for (Task task : tasks) {
+                if (task.getAssigneeId() != null) userIds.add(task.getAssigneeId());
+                if (task.getCreatorId() != null) userIds.add(task.getCreatorId());
+            }
+            Map<Long, User> userMap = new HashMap<>();
+            if (!userIds.isEmpty()) {
+                List<User> users = userMapper.selectBatchIds(userIds);
+                for (User u : users) {
+                    userMap.put(u.getId(), u);
+                }
+            }
+
             // 为每个任务添加assigneeRealName
             List<Map<String, Object>> taskList = new ArrayList<>();
             for (Task task : tasks) {
@@ -189,18 +211,18 @@ public class TaskController {
                 taskMap.put("isDeleted", task.getIsDeleted());
                 taskMap.put("deleteTime", task.getDeleteTime());
                 taskMap.put("sortOrder", task.getSortOrder());
-                
-                // 获取指派人的昵称
+
+                // 从缓存中获取指派人的昵称
                 if (task.getAssigneeId() != null) {
-                    User assignee = userMapper.selectById(task.getAssigneeId());
+                    User assignee = userMap.get(task.getAssigneeId());
                     if (assignee != null) {
                         taskMap.put("assigneeNickname", assignee.getNickname());
                     }
                 }
-                
-                // 获取创建人的昵称
+
+                // 从缓存中获取创建人的昵称
                 if (task.getCreatorId() != null) {
-                    User creator = userMapper.selectById(task.getCreatorId());
+                    User creator = userMap.get(task.getCreatorId());
                     if (creator != null) {
                         taskMap.put("creatorNickname", creator.getNickname());
                     }
@@ -213,8 +235,8 @@ public class TaskController {
             data.put("todoCount", todoCount);
             data.put("doneCount", doneCount);
             // 添加分页信息
-            data.put("total", tasks.size());
-            data.put("pages", 1);
+            data.put("total", taskPage.getTotal());
+            data.put("pages", taskPage.getPages());
             data.put("current", page);
             data.put("size", size);
             
@@ -222,10 +244,9 @@ public class TaskController {
             result.put("message", "success");
             result.put("data", data);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("查询任务列表失败", e);
             result.put("code", 500);
-            result.put("message", "查询失败：" + e.getMessage());
-            result.put("errorType", e.getClass().getName());
+            result.put("message", "查询失败，请稍后重试");
         }
         return result;
     }
@@ -270,7 +291,7 @@ public class TaskController {
             result.put("data", tasks);
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "查询失败：" + e.getMessage());
+            result.put("message", "查询失败，请稍后重试");
         }
         return result;
     }
@@ -350,7 +371,7 @@ public class TaskController {
                 }
             } catch (Exception e) {
                 // 推送失败不影响主流程
-                System.err.println("[WechatWork] 任务指派推送失败: " + e.getMessage());
+                log.error("任务指派推送失败", e);
             }
             // =============================
             
@@ -359,7 +380,7 @@ public class TaskController {
             result.put("data", task);
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "创建失败：" + e.getMessage());
+            result.put("message", "创建失败，请稍后重试");
         }
         return result;
     }
@@ -395,7 +416,7 @@ public class TaskController {
             result.put("data", task);
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "查询失败：" + e.getMessage());
+            result.put("message", "查询失败，请稍后重试");
         }
         return result;
     }
@@ -433,7 +454,7 @@ public class TaskController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "更新失败：" + e.getMessage());
+            result.put("message", "更新失败，请稍后重试");
         }
         return result;
     }
@@ -474,7 +495,7 @@ public class TaskController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "删除失败：" + e.getMessage());
+            result.put("message", "删除失败，请稍后重试");
         }
         return result;
     }
@@ -532,7 +553,7 @@ public class TaskController {
                 }
             } catch (Exception e) {
                 // 推送失败不影响主流程
-                System.err.println("[WechatWork] 任务完成推送失败: " + e.getMessage());
+                log.error("任务完成推送失败", e);
             }
             // =============================
 
@@ -540,7 +561,7 @@ public class TaskController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "操作失败：" + e.getMessage());
+            result.put("message", "操作失败，请稍后重试");
         }
         return result;
     }
@@ -585,7 +606,7 @@ public class TaskController {
             result.put("message", "success");
         } catch (Exception e) {
             result.put("code", 500);
-            result.put("message", "操作失败：" + e.getMessage());
+            result.put("message", "操作失败，请稍后重试");
         }
         return result;
     }
