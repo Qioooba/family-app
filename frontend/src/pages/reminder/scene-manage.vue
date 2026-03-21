@@ -477,20 +477,15 @@ const setAutoLocation = (scene) => {
 // 保存配置
 const saveSceneConfig = async (scene) => {
   try {
-    const res = await request.post('/api/reminder/scene/update', {
+    await request.post('/api/reminder/scene/update', {
       sceneType: scene.sceneType,
       businessData: scene.config
     })
-    
-    // request.js 已提取 data 字段，成功时 res 为 null 或空对象
-    if (res !== undefined && res !== null) {
-      uni.showToast({ title: '保存成功', icon: 'success' })
-    } else {
-      uni.showToast({ title: '保存失败', icon: 'none' })
-    }
+
+    uni.showToast({ title: '保存成功', icon: 'success' })
   } catch (e) {
     console.error('保存配置失败', e)
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    uni.showToast({ title: e.message || '保存失败', icon: 'none' })
   }
 }
 
