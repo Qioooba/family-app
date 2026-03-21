@@ -35,7 +35,7 @@
         </view>
         
         <!-- 展开的配置区域 -->
-        <view v-if="scene.expanded" class="scene-config">
+        <view v-if="scene.expanded" class="scene-config" @click.stop>
           <view class="config-divider"></view>
           
           <!-- 喝水提醒配置 -->
@@ -348,7 +348,7 @@
         </view>
         
         <!-- 展开/收起指示器 -->
-        <view class="expand-indicator" @click="toggleExpand(scene)">
+        <view class="expand-indicator" @click.stop="toggleExpand(scene)">
           <text class="expand-text">{{ scene.expanded ? '收起' : '配置' }}</text>
           <text class="expand-icon" :class="{ 'expanded': scene.expanded }">⌄</text>
         </view>
