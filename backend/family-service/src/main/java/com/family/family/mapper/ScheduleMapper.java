@@ -1,13 +1,12 @@
 package com.family.family.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.family.family.entity.Schedule;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
 @Mapper
-public interface ScheduleMapper extends BaseMapper<Schedule> {
+public interface ScheduleMapper {
     
     @Select("SELECT * FROM family_schedule WHERE family_id = #{familyId} AND status = 1 ORDER BY day_of_week, user_id")
     List<Schedule> selectByFamilyId(@Param("familyId") Long familyId);
@@ -30,4 +29,7 @@ public interface ScheduleMapper extends BaseMapper<Schedule> {
     @Select("SELECT * FROM family_schedule WHERE family_id = #{familyId} AND user_id = #{userId} AND status = 1 " +
             "AND (#{date} BETWEEN start_date AND end_date) ORDER BY day_of_week")
     List<Schedule> selectByFamilyAndUserAndDate(@Param("familyId") Long familyId, @Param("userId") Long userId, @Param("date") String date);
+
+    @Select("SELECT * FROM family_schedule WHERE user_id = #{userId} AND status = 1 ORDER BY day_of_week")
+    List<Schedule> selectActiveByUserId(@Param("userId") Long userId);
 }

@@ -83,12 +83,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public List<Schedule> mySchedule(Long userId, String startDate, String endDate) {
-        return scheduleMapper.selectList(
-            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Schedule>()
-                .eq(Schedule::getUserId, userId)
-                .eq(Schedule::getStatus, 1)
-                .orderByAsc(Schedule::getDayOfWeek)
-        );
+        return scheduleMapper.selectActiveByUserId(userId);
     }
 
     @Override
