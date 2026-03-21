@@ -95,15 +95,9 @@
                 </picker>
               </view>
               <view class="config-item">
-                <text class="config-label">监控位置</text>
-                <picker mode="selector" :range="locationOptions" :value="0">
-                  <view class="picker-value"><text>{{ scene.config.location === 'auto' ? '📍 自动定位' : scene.config.location }}</text></view>
-                </picker>
-              </view>
-              <view class="config-item">
                 <text class="config-label">降雨概率阈值: {{ scene.config.rainProbability || 30 }}%</text>
                 <slider :value="scene.config.rainProbability || 30" min="10" max="80" show-value activeColor="#667eea" block-size="20" @change="(e) => updateConfig(scene, 'rainProbability', e.detail.value)" />
-                <text class="config-hint">超过此概率时提醒</text>
+                <text class="config-hint">超过此概率时提醒，使用自动定位</text>
               </view>
             </view>
           </template>
@@ -233,18 +227,6 @@
                 </picker>
               </view>
               <view class="config-item">
-                <text class="config-label">监控位置</text>
-                <input
-                  class="config-input"
-                  :value="scene.config.location === 'auto' ? '自动定位' : scene.config.location"
-                  placeholder="输入城市名称或使用自动定位"
-                  @input="(e) => handleLocationInput(scene, e.detail.value)"
-                />
-                <view class="location-auto-btn" @click="setAutoLocation(scene)">
-                  <text>自动定位</text>
-                </view>
-              </view>
-              <view class="config-item">
                 <text class="config-label">PM2.5 阈值 (μg/m³)</text>
                 <input
                   class="threshold-input"
@@ -253,7 +235,7 @@
                   placeholder="请输入PM2.5阈值"
                   @input="(e) => updateConfig(scene, 'pm25Threshold', parseInt(e.detail.value) || 0)"
                 />
-                <text class="config-hint">超过此值提醒，默认75（轻度污染）</text>
+                <text class="config-hint">超过此值提醒，使用自动定位</text>
               </view>
               <view class="config-item">
                 <text class="config-label">AQI 阈值</text>
@@ -278,18 +260,6 @@
                 <picker mode="time" :value="scene.config.reminderTime || '10:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
                   <view class="picker"><text>{{ scene.config.reminderTime || '10:00' }}</text></view>
                 </picker>
-              </view>
-              <view class="config-item">
-                <text class="config-label">监控位置</text>
-                <input
-                  class="config-input"
-                  :value="scene.config.location === 'auto' ? '自动定位' : scene.config.location"
-                  placeholder="输入城市名称或使用自动定位"
-                  @input="(e) => handleLocationInput(scene, e.detail.value)"
-                />
-                <view class="location-auto-btn" @click="setAutoLocation(scene)">
-                  <text>自动定位</text>
-                </view>
               </view>
               <view class="config-item">
                 <text class="config-label">紫外线指数阈值</text>
