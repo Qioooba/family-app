@@ -2,25 +2,37 @@ package com.family.family.util;
 
 import cn.dev33.satoken.stp.StpUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 临时Token工具类 - 用于免密登录
+ * 使用内存存储（单实例部署）
  */
 @Slf4j
 @Component
 public class TempTokenUtil {
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private static final Map<String, TokenEntry> TOKEN_STORE = new ConcurrentHashMap<>();
 
-    private static final String TEMP_TOKEN_PREFIX = "temp:token:";
-    private static final long TOKEN_EXPIRE_MINUTES = 4320; // Token有效期3天 (3 * 24 * 60 = 4320分钟)
+    private static final long TOKEN_EXPIRE_MILLIS = 3L * 24 * 60 * 60 * 1000; // Token有效期3天
+
+    private static class TokenEntry {
+        final Long userId;
+        final long expireTime;
+
+        TokenEntry(Long userId, long expireTime) {
+            this.userId = userId;
+            this.expireTime = expireTime;
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() > expireTime;
+        }
+    }
 
     /**
      * 生成临时Token
@@ -29,11 +41,11 @@ public class TempTokenUtil {
      */
     public String generateTempToken(Long userId) {
         String tempToken = UUID.randomUUID().toString().replace("-", "");
-        String key = TEMP_TOKEN_PREFIX + tempToken;
-        
-        // 存储到Redis，设置过期时间
-        redisTemplate.opsForValue().set(key, String.valueOf(userId), TOKEN_EXPIRE_MINUTES, TimeUnit.MINUTES);
-        
+        long expireTime = System.currentTimeMillis() + TOKEN_EXPIRE_MILLIS;
+
+        // 存储到内存
+        TOKEN_STORE.put(tempToken, new TokenEntry(userId, expireTime));
+
         log.info("生成临时Token: userId={}, tempToken={}", userId, tempToken);
         return tempToken;
     }
@@ -44,20 +56,21 @@ public class TempTokenUtil {
      * @return 用户ID，验证失败返回null
      */
     public Long validateTempToken(String tempToken) {
-        String key = TEMP_TOKEN_PREFIX + tempToken;
-        String userIdStr = redisTemplate.opsForValue().get(key);
-        
-        if (userIdStr == null) {
+        TokenEntry entry = TOKEN_STORE.get(tempToken);
+
+        if (entry == null || entry.isExpired()) {
+            if (entry != null) {
+                TOKEN_STORE.remove(tempToken); // 清理过期Token
+            }
             log.warn("临时Token无效或已过期: {}", tempToken);
             return null;
         }
-        
+
         // 验证成功后删除Token（一次性使用）
-        redisTemplate.delete(key);
-        
-        Long userId = Long.valueOf(userIdStr);
-        log.info("临时Token验证成功: userId={}", userId);
-        return userId;
+        TOKEN_STORE.remove(tempToken);
+
+        log.info("临时Token验证成功: userId={}", entry.userId);
+        return entry.userId;
     }
 
     /**

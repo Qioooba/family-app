@@ -5,7 +5,7 @@ import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 温度提醒处理器（高温/低温提醒）
@@ -25,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class WeatherTempHandler implements SceneReminderHandler {
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private SceneCacheService sceneCacheService;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -104,7 +103,7 @@ public class WeatherTempHandler implements SceneReminderHandler {
             String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
             String cacheKey = String.format("scene:temp:%d:%s", reminder.getId(), today);
 
-            Boolean alreadyReminded = redisTemplate.hasKey(cacheKey);
+            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
             if (Boolean.TRUE.equals(alreadyReminded)) {
                 log.debug("今日已提醒过，跳过温度提醒");
                 return false;
@@ -169,8 +168,7 @@ public class WeatherTempHandler implements SceneReminderHandler {
      */
     private String getUserLocation(Long userId) {
         try {
-            String locationKey = String.format("user:location:%d", userId);
-            return redisTemplate.opsForValue().get(locationKey);
+            return sceneCacheService.getUserLocation(userId);
         } catch (Exception e) {
             return null;
         }
@@ -387,10 +385,8 @@ public class WeatherTempHandler implements SceneReminderHandler {
     /**
      * 标记今日已提醒
      */
-    public void markReminded(Long reminderId) {
-        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-        String cacheKey = String.format("scene:temp:%d:%s", reminderId, today);
-        redisTemplate.opsForValue().set(cacheKey, "1", 24, TimeUnit.HOURS);
+    public void markReminded(Long reminderId, Long userId) {
+        sceneCacheService.markRemindedToday(reminderId, userId, getSceneType());
     }
 
     // ========== 内部类 ==========

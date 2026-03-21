@@ -5,7 +5,7 @@ import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,7 +13,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 空气质量/PM2.5提醒处理器
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class AirQualityHandler implements SceneReminderHandler {
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private SceneCacheService sceneCacheService;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -95,7 +94,7 @@ public class AirQualityHandler implements SceneReminderHandler {
             String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
             String cacheKey = String.format("scene:air_quality:%d:%s", reminder.getId(), today);
 
-            Boolean alreadyReminded = redisTemplate.hasKey(cacheKey);
+            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
             if (Boolean.TRUE.equals(alreadyReminded)) {
                 log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
                 return false;
@@ -172,12 +171,7 @@ public class AirQualityHandler implements SceneReminderHandler {
      */
     private String getUserLocation(Long userId) {
         try {
-            String locationKey = String.format("user:location:%d", userId);
-            String location = redisTemplate.opsForValue().get(locationKey);
-            if (location != null && !location.isEmpty()) {
-                return location;
-            }
-            return null;
+            return sceneCacheService.getUserLocation(userId);
         } catch (Exception e) {
             log.warn("获取用户定位失败: {}", userId, e);
             return null;
@@ -416,10 +410,8 @@ public class AirQualityHandler implements SceneReminderHandler {
     /**
      * 标记今日已提醒
      */
-    public void markReminded(Long reminderId) {
-        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-        String cacheKey = String.format("scene:air_quality:%d:%s", reminderId, today);
-        redisTemplate.opsForValue().set(cacheKey, "1", 24, TimeUnit.HOURS);
+    public void markReminded(Long reminderId, Long userId) {
+        sceneCacheService.markRemindedToday(reminderId, userId, getSceneType());
     }
 
     /**

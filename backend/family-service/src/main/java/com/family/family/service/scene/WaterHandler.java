@@ -5,7 +5,7 @@ import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -14,7 +14,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 喝水提醒处理器
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class WaterHandler implements SceneReminderHandler {
     
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private SceneCacheService sceneCacheService;
     
     private static final String SCENE_TYPE = "WATER";
     private static final String ICON = "💧";
@@ -174,32 +173,21 @@ public class WaterHandler implements SceneReminderHandler {
     /**
      * 获取今日已喝水杯数
      */
-    private int getTodayCups(Long reminderId) {
+    private int getTodayCups(Long userId) {
         try {
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:water:cups:%d:%s", reminderId, today);
-            String cups = redisTemplate.opsForValue().get(cacheKey);
-            return cups != null ? Integer.parseInt(cups) : 0;
+            return sceneCacheService.getTodayCupCount(userId);
         } catch (Exception e) {
             return 0;
         }
     }
-    
+
     /**
      * 记录喝水
      */
-    public void recordWater(Long reminderId) {
+    public void recordWater(Long userId) {
         try {
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:water:cups:%d:%s", reminderId, today);
-            
-            String current = redisTemplate.opsForValue().get(cacheKey);
-            int cups = current != null ? Integer.parseInt(current) : 0;
-            cups++;
-            
-            redisTemplate.opsForValue().set(cacheKey, String.valueOf(cups), 24, TimeUnit.HOURS);
-            
-            log.info("记录喝水: reminderId={}, cups={}", reminderId, cups);
+            sceneCacheService.incrementCupCount(userId);
+            log.info("记录喝水: userId={}", userId);
         } catch (Exception e) {
             log.error("记录喝水失败", e);
         }

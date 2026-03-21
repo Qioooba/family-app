@@ -5,14 +5,13 @@ import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 每日签到提醒处理器
@@ -22,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class CheckInHandler implements SceneReminderHandler {
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private SceneCacheService sceneCacheService;
 
     private static final String SCENE_TYPE = "CHECKIN";
     private static final String ICON = "✅";
@@ -59,7 +58,7 @@ public class CheckInHandler implements SceneReminderHandler {
             String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
             String cacheKey = String.format("scene:checkin:%d:%s", reminder.getId(), today);
 
-            Boolean alreadyReminded = redisTemplate.hasKey(cacheKey);
+            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
             if (Boolean.TRUE.equals(alreadyReminded)) {
                 log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
                 return false;
@@ -143,9 +142,7 @@ public class CheckInHandler implements SceneReminderHandler {
             .build();
     }
 
-    public void markReminded(Long reminderId) {
-        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-        String cacheKey = String.format("scene:checkin:%d:%s", reminderId, today);
-        redisTemplate.opsForValue().set(cacheKey, "1", 24, TimeUnit.HOURS);
+    public void markReminded(Long reminderId, Long userId) {
+        sceneCacheService.markRemindedToday(reminderId, userId, getSceneType());
     }
 }

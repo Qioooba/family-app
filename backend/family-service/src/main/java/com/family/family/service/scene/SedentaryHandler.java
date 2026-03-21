@@ -5,7 +5,7 @@ import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -14,7 +14,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 久坐提醒处理器
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class SedentaryHandler implements SceneReminderHandler {
     
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private SceneCacheService sceneCacheService;
     
     private static final String SCENE_TYPE = "SEDENTARY";
     private static final String ICON = "🪑";
@@ -96,22 +95,19 @@ public class SedentaryHandler implements SceneReminderHandler {
             
             // 获取久坐时长配置
             int sitDuration = (int) config.getOrDefault("sitDuration", 60);
-            
+
             // 检查上次提醒时间
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:sedentary:%d:%s", reminder.getId(), today);
-            String lastRemindTime = redisTemplate.opsForValue().get(cacheKey);
-            
+            LocalDateTime lastRemindTime = sceneCacheService.getLastSitTime(reminder.getCreateBy());
+
             if (lastRemindTime != null) {
-                LocalDateTime lastTime = LocalDateTime.parse(lastRemindTime);
-                LocalDateTime nextRemindTime = lastTime.plusMinutes(sitDuration);
-                
+                LocalDateTime nextRemindTime = lastRemindTime.plusMinutes(sitDuration);
+
                 if (LocalDateTime.now().isBefore(nextRemindTime)) {
                     log.debug("久坐提醒冷却中，下次提醒时间: {}", nextRemindTime);
                     return false;
                 }
             }
-            
+
             return true;
             
         } catch (Exception e) {
@@ -179,9 +175,7 @@ public class SedentaryHandler implements SceneReminderHandler {
     /**
      * 标记已提醒
      */
-    public void markReminded(Long reminderId) {
-        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-        String cacheKey = String.format("scene:sedentary:%d:%s", reminderId, today);
-        redisTemplate.opsForValue().set(cacheKey, LocalDateTime.now().toString(), 24, TimeUnit.HOURS);
+    public void markReminded(Long reminderId, Long userId) {
+        sceneCacheService.updateLastSitTime(userId, LocalDateTime.now());
     }
 }

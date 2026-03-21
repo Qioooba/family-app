@@ -13,7 +13,6 @@ import com.family.family.service.scene.SceneHandlerFactory;
 import com.family.family.service.scene.SceneReminderHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
@@ -22,10 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 /**
  * 提醒调度服务（核心）
@@ -34,85 +30,52 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 @Slf4j
 @Service
 public class ReminderScheduleService {
-    
+
     @Autowired
     private ReminderMapper reminderMapper;
-    
+
     @Autowired
     private UserMapper userMapper;
-    
+
     @Autowired
     private TaskMapper taskMapper;
-    
+
     @Autowired
     private WechatWorkService wechatWorkService;
-    
+
     @Autowired
-    private StringRedisTemplate redisTemplate;
-    
+    private SceneCacheService sceneCacheService;
+
     @Autowired
     private ReminderLogService reminderLogService;
-    
+
     @Autowired
     private HolidayService holidayService;
-    
+
     @Autowired
     private SceneHandlerFactory sceneHandlerFactory;
-    
+
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
-    // Lua脚本：原子性释放分布式锁（只有锁值匹配时才删除）
-    private static final String RELEASE_LOCK_SCRIPT = 
-        "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-        "    return redis.call('del', KEYS[1]) " +
-        "else " +
-        "    return 0 " +
-        "end";
-    
+
     /**
      * 每分钟扫描一次需要执行的提醒
-     * 使用分布式锁防止多实例重复执行
      */
     @Scheduled(cron = "0 * * * * ?")
     public void scanAndExecuteReminders() {
-        // 分布式锁键
-        String lockKey = "reminder:schedule:lock";
-        String lockValue = UUID.randomUUID().toString();
-        
-        try {
-            // 尝试获取锁，有效期2分钟
-            Boolean locked = redisTemplate.opsForValue().setIfAbsent(lockKey, lockValue, 2, TimeUnit.MINUTES);
-            if (!Boolean.TRUE.equals(locked)) {
-                log.debug("未获取到分布式锁，跳过本次执行");
-                return;
-            }
-            
-            log.debug("获取到分布式锁，开始扫描定时提醒任务...");
-            
-            LocalDateTime now = LocalDateTime.now();
-            
-            // 查询所有需要执行的提醒（最多100条）
-            List<Reminder> dueReminders = reminderMapper.selectDueReminders(now);
-            
-            log.info("扫描到 {} 个需要执行的提醒", dueReminders.size());
-            
-            for (Reminder reminder : dueReminders) {
-                try {
-                    executeReminder(reminder);
-                } catch (Exception e) {
-                    log.error("执行提醒失败: id={}, name={}", reminder.getId(), reminder.getReminderName(), e);
-                }
-            }
-        } finally {
-            // 使用Lua脚本原子性释放锁
+        log.debug("开始扫描定时提醒任务...");
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 查询所有需要执行的提醒（最多100条）
+        List<Reminder> dueReminders = reminderMapper.selectDueReminders(now);
+
+        log.info("扫描到 {} 个需要执行的提醒", dueReminders.size());
+
+        for (Reminder reminder : dueReminders) {
             try {
-                DefaultRedisScript<Long> script = new DefaultRedisScript<>(RELEASE_LOCK_SCRIPT, Long.class);
-                Long result = redisTemplate.execute(script, Collections.singletonList(lockKey), lockValue);
-                if (result != null && result > 0) {
-                    log.debug("释放分布式锁成功");
-                }
+                executeReminder(reminder);
             } catch (Exception e) {
-                log.warn("释放分布式锁失败", e);
+                log.error("执行提醒失败: id={}, name={}", reminder.getId(), reminder.getReminderName(), e);
             }
         }
     }
@@ -893,17 +856,17 @@ public class ReminderScheduleService {
         
         // 4. 更新执行记录
         updateExecuteRecord(reminder, "SUCCESS", null);
-        
-        // 5. 标记已提醒（防止重复）
-        markSceneReminded(reminder.getId(), reminder.getReminderType());
+
+        // 5. 标记已提醒（防止重复）- 使用第一个用户ID
+        if (!targetUserIds.isEmpty()) {
+            markSceneReminded(reminder.getId(), targetUserIds.get(0), reminder.getReminderType());
+        }
     }
-    
+
     /**
      * 标记场景提醒已执行（防重复）
      */
-    private void markSceneReminded(Long reminderId, String sceneType) {
-        String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-        String cacheKey = String.format("scene:%s:%d:%s", sceneType, reminderId, today);
-        redisTemplate.opsForValue().set(cacheKey, "1", 24, TimeUnit.HOURS);
+    private void markSceneReminded(Long reminderId, Long userId, String sceneType) {
+        sceneCacheService.markRemindedToday(reminderId, userId, sceneType);
     }
 }

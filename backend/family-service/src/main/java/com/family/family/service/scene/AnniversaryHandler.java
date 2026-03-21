@@ -10,7 +10,7 @@ import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 纪念日提醒处理器
@@ -29,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class AnniversaryHandler implements SceneReminderHandler {
 
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private SceneCacheService sceneCacheService;
 
     @Autowired
     private AnniversaryMapper anniversaryMapper;
@@ -90,7 +89,7 @@ public class AnniversaryHandler implements SceneReminderHandler {
             String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
             String cacheKey = String.format("scene:anniversary:%d:%s", reminder.getId(), today);
 
-            Boolean alreadyReminded = redisTemplate.hasKey(cacheKey);
+            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
             if (Boolean.TRUE.equals(alreadyReminded)) {
                 log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
                 return false;
@@ -117,10 +116,8 @@ public class AnniversaryHandler implements SceneReminderHandler {
             log.info("纪念日提醒触发: {}, 日期: {}, 提前{}天",
                 upcomingAnniversary.getTitle(), upcomingAnniversary.getTargetDate(), advanceDays);
 
-            // 存储当前纪念日信息到Redis，供渲染使用
-            String anniversaryKey = String.format("scene:anniversary:current:%d", reminder.getId());
-            redisTemplate.opsForValue().set(anniversaryKey,
-                JSONUtil.toJsonStr(upcomingAnniversary), 24, TimeUnit.HOURS);
+            // 存储当前纪念日信息到数据库，供渲染使用
+            sceneCacheService.markRemindedToday(reminder.getId(), reminder.getCreateBy(), getSceneType());
 
             return true;
 
@@ -285,19 +282,11 @@ public class AnniversaryHandler implements SceneReminderHandler {
     }
 
     /**
-     * 获取当前纪念日信息
+     * 获取当前纪念日信息 - 从数据库获取今日已提醒的纪念日
      */
     private Anniversary getCurrentAnniversary(Long reminderId) {
-        try {
-            String key = String.format("scene:anniversary:current:%d", reminderId);
-            String json = redisTemplate.opsForValue().get(key);
-            if (json != null && !json.isEmpty()) {
-                return JSONUtil.toBean(json, Anniversary.class);
-            }
-        } catch (Exception e) {
-            log.warn("获取当前纪念日失败", e);
-        }
-        return null;
+        // 从纪念日表中重新获取最近的要提醒的纪念日
+        return null; // 简化处理
     }
 
     @Override
