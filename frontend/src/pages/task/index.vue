@@ -336,12 +336,7 @@ function switchCategory(index) {
 }
 
 async function toggleTask(task) {
-  // 已完成的任务不能恢复
-  if (task.status === 2) {
-    uni.showToast({ title: '已完成任务不能恢复', icon: 'none' })
-    return
-  }
-  
+  // 点击复选框切换任务状态：待办->完成 或 已完成->恢复
   const newStatus = task.status === 2 ? 0 : 2
   try {
     if (newStatus === 2) {

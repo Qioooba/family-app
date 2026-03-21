@@ -611,4 +611,63 @@ public class TaskController {
         return result;
     }
 
+    /**
+     * 指派任务
+     * POST /api/task/assign/{id}
+     */
+    @PostMapping("/assign/{id}")
+    public Map<String, Object> assign(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Map<String, Object> result = new HashMap<>();
+        Long userId = getCurrentUserId();
+
+        if (userId == null) {
+            result.put("code", 401);
+            result.put("message", "请先登录");
+            return result;
+        }
+
+        try {
+            Task task = taskMapper.selectById(id);
+            if (task == null || task.getIsDeleted() == 1) {
+                result.put("code", 404);
+                result.put("message", "任务不存在");
+                return result;
+            }
+
+            // 验证用户是否属于该家庭
+            if (!isFamilyMember(task.getFamilyId(), userId)) {
+                result.put("code", 403);
+                result.put("message", "您无权操作此任务");
+                return result;
+            }
+
+            Long assigneeId = body.get("assigneeId") != null ? Long.valueOf(body.get("assigneeId").toString()) : null;
+
+            // 如果指定了被指派人，验证是否为家庭成员
+            if (assigneeId != null) {
+                FamilyMember member = familyMemberMapper.selectOne(
+                    new LambdaQueryWrapper<FamilyMember>()
+                        .eq(FamilyMember::getFamilyId, task.getFamilyId())
+                        .eq(FamilyMember::getUserId, assigneeId)
+                );
+                if (member == null) {
+                    result.put("code", 400);
+                    result.put("message", "被指派人不是家庭成员");
+                    return result;
+                }
+            }
+
+            task.setAssigneeId(assigneeId);
+            task.setUpdateTime(LocalDateTime.now());
+            taskMapper.updateById(task);
+
+            result.put("code", 200);
+            result.put("message", "success");
+        } catch (Exception e) {
+            result.put("code", 500);
+            result.put("message", "指派失败，请稍后重试");
+        }
+        return result;
+    }
+
 }

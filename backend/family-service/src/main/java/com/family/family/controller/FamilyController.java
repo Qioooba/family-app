@@ -643,7 +643,7 @@ public class FamilyController {
     /**
      * 检查用户是否为管理员
      */
-    @GetMapping("/{familyId}/check-admin/{checkUserId}")
+    @GetMapping("/{familyId}/is-admin/{checkUserId}")
     public Map<String, Object> checkAdmin(@PathVariable Long familyId, @PathVariable Long checkUserId) {
         Map<String, Object> result = new HashMap<>();
         Long userId = getCurrentUserId();
