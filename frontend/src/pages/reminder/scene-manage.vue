@@ -45,9 +45,9 @@
               <view class="config-item">
                 <text class="config-label">每日目标杯数</text>
                 <view class="slider-wrapper">
-                  <slider 
-                    :value="scene.config.targetTimes" 
-                    min="4" max="16" 
+                  <slider
+                    :value="scene.config.targetTimes"
+                    min="4" max="16"
                     show-value
                     activeColor="#4facfe"
                     block-size="20"
@@ -58,8 +58,8 @@
               <view class="config-item">
                 <text class="config-label">每杯容量 (ml)</text>
                 <view class="cup-size-options">
-                  <view 
-                    v-for="size in [150, 200, 250, 300]" 
+                  <view
+                    v-for="size in [150, 200, 250, 300]"
                     :key="size"
                     class="size-option"
                     :class="{ 'active': scene.config.cupSize === size }"
@@ -67,6 +67,18 @@
                   >
                     <text>{{ size }}ml</text>
                   </view>
+                </view>
+              </view>
+              <view class="config-item">
+                <text class="config-label">工作时间段</text>
+                <view class="time-range">
+                  <picker mode="time" :value="scene.config.workHours[0]" @change="(e) => updateWorkHours(scene, 0, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[0] }}</view>
+                  </picker>
+                  <text class="time-separator">至</text>
+                  <picker mode="time" :value="scene.config.workHours[1]" @change="(e) => updateWorkHours(scene, 1, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[1] }}</view>
+                  </picker>
                 </view>
               </view>
             </view>
@@ -136,8 +148,8 @@
               <view class="config-item">
                 <text class="config-label">连续用眼时长 (分钟)</text>
                 <view class="duration-options">
-                  <view 
-                    v-for="duration in [20, 30, 45, 60]" 
+                  <view
+                    v-for="duration in [20, 30, 45, 60]"
                     :key="duration"
                     class="duration-option"
                     :class="{ 'active': scene.config.screenTime === duration }"
@@ -149,14 +161,26 @@
               </view>
               <view class="config-item">
                 <text class="config-label">建议休息时长 (分钟)</text>
-                <slider 
-                  :value="scene.config.restDuration" 
-                  min="3" max="30" 
+                <slider
+                  :value="scene.config.restDuration"
+                  min="3" max="30"
                   show-value
                   activeColor="#30cfd0"
                   block-size="20"
                   @change="(e) => updateConfig(scene, 'restDuration', e.detail.value)"
                 />
+              </view>
+              <view class="config-item">
+                <text class="config-label">工作时间段</text>
+                <view class="time-range">
+                  <picker mode="time" :value="scene.config.workHours[0]" @change="(e) => updateWorkHours(scene, 0, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[0] }}</view>
+                  </picker>
+                  <text class="time-separator">至</text>
+                  <picker mode="time" :value="scene.config.workHours[1]" @change="(e) => updateWorkHours(scene, 1, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[1] }}</view>
+                  </picker>
+                </view>
               </view>
             </view>
           </template>
@@ -457,6 +481,11 @@ const toggleExpand = (scene) => {
 // 更新配置
 const updateConfig = (scene, key, value) => {
   scene.config[key] = value
+}
+
+// 更新工作时间段
+const updateWorkHours = (scene, index, value) => {
+  scene.config.workHours[index] = value
 }
 
 // 处理位置输入
