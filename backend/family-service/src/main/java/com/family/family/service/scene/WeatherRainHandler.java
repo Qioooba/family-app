@@ -9,9 +9,6 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -73,27 +70,15 @@ public class WeatherRainHandler implements SceneReminderHandler {
     @Override
     public boolean shouldTrigger(Reminder reminder) {
         try {
-            // 获取配置的提醒时间
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
-            String reminderTime = (String) config.getOrDefault("reminderTime", "07:00");
 
-            // 检查当前时间是否到达提醒时间（允许5分钟误差）
-            LocalDateTime now = LocalDateTime.now();
-            String currentTime = String.format("%02d:%02d", now.getHour(), now.getMinute());
+            // 获取监测间隔（分钟）
+            int intervalMinutes = ((Number) config.getOrDefault("intervalMinutes", 120)).intValue();
 
-            int timeDiff = compareTime(currentTime, reminderTime);
-            if (timeDiff < -5 || timeDiff > 5) {
-                log.debug("未到达提醒时间 {}，当前时间 {}，跳过", reminderTime, currentTime);
-                return false;
-            }
-
-            // 检查今日是否已提醒
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:rain:%d:%s", reminder.getId(), today);
-
-            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
-            if (Boolean.TRUE.equals(alreadyReminded)) {
-                log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
+            // 检查是否到达监测间隔
+            boolean shouldNotify = sceneCacheService.shouldNotifyAgain(reminder.getId(), intervalMinutes);
+            if (!shouldNotify) {
+                log.debug("下雨提醒未到达间隔 {} 分钟，跳过: {}", intervalMinutes, reminder.getReminderName());
                 return false;
             }
 
@@ -126,21 +111,6 @@ public class WeatherRainHandler implements SceneReminderHandler {
         } catch (Exception e) {
             log.error("检查下雨提醒失败: {}", reminder.getId(), e);
             return false;
-        }
-    }
-
-    /**
-     * 比较时间
-     */
-    private int compareTime(String time1, String time2) {
-        try {
-            int h1 = Integer.parseInt(time1.split(":")[0]);
-            int m1 = Integer.parseInt(time1.split(":")[1]);
-            int h2 = Integer.parseInt(time2.split(":")[0]);
-            int m2 = Integer.parseInt(time2.split(":")[1]);
-            return (h1 * 60 + m1) - (h2 * 60 + m2);
-        } catch (Exception e) {
-            return 0;
         }
     }
 
@@ -369,13 +339,13 @@ public class WeatherRainHandler implements SceneReminderHandler {
             .sceneType(SCENE_TYPE)
             .reminderName("🌧️ 下雨提醒")
             .reminderType("WEATHER_RAIN")
-            .frequencyType("DAILY")
-            .frequencyConfig("{\"fixedTime\": \"07:00\"}")
+            .frequencyType("INTERVAL")
+            .frequencyConfig("{\"intervalMinutes\": 120}")
             .titleTemplate("🌧️ 今日有雨，记得带伞！")
             .contentTemplate("{userName}，{location}{rainTime}有雨，降雨概率{rainProbability}，出门记得带☔！")
-            .businessData("{\"sceneType\": \"WEATHER_RAIN\", \"location\": \"auto\", \"reminderTime\": \"07:00\", \"rainProbability\": 30, \"rainHoursAhead\": 3}")
+            .businessData("{\"sceneType\": \"WEATHER_RAIN\", \"location\": \"auto\", \"intervalMinutes\": 120, \"rainProbability\": 30, \"rainHoursAhead\": 3}")
             .icon(ICON)
-            .description("每天早上7点检查天气，预报有雨时自动提醒带伞")
+            .description("持续监测天气，预报有雨时提醒带伞（使用您的定位）")
             .bgColor(BG_COLOR)
             .build();
     }

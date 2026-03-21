@@ -9,9 +9,6 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -85,27 +82,15 @@ public class WeatherTempHandler implements SceneReminderHandler {
     @Override
     public boolean shouldTrigger(Reminder reminder) {
         try {
-            // 获取配置的提醒时间
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
-            String reminderTime = (String) config.getOrDefault("reminderTime", "08:00");
 
-            // 检查当前时间是否到达提醒时间（允许5分钟误差）
-            LocalDateTime now = LocalDateTime.now();
-            String currentTime = String.format("%02d:%02d", now.getHour(), now.getMinute());
+            // 获取监测间隔（分钟）
+            int intervalMinutes = ((Number) config.getOrDefault("intervalMinutes", 120)).intValue();
 
-            int timeDiff = compareTime(currentTime, reminderTime);
-            if (timeDiff < -5 || timeDiff > 5) {
-                log.debug("未到达提醒时间 {}，当前时间 {}，跳过", reminderTime, currentTime);
-                return false;
-            }
-
-            // 检查今日是否已提醒
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:temp:%d:%s", reminder.getId(), today);
-
-            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
-            if (Boolean.TRUE.equals(alreadyReminded)) {
-                log.debug("今日已提醒过，跳过温度提醒");
+            // 检查是否到达监测间隔
+            boolean shouldNotify = sceneCacheService.shouldNotifyAgain(reminder.getId(), intervalMinutes);
+            if (!shouldNotify) {
+                log.debug("温度提醒未到达间隔 {} 分钟，跳过: {}", intervalMinutes, reminder.getReminderName());
                 return false;
             }
 
@@ -145,21 +130,6 @@ public class WeatherTempHandler implements SceneReminderHandler {
         } catch (Exception e) {
             log.error("检查温度提醒失败: {}", reminder.getId(), e);
             return false;
-        }
-    }
-
-    /**
-     * 比较时间
-     */
-    private int compareTime(String time1, String time2) {
-        try {
-            int h1 = Integer.parseInt(time1.split(":")[0]);
-            int m1 = Integer.parseInt(time1.split(":")[1]);
-            int h2 = Integer.parseInt(time2.split(":")[0]);
-            int m2 = Integer.parseInt(time2.split(":")[1]);
-            return (h1 * 60 + m1) - (h2 * 60 + m2);
-        } catch (Exception e) {
-            return 0;
         }
     }
 
@@ -371,22 +341,22 @@ public class WeatherTempHandler implements SceneReminderHandler {
             .sceneType(SCENE_TYPE)
             .reminderName("🌡️ 高温提醒")
             .reminderType("WEATHER_TEMP")
-            .frequencyType("DAILY")
-            .frequencyConfig("{\"fixedTime\": \"08:00\"}")
+            .frequencyType("INTERVAL")
+            .frequencyConfig("{\"intervalMinutes\": 120}")
             .titleTemplate("🌡️ 高温预警，注意防暑！")
             .contentTemplate("{userName}，{location}当前气温{currentTemp}°C，{tempAdvice}\n\n{healthTips}")
-            .businessData("{\"sceneType\": \"WEATHER_TEMP\", \"location\": \"auto\", \"reminderTime\": \"08:00\", \"tempThreshold\": 35, \"alertType\": \"high\"}")
+            .businessData("{\"sceneType\": \"WEATHER_TEMP\", \"location\": \"auto\", \"intervalMinutes\": 120, \"tempThreshold\": 35, \"alertType\": \"high\"}")
             .icon(ICON)
-            .description("温度超过35°C时自动提醒防暑")
+            .description("持续监测温度，超标时提醒防暑（使用您的定位）")
             .bgColor(BG_COLOR)
             .build();
     }
 
     /**
-     * 标记今日已提醒
+     * 标记已提醒（使用时间戳，支持间隔提醒）
      */
     public void markReminded(Long reminderId, Long userId) {
-        sceneCacheService.markRemindedToday(reminderId, userId, getSceneType());
+        sceneCacheService.markNotified(reminderId, userId, getSceneType());
     }
 
     // ========== 内部类 ==========

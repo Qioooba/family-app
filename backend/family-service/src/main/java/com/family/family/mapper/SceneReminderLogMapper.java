@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.annotations.Insert;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 场景提醒日志 Mapper
@@ -24,4 +25,16 @@ public interface SceneReminderLogMapper extends BaseMapper<SceneReminderLog> {
      */
     @Insert("INSERT INTO scene_reminder_log (reminder_id, user_id, scene_type, remind_date) VALUES (#{reminderId}, #{userId}, #{sceneType}, #{date})")
     int insertReminderLog(@Param("reminderId") Long reminderId, @Param("userId") Long userId, @Param("sceneType") String sceneType, @Param("date") LocalDate date);
+
+    /**
+     * 获取最后一次提醒时间
+     */
+    @Select("SELECT MAX(created_at) FROM scene_reminder_log WHERE reminder_id = #{reminderId}")
+    LocalDateTime getLastReminderTime(@Param("reminderId") Long reminderId);
+
+    /**
+     * 记录提醒（使用时间戳）
+     */
+    @Insert("INSERT INTO scene_reminder_log (reminder_id, user_id, scene_type, remind_date, created_at) VALUES (#{reminderId}, #{userId}, #{sceneType}, #{date}, NOW())")
+    int insertReminderLogWithTime(@Param("reminderId") Long reminderId, @Param("userId") Long userId, @Param("sceneType") String sceneType, @Param("date") LocalDate date);
 }

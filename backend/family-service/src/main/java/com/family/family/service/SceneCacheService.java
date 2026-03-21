@@ -85,6 +85,37 @@ public class SceneCacheService {
         }
     }
 
+    /**
+     * 获取最后一次提醒时间
+     */
+    public LocalDateTime getLastNotificationTime(Long reminderId) {
+        return sceneReminderLogMapper.getLastReminderTime(reminderId);
+    }
+
+    /**
+     * 检查是否应该再次通知（基于间隔）
+     */
+    public boolean shouldNotifyAgain(Long reminderId, int intervalMinutes) {
+        LocalDateTime lastTime = getLastNotificationTime(reminderId);
+        if (lastTime == null) {
+            return true; // 从未提醒过
+        }
+        LocalDateTime now = LocalDateTime.now();
+        long minutesSinceLast = java.time.Duration.between(lastTime, now).toMinutes();
+        boolean should = minutesSinceLast >= intervalMinutes;
+        log.debug("检查间隔: reminderId={}, 上次提醒={}, 间隔={}分钟, 需要提醒={}", reminderId, lastTime, minutesSinceLast, should);
+        return should;
+    }
+
+    /**
+     * 记录通知（带时间戳，用于间隔提醒）
+     */
+    @Transactional
+    public void markNotified(Long reminderId, Long userId, String sceneType) {
+        sceneReminderLogMapper.insertReminderLogWithTime(reminderId, userId, sceneType, LocalDate.now());
+        log.info("记录间隔提醒: reminderId={}, sceneType={}", reminderId, sceneType);
+    }
+
     // ========== 久坐记录 ==========
 
     /**

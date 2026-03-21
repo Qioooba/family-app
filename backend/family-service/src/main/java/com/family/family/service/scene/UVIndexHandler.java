@@ -9,9 +9,6 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 /**
@@ -75,31 +72,20 @@ public class UVIndexHandler implements SceneReminderHandler {
     @Override
     public boolean shouldTrigger(Reminder reminder) {
         try {
-            // 获取配置的提醒时间
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
-            String reminderTime = (String) config.getOrDefault("reminderTime", "10:00");
 
-            // 检查当前时间是否到达提醒时间（允许5分钟误差）
-            LocalDateTime now = LocalDateTime.now();
-            String currentTime = String.format("%02d:%02d", now.getHour(), now.getMinute());
+            // 获取监测间隔（分钟）
+            int intervalMinutes = ((Number) config.getOrDefault("intervalMinutes", 120)).intValue();
 
-            int timeDiff = compareTime(currentTime, reminderTime);
-            if (timeDiff < -5 || timeDiff > 5) {
-                log.debug("未到达提醒时间 {}，当前时间 {}，跳过", reminderTime, currentTime);
+            // 检查是否到达监测间隔
+            boolean shouldNotify = sceneCacheService.shouldNotifyAgain(reminder.getId(), intervalMinutes);
+            if (!shouldNotify) {
+                log.debug("紫外线提醒未到达间隔 {} 分钟，跳过: {}", intervalMinutes, reminder.getReminderName());
                 return false;
             }
 
-            // 检查今日是否已提醒
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:uv_index:%d:%s", reminder.getId(), today);
-
-            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
-            if (Boolean.TRUE.equals(alreadyReminded)) {
-                log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
-                return false;
-            }
+            // 获取位置
             String location = (String) config.getOrDefault("location", "auto");
-
             if ("auto".equals(location)) {
                 String userLocation = getUserLocation(reminder.getCreateBy());
                 if (userLocation != null) {
@@ -129,21 +115,6 @@ public class UVIndexHandler implements SceneReminderHandler {
         } catch (Exception e) {
             log.error("检查紫外线提醒失败: {}", reminder.getId(), e);
             return false;
-        }
-    }
-
-    /**
-     * 比较时间
-     */
-    private int compareTime(String time1, String time2) {
-        try {
-            int h1 = Integer.parseInt(time1.split(":")[0]);
-            int m1 = Integer.parseInt(time1.split(":")[1]);
-            int h2 = Integer.parseInt(time2.split(":")[0]);
-            int m2 = Integer.parseInt(time2.split(":")[1]);
-            return (h1 * 60 + m1) - (h2 * 60 + m2);
-        } catch (Exception e) {
-            return 0;
         }
     }
 
@@ -223,15 +194,15 @@ public class UVIndexHandler implements SceneReminderHandler {
     public SceneTemplate getDefaultTemplate() {
         return SceneTemplate.builder()
             .sceneType(SCENE_TYPE)
-            .reminderName("☀️ 南京紫外线提醒")
+            .reminderName("☀️ 紫外线提醒")
             .reminderType("UV_INDEX")
-            .frequencyType("DAILY")
-            .frequencyConfig("{\"fixedTime\": \"10:00\"}")
+            .frequencyType("INTERVAL")
+            .frequencyConfig("{\"intervalMinutes\": 120}")
             .titleTemplate("☀️ 紫外线较强，注意防晒！")
             .contentTemplate("{userName}，当前位置{location}当前紫外线指数{uvIndex}，{uvLevel}，建议涂抹防晒霜，佩戴遮阳帽或太阳镜🕶️")
-            .businessData("{\"sceneType\": \"UV_INDEX\", \"location\": \"auto\", \"reminderTime\": \"10:00\", \"uvThreshold\": 3}")
+            .businessData("{\"sceneType\": \"UV_INDEX\", \"location\": \"auto\", \"intervalMinutes\": 120, \"uvThreshold\": 3}")
             .icon(ICON)
-            .description("每天上午10点检查紫外线指数，UV≥3时提醒防晒（优先使用您的定位）")
+            .description("持续监测紫外线指数，UV≥3时提醒防晒（使用您的定位）")
             .bgColor(BG_COLOR)
             .build();
     }
@@ -368,10 +339,10 @@ public class UVIndexHandler implements SceneReminderHandler {
     }
 
     /**
-     * 标记今日已提醒
+     * 标记已提醒（使用时间戳，支持间隔提醒）
      */
     public void markReminded(Long reminderId, Long userId) {
-        sceneCacheService.markRemindedToday(reminderId, userId, getSceneType());
+        sceneCacheService.markNotified(reminderId, userId, getSceneType());
     }
 
     /**

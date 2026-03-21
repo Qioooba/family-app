@@ -9,9 +9,6 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 /**
@@ -76,27 +73,15 @@ public class AirQualityHandler implements SceneReminderHandler {
     @Override
     public boolean shouldTrigger(Reminder reminder) {
         try {
-            // 获取配置的提醒时间
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
-            String reminderTime = (String) config.getOrDefault("reminderTime", "07:00");
 
-            // 检查当前时间是否到达提醒时间（允许5分钟误差）
-            LocalDateTime now = LocalDateTime.now();
-            String currentTime = String.format("%02d:%02d", now.getHour(), now.getMinute());
+            // 获取监测间隔（分钟）
+            int intervalMinutes = ((Number) config.getOrDefault("intervalMinutes", 120)).intValue();
 
-            int timeDiff = compareTime(currentTime, reminderTime);
-            if (timeDiff < -5 || timeDiff > 5) {
-                log.debug("未到达提醒时间 {}，当前时间 {}，跳过", reminderTime, currentTime);
-                return false;
-            }
-
-            // 检查今日是否已提醒
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:air_quality:%d:%s", reminder.getId(), today);
-
-            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
-            if (Boolean.TRUE.equals(alreadyReminded)) {
-                log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
+            // 检查是否到达监测间隔
+            boolean shouldNotify = sceneCacheService.shouldNotifyAgain(reminder.getId(), intervalMinutes);
+            if (!shouldNotify) {
+                log.debug("空气质量提醒未到达间隔 {} 分钟，跳过: {}", intervalMinutes, reminder.getReminderName());
                 return false;
             }
 
@@ -148,21 +133,6 @@ public class AirQualityHandler implements SceneReminderHandler {
         } catch (Exception e) {
             log.error("检查空气质量提醒失败: {}", reminder.getId(), e);
             return false;
-        }
-    }
-
-    /**
-     * 比较时间
-     */
-    private int compareTime(String time1, String time2) {
-        try {
-            int h1 = Integer.parseInt(time1.split(":")[0]);
-            int m1 = Integer.parseInt(time1.split(":")[1]);
-            int h2 = Integer.parseInt(time2.split(":")[0]);
-            int m2 = Integer.parseInt(time2.split(":")[1]);
-            return (h1 * 60 + m1) - (h2 * 60 + m2);
-        } catch (Exception e) {
-            return 0;
         }
     }
 
@@ -253,13 +223,13 @@ public class AirQualityHandler implements SceneReminderHandler {
             .sceneType(SCENE_TYPE)
             .reminderName("🌫️ 南京空气质量提醒")
             .reminderType("AIR_QUALITY")
-            .frequencyType("DAILY")
-            .frequencyConfig("{\"fixedTime\": \"07:00\"}")
+            .frequencyType("INTERVAL")
+            .frequencyConfig("{\"intervalMinutes\": 120}")
             .titleTemplate("🌫️ 空气质量较差，注意防护！")
             .contentTemplate("{userName}，当前位置{location}的空气质量{aqiLevel}，PM2.5浓度{pm25}μg/m³，建议减少户外活动，外出佩戴口罩😷")
-            .businessData("{\"sceneType\": \"AIR_QUALITY\", \"location\": \"auto\", \"reminderTime\": \"07:00\", \"pm25Threshold\": 75, \"pm10Threshold\": 150, \"aqiThreshold\": 100}")
+            .businessData("{\"sceneType\": \"AIR_QUALITY\", \"location\": \"auto\", \"intervalMinutes\": 120, \"pm25Threshold\": 75, \"pm10Threshold\": 150, \"aqiThreshold\": 100}")
             .icon(ICON)
-            .description("每天早上7点检查空气质量，PM2.5或AQI超标时提醒（优先使用您的定位）")
+            .description("持续监测空气质量，超标时提醒（使用您的定位）")
             .bgColor(BG_COLOR)
             .build();
     }
@@ -408,10 +378,10 @@ public class AirQualityHandler implements SceneReminderHandler {
     }
 
     /**
-     * 标记今日已提醒
+     * 标记已提醒（使用时间戳，支持间隔提醒）
      */
     public void markReminded(Long reminderId, Long userId) {
-        sceneCacheService.markRemindedToday(reminderId, userId, getSceneType());
+        sceneCacheService.markNotified(reminderId, userId, getSceneType());
     }
 
     /**

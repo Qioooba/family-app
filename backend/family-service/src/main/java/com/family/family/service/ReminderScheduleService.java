@@ -864,9 +864,9 @@ public class ReminderScheduleService {
     }
 
     /**
-     * 标记场景提醒已执行（防重复）
+     * 标记场景提醒已执行（使用时间戳，支持间隔提醒）
      */
     private void markSceneReminded(Long reminderId, Long userId, String sceneType) {
-        sceneCacheService.markRemindedToday(reminderId, userId, sceneType);
+        sceneCacheService.markNotified(reminderId, userId, sceneType);
     }
 }
