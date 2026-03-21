@@ -483,7 +483,22 @@ public class FamilyController {
                 new LambdaQueryWrapper<FamilyMember>()
                     .eq(FamilyMember::getFamilyId, familyId)
             );
-            
+
+            // 批量获取用户信息，避免N+1查询
+            List<Long> userIds = members.stream()
+                .map(FamilyMember::getUserId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+
+            Map<Long, User> userMap = new HashMap<>();
+            if (!userIds.isEmpty()) {
+                List<User> users = userMapper.selectBatchIds(userIds);
+                for (User user : users) {
+                    userMap.put(user.getId(), user);
+                }
+            }
+
             // 组装成员信息，包含用户头像和最新昵称
             List<Map<String, Object>> memberList = new ArrayList<>();
             for (FamilyMember member : members) {
@@ -492,9 +507,9 @@ public class FamilyController {
                 memberInfo.put("familyId", member.getFamilyId());
                 memberInfo.put("userId", member.getUserId());
                 memberInfo.put("role", member.getRole());
-                
-                // 获取用户最新信息（头像、昵称等）
-                User user = userMapper.selectById(member.getUserId());
+
+                // 使用批量查询的用户信息
+                User user = userMap.get(member.getUserId());
                 if (user != null) {
                     // 优先使用 User 表的最新昵称，如果没有则使用 FamilyMember 的昵称
                     String displayNickname = user.getNickname();
@@ -509,9 +524,9 @@ public class FamilyController {
                     // 用户不存在时使用成员表的数据
                     memberInfo.put("nickname", member.getNickname());
                 }
-                
+
                 memberInfo.put("joinTime", member.getJoinTime());
-                
+
                 memberList.add(memberInfo);
             }
 
