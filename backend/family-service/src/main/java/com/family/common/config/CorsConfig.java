@@ -42,7 +42,16 @@ public class CorsConfig implements WebMvcConfigurer {
         "http://qioba.cn:3000",
         "https://qioba.cn:3000",
         "http://qioba.cn:8080",
-        "https://qioba.cn:8443"
+        "https://qioba.cn:8443",
+        // 520xz.cn 生产域名
+        "http://520xz.cn",
+        "https://520xz.cn",
+        "http://www.520xz.cn",
+        "https://www.520xz.cn",
+        "http://520xz.cn:3000",
+        "https://520xz.cn:3000",
+        "http://520xz.cn:8443",
+        "https://520xz.cn:8443"
     );
 
     @Override
