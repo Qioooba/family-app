@@ -22,7 +22,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NotLoginException.class)
     public Result<Void> handleNotLoginException(NotLoginException e) {
-        log.warn("用户未登录: {}", e.getMessage());
+        // 未登录是前端状态流转中的常见结果，不记录为告警，避免日志被噪音淹没。
+        log.info("用户未登录: {}", e.getMessage());
         return Result.error(401, "请先登录");
     }
 

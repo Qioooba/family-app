@@ -2,9 +2,9 @@
 # 微信小程序上传脚本 v1.1
 
 APPID="${WEIXIN_APPID:-}"
-VERSION="1.1.0"
-PROJECT_PATH="/Volumes/document/Projects/family-app/frontend/dist/build/mp-weixin"
-DESC="提醒功能完整版更新"
+VERSION="${MINIPROGRAM_VERSION:-1.0.0}"
+PROJECT_PATH="${MINIPROGRAM_PROJECT_PATH:-/Volumes/document/Projects/family-app/frontend/dist/build/mp-weixin}"
+DESC="${MINIPROGRAM_DESC:-自动构建上传体验版}"
 
 if [ -z "$APPID" ]; then
     echo "❌ 请先导出 WEIXIN_APPID"
@@ -12,7 +12,7 @@ if [ -z "$APPID" ]; then
 fi
 
 # 检查private key
-KEY_FILE="/Volumes/document/Projects/family-app/frontend/private.key"
+KEY_FILE="${MINIPROGRAM_PRIVATE_KEY_PATH:-/Volumes/document/Projects/family-app/frontend/private.key}"
 
 if [ ! -f "$KEY_FILE" ]; then
     echo "❌ 错误：找不到 private.key 文件"

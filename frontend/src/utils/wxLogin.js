@@ -6,17 +6,33 @@
  */
 export const getWxLoginCode = () => {
   return new Promise((resolve, reject) => {
+    const handleSuccess = (res) => {
+      if (res && res.code) {
+        resolve(res.code)
+      } else {
+        reject(new Error('获取微信登录凭证失败'))
+      }
+    }
+
+    const handleFail = (err) => {
+      const message = err?.errMsg || err?.message || '微信授权失败'
+      reject(new Error(message))
+    }
+
+    // #ifdef MP-WEIXIN
+    wx.login({
+      success: handleSuccess,
+      fail: handleFail
+    })
+    // #endif
+
+    // #ifndef MP-WEIXIN
     uni.login({
       provider: 'weixin',
-      success: (res) => {
-        if (res.code) {
-          resolve(res.code)
-        } else {
-          reject(new Error('获取微信登录凭证失败'))
-        }
-      },
-      fail: reject
+      success: handleSuccess,
+      fail: handleFail
     })
+    // #endif
   })
 }
 

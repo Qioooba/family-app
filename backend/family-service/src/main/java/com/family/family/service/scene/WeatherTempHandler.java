@@ -9,6 +9,7 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -57,21 +58,25 @@ public class WeatherTempHandler implements SceneReminderHandler {
     public void validateConfig(String businessData) {
         try {
             Map<String, Object> config = JSONUtil.parseObj(businessData);
-
-            // 验证温度阈值
-            if (config.containsKey("tempThreshold")) {
-                int threshold = ((Number) config.get("tempThreshold")).intValue();
-                if (threshold < -20 || threshold > 50) {
-                    throw new IllegalArgumentException("温度阈值应在-20°C至50°C之间");
-                }
+            Integer highThreshold = resolveHighThreshold(config);
+            Integer lowThreshold = resolveLowThreshold(config);
+            if (highThreshold != null && (highThreshold < -20 || highThreshold > 50)) {
+                throw new IllegalArgumentException("高温阈值应在-20°C至50°C之间");
             }
-
-            // 验证提醒类型
-            if (config.containsKey("alertType")) {
-                String alertType = (String) config.get("alertType");
-                if (!alertType.matches("high|low|both")) {
-                    throw new IllegalArgumentException("提醒类型必须是 high/low/both");
+            if (lowThreshold != null && (lowThreshold < -20 || lowThreshold > 50)) {
+                throw new IllegalArgumentException("低温阈值应在-20°C至50°C之间");
+            }
+            if (highThreshold != null && lowThreshold != null && lowThreshold >= highThreshold) {
+                throw new IllegalArgumentException("低温阈值必须小于高温阈值");
+            }
+            if (config.containsKey("workHours")) {
+                @SuppressWarnings("unchecked")
+                List<String> workHours = (List<String>) config.get("workHours");
+                if (workHours == null || workHours.size() != 2) {
+                    throw new IllegalArgumentException("监测时间段格式错误");
                 }
+                LocalTime.parse(workHours.get(0));
+                LocalTime.parse(workHours.get(1));
             }
 
         } catch (Exception e) {
@@ -94,6 +99,21 @@ public class WeatherTempHandler implements SceneReminderHandler {
                 return false;
             }
 
+            boolean allDay = Boolean.TRUE.equals(config.get("allDay"));
+            if (!allDay) {
+                @SuppressWarnings("unchecked")
+                List<String> workHours = (List<String>) config.get("workHours");
+                if (workHours != null && workHours.size() == 2) {
+                    LocalTime now = LocalTime.now();
+                    LocalTime start = LocalTime.parse(workHours.get(0));
+                    LocalTime end = LocalTime.parse(workHours.get(1));
+                    if (now.isBefore(start) || now.isAfter(end)) {
+                        log.debug("不在温度提醒监测时间段内，跳过: {}-{}", start, end);
+                        return false;
+                    }
+                }
+            }
+
             // 获取位置
             String location = (String) config.getOrDefault("location", "auto");
             if ("auto".equals(location)) {
@@ -109,21 +129,13 @@ public class WeatherTempHandler implements SceneReminderHandler {
             }
 
             int currentTemp = (int) Math.round(weather.getTemperature());
-            int threshold = ((Number) config.getOrDefault("tempThreshold", 35)).intValue();
-            String alertType = (String) config.getOrDefault("alertType", "high");
+            Integer highThreshold = resolveHighThreshold(config);
+            Integer lowThreshold = resolveLowThreshold(config);
+            boolean shouldAlert = (highThreshold != null && currentTemp >= highThreshold)
+                || (lowThreshold != null && currentTemp <= lowThreshold);
 
-            boolean shouldAlert = false;
-
-            if (("high".equals(alertType) || "both".equals(alertType)) && currentTemp >= threshold) {
-                shouldAlert = true;
-            }
-
-            if (("low".equals(alertType) || "both".equals(alertType)) && currentTemp <= threshold) {
-                shouldAlert = true;
-            }
-
-            log.info("温度提醒检查 - 位置: {}, 当前温度: {}, 阈值: {}, 提醒类型: {}, 是否触发: {}",
-                location, currentTemp, threshold, alertType, shouldAlert);
+            log.info("温度提醒检查 - 位置: {}, 当前温度: {}, 高温阈值: {}, 低温阈值: {}, 是否触发: {}",
+                location, currentTemp, highThreshold, lowThreshold, shouldAlert);
 
             return shouldAlert;
 
@@ -259,17 +271,6 @@ public class WeatherTempHandler implements SceneReminderHandler {
         Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
         String template = reminder.getTitleTemplate();
 
-        String alertType = (String) config.getOrDefault("alertType", "high");
-        if (template == null || template.isEmpty()) {
-            if ("high".equals(alertType)) {
-                template = "🌡️ 高温预警，注意防暑！";
-            } else if ("low".equals(alertType)) {
-                template = "❄️ 低温预警，注意保暖！";
-            } else {
-                template = "🌡️ 温度异常提醒";
-            }
-        }
-
         String location = (String) config.getOrDefault("location", "auto");
         if ("auto".equals(location)) {
             String userLocation = getUserLocation(reminder.getCreateBy());
@@ -278,6 +279,18 @@ public class WeatherTempHandler implements SceneReminderHandler {
 
         CurrentWeather weather = getCurrentWeather(location);
         int currentTemp = weather != null ? (int) Math.round(weather.getTemperature()) : 0;
+        Integer highThreshold = resolveHighThreshold(config);
+        Integer lowThreshold = resolveLowThreshold(config);
+
+        if (template == null || template.isEmpty()) {
+            if (highThreshold != null && currentTemp >= highThreshold) {
+                template = "🌡️ 高温预警，注意防暑！";
+            } else if (lowThreshold != null && currentTemp <= lowThreshold) {
+                template = "❄️ 低温预警，注意保暖！";
+            } else {
+                template = "🌡️ 温度提醒";
+            }
+        }
 
         return template
             .replace("{userName}", user.getNickname() != null ? user.getNickname() : "亲爱的")
@@ -305,26 +318,29 @@ public class WeatherTempHandler implements SceneReminderHandler {
         int maxTemp = weather != null ? (int) Math.round(weather.getMaxTemp()) : 0;
         int minTemp = weather != null ? (int) Math.round(weather.getMinTemp()) : 0;
 
-        String alertType = (String) config.getOrDefault("alertType", "high");
-        int threshold = ((Number) config.getOrDefault("tempThreshold", 35)).intValue();
+        Integer highThreshold = resolveHighThreshold(config);
+        Integer lowThreshold = resolveLowThreshold(config);
 
         String tempAdvice;
         String healthTips;
 
-        if ("high".equals(alertType) || currentTemp >= 35) {
+        if (highThreshold != null && currentTemp >= highThreshold) {
             tempAdvice = "今日最高温" + maxTemp + "°C，当前" + currentTemp + "°C，天气较热，请注意防暑降温！";
             healthTips = "💡 防暑小贴士：\n" +
                 "1. 多喝水，及时补充流失的水分\n" +
                 "2. 避免在中午12点至下午3点外出\n" +
                 "3. 穿着宽松透气的衣物\n" +
                 "4. 室内保持通风，适当使用空调";
-        } else {
+        } else if (lowThreshold != null && currentTemp <= lowThreshold) {
             tempAdvice = "今日最低温" + minTemp + "°C，当前" + currentTemp + "°C，天气较冷，请注意保暖！";
             healthTips = "💡 保暖小贴士：\n" +
                 "1. 及时增添衣物，注意防寒\n" +
                 "2. 多喝热水，保持身体温暖\n" +
                 "3. 注意手脚保暖，避免冻伤\n" +
                 "4. 适当运动，促进血液循环";
+        } else {
+            tempAdvice = "当前气温" + currentTemp + "°C，今日最高" + maxTemp + "°C，最低" + minTemp + "°C。";
+            healthTips = "💡 可根据当天温差及时增减衣物，注意补水与休息。";
         }
 
         return template
@@ -339,17 +355,58 @@ public class WeatherTempHandler implements SceneReminderHandler {
     public SceneTemplate getDefaultTemplate() {
         return SceneTemplate.builder()
             .sceneType(SCENE_TYPE)
-            .reminderName("🌡️ 高温提醒")
+            .reminderName("🌡️ 温度提醒")
             .reminderType("WEATHER_TEMP")
             .frequencyType("INTERVAL")
             .frequencyConfig("{\"intervalMinutes\": 120}")
-            .titleTemplate("🌡️ 高温预警，注意防暑！")
-            .contentTemplate("{userName}，{location}当前气温{currentTemp}°C，{tempAdvice}\n\n{healthTips}")
-            .businessData("{\"sceneType\": \"WEATHER_TEMP\", \"location\": \"auto\", \"intervalMinutes\": 120, \"tempThreshold\": 35, \"alertType\": \"high\"}")
+            .titleTemplate("")
+            .contentTemplate("")
+            .businessData("{\"sceneType\": \"WEATHER_TEMP\", \"location\": \"auto\", \"intervalMinutes\": 120, \"highTempThreshold\": 35, \"lowTempThreshold\": 5, \"allDay\": false, \"workHours\": [\"07:00\", \"22:00\"]}")
             .icon(ICON)
-            .description("持续监测温度，超标时提醒防暑（使用您的定位）")
+            .description("在常用活动时段监测温度变化，过热或过冷时提醒")
             .bgColor(BG_COLOR)
             .build();
+    }
+
+    private Integer resolveHighThreshold(Map<String, Object> config) {
+        Object value = config.get("highTempThreshold");
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value != null) {
+            try {
+                return Integer.parseInt(String.valueOf(value));
+            } catch (Exception ignored) {
+            }
+        }
+        Object legacy = config.get("tempThreshold");
+        String alertType = String.valueOf(config.getOrDefault("alertType", "high"));
+        if ("low".equals(alertType)) {
+            return 35;
+        }
+        if (legacy instanceof Number number) {
+            return number.intValue();
+        }
+        return 35;
+    }
+
+    private Integer resolveLowThreshold(Map<String, Object> config) {
+        Object value = config.get("lowTempThreshold");
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value != null) {
+            try {
+                return Integer.parseInt(String.valueOf(value));
+            } catch (Exception ignored) {
+            }
+        }
+        Object legacy = config.get("tempThreshold");
+        String alertType = String.valueOf(config.getOrDefault("alertType", "high"));
+        if ("low".equals(alertType) && legacy instanceof Number number) {
+            return number.intValue();
+        }
+        return 5;
     }
 
     /**

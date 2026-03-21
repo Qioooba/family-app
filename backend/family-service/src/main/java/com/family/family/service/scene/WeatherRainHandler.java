@@ -9,6 +9,7 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalTime;
 import java.util.*;
 
 /**
@@ -62,6 +63,15 @@ public class WeatherRainHandler implements SceneReminderHandler {
                     throw new IllegalArgumentException("位置不能为空");
                 }
             }
+            if (config.containsKey("workHours")) {
+                @SuppressWarnings("unchecked")
+                List<String> workHours = (List<String>) config.get("workHours");
+                if (workHours == null || workHours.size() != 2) {
+                    throw new IllegalArgumentException("监测时间段格式错误");
+                }
+                LocalTime.parse(workHours.get(0));
+                LocalTime.parse(workHours.get(1));
+            }
         } catch (Exception e) {
             throw new IllegalArgumentException("下雨提醒配置格式错误: " + e.getMessage());
         }
@@ -80,6 +90,21 @@ public class WeatherRainHandler implements SceneReminderHandler {
             if (!shouldNotify) {
                 log.debug("下雨提醒未到达间隔 {} 分钟，跳过: {}", intervalMinutes, reminder.getReminderName());
                 return false;
+            }
+
+            boolean allDay = Boolean.TRUE.equals(config.get("allDay"));
+            if (!allDay) {
+                @SuppressWarnings("unchecked")
+                List<String> workHours = (List<String>) config.get("workHours");
+                if (workHours != null && workHours.size() == 2) {
+                    LocalTime now = LocalTime.now();
+                    LocalTime start = LocalTime.parse(workHours.get(0));
+                    LocalTime end = LocalTime.parse(workHours.get(1));
+                    if (now.isBefore(start) || now.isAfter(end)) {
+                        log.debug("不在下雨提醒监测时间段内，跳过: {}-{}", start, end);
+                        return false;
+                    }
+                }
             }
 
             // 获取位置
@@ -340,12 +365,12 @@ public class WeatherRainHandler implements SceneReminderHandler {
             .reminderName("🌧️ 下雨提醒")
             .reminderType("WEATHER_RAIN")
             .frequencyType("INTERVAL")
-            .frequencyConfig("{\"intervalMinutes\": 120}")
+            .frequencyConfig("{\"intervalMinutes\": 40}")
             .titleTemplate("🌧️ 今日有雨，记得带伞！")
             .contentTemplate("{userName}，{location}{rainTime}有雨，降雨概率{rainProbability}，出门记得带☔！")
-            .businessData("{\"sceneType\": \"WEATHER_RAIN\", \"location\": \"auto\", \"intervalMinutes\": 120, \"rainProbability\": 30, \"rainHoursAhead\": 3}")
+            .businessData("{\"sceneType\": \"WEATHER_RAIN\", \"location\": \"auto\", \"intervalMinutes\": 40, \"rainProbability\": 40, \"rainHoursAhead\": 3, \"allDay\": false, \"workHours\": [\"07:00\", \"22:00\"]}")
             .icon(ICON)
-            .description("持续监测天气，预报有雨时提醒带伞（使用您的定位）")
+            .description("在常用出行时段监测降雨，快下雨时及时提醒带伞")
             .bgColor(BG_COLOR)
             .build();
     }

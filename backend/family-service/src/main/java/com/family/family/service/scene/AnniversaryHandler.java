@@ -226,14 +226,13 @@ public class AnniversaryHandler implements SceneReminderHandler {
 
     @Override
     public String renderTitle(Reminder reminder, User user) {
-        Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
         String template = reminder.getTitleTemplate();
 
         if (template == null || template.isEmpty()) {
             template = "🎂 纪念日提醒";
         }
 
-        Anniversary anniversary = getCurrentAnniversary(reminder.getId());
+        Anniversary anniversary = getCurrentAnniversary(reminder);
         String title = anniversary != null ? anniversary.getTitle() : "纪念日";
 
         return template.replace("{userName}", user.getNickname() != null ? user.getNickname() : "亲爱的")
@@ -242,14 +241,13 @@ public class AnniversaryHandler implements SceneReminderHandler {
 
     @Override
     public String renderContent(Reminder reminder, User user) {
-        Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
         String template = reminder.getContentTemplate();
 
         if (template == null || template.isEmpty()) {
             template = "{userName}，{anniversary}快到了，就在{date}，还有{days}天！";
         }
 
-        Anniversary anniversary = getCurrentAnniversary(reminder.getId());
+        Anniversary anniversary = getCurrentAnniversary(reminder);
 
         String anniversaryTitle = "纪念日";
         String dateStr = "--";
@@ -284,9 +282,19 @@ public class AnniversaryHandler implements SceneReminderHandler {
     /**
      * 获取当前纪念日信息 - 从数据库获取今日已提醒的纪念日
      */
-    private Anniversary getCurrentAnniversary(Long reminderId) {
-        // 从纪念日表中重新获取最近的要提醒的纪念日
-        return null; // 简化处理
+    private Anniversary getCurrentAnniversary(Reminder reminder) {
+        try {
+            Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
+            int advanceDays = ((Number) config.getOrDefault("advanceDays", 3)).intValue();
+            Long familyId = getUserFamilyId(reminder.getCreateBy());
+            if (familyId == null) {
+                familyId = 1L;
+            }
+            return getUpcomingAnniversary(familyId, advanceDays);
+        } catch (Exception e) {
+            log.warn("获取当前纪念日失败: reminderId={}", reminder.getId(), e);
+            return null;
+        }
     }
 
     @Override

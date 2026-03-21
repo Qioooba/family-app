@@ -1,19 +1,23 @@
 const ci = require('miniprogram-ci');
 const path = require('path');
 
-// 小程序配置
+const version = process.env.MINIPROGRAM_VERSION || process.env.npm_package_version || '1.0.0';
+const desc = process.env.MINIPROGRAM_DESC || '自动构建上传体验版';
+const appid = process.env.WEIXIN_APPID || '';
+const projectPath = process.env.MINIPROGRAM_PROJECT_PATH || path.join(__dirname, 'dist/build/mp-weixin');
+const privateKeyPath = process.env.MINIPROGRAM_PRIVATE_KEY_PATH || path.join(__dirname, 'private.key');
+
 const config = {
-    appid: process.env.WEIXIN_APPID || '',
+    appid,
     type: 'miniProgram',
-    projectPath: path.join(__dirname, 'dist/build/mp-weixin'),
-    privateKeyPath: path.join(__dirname, 'private.key'),
+    projectPath,
+    privateKeyPath,
     ignores: ['node_modules/**/*']
 };
 
-// 上传配置
 const uploadConfig = {
-    version: '1.1.1',
-    desc: '修复首页今日提醒不显示标题的问题',
+    version,
+    desc,
     setting: {
         es6: true,
         es7: true,
@@ -27,6 +31,9 @@ async function upload() {
     if (!config.appid) {
         throw new Error('缺少 WEIXIN_APPID 环境变量');
     }
+
+    console.log(`项目目录: ${config.projectPath}`);
+    console.log(`私钥路径: ${config.privateKeyPath}`);
 
     console.log('🚀 开始上传微信小程序体验版...');
     console.log(`AppID: ${config.appid}`);
@@ -49,7 +56,7 @@ async function upload() {
         console.log('');
         console.log('请在微信小程序后台设置体验版：');
         console.log('1. 进入 版本管理');
-        console.log('2. 找到版本 1.1.0');
+        console.log(`2. 找到版本 ${uploadConfig.version}`);
         console.log('3. 点击"选为体验版"');
         console.log('');
         console.log('预览二维码信息：', result.subPackageInfo);

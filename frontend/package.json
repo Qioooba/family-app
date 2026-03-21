@@ -9,7 +9,10 @@
     "dev:app": "uni -p app",
     "build:h5": "uni build",
     "build:mp-weixin": "uni build -p mp-weixin",
-    "build:app": "uni build -p app"
+    "build:app": "uni build -p app",
+    "upload:mp-weixin": "node upload.js",
+    "set:experience": "node set-experience.js",
+    "release:experience": "npm run build:mp-weixin && npm run upload:mp-weixin && npm run set:experience"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-alpha-4010220240409001",
@@ -24,6 +27,7 @@
   },
   "devDependencies": {
     "@dcloudio/vite-plugin-uni": "3.0.0-alpha-4010220240409001",
+    "miniprogram-ci": "^2.1.11",
     "rollup-plugin-visualizer": "^7.0.0",
     "sass-embedded": "^1.97.3",
     "typescript": "^5.4.5",

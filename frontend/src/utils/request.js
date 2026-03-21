@@ -33,6 +33,16 @@ const CONFIG = {
   RETRY_DELAY: 1000
 }
 
+const logRequestDebug = (...args) => {
+  // #ifdef MP-WEIXIN
+  console.log('[RequestDebug]', ...args)
+  // #endif
+
+  // #ifndef MP-WEIXIN
+  console.log('[RequestDebug]', ...args)
+  // #endif
+}
+
 // 处理头像URL - 将相对路径转为完整URL
 export const getAvatarUrl = (avatar) => {
   if (!avatar) {
@@ -149,9 +159,14 @@ const getToken = () => {
 const baseRequest = async (options, retryCount = 0) => {
   const token = getToken()
   const baseUrl = getBaseUrl(options.url)
+  const requestUrl = baseUrl + options.url
   
-  // 简化的请求日志（不打印敏感信息）
-  // Request日志
+  logRequestDebug('request:start', {
+    method: options.method || 'GET',
+    url: requestUrl,
+    retryCount,
+    hasToken: !!token
+  })
   
   return new Promise((resolve, reject) => {
     const requestHeaders = {
@@ -165,12 +180,18 @@ const baseRequest = async (options, retryCount = 0) => {
     //  // console.log(`[Request] 请求头:`, Object.keys(requestHeaders))
     
     const requestTask = uni.request({
-      url: baseUrl + options.url,
+      url: requestUrl,
       method: options.method || 'GET',
       data: options.data || {},
       timeout: options.timeout || CONFIG.TIMEOUT,
       header: requestHeaders,
       success: async (res) => {
+        logRequestDebug('request:success', {
+          method: options.method || 'GET',
+          url: requestUrl,
+          statusCode: res.statusCode,
+          dataCode: res?.data?.code
+        })
         // 处理响应
         const result = handleResponse(res, options)
         if (result.success) {
@@ -185,6 +206,13 @@ const baseRequest = async (options, retryCount = 0) => {
         }
       },
       fail: async (err) => {
+        logRequestDebug('request:fail', {
+          method: options.method || 'GET',
+          url: requestUrl,
+          retryCount,
+          errMsg: err?.errMsg,
+          statusCode: err?.statusCode
+        })
         // 网络错误，尝试重试
         if (retryCount < CONFIG.RETRY_TIMES) {
           // 网络错误警告

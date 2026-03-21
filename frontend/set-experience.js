@@ -1,23 +1,28 @@
 const ci = require('miniprogram-ci');
 const path = require('path');
 
-// 小程序配置
+const version = process.env.MINIPROGRAM_VERSION || process.env.npm_package_version || '1.0.0';
+
 const project = new ci.Project({
-    appid: 'wxbdc70536c5e52b82',
+    appid: process.env.WEIXIN_APPID || '',
     type: 'miniProgram',
-    projectPath: path.join(__dirname, 'dist/build/mp-weixin'),
-    privateKeyPath: path.join(__dirname, 'private.key'),
+    projectPath: process.env.MINIPROGRAM_PROJECT_PATH || path.join(__dirname, 'dist/build/mp-weixin'),
+    privateKeyPath: process.env.MINIPROGRAM_PRIVATE_KEY_PATH || path.join(__dirname, 'private.key'),
 });
 
-// 设置为体验版
 async function setExperience() {
     try {
+        if (!project.appid) {
+            throw new Error('缺少 WEIXIN_APPID 环境变量');
+        }
+
         console.log('🚀 正在设置为体验版...');
+        console.log(`版本: ${version}`);
         
         const result = await ci.setExperience({
             project,
-            version: '1.1.1',
-            experience: true, // 设置为体验版
+            version,
+            experience: true,
         });
         
         console.log('✅ 体验版设置成功！');

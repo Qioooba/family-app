@@ -129,38 +129,6 @@
       
     </view>
     
-    <!-- 智能场景提醒 -->
-    <view class="section-card scene-reminders animate-in">
-      <view class="section-header">
-        <view class="title-wrapper">
-          <text class="section-icon">🎯</text>
-          <text class="section-title">智能场景</text>
-        </view>
-        <view class="header-actions">
-          <view class="more-btn" @click="goSceneManage">
-            <text>管理</text>
-            <text class="arrow">›</text>
-          </view>
-        </view>
-      </view>
-      <view class="scene-grid">
-        <view 
-          v-for="(scene, index) in sceneReminders" 
-          :key="scene.sceneType"
-          class="scene-item"
-          :class="{ 'active': scene.enabled }"
-          :style="{ animationDelay: `${index * 0.1}s` }"
-          @click="toggleScene(scene)"
-        >
-          <view class="scene-icon-box" :style="{ background: scene.bgColor }">
-            <text class="scene-icon-emoji">{{ scene.icon }}</text>
-          </view>
-          <text class="scene-name-text">{{ scene.name }}</text>
-          <view class="scene-status-dot" :class="{ 'on': scene.enabled }"></view>
-        </view>
-      </view>
-    </view>
-    
     <!-- 今日提醒 -->
     <view class="section-card reminder-card-small animate-in">
       <view class="section-header">
@@ -709,6 +677,45 @@ const formatFrequencyType = (type) => {
   return typeMap[type] || type || '定时'
 }
 
+const parseReminderBusinessData = (businessData) => {
+  if (!businessData) {
+    return {}
+  }
+
+  if (typeof businessData === 'object') {
+    return businessData
+  }
+
+  if (typeof businessData !== 'string') {
+    return {}
+  }
+
+  try {
+    const parsed = JSON.parse(businessData)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch (error) {
+    return {}
+  }
+}
+
+const getReminderCardTitle = (reminder) => {
+  const businessData = parseReminderBusinessData(reminder.businessData)
+  const sceneType = businessData.sceneType || reminder.reminderType
+  const sceneTitleMap = {
+    WATER: '喝水提醒',
+    WEATHER_RAIN: '下雨提醒',
+    WEATHER_TEMP: '温度提醒',
+    SEDENTARY: '久坐提醒',
+    EYE_REST: '护眼提醒'
+  }
+
+  if (sceneTitleMap[sceneType]) {
+    return sceneTitleMap[sceneType]
+  }
+
+  return reminder.reminderName || reminder.titleTemplate || '提醒'
+}
+
 // 加载今日提醒
 const loadTodayReminders = async () => {
   try {
@@ -735,7 +742,7 @@ const loadTodayReminders = async () => {
           ...reminder,
           icon: iconConfig.icon,
           iconBg: iconConfig.bg,
-          title: reminder.titleTemplate || reminder.reminderName || '提醒',
+          title: getReminderCardTitle(reminder),
           time: displayTime
         }
       })
@@ -1019,7 +1026,7 @@ const currentFamily = ref({ name: '幸福小家' })
 const quickActions = [
   { name: '纪念日', icon: 'heart', bgColor: '#FF6B6B', shadow: '0 8rpx 20rpx rgba(255, 107, 107, 0.35)', path: '/pages/anniversary/index' },
   { name: '心愿', icon: 'gift', bgColor: '#FF6B9D', shadow: '0 8rpx 20rpx rgba(255, 107, 157, 0.35)', path: '/pages/wish/index' },
-  { name: '提醒', icon: 'bell', bgColor: '#8B5CF6', shadow: '0 8rpx 20rpx rgba(139, 92, 246, 0.35)', path: '/pages/reminder/index' }
+  { name: '智能场景', icon: 'grid', bgColor: '#0EA5E9', shadow: '0 8rpx 20rpx rgba(14, 165, 233, 0.35)', path: '/pages/reminder/scene-manage' }
 ]
 
 // 今日任务
@@ -1031,93 +1038,6 @@ const todayReminders = ref([])
 // 折叠状态
 const isReminderCollapsed = ref(false)
 const isTaskCollapsed = ref(false)
-
-// ========== 场景化提醒 ==========
-const sceneReminders = ref([
-  {
-    sceneType: 'WATER',
-    name: '喝水提醒',
-    icon: '💧',
-    bgColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    enabled: false,
-    description: '每小时提醒您喝水',
-    loading: false
-  },
-  {
-    sceneType: 'WEATHER_RAIN',
-    name: '下雨提醒',
-    icon: '🌧️',
-    bgColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    enabled: false,
-    description: '雨天自动提醒带伞',
-    loading: false
-  },
-  {
-    sceneType: 'SEDENTARY',
-    name: '久坐提醒',
-    icon: '🪑',
-    bgColor: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    enabled: false,
-    description: '久坐1小时提醒活动',
-    loading: false
-  },
-  {
-    sceneType: 'EYE_REST',
-    name: '护眼提醒',
-    icon: '👁️',
-    bgColor: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-    enabled: false,
-    description: '用眼45分钟提醒休息',
-    loading: false
-  }
-])
-
-// 加载场景提醒状态
-const loadSceneReminders = async () => {
-  try {
-    const res = await request.get('/api/reminder/scene-templates')
-    if (res && Array.isArray(res)) {
-      res.forEach(scene => {
-        const existing = sceneReminders.value.find(s => s.sceneType === scene.sceneType)
-        if (existing) {
-          existing.enabled = scene.enabled
-          existing.reminderId = scene.reminderId
-        }
-      })
-    }
-  } catch (e) {
-     // console.error('加载场景提醒失败', e)
-  }
-}
-
-// 切换场景开关
-const toggleScene = async (scene) => {
-  if (scene.loading) return
-  
-  scene.loading = true
-  try {
-    const res = await request.post('/api/reminder/scene/toggle', {
-      sceneType: scene.sceneType
-    })
-    
-    // request.js 已提取 data 字段，res 直接包含 {enabled, reminderId}
-    if (res && typeof res.enabled === 'boolean') {
-      scene.enabled = res.enabled
-      scene.reminderId = res.reminderId
-      uni.showToast({
-        title: scene.enabled ? `${scene.name}已开启` : `${scene.name}已关闭`,
-        icon: 'none'
-      })
-    } else {
-      uni.showToast({ title: '操作失败', icon: 'none' })
-    }
-  } catch (e) {
-     // console.error('切换场景失败', e)
-    uni.showToast({ title: '操作失败', icon: 'none' })
-  } finally {
-    scene.loading = false
-  }
-}
 
 // 跳转场景管理
 const goSceneManage = () => {
@@ -1797,8 +1717,6 @@ onShow(async () => {
   // 加载今日提醒
   loadTodayReminders()
   
-  // 加载场景提醒
-  loadSceneReminders()
 })
 
 // 获取纪念日图标

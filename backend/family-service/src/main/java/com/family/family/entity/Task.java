@@ -78,7 +78,7 @@ public class Task {
     private Integer sortOrder;
 
     // 重复规则字段
-    private Integer repeatType;        // 重复类型: 0=不重复, 1=每天, 2=每周, 3=每月, 4=每年, 5=工作日, 6=自定义
+    private String repeatType;         // 重复类型: none/daily/weekly/monthly/yearly/workday/custom
     private String repeatRule;         // JSON格式的重复规则配置
     private java.time.LocalDate repeatStartDate;  // 重复开始日期
     private java.time.LocalDate repeatEndDate;    // 重复结束日期
@@ -268,11 +268,11 @@ public class Task {
         this.sortOrder = sortOrder;
     }
 
-    public Integer getRepeatType() {
+    public String getRepeatType() {
         return repeatType;
     }
-
-    public void setRepeatType(Integer repeatType) {
+    
+    public void setRepeatType(String repeatType) {
         this.repeatType = repeatType;
     }
 

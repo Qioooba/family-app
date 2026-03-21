@@ -51,14 +51,13 @@ public class TaskRepeatServiceImpl implements TaskRepeatService {
             return;
         }
 
-        // 转换重复类型字符串到整数
-        Integer repeatTypeInt = convertRepeatTypeStringToInt(repeatType);
-        task.setRepeatType(repeatTypeInt);
+        String normalizedRepeatType = normalizeRepeatType(repeatType);
+        task.setRepeatType(normalizedRepeatType);
         task.setRepeatRule(repeatRule);
         task.setRepeatStartDate(LocalDate.now());
 
         // 计算下次执行时间
-        LocalDateTime nextRun = calculateNextRunTime(task.getDueTime(), repeatTypeInt, repeatRule, LocalDate.now());
+        LocalDateTime nextRun = calculateNextRunTime(task.getDueTime(), normalizedRepeatType, repeatRule, LocalDate.now());
         task.setNextRunTime(nextRun);
 
         taskMapper.updateById(task);
@@ -71,10 +70,7 @@ public class TaskRepeatServiceImpl implements TaskRepeatService {
         if (task == null) {
             return new RepeatRuleResponse(null, null);
         }
-        return new RepeatRuleResponse(
-            convertRepeatTypeIntToString(task.getRepeatType()),
-            task.getRepeatRule()
-        );
+        return new RepeatRuleResponse(task.getRepeatType(), task.getRepeatRule());
     }
 
     /**
@@ -92,7 +88,7 @@ public class TaskRepeatServiceImpl implements TaskRepeatService {
         // 查询今天需要执行的任务（nextRunTime在今天范围内）
         List<Task> tasksToRepeat = taskMapper.selectList(
             new LambdaQueryWrapper<Task>()
-                .eq(Task::getRepeatType, 0) // 获取有重复类型的任务
+                .ne(Task::getRepeatType, "none")
                 .isNotNull(Task::getNextRunTime)
                 .ge(Task::getNextRunTime, todayStart)
                 .le(Task::getNextRunTime, todayEnd)
@@ -129,25 +125,26 @@ public class TaskRepeatServiceImpl implements TaskRepeatService {
     /**
      * 计算下次执行时间
      */
-    private LocalDateTime calculateNextRunTime(LocalDateTime baseTime, Integer repeatType, String repeatRule, LocalDate fromDate) {
-        if (repeatType == null || repeatType == 0) {
+    private LocalDateTime calculateNextRunTime(LocalDateTime baseTime, String repeatType, String repeatRule, LocalDate fromDate) {
+        String normalizedRepeatType = normalizeRepeatType(repeatType);
+        if ("none".equals(normalizedRepeatType)) {
             return null;
         }
 
         LocalDateTime base = baseTime != null ? baseTime : fromDate.atTime(9, 0); // 默认早上9点
 
-        switch (repeatType) {
-            case 1: // 每天
+        switch (normalizedRepeatType) {
+            case "daily":
                 return base.with(temporal -> fromDate.plusDays(1)).withHour(base.getHour()).withMinute(base.getMinute());
-            case 2: // 每周
+            case "weekly":
                 return base.with(temporal -> fromDate.plusWeeks(1)).withHour(base.getHour()).withMinute(base.getMinute());
-            case 3: // 每月
+            case "monthly":
                 return base.with(temporal -> fromDate.plusMonths(1)).withHour(base.getHour()).withMinute(base.getMinute());
-            case 4: // 每年
+            case "yearly":
                 return base.with(temporal -> fromDate.plusYears(1)).withHour(base.getHour()).withMinute(base.getMinute());
-            case 5: // 工作日（仅工作日）
+            case "workday":
                 return calculateNextWorkday(base, fromDate);
-            case 6: // 自定义（通过repeatRule JSON配置）
+            case "custom":
                 return calculateCustomRepeat(base, repeatRule, fromDate);
             default:
                 return null;
@@ -248,37 +245,27 @@ public class TaskRepeatServiceImpl implements TaskRepeatService {
         return newTask;
     }
 
-    /**
-     * 转换重复类型字符串到整数
-     */
-    private Integer convertRepeatTypeStringToInt(String repeatType) {
-        if (repeatType == null) return 0;
-        switch (repeatType.toLowerCase()) {
-            case "none": case "0": return 0;
-            case "daily": case "1": return 1;
-            case "weekly": case "2": return 2;
-            case "monthly": case "3": return 3;
-            case "yearly": case "4": return 4;
-            case "workday": case "5": return 5;
-            case "custom": case "6": return 6;
-            default: return 0;
+    private String normalizeRepeatType(String repeatType) {
+        if (repeatType == null || repeatType.isBlank()) {
+            return "none";
         }
-    }
-
-    /**
-     * 转换重复类型整数到字符串
-     */
-    private String convertRepeatTypeIntToString(Integer repeatType) {
-        if (repeatType == null) return "none";
-        switch (repeatType) {
-            case 0: return "none";
-            case 1: return "daily";
-            case 2: return "weekly";
-            case 3: return "monthly";
-            case 4: return "yearly";
-            case 5: return "workday";
-            case 6: return "custom";
-            default: return "none";
+        switch (repeatType.toLowerCase()) {
+            case "0":
+                return "none";
+            case "1":
+                return "daily";
+            case "2":
+                return "weekly";
+            case "3":
+                return "monthly";
+            case "4":
+                return "yearly";
+            case "5":
+                return "workday";
+            case "6":
+                return "custom";
+            default:
+                return repeatType.toLowerCase();
         }
     }
 }

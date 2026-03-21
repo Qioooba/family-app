@@ -25,7 +25,7 @@
           </view>
           <view class="scene-info">
             <text class="scene-name">{{ scene.name }}</text>
-            <text class="scene-desc">{{ scene.description }}</text>
+            <text class="scene-desc">{{ getSceneDescription(scene) }}</text>
           </view>
           <view class="scene-toggle">
             <view class="toggle-track" :class="{ 'on': scene.enabled }">
@@ -103,14 +103,37 @@
                 </view>
               </view>
               <view class="config-item">
-                <text class="config-label">降雨概率阈值: {{ scene.config.rainProbability || 30 }}%</text>
-                <slider :value="scene.config.rainProbability || 30" min="10" max="80" show-value activeColor="#667eea" block-size="20" @change="(e) => updateConfig(scene, 'rainProbability', e.detail.value)" />
-                <text class="config-hint">超过此概率时提醒，使用自动定位</text>
+                <text class="config-label">降雨概率阈值</text>
+                <view class="interval-options">
+                  <view
+                    v-for="threshold in rainProbabilityOptions"
+                    :key="threshold"
+                    class="interval-option"
+                    :class="{ 'active': (scene.config.rainProbability || 40) === threshold }"
+                    @click="updateConfig(scene, 'rainProbability', threshold)"
+                  >
+                    <text>{{ threshold }}%</text>
+                  </view>
+                </view>
+                <text class="config-hint">超过此概率时提醒</text>
               </view>
               <view class="config-item">
                 <text class="config-label">全天监测</text>
                 <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
                 <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
+              </view>
+              <view v-if="scene.config.allDay !== true" class="config-item">
+                <text class="config-label">监测时间段</text>
+                <view class="time-range">
+                  <picker mode="time" :value="scene.config.workHours[0]" @change="(e) => updateWorkHours(scene, 0, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[0] }}</view>
+                  </picker>
+                  <text class="time-separator">至</text>
+                  <picker mode="time" :value="scene.config.workHours[1]" @change="(e) => updateWorkHours(scene, 1, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[1] }}</view>
+                  </picker>
+                </view>
+                <text class="config-hint">建议设置在常用出行时段，避免夜间无意义监测</text>
               </view>
             </view>
           </template>
@@ -136,11 +159,11 @@
               <view class="config-item">
                 <text class="config-label">工作时间段</text>
                 <view class="time-range">
-                  <picker mode="time" :value="scene.config.workHours[0]">
+                  <picker mode="time" :value="scene.config.workHours[0]" @change="(e) => updateWorkHours(scene, 0, e.detail.value)">
                     <view class="time-value">{{ scene.config.workHours[0] }}</view>
                   </picker>
                   <text class="time-separator">至</text>
-                  <picker mode="time" :value="scene.config.workHours[1]">
+                  <picker mode="time" :value="scene.config.workHours[1]" @change="(e) => updateWorkHours(scene, 1, e.detail.value)">
                     <view class="time-value">{{ scene.config.workHours[1] }}</view>
                   </picker>
                 </view>
@@ -211,33 +234,48 @@
                 </view>
               </view>
               <view class="config-item">
-                <text class="config-label">提醒类型</text>
-                <view class="alert-type-options">
-                  <view
-                    v-for="type in alertTypes"
-                    :key="type.value"
-                    class="alert-type-option"
-                    :class="{ 'active': scene.config.alertType === type.value }"
-                    @click="updateConfig(scene, 'alertType', type.value)"
-                  >
-                    <text>{{ type.label }}</text>
+                <text class="config-label">温度阈值</text>
+                <view class="threshold-grid">
+                  <view class="threshold-card">
+                    <text class="threshold-card-label">高温提醒</text>
+                    <input
+                      class="threshold-input"
+                      type="number"
+                      :value="scene.config.highTempThreshold"
+                      placeholder="如 35"
+                      @input="(e) => updateConfig(scene, 'highTempThreshold', parseInt(e.detail.value) || 0)"
+                    />
+                    <text class="threshold-unit">达到或超过该温度提醒</text>
+                  </view>
+                  <view class="threshold-card low">
+                    <text class="threshold-card-label">低温提醒</text>
+                    <input
+                      class="threshold-input"
+                      type="number"
+                      :value="scene.config.lowTempThreshold"
+                      placeholder="如 5"
+                      @input="(e) => updateConfig(scene, 'lowTempThreshold', parseInt(e.detail.value) || 0)"
+                    />
+                    <text class="threshold-unit">低于或等于该温度提醒</text>
                   </view>
                 </view>
-              </view>
-              <view class="config-item">
-                <text class="config-label">温度阈值 (°C)</text>
-                <input
-                  class="threshold-input"
-                  type="number"
-                  :value="scene.config.tempThreshold"
-                  placeholder="请输入温度阈值"
-                  @input="(e) => updateConfig(scene, 'tempThreshold', parseInt(e.detail.value) || 0)"
-                />
               </view>
               <view class="config-item">
                 <text class="config-label">全天监测</text>
                 <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
                 <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
+              </view>
+              <view v-if="scene.config.allDay !== true" class="config-item">
+                <text class="config-label">监测时间段</text>
+                <view class="time-range">
+                  <picker mode="time" :value="scene.config.workHours[0]" @change="(e) => updateWorkHours(scene, 0, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[0] }}</view>
+                  </picker>
+                  <text class="time-separator">至</text>
+                  <picker mode="time" :value="scene.config.workHours[1]" @change="(e) => updateWorkHours(scene, 1, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[1] }}</view>
+                  </picker>
+                </view>
               </view>
             </view>
           </template>
@@ -269,7 +307,7 @@
                   placeholder="请输入PM2.5阈值"
                   @input="(e) => updateConfig(scene, 'pm25Threshold', parseInt(e.detail.value) || 0)"
                 />
-                <text class="config-hint">超过此值提醒，使用自动定位</text>
+                <text class="config-hint">超过此值提醒</text>
               </view>
               <view class="config-item">
                 <text class="config-label">AQI 阈值</text>
@@ -286,6 +324,18 @@
                 <text class="config-label">全天监测</text>
                 <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
                 <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
+              </view>
+              <view v-if="scene.config.allDay !== true" class="config-item">
+                <text class="config-label">监测时间段</text>
+                <view class="time-range">
+                  <picker mode="time" :value="scene.config.workHours[0]" @change="(e) => updateWorkHours(scene, 0, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[0] }}</view>
+                  </picker>
+                  <text class="time-separator">至</text>
+                  <picker mode="time" :value="scene.config.workHours[1]" @change="(e) => updateWorkHours(scene, 1, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[1] }}</view>
+                  </picker>
+                </view>
               </view>
             </view>
           </template>
@@ -323,6 +373,18 @@
                 <text class="config-label">全天监测</text>
                 <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
                 <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
+              </view>
+              <view v-if="scene.config.allDay !== true" class="config-item">
+                <text class="config-label">监测时间段</text>
+                <view class="time-range">
+                  <picker mode="time" :value="scene.config.workHours[0]" @change="(e) => updateWorkHours(scene, 0, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[0] }}</view>
+                  </picker>
+                  <text class="time-separator">至</text>
+                  <picker mode="time" :value="scene.config.workHours[1]" @change="(e) => updateWorkHours(scene, 1, e.detail.value)">
+                    <view class="time-value">{{ scene.config.workHours[1] }}</view>
+                  </picker>
+                </view>
               </view>
             </view>
           </template>
@@ -369,7 +431,18 @@
               </view>
               <view class="config-item">
                 <text class="config-label">提前提醒天数</text>
-                <slider :value="scene.config.advanceDays || 3" min="1" max="7" show-value activeColor="#ff9a9e" block-size="20" @change="(e) => updateConfig(scene, 'advanceDays', e.detail.value)" />
+                <picker
+                  mode="selector"
+                  :range="anniversaryAdvanceDayOptionLabels"
+                  :value="getAnniversaryAdvanceDayIndex(scene.config.advanceDays)"
+                  @change="(e) => updateAnniversaryAdvanceDays(scene, e.detail.value)"
+                >
+                  <view class="picker-value">
+                    <text>{{ getAnniversaryAdvanceDayLabel(scene.config.advanceDays) }}</text>
+                    <text class="picker-arrow">›</text>
+                  </view>
+                </picker>
+                <text class="config-hint">会从设定天数开始，一直到纪念日当天每天提醒一次</text>
               </view>
             </view>
           </template>
@@ -409,20 +482,82 @@ const loading = ref(false)
 
 const locationOptions = ['自动定位', '北京', '上海', '广州', '深圳', '杭州', '成都']
 
-const alertTypes = [
-  { value: 'high', label: '高温提醒' },
-  { value: 'low', label: '低温提醒' },
-  { value: 'both', label: '高低温都提醒' }
-]
-
 // 监测间隔选项（分钟）
 const intervalOptions = [
+  { value: 20, label: '20分钟' },
+  { value: 40, label: '40分钟' },
   { value: 60, label: '1小时' },
   { value: 120, label: '2小时' },
   { value: 180, label: '3小时' },
   { value: 360, label: '6小时' },
   { value: 720, label: '12小时' }
 ]
+
+const rainProbabilityOptions = [20, 30, 40, 50, 60, 70, 80]
+
+const anniversaryAdvanceDayOptions = [
+  { value: 0, label: '仅当天提醒' },
+  { value: 1, label: '提前1天' },
+  { value: 3, label: '提前3天' },
+  { value: 7, label: '提前7天' },
+  { value: 15, label: '提前15天' },
+  { value: 30, label: '提前30天' }
+]
+
+const anniversaryAdvanceDayOptionLabels = anniversaryAdvanceDayOptions.map(option => option.label)
+
+const normalizeConfig = (sceneType, rawConfig) => {
+  const fallback = { ...getDefaultConfig(sceneType) }
+  if (!rawConfig) {
+    return fallback
+  }
+
+  let parsedConfig = rawConfig
+  if (typeof rawConfig === 'string') {
+    try {
+      parsedConfig = JSON.parse(rawConfig)
+    } catch (e) {
+      console.warn('[SceneManage] 解析场景配置失败，使用默认配置:', sceneType, rawConfig)
+      return fallback
+    }
+  }
+
+  if (typeof parsedConfig !== 'object' || Array.isArray(parsedConfig)) {
+    return fallback
+  }
+
+  const normalized = {
+    ...fallback,
+    ...parsedConfig
+  }
+
+  if (['WEATHER_RAIN', 'WEATHER_TEMP', 'AIR_QUALITY', 'UV_INDEX'].includes(sceneType)) {
+    if (!Array.isArray(normalized.workHours) || normalized.workHours.length !== 2) {
+      normalized.workHours = [...fallback.workHours]
+    }
+  }
+
+  if (sceneType === 'WEATHER_TEMP') {
+    const legacyThreshold = Number.isFinite(Number(parsedConfig.tempThreshold))
+      ? Number(parsedConfig.tempThreshold)
+      : null
+    const legacyAlertType = parsedConfig.alertType
+
+    if (!Number.isFinite(Number(normalized.highTempThreshold))) {
+      normalized.highTempThreshold = legacyAlertType === 'low'
+        ? fallback.highTempThreshold
+        : (legacyThreshold ?? fallback.highTempThreshold)
+    }
+
+    if (!Number.isFinite(Number(normalized.lowTempThreshold))) {
+      normalized.lowTempThreshold = legacyAlertType === 'low'
+        ? (legacyThreshold ?? fallback.lowTempThreshold)
+        : fallback.lowTempThreshold
+    }
+  }
+
+  return normalized
+}
 
 // 加载场景列表
 const loadScenes = async () => {
@@ -434,7 +569,7 @@ const loadScenes = async () => {
         ...scene,
         expanded: false,
         // 如果API返回了实际配置(defaultConfig)，使用它；否则使用默认配置
-        config: scene.defaultConfig || getDefaultConfig(scene.sceneType)
+        config: normalizeConfig(scene.sceneType, scene.defaultConfig || scene.businessData)
       }))
     }
   } catch (e) {
@@ -449,12 +584,12 @@ const loadScenes = async () => {
 const getDefaultConfig = (sceneType) => {
   const configs = {
     WATER: { targetTimes: 8, cupSize: 200, workHours: ['09:00', '18:00'] },
-    WEATHER_RAIN: { location: 'auto', intervalMinutes: 120, rainProbability: 30, rainHoursAhead: 3, allDay: false },
+    WEATHER_RAIN: { location: 'auto', intervalMinutes: 40, rainProbability: 40, rainHoursAhead: 3, allDay: false, workHours: ['07:00', '22:00'] },
     SEDENTARY: { sitDuration: 60, breakDuration: 5, workHours: ['09:00', '18:00'], postureTips: true },
     EYE_REST: { screenTime: 45, restDuration: 10, eyeExercise: true, blinkReminder: true, workHours: ['09:00', '18:00'] },
-    WEATHER_TEMP: { location: 'auto', intervalMinutes: 120, tempThreshold: 35, alertType: 'high', allDay: false },
-    AIR_QUALITY: { location: 'auto', intervalMinutes: 120, pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100, allDay: false },
-    UV_INDEX: { location: 'auto', intervalMinutes: 120, uvThreshold: 3, allDay: false },
+    WEATHER_TEMP: { location: 'auto', intervalMinutes: 120, highTempThreshold: 35, lowTempThreshold: 5, allDay: false, workHours: ['07:00', '22:00'] },
+    AIR_QUALITY: { location: 'auto', intervalMinutes: 120, pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100, allDay: false, workHours: ['06:00', '22:00'] },
+    UV_INDEX: { location: 'auto', intervalMinutes: 120, uvThreshold: 3, allDay: false, workHours: ['08:00', '18:00'] },
     MORNING: { type: 'morning', location: 'auto', reminderTime: '07:00' },
     CHECKIN: { reminderTime: '08:00' },
     SCHEDULE: { reminderTime: '07:30' },
@@ -502,16 +637,84 @@ const toggleExpand = (scene) => {
 
 // 更新配置
 const updateConfig = (scene, key, value) => {
+  scene.config = normalizeConfig(scene.sceneType, scene.config)
   scene.config[key] = value
+  if (key === 'allDay' && value !== true && (!Array.isArray(scene.config.workHours) || scene.config.workHours.length !== 2)) {
+    scene.config.workHours = [...getDefaultConfig(scene.sceneType).workHours]
+  }
+}
+
+const getAnniversaryAdvanceDayIndex = (advanceDays) => {
+  const targetValue = Number.isFinite(Number(advanceDays)) ? Number(advanceDays) : 3
+  const index = anniversaryAdvanceDayOptions.findIndex(option => option.value === targetValue)
+  return index >= 0 ? index : 2
+}
+
+const getAnniversaryAdvanceDayLabel = (advanceDays) => {
+  return anniversaryAdvanceDayOptions[getAnniversaryAdvanceDayIndex(advanceDays)]?.label || '提前3天'
+}
+
+const updateAnniversaryAdvanceDays = (scene, selectedIndex) => {
+  const option = anniversaryAdvanceDayOptions[Number(selectedIndex)]
+  if (!option) {
+    return
+  }
+  updateConfig(scene, 'advanceDays', option.value)
+}
+
+const getIntervalLabel = (intervalMinutes, fallback = '2小时') => {
+  return intervalOptions.find(option => option.value === intervalMinutes)?.label || fallback
+}
+
+const formatWorkHourLabel = (workHours, fallback = '白天时段') => {
+  if (Array.isArray(workHours) && workHours.length === 2) {
+    return `${workHours[0]}-${workHours[1]}`
+  }
+  return fallback
+}
+
+const getSceneDescription = (scene) => {
+  const config = normalizeConfig(scene.sceneType, scene.config || scene.defaultConfig || scene.businessData)
+
+  switch (scene.sceneType) {
+    case 'WATER':
+      return `${formatWorkHourLabel(config.workHours, '白天时段')}内按节奏提醒喝水`
+    case 'WEATHER_RAIN':
+      return `${config.allDay ? '全天' : formatWorkHourLabel(config.workHours, '07:00-22:00')}内每${getIntervalLabel(config.intervalMinutes)}监测降雨`
+    case 'SEDENTARY':
+      return `${formatWorkHourLabel(config.workHours, '工作时间')}内久坐${config.sitDuration || 60}分钟提醒活动`
+    case 'EYE_REST':
+      return `${formatWorkHourLabel(config.workHours, '工作时间')}内用眼${config.screenTime || 45}分钟提醒休息`
+    case 'WEATHER_TEMP':
+      return `${config.allDay ? '全天' : formatWorkHourLabel(config.workHours, '07:00-22:00')}内监测温度变化`
+    case 'AIR_QUALITY':
+      return `${config.allDay ? '全天' : formatWorkHourLabel(config.workHours, '06:00-22:00')}内每${getIntervalLabel(config.intervalMinutes)}监测空气质量`
+    case 'UV_INDEX':
+      return `${config.allDay ? '全天' : formatWorkHourLabel(config.workHours, '08:00-18:00')}内监测紫外线指数`
+    case 'MORNING':
+      return `${config.type === 'evening' ? '每天' : '每天'}${config.reminderTime || '07:00'}发送${config.type === 'evening' ? '晚安问候' : '早安问候'}`
+    case 'CHECKIN':
+      return `每天${config.reminderTime || '08:00'}提醒签到打卡`
+    case 'SCHEDULE':
+      return `每天${config.reminderTime || '07:30'}提醒查看今日日程`
+    case 'SLEEP':
+      return `每天${config.reminderTime || '22:00'}提醒准备休息`
+    case 'ANNIVERSARY':
+      return `${getAnniversaryAdvanceDayLabel(config.advanceDays)}开始，到当天每天提醒一次`
+    default:
+      return scene.description || '按当前配置自动提醒'
+  }
 }
 
 // 更新工作时间段
 const updateWorkHours = (scene, index, value) => {
+  scene.config = normalizeConfig(scene.sceneType, scene.config)
   scene.config.workHours[index] = value
 }
 
 // 处理位置输入
 const handleLocationInput = (scene, value) => {
+  scene.config = normalizeConfig(scene.sceneType, scene.config)
   if (value === '自动定位' || value === 'auto') {
     scene.config.location = 'auto'
   } else {
@@ -521,6 +724,7 @@ const handleLocationInput = (scene, value) => {
 
 // 设置自动定位
 const setAutoLocation = (scene) => {
+  scene.config = normalizeConfig(scene.sceneType, scene.config)
   scene.config.location = 'auto'
   uni.showToast({ title: '已设置为自动定位', icon: 'none' })
 }
@@ -528,6 +732,11 @@ const setAutoLocation = (scene) => {
 // 保存配置
 const saveSceneConfig = async (scene) => {
   try {
+    scene.config = normalizeConfig(scene.sceneType, scene.config)
+    if (scene.sceneType === 'WEATHER_TEMP') {
+      delete scene.config.alertType
+      delete scene.config.tempThreshold
+    }
     await request.post('/api/reminder/scene/update', {
       sceneType: scene.sceneType,
       businessData: scene.config
@@ -755,6 +964,45 @@ onShow(() => {
   background: #fff;
   width: 200rpx;
   text-align: center;
+}
+
+.threshold-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16rpx;
+}
+
+.threshold-card {
+  background: linear-gradient(180deg, #f8fbff 0%, #f1f6ff 100%);
+  border: 1rpx solid #dbeafe;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+
+  &.low {
+    background: linear-gradient(180deg, #fbfdff 0%, #f4f7fb 100%);
+    border-color: #dbe4f0;
+  }
+
+  .threshold-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.threshold-card-label {
+  font-size: 24rpx;
+  color: #334155;
+  font-weight: 600;
+}
+
+.threshold-unit {
+  font-size: 22rpx;
+  color: #64748b;
+  line-height: 1.5;
 }
 
 .location-auto-btn {

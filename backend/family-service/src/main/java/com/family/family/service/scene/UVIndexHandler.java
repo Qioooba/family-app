@@ -9,6 +9,7 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalTime;
 import java.util.Map;
 
 /**
@@ -64,6 +65,15 @@ public class UVIndexHandler implements SceneReminderHandler {
                     throw new IllegalArgumentException("位置不能为空");
                 }
             }
+            if (config.containsKey("workHours")) {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> workHours = (java.util.List<String>) config.get("workHours");
+                if (workHours == null || workHours.size() != 2) {
+                    throw new IllegalArgumentException("监测时间段格式错误");
+                }
+                LocalTime.parse(workHours.get(0));
+                LocalTime.parse(workHours.get(1));
+            }
         } catch (Exception e) {
             throw new IllegalArgumentException("紫外线提醒配置格式错误: " + e.getMessage());
         }
@@ -82,6 +92,21 @@ public class UVIndexHandler implements SceneReminderHandler {
             if (!shouldNotify) {
                 log.debug("紫外线提醒未到达间隔 {} 分钟，跳过: {}", intervalMinutes, reminder.getReminderName());
                 return false;
+            }
+
+            boolean allDay = Boolean.TRUE.equals(config.get("allDay"));
+            if (!allDay) {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> workHours = (java.util.List<String>) config.get("workHours");
+                if (workHours != null && workHours.size() == 2) {
+                    LocalTime now = LocalTime.now();
+                    LocalTime start = LocalTime.parse(workHours.get(0));
+                    LocalTime end = LocalTime.parse(workHours.get(1));
+                    if (now.isBefore(start) || now.isAfter(end)) {
+                        log.debug("不在紫外线提醒监测时间段内，跳过: {}-{}", start, end);
+                        return false;
+                    }
+                }
             }
 
             // 获取位置
@@ -200,9 +225,9 @@ public class UVIndexHandler implements SceneReminderHandler {
             .frequencyConfig("{\"intervalMinutes\": 120}")
             .titleTemplate("☀️ 紫外线较强，注意防晒！")
             .contentTemplate("{userName}，当前位置{location}当前紫外线指数{uvIndex}，{uvLevel}，建议涂抹防晒霜，佩戴遮阳帽或太阳镜🕶️")
-            .businessData("{\"sceneType\": \"UV_INDEX\", \"location\": \"auto\", \"intervalMinutes\": 120, \"uvThreshold\": 3}")
+            .businessData("{\"sceneType\": \"UV_INDEX\", \"location\": \"auto\", \"intervalMinutes\": 120, \"uvThreshold\": 3, \"allDay\": false, \"workHours\": [\"08:00\", \"18:00\"]}")
             .icon(ICON)
-            .description("持续监测紫外线指数，UV≥3时提醒防晒（使用您的定位）")
+            .description("在白天时段监测紫外线，偏强时提醒防晒")
             .bgColor(BG_COLOR)
             .build();
     }

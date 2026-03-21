@@ -80,12 +80,16 @@
         <view class="section-title">消息内容</view>
         <view class="template-box">
           <view class="template-item">
-            <text class="template-label">标题</text>
+            <text class="template-label">{{ isSceneReminder ? '标题模板（场景自动生成）' : '标题' }}</text>
             <text class="template-content">{{ reminder.titleTemplate || '-' }}</text>
           </view>
           <view class="template-item" v-if="reminder.contentTemplate">
-            <text class="template-label">内容</text>
+            <text class="template-label">{{ isSceneReminder ? '内容模板（场景自动生成）' : '内容' }}</text>
             <text class="template-content">{{ reminder.contentTemplate }}</text>
+          </view>
+          <view v-if="isSceneReminder" class="template-item">
+            <text class="template-label">说明</text>
+            <text class="template-content">智能场景提醒会在执行时根据实时数据动态渲染标题和内容，详情页只展示模板，不再把动态结果当成固定文案编辑。</text>
           </view>
         </view>
       </view>
@@ -262,26 +266,43 @@
       <!-- 消息内容 -->
       <view class="form-section">
         <view class="section-title">消息内容</view>
+        <template v-if="isSceneReminder">
+          <view class="form-item">
+            <text class="form-label">标题模板</text>
+            <view class="readonly-box">{{ editForm.titleTemplate || '由系统按场景自动生成' }}</view>
+          </view>
+          
+          <view class="form-item">
+            <text class="form-label">内容模板</text>
+            <view class="readonly-box multiline">{{ editForm.contentTemplate || '由系统按场景自动生成' }}</view>
+          </view>
+
+          <view class="form-item">
+            <text class="form-tip">智能场景提醒的文案会在执行时结合天气、喝水进度、久坐时长等实时数据生成，这里改为只读展示，避免误把动态内容保存成固定模板。</text>
+          </view>
+        </template>
         
-        <view class="form-item">
-          <text class="form-label">标题 <text class="required">*</text></text>
-          <input 
-            class="form-input" 
-            v-model="editForm.titleTemplate" 
-            placeholder="请输入提醒标题，例如：该喝水啦"
-            maxlength="100"
-          />
-        </view>
-        
-        <view class="form-item">
-          <text class="form-label">内容</text>
-          <textarea 
-            class="form-textarea" 
-            v-model="editForm.contentTemplate" 
-            placeholder="请输入提醒内容（选填）"
-            maxlength="500"
-          />
-        </view>
+        <template v-else>
+          <view class="form-item">
+            <text class="form-label">标题 <text class="required">*</text></text>
+            <input 
+              class="form-input" 
+              v-model="editForm.titleTemplate" 
+              placeholder="请输入提醒标题，例如：该喝水啦"
+              maxlength="100"
+            />
+          </view>
+          
+          <view class="form-item">
+            <text class="form-label">内容</text>
+            <textarea 
+              class="form-textarea" 
+              v-model="editForm.contentTemplate" 
+              placeholder="请输入提醒内容（选填）"
+              maxlength="500"
+            />
+          </view>
+        </template>
       </view>
       
       <!-- 保存按钮 -->
@@ -364,6 +385,19 @@ export default {
     },
     selectedWeekDays() {
       return this.editForm.weekDays || []
+    },
+    isSceneReminder() {
+      const sceneTypes = ['WATER', 'WEATHER_RAIN', 'WEATHER_TEMP', 'SEDENTARY', 'EYE_REST']
+      const reminderType = this.reminder?.reminderType
+      if (sceneTypes.includes(reminderType)) {
+        return true
+      }
+      try {
+        const businessData = JSON.parse(this.reminder?.businessData || '{}')
+        return sceneTypes.includes(businessData.sceneType)
+      } catch (e) {
+        return false
+      }
     }
   },
   onLoad(options) {
@@ -510,7 +544,7 @@ export default {
         return
       }
       
-      if (!this.editForm.titleTemplate) {
+      if (!this.isSceneReminder && !this.editForm.titleTemplate) {
         uni.showToast({ title: '请输入标题模板', icon: 'none' })
         return
       }
@@ -999,6 +1033,29 @@ export default {
 
 .form-textarea {
   min-height: 160rpx;
+}
+
+.readonly-box {
+  width: 100%;
+  min-height: 88rpx;
+  padding: 20rpx;
+  background: #f5f6fa;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.readonly-box.multiline {
+  min-height: 160rpx;
+  white-space: pre-wrap;
+}
+
+.form-tip {
+  font-size: 24rpx;
+  color: #8c8c8c;
+  line-height: 1.6;
 }
 
 .picker {
