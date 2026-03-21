@@ -78,31 +78,36 @@ public class HolidayController {
         try {
             log.info("开始同步 {} 年的节假日数据", year);
 
-            // 调用节假日API
-            String url = HOLIDAY_API + "?year=" + year;
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-
-            if (response == null || !"0".equals(String.valueOf(response.get("code")))) {
-                return Result.error("获取节假日数据失败: " + response);
-            }
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> data = (Map<String, Object>) response.get("data");
-            if (data == null) {
-                return Result.error("节假日数据为空");
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("list");
-            if (list == null || list.isEmpty()) {
-                return Result.error("节假日列表为空");
-            }
-
             int holidayCount = 0;
             int workdayCount = 0;
             int weekendCount = 0;
+            int page = 1;
+            int pageSize = 31;
+            int total = 365;
 
-            for (Map<String, Object> dayInfo : list) {
+            // 分页获取所有数据
+            while (true) {
+                String url = HOLIDAY_API + "?year=" + year + "&page=" + page;
+                Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+
+                if (response == null || !"0".equals(String.valueOf(response.get("code")))) {
+                    log.error("获取节假日数据失败: {}", response);
+                    break;
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> data = (Map<String, Object>) response.get("data");
+                if (data == null) {
+                    break;
+                }
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("list");
+                if (list == null || list.isEmpty()) {
+                    break;
+                }
+
+                for (Map<String, Object> dayInfo : list) {
                 // 解析日期 (格式: 20241231 -> LocalDate)
                 Integer dateInt = (Integer) dayInfo.get("date");
                 if (dateInt == null) {
@@ -174,6 +179,16 @@ public class HolidayController {
                     holidayConfigMapper.insert(config);
                 }
             }
+
+            // 检查是否还有更多数据
+            Integer currentTotal = (Integer) data.get("total");
+            Integer currentSize = (Integer) data.get("size");
+            if (currentTotal != null && currentSize != null && list.size() >= currentSize) {
+                page++;
+                continue; // 获取下一页
+            }
+            break; // 没有更多数据
+        }
 
             log.info("同步节假日数据完成: {} 年, 节假日 {} 天, 工作日 {} 天, 周末 {} 天", year, holidayCount, workdayCount, weekendCount);
 
