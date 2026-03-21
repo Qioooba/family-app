@@ -88,10 +88,13 @@ public class HolidayController {
             // 分页获取所有数据
             while (true) {
                 String url = HOLIDAY_API + "?year=" + year + "&page=" + page;
+                log.info("请求URL: {}", url);
                 Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+                log.info("API响应: code={}, data={}", response != null ? response.get("code") : "null", response != null && response.get("data") != null ? "exists" : "null");
 
                 if (response == null || !"0".equals(String.valueOf(response.get("code")))) {
-                    log.error("获取节假日数据失败: {}", response);
+                    log.warn("获取节假日数据失败或已达上限: {}, 尝试处理已有数据", response);
+                    // 即使失败也尝试处理已获取的数据
                     break;
                 }
 
@@ -104,6 +107,7 @@ public class HolidayController {
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> list = (List<Map<String, Object>>) data.get("list");
                 if (list == null || list.isEmpty()) {
+                    log.info("没有更多数据");
                     break;
                 }
 
@@ -183,8 +187,15 @@ public class HolidayController {
             // 检查是否还有更多数据
             Integer currentTotal = (Integer) data.get("total");
             Integer currentSize = (Integer) data.get("size");
+            log.info("处理第 {} 页: list.size()={}, currentSize={}, total={}", page, list.size(), currentSize, currentTotal);
             if (currentTotal != null && currentSize != null && list.size() >= currentSize) {
                 page++;
+                log.info("继续获取下一页, page={}, 等待2000ms", page);
+                try {
+                    Thread.sleep(2000); // 避免请求过于频繁
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
                 continue; // 获取下一页
             }
             break; // 没有更多数据
