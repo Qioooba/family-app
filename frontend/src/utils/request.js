@@ -5,10 +5,14 @@
 
 import { cacheManager } from './cache.js'
 
-// 后端地址配置 - 强制使用 HTTPS 和 8443 端口
+// 后端地址配置 - 根据环境切换
 const getBackendUrl = () => {
-  // 微信小程序使用 HTTPS 地址
-  return 'https://qioba.cn:8443'
+  // 生产环境使用 520xz.cn，开发环境使用电脑IP
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://520xz.cn:8443'
+  }
+  // 本地开发：微信开发者工具用电脑IP
+  return 'http://192.168.1.209:8443'
 }
 
 // 基础配置

@@ -6,13 +6,9 @@ server:
       charset: UTF-8
       enabled: true
       force: true
-  # SSL/HTTPS 配置（正式证书）
+  # SSL/HTTPS 配置（本地开发禁用）
   ssl:
-    enabled: true
-    key-store: classpath:qioba.cn.p12
-    key-store-password: qioba123
-    key-store-type: PKCS12
-    key-alias: qioba
+    enabled: false
 
 spring:
   main:
