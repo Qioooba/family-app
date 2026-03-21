@@ -18,14 +18,14 @@
 | 4 | 🏠 **家庭管理** | 家庭创建、成员管理、邀请码 | ✅ 完整 |
 | 5 | 👤 **用户系统** | 登录/注册、Sa-Token鉴权 | ✅ 完整 |
 
-### ❌ 已删除的功能模块
+### 🧪 仓库内保留但非默认启用的模块
 
 | 序号 | 功能模块 | 删除原因 |
 |------|---------|---------|
-| 1 | 🤖 **AI 助手** | 深度合成技术不符合审核要求 |
-| 2 | 📷 **家庭相册** | 用户不需要 |
-| 3 | 💰 **家庭账本** | 用户不需要 |
-| 4 | 📱 **微信手机号登录** | 不符合微信审核（仅支持openid） |
+| 1 | 🤖 **AI 助手** | 已不作为当前主流程功能 |
+| 2 | 📷 **家庭相册** | 代码仍在仓库中，默认不作为主功能维护 |
+| 3 | 💰 **家庭账本** | 代码仍在仓库中，默认不作为主功能维护 |
+| 4 | 📱 **微信手机号登录** | 当前主流程以 openid 登录为主 |
 
 > **说明**: ✅ 完整 - 功能已实现并可用
 
@@ -80,22 +80,53 @@
 git clone https://github.com/Qioooba/family-app.git
 cd family-app
 
-# 2. 启动服务
-cd docker
+# 2. 配置环境变量
 cp .env.example .env
-docker-compose up -d --build
 
-# 3. 查看状态
-docker-compose ps
+# 3. 启动后端
+cd backend
+mvn spring-boot:run
+
+# 4. 启动前端
+cd ../frontend
+npm install
+npm run dev:h5
+
+# 5. 构建产物
+npm run build:h5
 ```
 
 ### 访问服务
 
 | 服务 | 地址 |
 |------|------|
-| 前端页面 | http://localhost |
-| 后端API | http://localhost:8080 |
-| API文档 | http://localhost:8080/swagger-ui.html |
+| 前端页面 | http://localhost:3000 |
+| 后端API | http://localhost:8443 |
+| API文档 | http://localhost:8443/swagger-ui.html |
+
+### 远程部署
+
+远程环境建议把基础设施参数放到 `/etc/family-app/family-app.env`，业务侧第三方参数继续放 `sys_config`。
+
+```bash
+# 1. 本地构建后端
+mvn -pl backend/family-service -am clean package
+
+# 2. 准备环境变量文件
+cp ops/family-app.env.example /path/to/family-app.env
+
+# 3. 执行远程同步
+REMOTE_PASSWORD='你的SSH密码' \
+REMOTE_MYSQL_PASSWORD='你的MySQL密码' \
+LOCAL_ENV_FILE='/path/to/family-app.env' \
+bash scripts/deploy_remote_backend.sh
+```
+
+脚本会自动完成：
+- 上传最新 JAR
+- 执行 [database/remote_sync_schema.sql](/Volumes/document/Projects/family-app/database/remote_sync_schema.sql)
+- 安装 [ops/family-app.service](/Volumes/document/Projects/family-app/ops/family-app.service)
+- 重启 `family-app.service`
 
 ## 📂 项目结构
 

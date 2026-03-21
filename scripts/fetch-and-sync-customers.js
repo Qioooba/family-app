@@ -9,10 +9,10 @@ const mysql = require('mysql2/promise');
 
 // 从代码中找到的配置
 const CONFIG = {
-  corpId: 'ww6c1c7590db91ef85',
-  secret: 'Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4',
-  agentId: '1000002',
-  userId: 'XIAOZHUSHOU'
+  corpId: process.env.WECHAT_WORK_CORPID || '',
+  secret: process.env.WECHAT_WORK_SECRET || '',
+  agentId: process.env.WECHAT_WORK_AGENTID || '',
+  userId: process.env.WECHAT_WORK_USERID || ''
 };
 
 // 数据库配置
@@ -20,7 +20,7 @@ const DB_CONFIG = {
   host: 'localhost',
   port: 3306,
   user: 'root',
-  password: process.env.MYSQL_PASSWORD || 'your_secure_mysql_password',
+  password: process.env.MYSQL_PASSWORD || '',
   database: 'family_app'
 };
 
@@ -32,6 +32,10 @@ let tokenExpireTime = 0;
  * 获取access_token
  */
 async function getAccessToken() {
+  if (!CONFIG.corpId || !CONFIG.secret) {
+    throw new Error('缺少 WECHAT_WORK_CORPID / WECHAT_WORK_SECRET 环境变量');
+  }
+
   if (accessToken && Date.now() < tokenExpireTime) {
     return accessToken;
   }

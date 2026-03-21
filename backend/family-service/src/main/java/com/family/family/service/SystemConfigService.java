@@ -10,6 +10,7 @@ import jakarta.annotation.PostConstruct;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -56,19 +57,18 @@ public class SystemConfigService {
      * 获取配置值
      */
     public String getValue(String key) {
-        // 先查缓存
-        String value = configCache.get(key);
-        if (value != null) {
-            return value;
+        for (String candidate : resolveKeys(key)) {
+            String value = configCache.get(candidate);
+            if (value != null) {
+                return value;
+            }
+
+            SystemConfig config = configMapper.selectByKey(candidate);
+            if (config != null && config.getConfigValue() != null) {
+                configCache.put(config.getConfigKey(), config.getConfigValue());
+                return config.getConfigValue();
+            }
         }
-        
-        // 缓存未命中，查数据库
-        SystemConfig config = configMapper.selectByKey(key);
-        if (config != null && config.getConfigValue() != null) {
-            configCache.put(key, config.getConfigValue());
-            return config.getConfigValue();
-        }
-        
         return null;
     }
     
@@ -84,45 +84,46 @@ public class SystemConfigService {
      * 更新配置
      */
     public void setValue(String key, String value) {
-        SystemConfig config = configMapper.selectByKey(key);
+        String normalizedKey = normalizeKey(key);
+        SystemConfig config = findExistingConfig(key);
         if (config != null) {
+            config.setConfigKey(normalizedKey);
             config.setConfigValue(value);
             configMapper.updateById(config);
         } else {
             config = new SystemConfig();
-            config.setConfigKey(key);
+            config.setConfigKey(normalizedKey);
             config.setConfigValue(value);
-            config.setConfigType("string");
+            config.setCategory(resolveCategory(normalizedKey));
             configMapper.insert(config);
         }
-        // 更新缓存
-        configCache.put(key, value);
+        configCache.put(normalizedKey, value);
     }
     
     // ==================== 企业微信配置快捷方法 ====================
 
     public String getWechatWorkCorpId() {
-        return getValue("wechat_work_corpid", "");
+        return getValue("wechat.work.corpid", "");
     }
 
     public String getWechatWorkAgentId() {
-        return getValue("wechat_work_agentid", "");
+        return getValue("wechat.work.agentid", "");
     }
 
     public String getWechatWorkSecret() {
-        return getValue("wechat_work_secret", "");
+        return getValue("wechat.work.secret", "");
     }
 
     public String getWechatWorkUserId() {
-        return getValue("wechat_work_userid", "XIAOXHUSHOU");
+        return getValue("wechat.work.userid", "XIAOXHUSHOU");
     }
 
     public String getWechatWorkToken() {
-        return getValue("wechat_work_token", "");
+        return getValue("wechat.work.token", "");
     }
 
     public String getWechatWorkAesKey() {
-        return getValue("wechat_work_aeskey", "");
+        return getValue("wechat.work.aeskey", "");
     }
 
     public boolean isWechatWorkConfigured() {
@@ -134,22 +135,55 @@ public class SystemConfigService {
     // ==================== 微信小程序配置快捷方法 ====================
 
     public String getWeixinAppId() {
-        return getValue("weixin_appid", "");
+        return getValue("wechat.miniapp.appid", "");
     }
 
     public String getWeixinAppSecret() {
-        return getValue("weixin_appsecret", "");
+        return getValue("wechat.miniapp.secret", "");
     }
 
     // ==================== 腾讯地图配置快捷方法 ====================
 
     public String getTencentMapKey() {
-        return getValue("tencent_map_key", "");
+        return getValue("tencent.map.key", "");
     }
 
     // ==================== SSL配置快捷方法 ====================
 
     public String getSslKeystorePassword() {
-        return getValue("ssl_keystore_password", "");
+        return getValue("ssl.keystore.password", "");
+    }
+
+    private SystemConfig findExistingConfig(String key) {
+        for (String candidate : resolveKeys(key)) {
+            SystemConfig config = configMapper.selectByKey(candidate);
+            if (config != null) {
+                return config;
+            }
+        }
+        return null;
+    }
+
+    private List<String> resolveKeys(String key) {
+        String normalized = normalizeKey(key);
+        String legacy = normalized.replace('.', '_');
+        return normalized.equals(legacy) ? List.of(normalized) : List.of(normalized, legacy);
+    }
+
+    private String normalizeKey(String key) {
+        return Optional.ofNullable(key).orElse("").trim().replace('_', '.');
+    }
+
+    private String resolveCategory(String key) {
+        if (key.startsWith("wechat.work.")) {
+            return "wechat_work";
+        }
+        if (key.startsWith("wechat.miniapp.")) {
+            return "wechat_miniapp";
+        }
+        if (key.startsWith("tencent.map.")) {
+            return "map";
+        }
+        return "general";
     }
 }

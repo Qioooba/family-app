@@ -4,7 +4,7 @@
 
 在浏览器中访问以下URL：
 ```
-https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=ww6c1c7590db91ef85&corpsecret=Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4
+https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=YOUR_CORP_ID&corpsecret=YOUR_SECRET
 ```
 
 复制返回的 `access_token` 值。

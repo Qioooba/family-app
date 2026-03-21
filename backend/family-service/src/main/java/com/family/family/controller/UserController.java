@@ -55,7 +55,7 @@ public class UserController {
     @Value("${file.upload.path:./uploads}")
     private String uploadPath;
     
-    @Value("${file.upload.base-url:http://qioba.cn:3000}")
+    @Value("${file.upload.base-url:${app.base-url:http://localhost:8443}}")
     private String baseUrl;
 
     @GetMapping("/info")

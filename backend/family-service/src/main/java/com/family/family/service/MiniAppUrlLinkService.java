@@ -1,5 +1,6 @@
 package com.family.family.service;
 
+import com.family.common.config.AppProperties;
 import com.family.family.util.TempTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,9 @@ public class MiniAppUrlLinkService {
 
     @Autowired(required = false)
     private TempTokenUtil tempTokenUtil;
+
+    @Autowired
+    private AppProperties appProperties;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -166,7 +170,7 @@ public class MiniAppUrlLinkService {
      * 生成H5备用链接
      */
     private String generateH5Link(String path, String query) {
-        String baseUrl = "https://qioba.cn:8443";
+        String baseUrl = appProperties.getBaseUrl();
         String fullQuery = query != null && !query.isEmpty() ? "?" + query : "";
         return baseUrl + "/h5/" + fullQuery;
     }
@@ -193,7 +197,7 @@ public class MiniAppUrlLinkService {
         // 否则返回免密登录链接
         if (tempTokenUtil != null) {
             String tempToken = tempTokenUtil.generateTempToken(userId);
-            return String.format("https://qioba.cn:8443/auto-login.html?token=%s&taskId=%s", tempToken, taskId);
+            return String.format("%s/auto-login.html?token=%s&taskId=%s", appProperties.getBaseUrl(), tempToken, taskId);
         }
 
         return generateH5Link(path, query);

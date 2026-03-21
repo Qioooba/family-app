@@ -3,12 +3,17 @@ const fs = require('fs');
 const FormData = require('form-data');
 
 const CONFIG = {
-  corpId: 'ww6c1c7590db91ef85',
-  secret: 'Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4',
-  agentId: '1000002'
+  corpId: process.env.WECHAT_WORK_CORPID || '',
+  secret: process.env.WECHAT_WORK_SECRET || '',
+  agentId: process.env.WECHAT_WORK_AGENTID || '',
+  baseUrl: process.env.APP_BASE_URL || 'http://localhost:8443'
 };
 
 async function main() {
+  if (!CONFIG.corpId || !CONFIG.secret || !CONFIG.agentId) {
+    throw new Error('缺少企业微信环境变量');
+  }
+
   console.log('📤 发送图文消息（修正版）...\n');
   
   const tokenResp = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=' + CONFIG.corpId + '&corpsecret=' + CONFIG.secret);
@@ -71,7 +76,7 @@ async function main() {
           title: '🏠 新任务：整理房间（请扫码查看）',
           thumb_media_id: mediaId,
           author: '家庭小程序',
-          content_source_url: 'https://qioba.cn:8443/jump-mp/index.html',
+          content_source_url: CONFIG.baseUrl + '/jump-mp/index.html',
           content: content,
           digest: '📋 任务：周末大扫除 \n📝 备注：请尽快完成 \n👤 指派人：系统 \n📱 请长按小程序码查看'
         }

@@ -1,0 +1,16 @@
+[Unit]
+Description=Family App Backend Service
+After=network.target mysql.service redis.service
+
+[Service]
+Type=simple
+User=app
+Group=app
+WorkingDirectory=/opt/family-app
+EnvironmentFile=/etc/family-app/family-app.env
+ExecStart=/usr/bin/java -Xmx512m -Xms256m -jar /opt/family-app/family-service-1.0.0.jar
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

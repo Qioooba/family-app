@@ -34,7 +34,7 @@ public interface ReminderMapper extends BaseMapper<Reminder> {
      * 限制最多100条
      * 使用 FIND_IN_SET 兼容 BigInt 类型
      */
-    @Select("SELECT * FROM reminder_config WHERE status = 1 AND (push_scope = 'ALL' OR (push_scope = 'SPECIFIED' AND target_user_ids IS NOT NULL AND target_user_ids != '' AND (FIND_IN_SET(CAST(#{userId} AS CHAR), target_user_ids) > 0 OR JSON_CONTAINS(target_user_ids, CAST(#{userId} AS JSON)))) ORDER BY next_execute_time ASC LIMIT 100")
+    @Select("SELECT * FROM reminder_config WHERE status = 1 AND (push_scope = 'ALL' OR (push_scope = 'SPECIFIED' AND target_user_ids IS NOT NULL AND target_user_ids != '' AND (FIND_IN_SET(CAST(#{userId} AS CHAR), target_user_ids) > 0 OR JSON_CONTAINS(target_user_ids, CAST(#{userId} AS JSON))))) ORDER BY next_execute_time ASC LIMIT 100")
     List<Reminder> selectByTargetUserId(@Param("userId") Long userId);
     
     /**

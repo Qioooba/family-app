@@ -3,12 +3,17 @@ const fs = require('fs');
 const FormData = require('form-data');
 
 const CONFIG = {
-  corpId: 'ww6c1c7590db91ef85',
-  secret: 'Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4',
-  agentId: '1000002'
+  corpId: process.env.WECHAT_WORK_CORPID || '',
+  secret: process.env.WECHAT_WORK_SECRET || '',
+  agentId: process.env.WECHAT_WORK_AGENTID || '',
+  baseUrl: process.env.APP_BASE_URL || 'http://localhost:8443'
 };
 
 async function main() {
+  if (!CONFIG.corpId || !CONFIG.secret || !CONFIG.agentId) {
+    throw new Error('缺少企业微信环境变量');
+  }
+
   console.log('📤 发送修复后的图文消息...\n');
   
   const tokenResp = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=' + CONFIG.corpId + '&corpsecret=' + CONFIG.secret);
@@ -44,7 +49,7 @@ async function main() {
     '<p><strong>📅 时间：</strong>' + timeStr + '</p>' +
     '<p>━━━━━━━━━━━━━━━</p>' +
     '<p><strong>📱 请保存下方小程序码，微信扫码进入小程序</strong></p>' +
-    '<p><img src=\"https://qioba.cn:8443/miniapp-qr.png\" width=\"280\"/></p>' +
+    '<p><img src=\"' + CONFIG.baseUrl + '/miniapp-qr.png\" width=\"280\"/></p>' +
     '<p><strong>👉 扫码后直接打开小程序首页</strong></p>';
   
   // 发送图文消息 - 使用正确的链接
@@ -58,7 +63,7 @@ async function main() {
           title: '🏠 新任务：整理房间',
           thumb_media_id: mediaId,
           author: '家庭小程序',
-          content_source_url: 'https://qioba.cn:8443/jump-mp/index.html',  // 修复链接
+          content_source_url: CONFIG.baseUrl + '/jump-mp/index.html',
           content: content,
           digest: digest
         }

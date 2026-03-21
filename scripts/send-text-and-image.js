@@ -3,12 +3,16 @@ const fs = require('fs');
 const FormData = require('form-data');
 
 const CONFIG = {
-  corpId: 'ww6c1c7590db91ef85',
-  secret: 'Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4',
-  agentId: '1000002'
+  corpId: process.env.WECHAT_WORK_CORPID || '',
+  secret: process.env.WECHAT_WORK_SECRET || '',
+  agentId: process.env.WECHAT_WORK_AGENTID || ''
 };
 
 async function main() {
+  if (!CONFIG.corpId || !CONFIG.secret || !CONFIG.agentId) {
+    throw new Error('缺少企业微信环境变量');
+  }
+
   console.log('📤 发送修复后的消息（图片能显示）...\n');
   
   const tokenResp = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=' + CONFIG.corpId + '&corpsecret=' + CONFIG.secret);

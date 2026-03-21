@@ -15,10 +15,10 @@ CREATE TABLE IF NOT EXISTS sys_config (
 
 -- 插入/更新企业微信配置
 INSERT INTO sys_config (config_key, config_value, description, category) VALUES
-('wechat.work.corpid', 'ww6c1c7590db91ef85', '企业微信CorpID', 'wechat_work'),
-('wechat.work.agentid', '1000002', '企业微信应用AgentID', 'wechat_work'),
-('wechat.work.secret', 'Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4', '企业微信应用Secret', 'wechat_work'),
-('wechat.work.userid', 'XIAOXHUSHOU', '企业微信小助手UserID', 'wechat_work')
+('wechat.work.corpid', '', '企业微信CorpID', 'wechat_work'),
+('wechat.work.agentid', '', '企业微信应用AgentID', 'wechat_work'),
+('wechat.work.secret', '', '企业微信应用Secret', 'wechat_work'),
+('wechat.work.userid', '', '企业微信小助手UserID', 'wechat_work')
 ON DUPLICATE KEY UPDATE 
     config_value = VALUES(config_value),
     description = VALUES(description),

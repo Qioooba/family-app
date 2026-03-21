@@ -271,6 +271,8 @@
 </template>
 
 <script>
+import { buildApiUrl } from '../../utils/request'
+
 export default {
   data() {
     return {
@@ -783,7 +785,7 @@ export default {
     getAvatarUrl(avatar) {
       if (!avatar) return '/static/avatar-default.png'
       if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar
-      if (avatar.startsWith('/api/avatars')) return 'https://qioba.cn:8443' + avatar
+      if (avatar.startsWith('/api/avatars')) return buildApiUrl(avatar)
       return avatar
     },
     

@@ -4,8 +4,13 @@
 echo "==================== 企业微信推送测试 ===================="
 
 # 测试获取access_token
-CORPID="ww6c1c7590db91ef85"
-SECRET="Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4"
+CORPID="${WECHAT_WORK_CORPID:-}"
+SECRET="${WECHAT_WORK_SECRET:-}"
+
+if [ -z "${CORPID}" ] || [ -z "${SECRET}" ]; then
+    echo "❌ 请先导出 WECHAT_WORK_CORPID / WECHAT_WORK_SECRET"
+    exit 1
+fi
 
 echo ""
 echo "1. 测试获取企业微信access_token..."

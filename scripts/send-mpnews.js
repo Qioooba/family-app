@@ -3,12 +3,17 @@ const fs = require('fs');
 const FormData = require('form-data');
 
 const CONFIG = {
-  corpId: 'ww6c1c7590db91ef85',
-  secret: 'Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4',
-  agentId: '1000002'
+  corpId: process.env.WECHAT_WORK_CORPID || '',
+  secret: process.env.WECHAT_WORK_SECRET || '',
+  agentId: process.env.WECHAT_WORK_AGENTID || '',
+  baseUrl: process.env.APP_BASE_URL || 'http://localhost:8443'
 };
 
 async function main() {
+  if (!CONFIG.corpId || !CONFIG.secret || !CONFIG.agentId) {
+    throw new Error('缺少企业微信环境变量');
+  }
+
   console.log('📤 发送合并的图文消息给齐军...\n');
   
   // 1. 获取token
@@ -57,7 +62,7 @@ async function main() {
           title: '🏠 新任务：整理房间（请扫码查看）',
           thumb_media_id: mediaId,
           author: '家庭小程序',
-          content_source_url: 'https://qioba.cn:8443',
+          content_source_url: CONFIG.baseUrl,
           content: content,
           digest: digest
         }

@@ -23,6 +23,6 @@ public class WechatMessage {
         this.targetUserId = targetUserId;
         this.title = title;
         this.description = description;
-        this.url = "https://qioba.cn/pages/task/index";
+        this.url = "/pages/task/index";
     }
 }

@@ -13,16 +13,16 @@ const mysql = require('mysql2/promise');
 
 // 配置
 const CONFIG = {
-  corpId: process.env.CORPID,
-  secret: process.env.SECRET,
-  userId: 'XIAOXHUSHOU',  // 小助手的userid
+  corpId: process.env.WECHAT_WORK_CORPID || process.env.CORPID,
+  secret: process.env.WECHAT_WORK_SECRET || process.env.SECRET,
+  userId: process.env.WECHAT_WORK_USERID || 'XIAOXHUSHOU',  // 小助手的userid
   
   // 数据库配置
   db: {
     host: 'localhost',
     port: 3306,
     user: 'root',
-    password: process.env.MYSQL_PASSWORD || 'your_secure_mysql_password',
+    password: process.env.MYSQL_PASSWORD || '',
     database: 'family_app'
   }
 };
@@ -117,7 +117,7 @@ async function main() {
   console.log('🚀 开始同步企业微信外部联系人...\n');
   
   // 检查配置
-  if (!CONFIG.corpId || CONFIG.corpId === '你的企业ID') {
+  if (!CONFIG.corpId || CONFIG.corpId === '你的企业ID' || !CONFIG.secret) {
     console.error('❌ 错误: 请设置环境变量 CORPID');
     console.log('   export CORPID="你的企业ID"');
     process.exit(1);

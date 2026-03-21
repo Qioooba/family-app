@@ -1,7 +1,9 @@
 package com.family.family.util;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.family.common.config.AppProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -15,6 +17,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Component
 public class TempTokenUtil {
+
+    @Autowired
+    private AppProperties appProperties;
 
     private static final Map<String, TokenEntry> TOKEN_STORE = new ConcurrentHashMap<>();
 
@@ -80,6 +85,6 @@ public class TempTokenUtil {
      */
     public String getAutoLoginUrl(Long userId) {
         String tempToken = generateTempToken(userId);
-        return String.format("https://qioba.cn:8443/auto-login.html?token=%s", tempToken);
+        return String.format("%s/auto-login.html?token=%s", appProperties.getBaseUrl(), tempToken);
     }
 }

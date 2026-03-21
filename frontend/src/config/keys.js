@@ -6,4 +6,4 @@
 export const TENCENT_MAP_KEY = import.meta.env.VITE_TENCENT_MAP_KEY || ''
 
 // 微信小程序 AppID（可公开）
-export const WEIXIN_APPID = 'wxbdc70536c5e52b82'
+export const WEIXIN_APPID = import.meta.env.VITE_WEIXIN_APPID || ''

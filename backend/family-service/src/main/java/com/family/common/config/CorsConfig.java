@@ -9,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,46 +20,22 @@ import java.util.List;
  */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
+    private final AppProperties appProperties;
 
-    /**
-     * 信任的前端域名列表
-     * 生产环境应只保留 qioba.cn 相关域名
-     */
-    private static final List<String> TRUSTED_ORIGINS = Arrays.asList(
-        // 本地开发
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002",
-        "http://localhost:3003",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        // 局域网开发
-        "http://192.168.1.209:3000",
-        // 生产域名
-        "http://qioba.cn",
-        "https://qioba.cn",
-        "http://www.qioba.cn",
-        "https://www.qioba.cn",
-        "http://qioba.cn:3000",
-        "https://qioba.cn:3000",
-        "http://qioba.cn:8080",
-        "https://qioba.cn:8443",
-        // 520xz.cn 生产域名
-        "http://520xz.cn",
-        "https://520xz.cn",
-        "http://www.520xz.cn",
-        "https://www.520xz.cn",
-        "http://520xz.cn:3000",
-        "https://520xz.cn:3000",
-        "http://520xz.cn:8443",
-        "https://520xz.cn:8443"
-    );
+    public CorsConfig(AppProperties appProperties) {
+        this.appProperties = appProperties;
+    }
+
+    private List<String> getTrustedOrigins() {
+        List<String> origins = appProperties.getCorsAllowedOrigins();
+        return origins == null || origins.isEmpty() ? Collections.emptyList() : origins;
+    }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 // 允许明确列出的前端地址
-                .allowedOrigins(TRUSTED_ORIGINS.toArray(new String[0]))
+                .allowedOrigins(getTrustedOrigins().toArray(new String[0]))
                 // 允许的 HTTP 方法
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 // 允许的请求头
@@ -79,7 +56,7 @@ public class CorsConfig implements WebMvcConfigurer {
         CorsConfiguration config = new CorsConfiguration();
         
         // 使用信任的域名列表，不使用通配符
-        config.setAllowedOriginPatterns(TRUSTED_ORIGINS);
+        config.setAllowedOriginPatterns(getTrustedOrigins());
         
         // 只允许必要的 HTTP 方法
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

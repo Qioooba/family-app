@@ -1,6 +1,7 @@
 package com.family.weather.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import com.family.common.config.AppProperties;
 import com.family.common.core.Result;
 import com.family.family.service.SystemConfigService;
 import lombok.Data;
@@ -27,6 +28,9 @@ public class WeatherController {
 
     @Autowired
     private SystemConfigService configService;
+
+    @Autowired
+    private AppProperties appProperties;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -245,7 +249,7 @@ public class WeatherController {
             
             // 创建请求头，添加Referer
             org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.set("Referer", "https://qioba.cn");
+            headers.set("Referer", appProperties.getPublicOrigin());
             org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(headers);
             
             org.springframework.http.ResponseEntity<Map> responseEntity = restTemplate.exchange(

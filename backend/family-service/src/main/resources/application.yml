@@ -31,9 +31,9 @@ spring:
       default-view-inclusion: true
   
   datasource:
-    url: jdbc:mysql://localhost:3306/family_app?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/family_app?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
     username: ${MYSQL_USERNAME:root}
-    password: your_secure_mysql_password
+    password: ${MYSQL_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -60,13 +60,13 @@ spring:
 # 文件上传配置
 file:
   upload:
-    path: ./uploads
-    base-url: http://qioba.cn:8081
+    path: ${FILE_UPLOAD_PATH:./uploads}
+    base-url: ${FILE_UPLOAD_BASE_URL:${app.base-url}}
 
 # 微信小程序配置（使用环境变量传入）
 weixin:
-  appId: ${WEIXIN_APPID:wxbdc70536c5e52b82}
-  appSecret: ${WEIXIN_APPSECRET:ee79692373557e80d206c09a1876dbea}
+  appId: ${WEIXIN_APPID:}
+  appSecret: ${WEIXIN_APPSECRET:}
 
 # 企业微信配置（用于任务通知推送）
 wechat:
@@ -77,7 +77,6 @@ wechat:
 
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   global-config:
     db-config:
@@ -94,12 +93,18 @@ sa-token:
   is-concurrent: true
   is-share: false
   token-style: uuid
-  is-log: true
+  is-log: ${SA_TOKEN_LOG_ENABLED:false}
   is-read-cookie: false
   is-read-header: true
   # JWT配置
-  jwt-secret-key: family-app-secret-key-2024-qioba-cn
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET:change-me-in-production}
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8443}
+  public-origin: ${APP_PUBLIC_ORIGIN:http://localhost:8443}
+  cors-allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
 
 logging:
   level:
-    com.family: DEBUG
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.family: ${LOG_LEVEL_APP:INFO}

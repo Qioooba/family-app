@@ -3,7 +3,7 @@ const path = require('path');
 
 // 小程序配置
 const config = {
-    appid: 'wxbdc70536c5e52b82',
+    appid: process.env.WEIXIN_APPID || '',
     type: 'miniProgram',
     projectPath: path.join(__dirname, 'dist/build/mp-weixin'),
     privateKeyPath: path.join(__dirname, 'private.key'),
@@ -24,6 +24,10 @@ const uploadConfig = {
 };
 
 async function upload() {
+    if (!config.appid) {
+        throw new Error('缺少 WEIXIN_APPID 环境变量');
+    }
+
     console.log('🚀 开始上传微信小程序体验版...');
     console.log(`AppID: ${config.appid}`);
     console.log(`版本: ${uploadConfig.version}`);

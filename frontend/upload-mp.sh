@@ -1,10 +1,15 @@
 #!/bin/bash
 # 微信小程序上传脚本 v1.1
 
-APPID="wxbdc70536c5e52b82"
+APPID="${WEIXIN_APPID:-}"
 VERSION="1.1.0"
 PROJECT_PATH="/Volumes/document/Projects/family-app/frontend/dist/build/mp-weixin"
 DESC="提醒功能完整版更新"
+
+if [ -z "$APPID" ]; then
+    echo "❌ 请先导出 WEIXIN_APPID"
+    exit 1
+fi
 
 # 检查private key
 KEY_FILE="/Volumes/document/Projects/family-app/frontend/private.key"

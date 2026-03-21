@@ -94,6 +94,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../stores/user'
 import { gameApi } from '../../api/game'
 import { isDarkMode, toggleTheme } from '../../utils/theme.js'
+import { buildApiUrl } from '../../utils/request'
 
 const userStore = useUserStore()
 const userInfo = computed(() => userStore.userInfo)
@@ -111,7 +112,7 @@ const displayAvatar = computed(() => {
   if (info.avatar) {
     // 如果是相对路径，添加服务器地址
     if (info.avatar.startsWith('/uploads') || info.avatar.startsWith('/api/avatars')) {
-      return 'https://qioba.cn:8443' + info.avatar
+      return buildApiUrl(info.avatar)
     }
     return info.avatar
   }
@@ -229,7 +230,7 @@ const uploadAvatar = async (filePath) => {
     uni.showLoading({ title: '上传中...' })
     
     // 使用完整 URL，避免 url scheme 错误
-    const uploadUrl = 'https://qioba.cn:8443/api/user/avatar'
+    const uploadUrl = buildApiUrl('/api/user/avatar')
     const token = uni.getStorageSync('token') || ''
     
      // console.log('上传头像, URL:', uploadUrl)

@@ -3,9 +3,14 @@
 
 echo "==================== 企业微信推送测试 ===================="
 
-CORPID="ww6c1c7590db91ef85"
-SECRET="Ne0oN5Y8mNmRA_wkIP7I4PMn_sr2GFPkbBABqUaEEE4"
-AGENTID="1000002"
+CORPID="${WECHAT_WORK_CORPID:-}"
+SECRET="${WECHAT_WORK_SECRET:-}"
+AGENTID="${WECHAT_WORK_AGENTID:-}"
+
+if [ -z "${CORPID}" ] || [ -z "${SECRET}" ] || [ -z "${AGENTID}" ]; then
+    echo "❌ 请先导出 WECHAT_WORK_CORPID / WECHAT_WORK_SECRET / WECHAT_WORK_AGENTID"
+    exit 1
+fi
 
 echo ""
 echo "1. 获取access_token..."
@@ -32,7 +37,7 @@ SEND_RESULT=$(curl -s -X POST "https://qyapi.weixin.qq.com/cgi-bin/message/send?
     \"textcard\": {
       \"title\": \"🏠 新任务指派\",
       \"description\": \"<div class='gray'>$(date '+%Y-%m-%d %H:%M')</div><div class='highlight'>陶陶给你指派了任务：测试企业微信推送</div>\",
-      \"url\": \"https://qioba.cn\",
+      \"url\": \"${APP_BASE_URL:-http://localhost:8443}\",
       \"btntxt\": \"查看详情\"
     }
   }")
@@ -50,7 +55,7 @@ SEND_RESULT2=$(curl -s -X POST "https://qyapi.weixin.qq.com/cgi-bin/message/send
     \"textcard\": {
       \"title\": \"✅ 任务已指派\",
       \"description\": \"<div class='gray'>$(date '+%Y-%m-%d %H:%M')</div><div class='highlight'>你已指派任务给齐军：测试企业微信推送</div>\",
-      \"url\": \"https://qioba.cn\",
+      \"url\": \"${APP_BASE_URL:-http://localhost:8443}\",
       \"btntxt\": \"查看详情\"
     }
   }")

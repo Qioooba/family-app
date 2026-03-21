@@ -60,8 +60,7 @@ public class TaskTagController {
     @Transactional
     public Result<Boolean> deleteTag(@PathVariable Long id) {
         // 删除标签关联
-        relationMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<TaskTagRelation>()
-            .eq(TaskTagRelation::getTagId, id));
+        relationMapper.deleteByTagId(id);
         // 删除标签
         tagMapper.deleteById(id);
         return Result.success(true);
@@ -100,7 +99,7 @@ public class TaskTagController {
         TaskTagRelation relation = new TaskTagRelation();
         relation.setTaskId(taskId);
         relation.setTagId(tagId);
-        relationMapper.insert(relation);
+        relationMapper.insertRelation(relation);
         return Result.success(true);
     }
     
@@ -112,15 +111,14 @@ public class TaskTagController {
     @Transactional
     public Result<Boolean> addTagsToTask(@PathVariable Long taskId, @RequestBody List<Long> tagIds) {
         // 先删除原有标签关联
-        relationMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<TaskTagRelation>()
-            .eq(TaskTagRelation::getTaskId, taskId));
+        relationMapper.deleteByTaskId(taskId);
         
         // 添加新标签
         for (Long tagId : tagIds) {
             TaskTagRelation relation = new TaskTagRelation();
             relation.setTaskId(taskId);
             relation.setTagId(tagId);
-            relationMapper.insert(relation);
+            relationMapper.insertRelation(relation);
         }
         return Result.success(true);
     }
@@ -131,9 +129,7 @@ public class TaskTagController {
      */
     @DeleteMapping("/{taskId}/tags/{tagId}")
     public Result<Boolean> removeTagFromTask(@PathVariable Long taskId, @PathVariable Long tagId) {
-        relationMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<TaskTagRelation>()
-            .eq(TaskTagRelation::getTaskId, taskId)
-            .eq(TaskTagRelation::getTagId, tagId));
+        relationMapper.deleteByTaskIdAndTagId(taskId, tagId);
         return Result.success(true);
     }
     

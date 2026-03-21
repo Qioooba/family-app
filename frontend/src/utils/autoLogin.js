@@ -3,6 +3,8 @@
  * 处理从企业微信跳转过来的自动登录
  */
 
+import { buildApiUrl } from './request'
+
 // 检查是否需要自动登录
 export function checkAutoLogin() {
   return new Promise((resolve) => {
@@ -49,7 +51,7 @@ export async function doAutoLogin(token) {
     uni.showLoading({ title: '自动登录中...' });
     
     const res = await uni.request({
-      url: 'https://qioba.cn:8443/api/auth/auto-login',
+      url: buildApiUrl('/api/auth/auto-login'),
       method: 'POST',
       header: {
         'Content-Type': 'application/json'

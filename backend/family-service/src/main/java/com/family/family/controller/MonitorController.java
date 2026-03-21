@@ -1,10 +1,15 @@
 package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import com.family.common.core.Result;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -20,6 +25,12 @@ import java.util.Map;
 @RequestMapping("/api/monitor")
 @SaCheckLogin
 public class MonitorController {
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Autowired(required = false)
+    private StringRedisTemplate redisTemplate;
     
     /**
      * 获取系统状态
@@ -64,11 +75,14 @@ public class MonitorController {
     @GetMapping("/health")
     public Result<Map<String, String>> healthCheck() {
         Map<String, String> health = new HashMap<>();
-        health.put("status", "UP");
-        health.put("database", "UP");
-        health.put("redis", "UP");
+        boolean databaseUp = isDatabaseUp();
+        boolean redisUp = isRedisUp();
+        String overallStatus = databaseUp ? (redisUp ? "UP" : "DEGRADED") : "DOWN";
+        health.put("status", overallStatus);
+        health.put("database", databaseUp ? "UP" : "DOWN");
+        health.put("redis", redisTemplate == null ? "DISABLED" : (redisUp ? "UP" : "DOWN"));
         health.put("timestamp", java.time.LocalDateTime.now().toString());
-        return Result.success(health);
+        return databaseUp ? Result.success(health) : Result.error(500, "数据库健康检查失败");
     }
     
     /**
@@ -95,5 +109,25 @@ public class MonitorController {
         metrics.put("gc", gc);
         
         return Result.success(metrics);
+    }
+
+    private boolean isDatabaseUp() {
+        try (Connection connection = dataSource.getConnection()) {
+            return connection.isValid(2);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isRedisUp() {
+        if (redisTemplate == null) {
+            return false;
+        }
+        try {
+            redisTemplate.opsForValue().get("__healthcheck__");
+            return true;
+        } catch (DataAccessException e) {
+            return false;
+        }
     }
 }

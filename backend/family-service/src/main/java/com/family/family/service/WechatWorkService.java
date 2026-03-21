@@ -1,5 +1,6 @@
 package com.family.family.service;
 
+import com.family.common.config.AppProperties;
 import com.family.family.entity.MessageType;
 import com.family.family.entity.User;
 import com.family.family.entity.WechatMessage;
@@ -49,6 +50,9 @@ public class WechatWorkService {
 
     @Autowired
     private MiniAppUrlLinkService miniAppUrlLinkService;
+
+    @Autowired
+    private AppProperties appProperties;
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -111,6 +115,14 @@ public class WechatWorkService {
     
     private String getWorkUserId() {
         return configService.getWechatWorkUserId();
+    }
+
+    private String getBaseUrl() {
+        return appProperties.getBaseUrl();
+    }
+
+    private String buildUrl(String path) {
+        return path.startsWith("/") ? getBaseUrl() + path : getBaseUrl() + "/" + path;
     }
 
     // ==================== Token管理 ====================
@@ -284,7 +296,7 @@ public class WechatWorkService {
         article.put("title", message.getTitle());
         article.put("description", buildRichMessageContent(message));
         // 根据消息类型设置不同的跳转链接
-        String jumpUrl = message.getUrl() != null ? "https://qioba.cn:8443/h5/index.html#" + message.getUrl() : "https://qioba.cn:8443/h5/index.html";
+        String jumpUrl = message.getUrl() != null ? buildUrl("/h5/index.html#" + message.getUrl()) : buildUrl("/h5/index.html");
         article.put("url", jumpUrl);
         // 根据消息类型设置不同的背景图
         String picUrl = getMessagePicUrl(message.getType());
@@ -345,7 +357,7 @@ public class WechatWorkService {
         article.put("title", message.getTitle());
         article.put("thumb_media_id", mediaId);
         article.put("author", "家庭小程序");
-        article.put("content_source_url", "https://qioba.cn:8443");
+        article.put("content_source_url", getBaseUrl());
         article.put("content", content);
         article.put("digest", digest);
         
@@ -501,13 +513,13 @@ public class WechatWorkService {
         
         // 小程序码区域
         content.append("<div style='text-align: center; padding: 20px; background: #fafafa; border-radius: 12px;'>");
-        content.append("<img src=\"https://qioba.cn:8443/miniapp-qr.png\" style='width: 160px; height: 160px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);' alt='小程序码'/>");
+        content.append("<img src=\"").append(buildUrl("/miniapp-qr.png")).append("\" style='width: 160px; height: 160px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);' alt='小程序码'/>");
         content.append("<div style='margin-top: 12px; font-size: 13px; color: #666;'>长按识别小程序码查看任务</div>");
         content.append("</div>");
         
         // 底部按钮
         content.append("<div style='text-align: center; margin-top: 20px;'>");
-        content.append("<a href=\"https://qioba.cn:8443\" style='display: inline-block; background: #07c160; color: white; padding: 12px 40px; border-radius: 24px; text-decoration: none; font-size: 15px; font-weight: 500;'>打开小程序</a>");
+        content.append("<a href=\"").append(getBaseUrl()).append("\" style='display: inline-block; background: #07c160; color: white; padding: 12px 40px; border-radius: 24px; text-decoration: none; font-size: 15px; font-weight: 500;'>打开小程序</a>");
         content.append("</div>");
         
         content.append("</div>");
@@ -668,9 +680,9 @@ public class WechatWorkService {
         article.put("title", title);
         article.put("description", "⏰ " + timeStr + "\n" + cleanDesc + "\n\n👇 点击查看详情，长按小程序码进入");
         // 封面图使用小程序码图片
-        article.put("picurl", "https://qioba.cn:8443/miniapp-qr.png");
+        article.put("picurl", buildUrl("/miniapp-qr.png"));
         // 点击进入H5详情页
-        article.put("url", "https://qioba.cn:8443/reminder-detail.html?t=" + System.currentTimeMillis());
+        article.put("url", buildUrl("/reminder-detail.html?t=" + System.currentTimeMillis()));
         
         articles.add(article);
         news.put("articles", articles);
@@ -704,13 +716,13 @@ public class WechatWorkService {
     private String getMessagePicUrl(MessageType type) {
         // 使用CDN上的精美图标
         if (type == MessageType.REMINDER) {
-            return "https://qioba.cn/static/images/reminder-bg.png";
+            return buildUrl("/static/images/reminder-bg.png");
         } else if (type == MessageType.TASK_ASSIGNED || type == MessageType.TASK_COMPLETED) {
-            return "https://qioba.cn/static/images/task-bg.png";
+            return buildUrl("/static/images/task-bg.png");
         } else if (type == MessageType.ANNIVERSARY_REMIND || type == MessageType.ANNIVERSARY_TODAY) {
-            return "https://qioba.cn/static/images/anniversary-bg.png";
+            return buildUrl("/static/images/anniversary-bg.png");
         } else {
-            return "https://qioba.cn/static/images/default-bg.png";
+            return buildUrl("/static/images/default-bg.png");
         }
     }
 
@@ -762,7 +774,7 @@ public class WechatWorkService {
 
         // 默认返回免密登录链接（如果URL Link生成失败）
         String tempToken = tempTokenUtil.generateTempToken(message.getTargetUserId());
-        String fallbackUrl = String.format("https://qioba.cn:8443/auto-login.html?token=%s", tempToken);
+        String fallbackUrl = String.format("%s/auto-login.html?token=%s", getBaseUrl(), tempToken);
 
         try {
             // 尝试生成小程序 URL Link
@@ -1126,7 +1138,7 @@ public class WechatWorkService {
         article.put("title", message.getTitle());
         article.put("description", buildReminderDigest(message, timeStr));
         // 使用外部图片URL（小程序码）
-        article.put("picurl", "https://qioba.cn:8443/miniapp-qr.png");
+        article.put("picurl", buildUrl("/miniapp-qr.png"));
         // 点击直接跳转小程序
         article.put("url", buildReminderMiniappLink(message));
         
@@ -1171,8 +1183,9 @@ public class WechatWorkService {
         // 如果 URL Link 生成失败，使用H5详情页作为fallback
         log.warn("生成小程序URL Link失败，使用H5详情页");
         String tempToken = tempTokenUtil.generateTempToken(message.getTargetUserId());
-        return String.format("https://qioba.cn:8443/reminder-detail.html?token=%s&title=%s", 
-            tempToken, 
+        return String.format("%s/reminder-detail.html?token=%s&title=%s", 
+            getBaseUrl(),
+            tempToken,
             java.net.URLEncoder.encode(message.getTitle(), java.nio.charset.StandardCharsets.UTF_8));
     }
     
@@ -1222,7 +1235,7 @@ public class WechatWorkService {
         content.append("<div style='font-size: 16px; font-weight: 600; color: #333; margin-bottom: 8px;'>进入家庭小程序</div>");
         content.append("<div style='font-size: 13px; color: #666; margin-bottom: 16px;'>查看完整提醒内容</div>");
         // 使用外部图片URL显示小程序码，可长按识别
-        content.append("<img src='https://qioba.cn:8443/miniapp-qr.png' style='width: 180px; height: 180px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);' />");
+        content.append("<img src='").append(buildUrl("/miniapp-qr.png")).append("' style='width: 180px; height: 180px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);' />");
         content.append("<div style='margin-top: 12px; font-size: 14px; color: #667eea; font-weight: 500;'>👆 长按识别小程序码</div>");
         content.append("</div>");
         

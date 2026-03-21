@@ -1,7 +1,6 @@
 package com.family.family.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
-import cn.dev33.satoken.annotation.SaIgnore;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
 import com.family.family.entity.SystemConfig;
@@ -12,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,16 +77,16 @@ public class SystemConfigController {
         String userId = params.get("userId");
 
         if (corpId != null) {
-            configService.setValue("wechat_work_corpid", corpId);
+            configService.setValue("wechat.work.corpid", corpId);
         }
         if (agentId != null) {
-            configService.setValue("wechat_work_agentid", agentId);
+            configService.setValue("wechat.work.agentid", agentId);
         }
         if (secret != null) {
-            configService.setValue("wechat_work_secret", secret);
+            configService.setValue("wechat.work.secret", secret);
         }
         if (userId != null) {
-            configService.setValue("wechat_work_userid", userId);
+            configService.setValue("wechat.work.userid", userId);
         }
 
         // 刷新缓存
@@ -136,7 +134,9 @@ public class SystemConfigController {
 
         // 敏感字段脱敏
         for (SystemConfig config : configs) {
-            if (config.getConfigKey().contains("secret") || config.getConfigKey().contains("password") || config.getIsEncrypted() == 1) {
+            if (config.getConfigKey().contains("secret")
+                || config.getConfigKey().contains("password")
+                || Integer.valueOf(1).equals(config.getIsEncrypted())) {
                 config.setConfigValue(maskString(config.getConfigValue()));
             }
         }

@@ -5,14 +5,23 @@
 
 import { cacheManager } from './cache.js'
 
-// 后端地址配置 - 根据环境切换
-const getBackendUrl = () => {
-  // 生产环境使用 520xz.cn，开发环境使用电脑IP
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://520xz.cn:8443'
+const trimTrailingSlash = (value) => value ? value.replace(/\/+$/, '') : ''
+
+// 后端地址配置 - 优先使用构建环境变量
+export const getBackendUrl = () => {
+  const configured = import.meta.env.VITE_API_BASE_URL
+  if (configured) {
+    return trimTrailingSlash(configured)
   }
-  // 本地开发：微信开发者工具用电脑IP
-  return 'http://192.168.1.209:8443'
+  return 'http://localhost:8443'
+}
+
+export const buildApiUrl = (path = '') => {
+  const baseUrl = getBackendUrl()
+  if (!path) {
+    return baseUrl
+  }
+  return path.startsWith('/') ? `${baseUrl}${path}` : `${baseUrl}/${path}`
 }
 
 // 基础配置
@@ -36,7 +45,7 @@ export const getAvatarUrl = (avatar) => {
   }
   // 如果是相对路径（如 /api/avatars/xxx.jpg），拼接base URL
   if (avatar.startsWith('/')) {
-    return `${CONFIG.BASE_URL}${avatar}`
+    return buildApiUrl(avatar)
   }
   return avatar
 }
