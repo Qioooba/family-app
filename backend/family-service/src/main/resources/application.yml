@@ -13,9 +13,6 @@ server:
 spring:
   main:
     allow-bean-definition-overriding: true
-  autoconfigure:
-    exclude:
-      - org.redisson.spring.starter.RedissonAutoConfigurationV2
   application:
     name: family-app
   jackson:
@@ -40,17 +37,6 @@ spring:
       minimum-idle: 5
       idle-timeout: 300000
       connection-timeout: 20000
-  
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
-    database: ${REDIS_DB:0}
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
   
   servlet:
     multipart:

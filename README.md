@@ -45,7 +45,6 @@
 | **Spring Cloud** | 2022.0.4 | 微服务框架 |
 | **MyBatis Plus** | 3.5.5 | ORM框架 |
 | **MySQL** | 8.0 | 关系型数据库 |
-| **Redis** | 7.0 | 缓存数据库 |
 | **Sa-Token** | 1.37.0 | 权限认证框架 |
 | **SpringDoc** | 2.2.0 | API文档 |
 | **WebSocket** | - | 实时通信 |

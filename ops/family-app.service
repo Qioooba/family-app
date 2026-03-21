@@ -1,6 +1,6 @@
 [Unit]
 Description=Family App Backend Service
-After=network.target mysql.service redis.service
+After=network.target mysql.service
 
 [Service]
 Type=simple
