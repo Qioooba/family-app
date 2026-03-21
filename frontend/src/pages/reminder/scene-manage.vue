@@ -89,15 +89,28 @@
             <view class="config-section">
               <text class="config-section-title">🌧️ 下雨提醒</text>
               <view class="config-item">
-                <text class="config-label">提醒时间</text>
-                <picker mode="time" :value="scene.config.reminderTime || '07:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
-                  <view class="picker"><text>{{ scene.config.reminderTime || '07:00' }}</text></view>
-                </picker>
+                <text class="config-label">监测间隔</text>
+                <view class="interval-options">
+                  <view
+                    v-for="option in intervalOptions"
+                    :key="option.value"
+                    class="interval-option"
+                    :class="{ 'active': scene.config.intervalMinutes === option.value }"
+                    @click="updateConfig(scene, 'intervalMinutes', option.value)"
+                  >
+                    <text>{{ option.label }}</text>
+                  </view>
+                </view>
               </view>
               <view class="config-item">
                 <text class="config-label">降雨概率阈值: {{ scene.config.rainProbability || 30 }}%</text>
                 <slider :value="scene.config.rainProbability || 30" min="10" max="80" show-value activeColor="#667eea" block-size="20" @change="(e) => updateConfig(scene, 'rainProbability', e.detail.value)" />
                 <text class="config-hint">超过此概率时提醒，使用自动定位</text>
+              </view>
+              <view class="config-item">
+                <text class="config-label">全天监测</text>
+                <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
+                <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
               </view>
             </view>
           </template>
@@ -184,10 +197,18 @@
             <view class="config-section">
               <text class="config-section-title">🌡️ 温度监控</text>
               <view class="config-item">
-                <text class="config-label">提醒时间</text>
-                <picker mode="time" :value="scene.config.reminderTime || '08:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
-                  <view class="picker"><text>{{ scene.config.reminderTime || '08:00' }}</text></view>
-                </picker>
+                <text class="config-label">监测间隔</text>
+                <view class="interval-options">
+                  <view
+                    v-for="option in intervalOptions"
+                    :key="option.value"
+                    class="interval-option"
+                    :class="{ 'active': scene.config.intervalMinutes === option.value }"
+                    @click="updateConfig(scene, 'intervalMinutes', option.value)"
+                  >
+                    <text>{{ option.label }}</text>
+                  </view>
+                </view>
               </view>
               <view class="config-item">
                 <text class="config-label">提醒类型</text>
@@ -213,6 +234,11 @@
                   @input="(e) => updateConfig(scene, 'tempThreshold', parseInt(e.detail.value) || 0)"
                 />
               </view>
+              <view class="config-item">
+                <text class="config-label">全天监测</text>
+                <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
+                <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
+              </view>
             </view>
           </template>
 
@@ -221,10 +247,18 @@
             <view class="config-section">
               <text class="config-section-title">🌫️ 空气质量监控</text>
               <view class="config-item">
-                <text class="config-label">提醒时间</text>
-                <picker mode="time" :value="scene.config.reminderTime || '07:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
-                  <view class="picker"><text>{{ scene.config.reminderTime || '07:00' }}</text></view>
-                </picker>
+                <text class="config-label">监测间隔</text>
+                <view class="interval-options">
+                  <view
+                    v-for="option in intervalOptions"
+                    :key="option.value"
+                    class="interval-option"
+                    :class="{ 'active': scene.config.intervalMinutes === option.value }"
+                    @click="updateConfig(scene, 'intervalMinutes', option.value)"
+                  >
+                    <text>{{ option.label }}</text>
+                  </view>
+                </view>
               </view>
               <view class="config-item">
                 <text class="config-label">PM2.5 阈值 (μg/m³)</text>
@@ -248,6 +282,11 @@
                 />
                 <text class="config-hint">美国AQI指数，超过此值提醒</text>
               </view>
+              <view class="config-item">
+                <text class="config-label">全天监测</text>
+                <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
+                <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
+              </view>
             </view>
           </template>
 
@@ -256,10 +295,18 @@
             <view class="config-section">
               <text class="config-section-title">☀️ 紫外线监控</text>
               <view class="config-item">
-                <text class="config-label">提醒时间</text>
-                <picker mode="time" :value="scene.config.reminderTime || '10:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
-                  <view class="picker"><text>{{ scene.config.reminderTime || '10:00' }}</text></view>
-                </picker>
+                <text class="config-label">监测间隔</text>
+                <view class="interval-options">
+                  <view
+                    v-for="option in intervalOptions"
+                    :key="option.value"
+                    class="interval-option"
+                    :class="{ 'active': scene.config.intervalMinutes === option.value }"
+                    @click="updateConfig(scene, 'intervalMinutes', option.value)"
+                  >
+                    <text>{{ option.label }}</text>
+                  </view>
+                </view>
               </view>
               <view class="config-item">
                 <text class="config-label">紫外线指数阈值</text>
@@ -271,6 +318,11 @@
                   @input="(e) => updateConfig(scene, 'uvThreshold', parseInt(e.detail.value) || 0)"
                 />
                 <text class="config-hint">UV≥3需要防晒，建议设置为3-5</text>
+              </view>
+              <view class="config-item">
+                <text class="config-label">全天监测</text>
+                <switch :checked="scene.config.allDay === true" @change="(e) => updateConfig(scene, 'allDay', e.detail.value)" />
+                <text class="config-hint">{{ scene.config.allDay ? '24小时监测' : '仅工作时间内监测' }}</text>
               </view>
             </view>
           </template>
@@ -363,6 +415,15 @@ const alertTypes = [
   { value: 'both', label: '高低温都提醒' }
 ]
 
+// 监测间隔选项（分钟）
+const intervalOptions = [
+  { value: 60, label: '1小时' },
+  { value: 120, label: '2小时' },
+  { value: 180, label: '3小时' },
+  { value: 360, label: '6小时' },
+  { value: 720, label: '12小时' }
+]
+
 // 加载场景列表
 const loadScenes = async () => {
   loading.value = true
@@ -388,12 +449,12 @@ const loadScenes = async () => {
 const getDefaultConfig = (sceneType) => {
   const configs = {
     WATER: { targetTimes: 8, cupSize: 200, workHours: ['09:00', '18:00'] },
-    WEATHER_RAIN: { location: 'auto', reminderTime: '07:00', rainProbability: 30, rainHoursAhead: 3 },
+    WEATHER_RAIN: { location: 'auto', intervalMinutes: 120, rainProbability: 30, rainHoursAhead: 3, allDay: false },
     SEDENTARY: { sitDuration: 60, breakDuration: 5, workHours: ['09:00', '18:00'], postureTips: true },
     EYE_REST: { screenTime: 45, restDuration: 10, eyeExercise: true, blinkReminder: true, workHours: ['09:00', '18:00'] },
-    WEATHER_TEMP: { location: 'auto', reminderTime: '08:00', tempThreshold: 35, alertType: 'high' },
-    AIR_QUALITY: { location: 'auto', reminderTime: '07:00', pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100 },
-    UV_INDEX: { location: 'auto', reminderTime: '10:00', uvThreshold: 3 },
+    WEATHER_TEMP: { location: 'auto', intervalMinutes: 120, tempThreshold: 35, alertType: 'high', allDay: false },
+    AIR_QUALITY: { location: 'auto', intervalMinutes: 120, pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100, allDay: false },
+    UV_INDEX: { location: 'auto', intervalMinutes: 120, uvThreshold: 3, allDay: false },
     MORNING: { type: 'morning', location: 'auto', reminderTime: '07:00' },
     CHECKIN: { reminderTime: '08:00' },
     SCHEDULE: { reminderTime: '07:30' },
@@ -713,7 +774,8 @@ onShow(() => {
 // 选项按钮组
 .cup-size-options,
 .duration-options,
-.alert-type-options {
+.alert-type-options,
+.interval-options {
   display: flex;
   flex-wrap: wrap;
   gap: 16rpx;
@@ -721,7 +783,8 @@ onShow(() => {
 
 .size-option,
 .duration-option,
-.alert-type-option {
+.alert-type-option,
+.interval-option {
   padding: 16rpx 32rpx;
   background: #f5f5f5;
   border-radius: 32rpx;
