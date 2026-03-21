@@ -439,7 +439,22 @@ public class FamilyReminderController {
         result.put("message", message);
         return result;
     }
-    
+
+    /**
+     * 解析业务数据JSON字符串为Map
+     */
+    private Map<String, Object> parseBusinessData(String businessData) {
+        if (businessData == null || businessData.isEmpty()) {
+            return new HashMap<>();
+        }
+        try {
+            return JSONUtil.parseObj(businessData);
+        } catch (Exception e) {
+            log.warn("解析businessData失败: {}", businessData, e);
+            return new HashMap<>();
+        }
+    }
+
     // ==================== 场景化提醒 API ====================
     
     /**
@@ -470,6 +485,8 @@ public class FamilyReminderController {
                     .created(existing != null)
                     .reminderId(existing != null ? existing.getId() : null)
                     .enabled(existing != null && existing.getStatus() == 1)
+                    // 如果已创建，返回实际保存的配置；否则返回默认配置
+                    .defaultConfig(existing != null ? parseBusinessData(existing.getBusinessData()) : handler.getDefaultTemplate().getBusinessData())
                     .build();
                 
                 templates.add(vo);

@@ -402,7 +402,8 @@ const loadScenes = async () => {
       scenes.value = res.map(scene => ({
         ...scene,
         expanded: false,
-        config: getDefaultConfig(scene.sceneType)
+        // 如果API返回了实际配置(defaultConfig)，使用它；否则使用默认配置
+        config: scene.defaultConfig || getDefaultConfig(scene.sceneType)
       }))
     }
   } catch (e) {
@@ -419,7 +420,7 @@ const getDefaultConfig = (sceneType) => {
     WATER: { targetTimes: 8, cupSize: 200, workHours: ['09:00', '18:00'] },
     WEATHER_RAIN: { location: 'auto', reminderTime: '07:00', rainProbability: 30, rainHoursAhead: 3 },
     SEDENTARY: { sitDuration: 60, breakDuration: 5, workHours: ['09:00', '18:00'], postureTips: true },
-    EYE_REST: { screenTime: 45, restDuration: 10, eyeExercise: true, blinkReminder: true },
+    EYE_REST: { screenTime: 45, restDuration: 10, eyeExercise: true, blinkReminder: true, workHours: ['09:00', '18:00'] },
     WEATHER_TEMP: { location: 'auto', reminderTime: '08:00', tempThreshold: 35, alertType: 'high' },
     AIR_QUALITY: { location: 'auto', reminderTime: '07:00', pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100 },
     UV_INDEX: { location: 'auto', reminderTime: '10:00', uvThreshold: 3 },
