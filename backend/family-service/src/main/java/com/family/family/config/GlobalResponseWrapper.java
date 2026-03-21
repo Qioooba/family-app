@@ -51,7 +51,7 @@ public class GlobalResponseWrapper implements ResponseBodyAdvice<Object> {
 
                 if (code == null) {
                     return Result.success(message, data);
-                } else if (code == 200) {
+                } else if (code == 0 || code == 200) {
                     return Result.success(message, data);
                 } else {
                     return Result.error(code, message);

@@ -77,7 +77,7 @@ public class FamilyReminderController {
      * 获取我的提醒列表
      */
     @GetMapping("/list")
-    public String getMyReminders() {
+    public Map<String, Object> getMyReminders() {
         try {
             Long userId = StpUtil.getLoginIdAsLong();
             List<Reminder> reminders = reminderService.getUserReminders(userId);
@@ -106,10 +106,13 @@ public class FamilyReminderController {
             result.put("message", "success");
             result.put("data", resultList);
 
-            return JSONUtil.toJsonStr(result);
+            return result;
         } catch (Exception e) {
             log.error("获取提醒列表失败", e);
-            return "{\"code\":500,\"message\":\"获取失败\"}";
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("code", 500);
+            errorResult.put("message", "获取失败");
+            return errorResult;
         }
     }
     
