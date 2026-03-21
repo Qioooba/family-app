@@ -211,13 +211,12 @@
               </view>
               <view class="config-item">
                 <text class="config-label">温度阈值 (°C)</text>
-                <slider
+                <input
+                  class="threshold-input"
+                  type="number"
                   :value="scene.config.tempThreshold"
-                  min="-10" max="45"
-                  show-value
-                  activeColor="#f5576c"
-                  block-size="20"
-                  @change="(e) => updateConfig(scene, 'tempThreshold', e.detail.value)"
+                  placeholder="请输入温度阈值"
+                  @input="(e) => updateConfig(scene, 'tempThreshold', parseInt(e.detail.value) || 0)"
                 />
               </view>
             </view>
@@ -247,30 +246,24 @@
               </view>
               <view class="config-item">
                 <text class="config-label">PM2.5 阈值 (μg/m³)</text>
-                <view class="slider-wrapper">
-                  <slider
-                    :value="scene.config.pm25Threshold || 75"
-                    min="35" max="150"
-                    show-value
-                    activeColor="#434343"
-                    block-size="20"
-                    @change="(e) => updateConfig(scene, 'pm25Threshold', e.detail.value)"
-                  />
-                </view>
+                <input
+                  class="threshold-input"
+                  type="number"
+                  :value="scene.config.pm25Threshold || 75"
+                  placeholder="请输入PM2.5阈值"
+                  @input="(e) => updateConfig(scene, 'pm25Threshold', parseInt(e.detail.value) || 0)"
+                />
                 <text class="config-hint">超过此值提醒，默认75（轻度污染）</text>
               </view>
               <view class="config-item">
                 <text class="config-label">AQI 阈值</text>
-                <view class="slider-wrapper">
-                  <slider
-                    :value="scene.config.aqiThreshold || 100"
-                    min="50" max="200"
-                    show-value
-                    activeColor="#434343"
-                    block-size="20"
-                    @change="(e) => updateConfig(scene, 'aqiThreshold', e.detail.value)"
-                  />
-                </view>
+                <input
+                  class="threshold-input"
+                  type="number"
+                  :value="scene.config.aqiThreshold || 100"
+                  placeholder="请输入AQI阈值"
+                  @input="(e) => updateConfig(scene, 'aqiThreshold', parseInt(e.detail.value) || 0)"
+                />
                 <text class="config-hint">美国AQI指数，超过此值提醒</text>
               </view>
             </view>
@@ -300,16 +293,13 @@
               </view>
               <view class="config-item">
                 <text class="config-label">紫外线指数阈值</text>
-                <view class="slider-wrapper">
-                  <slider
-                    :value="scene.config.uvThreshold || 3"
-                    min="1" max="10"
-                    show-value
-                    activeColor="#f6d365"
-                    block-size="20"
-                    @change="(e) => updateConfig(scene, 'uvThreshold', e.detail.value)"
-                  />
-                </view>
+                <input
+                  class="threshold-input"
+                  type="number"
+                  :value="scene.config.uvThreshold || 3"
+                  placeholder="请输入紫外线指数"
+                  @input="(e) => updateConfig(scene, 'uvThreshold', parseInt(e.detail.value) || 0)"
+                />
                 <text class="config-hint">UV≥3需要防晒，建议设置为3-5</text>
               </view>
             </view>
@@ -723,6 +713,16 @@ onShow(() => {
   font-size: 26rpx;
   background: #fff;
   flex: 1;
+}
+
+.threshold-input {
+  border: 1rpx solid #ddd;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  background: #fff;
+  width: 200rpx;
+  text-align: center;
 }
 
 .location-auto-btn {
