@@ -7,7 +7,8 @@ import { cacheManager } from './cache.js'
 
 const trimTrailingSlash = (value) => value ? value.replace(/\/+$/, '') : ''
 const injectedApiBaseUrl = typeof __APP_API_BASE_URL__ !== 'undefined' ? __APP_API_BASE_URL__ : ''
-const REQUEST_DEBUG_BUILD = '1.3.14'
+const injectedBuildVersion = typeof __APP_BUILD_VERSION__ !== 'undefined' ? __APP_BUILD_VERSION__ : ''
+const REQUEST_DEBUG_BUILD = injectedBuildVersion || import.meta.env.MINIPROGRAM_VERSION || import.meta.env.npm_package_version || 'dev'
 
 // 后端地址配置 - 优先使用构建环境变量
 export const getBackendUrl = () => {

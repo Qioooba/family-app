@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
   const apiBaseUrl = env.VITE_API_BASE_URL || env.API_BASE_URL || ''
   const tencentMapKey = env.VITE_TENCENT_MAP_KEY || env.TENCENT_MAP_KEY || ''
   const weixinAppId = env.VITE_WEIXIN_APPID || env.WEIXIN_APPID || ''
+  const buildVersion = env.MINIPROGRAM_VERSION || env.npm_package_version || process.env.npm_package_version || 'dev'
   const extraHosts = (env.VITE_ALLOWED_HOSTS || env.ALLOWED_HOSTS || '')
     .split(',')
     .map(host => host.trim())
@@ -76,7 +77,8 @@ export default defineConfig(({ mode }) => {
       __VUE_PROD_DEVTOOLS__: true,
       __APP_API_BASE_URL__: JSON.stringify(apiBaseUrl),
       __APP_TENCENT_MAP_KEY__: JSON.stringify(tencentMapKey),
-      __APP_WEIXIN_APPID__: JSON.stringify(weixinAppId)
+      __APP_WEIXIN_APPID__: JSON.stringify(weixinAppId),
+      __APP_BUILD_VERSION__: JSON.stringify(buildVersion)
     }
   }
 })
