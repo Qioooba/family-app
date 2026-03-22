@@ -387,7 +387,7 @@ export default {
       return this.editForm.weekDays || []
     },
     isSceneReminder() {
-      const sceneTypes = ['WATER', 'WEATHER_RAIN', 'WEATHER_TEMP', 'SEDENTARY', 'EYE_REST']
+      const sceneTypes = ['WATER', 'WEATHER_RAIN', 'WEATHER_TEMP', 'SEDENTARY', 'EYE_REST', 'AIR_QUALITY', 'UV_INDEX', 'CHECKIN', 'MORNING', 'SCHEDULE', 'SLEEP', 'ANNIVERSARY']
       const reminderType = this.reminder?.reminderType
       if (sceneTypes.includes(reminderType)) {
         return true
@@ -416,6 +416,17 @@ export default {
       try {
         const data = await this.$request.get(`/api/reminder/detail/${this.id}`)
         this.reminder = data || {}
+        if (this.isSceneReminder) {
+          uni.showModal({
+            title: '请前往智能场景',
+            content: '这类提醒属于智能场景提醒，请在智能场景页面查看和设置。',
+            showCancel: false,
+            success: () => {
+              uni.navigateTo({ url: '/pages/reminder/scene-manage' })
+            }
+          })
+          return
+        }
         this.parseTargetUsers()
         this.initEditForm()
       } catch (e) {

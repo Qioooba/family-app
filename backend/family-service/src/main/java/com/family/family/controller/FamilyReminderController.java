@@ -169,6 +169,7 @@ public class FamilyReminderController {
             if (reminder.getReminderType() == null || reminder.getReminderType().trim().isEmpty()) {
                 reminder.setReminderType("SYSTEM");
             }
+            reminder.setCreateType(1);
             
             boolean success = reminderService.createReminder(reminder);
             if (success) {
@@ -560,6 +561,7 @@ public class FamilyReminderController {
             
             reminder.setPushScope("SELF");
             reminder.setTargetUserIds(null);
+            reminder.setCreateType(2);
             reminder.setCreateBy(userId);
             reminder.setStatus(1);
             reminder.setPriority(5);
@@ -634,6 +636,7 @@ public class FamilyReminderController {
                 handler.validateConfig(template.getBusinessData());
                 reminder.setBusinessData(template.getBusinessData());
                 reminder.setPushScope("SELF");
+                reminder.setCreateType(2);
                 reminder.setCreateBy(userId);
                 reminder.setStatus(1);
                 reminder.setPriority(5);

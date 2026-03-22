@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.List;
 
 /**
@@ -17,6 +18,11 @@ import java.util.List;
 @Slf4j
 @Service
 public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
+
+    private static final Set<String> SCENE_REMINDER_TYPES = Set.of(
+        "WATER", "WEATHER_RAIN", "WEATHER_TEMP", "AIR_QUALITY", "UV_INDEX",
+        "MORNING", "CHECKIN", "SCHEDULE", "SLEEP", "ANNIVERSARY", "EYE_REST", "SEDENTARY"
+    );
     
     @Autowired
     private ReminderMapper reminderMapper;
@@ -29,7 +35,9 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
         if (reminder.getStatus() == null) {
             reminder.setStatus(1);
         }
-        reminder.setCreateType(1);
+        if (reminder.getCreateType() == null) {
+            reminder.setCreateType(1);
+        }
         if (reminder.getPushScope() == null || reminder.getPushScope().isEmpty()) {
             reminder.setPushScope("SELF");
         }
@@ -122,6 +130,7 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
         LambdaQueryWrapper<Reminder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Reminder::getCreateBy, userId)
                .eq(Reminder::getStatus, 1)  // 只查询启用的提醒
+               .notIn(Reminder::getReminderType, SCENE_REMINDER_TYPES)
                .isNotNull(Reminder::getNextExecuteTime)  // 确保下次执行时间不为空
                .between(Reminder::getNextExecuteTime, todayStart, todayEnd)
                .orderByAsc(Reminder::getNextExecuteTime);
@@ -134,6 +143,7 @@ public class ReminderService extends ServiceImpl<ReminderMapper, Reminder> {
     public List<Reminder> getUserReminders(Long userId) {
         LambdaQueryWrapper<Reminder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Reminder::getCreateBy, userId)
+               .notIn(Reminder::getReminderType, SCENE_REMINDER_TYPES)
                .orderByDesc(Reminder::getCreateTime);
         return this.list(wrapper);
     }
