@@ -91,12 +91,28 @@ export const getLocationByTencentMap = (latitude, longitude) => {
         if (res.data && res.data.status === 0 && res.data.result) {
           const result = res.data.result
           const address = result.address_component || {}
+          const addressReference = result.address_reference || {}
           const pois = result.pois || []
           const poi = pois[0] || {} // 最近的POI（小区、大厦等）
+          const landmarkL2 = addressReference.landmark_l2?.title || ''
+          const landmarkL1 = addressReference.landmark_l1?.title || ''
+          const businessArea = addressReference.business_area?.title || ''
+          const streetNumberTitle = addressReference.street_number?.title || ''
           const streetName = [address.street || '', address.street_number || '']
             .filter(Boolean)
             .join('')
-          const detailName = poi.title || streetName || address.district || address.city || '当前位置'
+          const detailCandidates = [
+            poi.title || '',
+            landmarkL2,
+            landmarkL1,
+            businessArea,
+            streetNumberTitle,
+            streetName,
+            address.district || '',
+            address.city || '',
+            '当前位置'
+          ]
+          const detailName = detailCandidates.find(item => item && String(item).trim()) || '当前位置'
           const shortDistrict = (address.district || '').replace(/(区|县|市辖区)$/g, '')
           const shortDetail = detailName
             .replace(/^中国/, '')
@@ -104,7 +120,7 @@ export const getLocationByTencentMap = (latitude, longitude) => {
             .replace(address.city || '', '')
             .replace(address.district || '', '')
             .trim()
-          const shortName = [shortDistrict, shortDetail]
+          const shortName = [shortDistrict, shortDetail || detailName]
             .filter(Boolean)
             .filter((item, index, arr) => arr.indexOf(item) === index)
             .join('·') || detailName
@@ -124,7 +140,7 @@ export const getLocationByTencentMap = (latitude, longitude) => {
             street: address.street || '',
             streetNumber: address.street_number || '',
             // POI信息（小区、大厦、商场等）
-            poiName: poi.title || '',
+            poiName: poi.title || landmarkL2 || landmarkL1 || businessArea || streetNumberTitle || '',
             poiCategory: poi.category || '',
             // 用于显示的完整地址
             fullAddress: result.formatted_addresses?.recommend || result.address || fullDisplayName,
