@@ -32,9 +32,10 @@ public class HealthController {
     @GetMapping("/water/today")
     public Map<String, Object> getTodayWater(@RequestParam Long userId) {
         Map<String, Object> result = new HashMap<>();
+        Long currentUserId = StpUtil.getLoginIdAsLong();
         
         try {
-            Map<String, Object> data = waterRecordService.getTodayWaterInfo(userId);
+            Map<String, Object> data = waterRecordService.getTodayWaterInfo(currentUserId);
             
             result.put("code", 200);
             result.put("message", "success");
@@ -51,15 +52,16 @@ public class HealthController {
     @GetMapping("/water/target")
     public Map<String, Object> getWaterTarget(@RequestParam Long userId) {
         Map<String, Object> result = new HashMap<>();
+        Long currentUserId = StpUtil.getLoginIdAsLong();
         result.put("code", 200);
         
         // 从数据库获取用户保存的目标，如果没有则返回默认值
-        Integer targetAmount = waterRecordService.getUserWaterTarget(userId);
+        Integer targetAmount = waterRecordService.getUserWaterTarget(currentUserId);
         
         Map<String, Object> data = new HashMap<>();
         data.put("defaultTarget", 2000);
         data.put("targetAmount", targetAmount);
-        data.put("userId", userId);
+        data.put("userId", currentUserId);
         result.put("data", data);
         return result;
     }
@@ -69,7 +71,7 @@ public class HealthController {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            Long userId = Long.valueOf(data.get("userId").toString());
+            Long userId = StpUtil.getLoginIdAsLong();
             Integer targetAmount = Integer.valueOf(data.get("targetAmount").toString());
             
             // 保存到数据库
@@ -125,15 +127,16 @@ public class HealthController {
     @DeleteMapping("/water/{id}")
     public Map<String, Object> deleteWaterRecord(@PathVariable Long id) {
         Map<String, Object> result = new HashMap<>();
+        Long currentUserId = StpUtil.getLoginIdAsLong();
         
         try {
-            boolean success = waterRecordService.deleteRecord(id);
+            boolean success = waterRecordService.deleteRecord(currentUserId, id);
             if (success) {
                 result.put("code", 200);
                 result.put("message", "删除成功");
             } else {
-                result.put("code", 404);
-                result.put("message", "记录不存在");
+                result.put("code", 403);
+                result.put("message", "记录不存在或无权限");
             }
         } catch (Exception e) {
             result.put("code", 500);
@@ -146,10 +149,11 @@ public class HealthController {
     @GetMapping("/water/history")
     public Map<String, Object> getWaterHistory(@RequestParam Long userId, @RequestParam String date) {
         Map<String, Object> result = new HashMap<>();
+        Long currentUserId = StpUtil.getLoginIdAsLong();
         
         try {
             LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
-            List<WaterRecord> records = waterRecordService.getRecordsByDate(userId, localDate);
+            List<WaterRecord> records = waterRecordService.getRecordsByDate(currentUserId, localDate);
             
             result.put("code", 200);
             result.put("message", "success");
@@ -174,13 +178,14 @@ public class HealthController {
     @GetMapping("/diet/statistics")
     public Map<String, Object> getDietStatistics(@RequestParam Long userId, @RequestParam String date) {
         Map<String, Object> result = new HashMap<>();
+        Long currentUserId = StpUtil.getLoginIdAsLong();
         
         try {
             // 解析日期
             LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
             
             // 获取统计数据
-            Map<String, Object> data = statsService.getDailyDietStats(userId, localDate);
+            Map<String, Object> data = statsService.getDailyDietStats(currentUserId, localDate);
             
             result.put("code", 200);
             result.put("message", "success");

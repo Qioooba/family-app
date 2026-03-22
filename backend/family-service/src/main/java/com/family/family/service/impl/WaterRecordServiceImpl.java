@@ -106,7 +106,15 @@ public class WaterRecordServiceImpl implements WaterRecordService {
     }
     
     @Override
-    public boolean deleteRecord(Long recordId) {
+    public boolean deleteRecord(Long userId, Long recordId) {
+        WaterRecord record = waterRecordMapper.selectById(recordId);
+        if (record == null) {
+            return false;
+        }
+        if (userId == null || !userId.equals(record.getUserId())) {
+            log.warn("越权删除喝水记录: userId={}, recordId={}, ownerId={}", userId, recordId, record.getUserId());
+            return false;
+        }
         return waterRecordMapper.deleteById(recordId) > 0;
     }
     

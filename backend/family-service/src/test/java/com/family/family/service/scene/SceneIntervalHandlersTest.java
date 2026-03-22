@@ -128,7 +128,7 @@ class SceneIntervalHandlersTest {
         }
 
         @Override
-        public boolean deleteRecord(Long recordId) {
+        public boolean deleteRecord(Long userId, Long recordId) {
             throw new UnsupportedOperationException();
         }
 

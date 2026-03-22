@@ -34,7 +34,7 @@ public interface WaterRecordService {
     /**
      * 删除喝水记录
      */
-    boolean deleteRecord(Long recordId);
+    boolean deleteRecord(Long userId, Long recordId);
     
     /**
      * 获取用户喝水目标

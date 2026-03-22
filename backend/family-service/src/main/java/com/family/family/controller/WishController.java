@@ -1,5 +1,6 @@
 package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
 
 import com.family.family.entity.User;
 import com.family.family.entity.Wish;
@@ -26,12 +27,17 @@ public class WishController {
     private UserMapper userMapper;
 
     /**
-     * 获取当前用户ID (简化版，默认返回1)
+     * 获取当前用户ID
      */
     private Long getCurrentUserId() {
-        // 尝试从请求头获取用户ID
-        // 默认返回1，如果数据库中没有用户1，会自动创建
-        return 1L;
+        return StpUtil.getLoginIdAsLong();
+    }
+
+    private boolean canModifyWish(Wish wish, Long currentUserId) {
+        if (wish == null || currentUserId == null) {
+            return false;
+        }
+        return currentUserId.equals(wish.getUserId()) || currentUserId.equals(wish.getClaimantId());
     }
 
     /**
@@ -167,6 +173,12 @@ public class WishController {
                 result.put("message", "心愿不存在");
                 return result;
             }
+            Long currentUserId = getCurrentUserId();
+            if (!currentUserId.equals(wish.getUserId())) {
+                result.put("code", 403);
+                result.put("message", "无权限修改该心愿");
+                return result;
+            }
             
             if (data.get("title") != null) {
                 wish.setTitle((String) data.get("title"));
@@ -218,6 +230,19 @@ public class WishController {
         Map<String, Object> result = new HashMap<>();
         
         try {
+            Wish wish = wishMapper.selectById(id);
+            if (wish == null) {
+                result.put("code", 404);
+                result.put("message", "心愿不存在");
+                return result;
+            }
+            Long currentUserId = getCurrentUserId();
+            if (!currentUserId.equals(wish.getUserId())) {
+                result.put("code", 403);
+                result.put("message", "无权限删除该心愿");
+                return result;
+            }
+
             wishMapper.deleteById(id);
             result.put("code", 200);
             result.put("message", "success");
@@ -251,7 +276,7 @@ public class WishController {
                 result.put("message", "该心愿已被认领或已完成");
                 return result;
             }
-            
+
             wish.setClaimantId(currentUserId);
             wish.setStatus(1);
             wish.setUpdateTime(LocalDateTime.now());
@@ -284,6 +309,13 @@ public class WishController {
                 return result;
             }
             
+            Long currentUserId = getCurrentUserId();
+            if (!canModifyWish(wish, currentUserId)) {
+                result.put("code", 403);
+                result.put("message", "无权限更新该心愿");
+                return result;
+            }
+
             if (data.get("progress") != null) {
                 wish.setProgress(Integer.parseInt(data.get("progress").toString()));
             }
@@ -318,6 +350,13 @@ public class WishController {
                 return result;
             }
             
+            Long currentUserId = getCurrentUserId();
+            if (!currentUserId.equals(wish.getUserId())) {
+                result.put("code", 403);
+                result.put("message", "无权限完成该心愿");
+                return result;
+            }
+
             wish.setStatus(2);
             wish.setProgress(100);
             wish.setFinishTime(java.time.LocalDate.now());

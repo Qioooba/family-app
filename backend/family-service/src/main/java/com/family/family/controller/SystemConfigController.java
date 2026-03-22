@@ -4,6 +4,8 @@ import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.core.Result;
 import com.family.family.entity.SystemConfig;
+import com.family.family.entity.FamilyMember;
+import com.family.family.mapper.FamilyMemberMapper;
 import com.family.family.mapper.SystemConfigMapper;
 import com.family.family.service.SystemConfigService;
 import com.family.family.service.WechatWorkService;
@@ -40,6 +42,9 @@ public class SystemConfigController {
     
     @Autowired
     private SystemConfigMapper configMapper;
+
+    @Autowired
+    private FamilyMemberMapper familyMemberMapper;
     
     @Autowired
     private WechatWorkService wechatWorkService;
@@ -163,9 +168,17 @@ public class SystemConfigController {
      * 判断是否管理员
      */
     private boolean isAdmin() {
-        // 这里可以根据实际情况判断，比如用户ID=1是管理员
         Long userId = StpUtil.getLoginIdAsLong();
-        return userId != null && userId == 1; // 简单示例：用户ID=1是管理员
+        if (userId == null) {
+            return false;
+        }
+        if (userId == 1L) {
+            return true;
+        }
+        List<FamilyMember> memberships = familyMemberMapper.selectByUserId(userId);
+        return memberships != null && memberships.stream().anyMatch(member ->
+            "owner".equalsIgnoreCase(member.getRole()) || "admin".equalsIgnoreCase(member.getRole())
+        );
     }
 
     /**

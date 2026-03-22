@@ -12,6 +12,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -100,8 +102,8 @@ public class WeatherController {
             log.info("根据城市获取天气: city={}", city);
             
             // 1. 先获取城市坐标
-            String geoUrl = String.format("%s?name=%s&count=1&language=zh&format=json", 
-                GEOCODING_API, city);
+            String geoUrl = String.format("%s?name=%s&count=1&language=zh&format=json",
+                GEOCODING_API, URLEncoder.encode(city, StandardCharsets.UTF_8));
             
             Map<String, Object> geoResponse = restTemplate.getForObject(geoUrl, Map.class);
             

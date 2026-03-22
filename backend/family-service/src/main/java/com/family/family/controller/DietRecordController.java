@@ -83,6 +83,14 @@ public class DietRecordController {
      */
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        DietRecord record = dietRecordService.getById(id);
+        if (record == null) {
+            return Result.error("记录不存在");
+        }
+        if (!userId.equals(record.getUserId())) {
+            return Result.error("无权限删除该记录");
+        }
         dietRecordService.removeById(id);
         return Result.success(null);
     }

@@ -57,14 +57,14 @@ public class WxDecryptUtil {
             int responseCode = connection.getResponseCode();
             log.info("微信登录 HTTP 响应码: {}", responseCode);
             
-            java.io.BufferedReader reader = new java.io.BufferedReader(
-                new java.io.InputStreamReader(connection.getInputStream()));
             StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                new java.io.InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
             }
-            reader.close();
             connection.disconnect();
             
             String resp = response.toString();
