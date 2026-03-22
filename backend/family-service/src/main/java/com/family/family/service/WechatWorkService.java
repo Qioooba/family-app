@@ -7,9 +7,9 @@ import com.family.family.entity.WechatMessage;
 import com.family.family.mapper.UserMapper;
 import com.family.family.util.TempTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Lazy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -38,6 +38,9 @@ import java.util.Map;
 @Slf4j
 @Service
 public class WechatWorkService {
+    @Autowired
+    @Lazy
+    private WechatWorkAsyncService wechatWorkAsyncService;
 
     @Autowired
     private SystemConfigService configService;
@@ -214,28 +217,15 @@ public class WechatWorkService {
      * 核心：异步发送消息（带3次重试）
      * 自动选择最优发送方式：外部联系人（优先）> 内部成员（备用）
      */
-    @Async("wechatWorkExecutor")
     public void sendMessageAsync(WechatMessage message) {
-        int maxRetry = 3;
-        for (int i = 0; i < maxRetry; i++) {
-            try {
-                doSendMessage(message);
-                return;
-            } catch (Exception e) {
-                log.error("企业微信推送失败，第{}次尝试, userId={}", i + 1, message.getTargetUserId(), e);
-                if (i < maxRetry - 1) {
-                    try { Thread.sleep(1000 * (i + 1)); } catch (InterruptedException ignored) {}
-                }
-            }
-        }
-        log.error("企业微信推送最终失败，已重试{}次, userId={}", maxRetry, message.getTargetUserId());
+        wechatWorkAsyncService.sendMessageAsync(message);
     }
 
     /**
      * 实际发送消息
      * 优先级：1.外部联系人推送（微信显示更好） 2.内部成员推送
      */
-    private void doSendMessage(WechatMessage message) throws Exception {
+    void doSendMessage(WechatMessage message) throws Exception {
         String token = getAccessToken();
         if (token == null) {
             throw new Exception("无法获取access_token，请检查企业微信配置");
@@ -939,28 +929,15 @@ public class WechatWorkService {
     /**
      * 异步发送提醒消息（带小程序码图片）
      */
-    @Async("wechatWorkExecutor")
     public void sendReminderWithQrCodeAsync(WechatMessage message) {
-        int maxRetry = 3;
-        for (int i = 0; i < maxRetry; i++) {
-            try {
-                doSendReminderWithQrCode(message);
-                return;
-            } catch (Exception e) {
-                log.error("提醒推送失败，第{}次尝试, userId={}", i + 1, message.getTargetUserId(), e);
-                if (i < maxRetry - 1) {
-                    try { Thread.sleep(1000 * (i + 1)); } catch (InterruptedException ignored) {}
-                }
-            }
-        }
-        log.error("提醒推送最终失败，已重试{}次, userId={}", maxRetry, message.getTargetUserId());
+        wechatWorkAsyncService.sendReminderWithQrCodeAsync(message);
     }
     
     /**
      * 实际发送带小程序码的提醒消息
      * 使用小程序卡片，点击直接打开小程序
      */
-    private void doSendReminderWithQrCode(WechatMessage message) throws Exception {
+    void doSendReminderWithQrCode(WechatMessage message) throws Exception {
         String token = getAccessToken();
         if (token == null) {
             throw new Exception("无法获取access_token，请检查企业微信配置");

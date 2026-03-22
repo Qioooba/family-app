@@ -261,40 +261,7 @@ public class WeatherRainHandler implements SceneReminderHandler {
      */
     private double[] getCoordinates(String cityName) {
         try {
-            // 如果是坐标格式
-            if (cityName.matches(".*\\d+.*")) {
-                String[] parts = cityName.replaceAll("[^0-9.,-]", "").split(",");
-                if (parts.length >= 2) {
-                    try {
-                        return new double[]{Double.parseDouble(parts[0].trim()), Double.parseDouble(parts[1].trim())};
-                    } catch (NumberFormatException ignored) {}
-                }
-            }
-
-            // 地理编码
-            String url = String.format("%s?name=%s&count=1&language=zh",
-                GEOCODING_API, java.net.URLEncoder.encode(cityName, "UTF-8"));
-
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            if (response == null || !response.containsKey("results")) {
-                return null;
-            }
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-            if (results == null || results.isEmpty()) {
-                return null;
-            }
-
-            Map<String, Object> first = results.get(0);
-            Object lat = first.get("latitude");
-            Object lon = first.get("longitude");
-
-            if (lat != null && lon != null) {
-                return new double[]{((Number) lat).doubleValue(), ((Number) lon).doubleValue()};
-            }
-
-            return null;
+            return OpenMeteoGeocodingSupport.resolveCoordinates(restTemplate, GEOCODING_API, cityName);
         } catch (Exception e) {
             log.error("获取城市坐标失败: {}", cityName, e);
             return null;

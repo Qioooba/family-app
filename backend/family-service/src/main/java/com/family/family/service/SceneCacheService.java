@@ -79,10 +79,8 @@ public class SceneCacheService {
      */
     @Transactional
     public void markRemindedToday(Long reminderId, Long userId, String sceneType) {
-        if (!hasRemindedToday(reminderId)) {
-            sceneReminderLogMapper.insertReminderLog(reminderId, userId, sceneType, LocalDate.now());
-            log.info("记录提醒: reminderId={}, sceneType={}", reminderId, sceneType);
-        }
+        sceneReminderLogMapper.upsertReminderLog(reminderId, userId, sceneType, LocalDate.now());
+        log.info("记录提醒: reminderId={}, sceneType={}", reminderId, sceneType);
     }
 
     /**
@@ -112,7 +110,7 @@ public class SceneCacheService {
      */
     @Transactional
     public void markNotified(Long reminderId, Long userId, String sceneType) {
-        sceneReminderLogMapper.insertReminderLogWithTime(reminderId, userId, sceneType, LocalDate.now());
+        sceneReminderLogMapper.upsertReminderLogWithTime(reminderId, userId, sceneType, LocalDate.now());
         log.info("记录间隔提醒: reminderId={}, sceneType={}", reminderId, sceneType);
     }
 

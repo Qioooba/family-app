@@ -298,43 +298,7 @@ public class UVIndexHandler implements SceneReminderHandler {
      */
     private double[] getCoordinates(String cityName) {
         try {
-            if (cityName.matches(".*\\d+.*")) {
-                String[] parts = cityName.replaceAll("[^0-9.,-]", "").split(",");
-                if (parts.length >= 2) {
-                    try {
-                        double lat = Double.parseDouble(parts[0].trim());
-                        double lon = Double.parseDouble(parts[1].trim());
-                        return new double[]{lat, lon};
-                    } catch (NumberFormatException ignored) {}
-                }
-            }
-
-            String url = String.format("%s?name=%s&count=1&language=zh&format=json",
-                GEOCODING_API, java.net.URLEncoder.encode(cityName, "UTF-8"));
-
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            if (response == null || !response.containsKey("results")) {
-                return null;
-            }
-
-            @SuppressWarnings("unchecked")
-            java.util.List<Map<String, Object>> results = (java.util.List<Map<String, Object>>) response.get("results");
-            if (results == null || results.isEmpty()) {
-                return null;
-            }
-
-            Map<String, Object> firstResult = results.get(0);
-            Object latObj = firstResult.get("latitude");
-            Object lonObj = firstResult.get("longitude");
-
-            if (latObj != null && lonObj != null) {
-                return new double[]{
-                    ((Number) latObj).doubleValue(),
-                    ((Number) lonObj).doubleValue()
-                };
-            }
-
-            return null;
+            return OpenMeteoGeocodingSupport.resolveCoordinates(restTemplate, GEOCODING_API, cityName);
 
         } catch (Exception e) {
             log.error("获取城市坐标失败: {}", cityName, e);

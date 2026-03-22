@@ -44,6 +44,9 @@ public class SystemConfigController {
     @Autowired
     private WechatWorkService wechatWorkService;
 
+    @Autowired
+    private com.family.family.service.WechatWorkAsyncService wechatWorkAsyncService;
+
     /**
      * 获取企业微信配置状态
      */
@@ -107,9 +110,7 @@ public class SystemConfigController {
             return Result.error("企业微信未配置");
         }
         
-        new Thread(() -> {
-            wechatWorkService.syncExternalUsers();
-        }).start();
+        wechatWorkAsyncService.syncExternalUsersAsync();
         
         return Result.success("同步任务已启动");
     }
