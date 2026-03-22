@@ -61,15 +61,13 @@ public class CheckInHandler implements SceneReminderHandler {
                 return false;
             }
 
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+            String reminderTime = (String) config.getOrDefault("reminderTime", "08:00");
 
-            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
+            boolean alreadyReminded = sceneCacheService.hasRemindedForScheduledTimeToday(reminder.getId(), reminderTime, 30);
             if (Boolean.TRUE.equals(alreadyReminded)) {
-                log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
+                log.debug("今日已在该时段提醒过，跳过: {}", reminder.getReminderName());
                 return false;
             }
-
-            String reminderTime = (String) config.getOrDefault("reminderTime", "08:00");
 
             // 检查当前时间
             LocalDateTime now = LocalDateTime.now();

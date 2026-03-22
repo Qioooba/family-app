@@ -85,13 +85,9 @@ public class AnniversaryHandler implements SceneReminderHandler {
                 return false;
             }
 
-            // 检查今日是否已提醒
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:anniversary:%d:%s", reminder.getId(), today);
-
-            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
+            boolean alreadyReminded = sceneCacheService.hasRemindedForScheduledTimeToday(reminder.getId(), reminderTime, 5);
             if (Boolean.TRUE.equals(alreadyReminded)) {
-                log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
+                log.debug("今日已在该时段提醒过，跳过: {}", reminder.getReminderName());
                 return false;
             }
             int advanceDays = ((Number) config.getOrDefault("advanceDays", 3)).intValue();

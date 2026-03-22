@@ -340,7 +340,7 @@ const goLogin = () => {
 const showAbout = () => {
   uni.showModal({
     title: '家庭小程序',
-    content: '版本: 1.0.0\n\n这是一个家庭内部使用的小程序\n仅供家庭成员使用',
+    content: '版本: 1.3.18\n\n这是一个家庭内部使用的小程序\n仅供家庭成员使用',
     showCancel: false,
     confirmText: '知道了',
     confirmColor: '#333333'

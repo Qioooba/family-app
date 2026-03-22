@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 场景缓存服务 - 替代 Redis 实现数据库存储
@@ -92,6 +93,25 @@ public class SceneCacheService {
      */
     public boolean hasRemindedToday(Long reminderId) {
         return sceneReminderLogMapper.checkTodayReminded(reminderId, LocalDate.now()) > 0;
+    }
+
+    /**
+     * 检查今天是否已在当前计划时段提醒过。
+     * 适用于固定时间类场景，避免“当天改时间后仍被旧日志锁死”。
+     */
+    public boolean hasRemindedForScheduledTimeToday(Long reminderId, String scheduledTime, int toleranceMinutes) {
+        LocalDateTime lastTime = getLastNotificationTime(reminderId);
+        if (lastTime == null || !LocalDate.now().equals(lastTime.toLocalDate())) {
+            return false;
+        }
+        try {
+            LocalTime scheduled = LocalTime.parse(scheduledTime);
+            LocalTime lowerBound = scheduled.minusMinutes(toleranceMinutes);
+            return !lastTime.toLocalTime().isBefore(lowerBound);
+        } catch (Exception e) {
+            log.warn("解析计划提醒时间失败: reminderId={}, scheduledTime={}", reminderId, scheduledTime, e);
+            return hasRemindedToday(reminderId);
+        }
     }
 
     /**

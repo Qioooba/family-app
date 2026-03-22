@@ -100,19 +100,15 @@ public class MorningHandler implements SceneReminderHandler {
     @Override
     public boolean shouldTrigger(Reminder reminder) {
         try {
-            // 检查今日是否已提醒
-            String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:morning:%d:%s", reminder.getId(), today);
-
-            boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
-            if (Boolean.TRUE.equals(alreadyReminded)) {
-                log.debug("今日已提醒过，跳过: {}", reminder.getReminderName());
-                return false;
-            }
-
             // 获取配置的提醒时间
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
             String reminderTime = (String) config.getOrDefault("reminderTime", "07:00");
+
+            boolean alreadyReminded = sceneCacheService.hasRemindedForScheduledTimeToday(reminder.getId(), reminderTime, 5);
+            if (Boolean.TRUE.equals(alreadyReminded)) {
+                log.debug("今日已在该时段提醒过，跳过: {}", reminder.getReminderName());
+                return false;
+            }
             // 检查当前时间是否到达提醒时间
             LocalDateTime now = LocalDateTime.now();
             String currentTime = String.format("%02d:%02d", now.getHour(), now.getMinute());

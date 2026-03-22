@@ -3,7 +3,7 @@
 家庭内部使用的智能家庭管理平台
 
 ![Status](https://img.shields.io/badge/状态-开发中-blue)
-![Version](https://img.shields.io/badge/版本-1.0.0-blue)
+![Version](https://img.shields.io/badge/版本-1.3.18-blue)
 ![License](https://img.shields.io/badge/协议-MIT-yellow)
 
 ## 📱 功能模块

@@ -199,17 +199,41 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const currentVersion = ref('1.2.0')
-const currentDate = ref('2026-03-18')
-const buildNumber = ref('20260318.1')
+const currentVersion = ref('1.3.18')
+const currentDate = ref('2026-03-22')
+const buildNumber = ref('20260322.1')
 const updateStatus = ref('已是最新版本')
 const isChecking = ref(false)
 const showUpdateModal = ref(false)
 const newVersion = ref('')
-const expandedVersion = ref('v1.2.0')
+const expandedVersion = ref('v1.3.18')
 
 // 版本数据
 const versions = ref([
+  {
+    version: 'v1.3.18',
+    date: '2026-03-22',
+    type: 'major',
+    slogan: '提醒调度收口，定位展示稳定',
+    features: [
+      '新增每日早安增强版内容 - 组合天气、每日心语与简讯摘要',
+      '智能场景提醒与普通提醒彻底分层 - 提醒管理和首页不再混入场景提醒',
+      '天气位置展示升级 - 首页天气卡片与天气页支持更细粒度位置名称展示',
+      '体验版构建链路修复 - 构建时自动读取项目根目录环境变量并注入腾讯地图Key'
+    ],
+    optimizations: [
+      '喝水提醒改为直接读取喝水页真实进度与目标值，避免双份配置',
+      '下雨、温度、空气质量、紫外线场景统一补齐时间段与更合理的交互参数',
+      '温度提醒阈值输入框样式优化，首页天气和喝水卡片标题区重新对齐',
+      '固定时间类场景提醒改时间后，当天仍可在新时段正常触发'
+    ],
+    fixes: [
+      '修复智能场景提醒重复推送和普通提醒双重执行问题',
+      '修复喝水、护眼、久坐提醒按分钟刷屏问题',
+      '修复空气质量坐标解析、下雨提醒窗口判断、天气场景南京坐标兜底',
+      '修复体验版偶发请求地址回退 localhost 和腾讯地图Key丢失问题'
+    ]
+  },
   {
     version: 'v1.2.0',
     date: '2026-03-18',
@@ -395,7 +419,7 @@ const checkForUpdate = () => {
       isChecking.value = false
       if (res.hasUpdate) {
         updateStatus.value = '发现新版本'
-        newVersion.value = 'v1.0.4' // 模拟新版本
+        newVersion.value = 'v1.3.18'
         showUpdateModal.value = true
       } else {
         updateStatus.value = '已是最新版本'
