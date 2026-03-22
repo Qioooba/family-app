@@ -93,9 +93,29 @@ export const getLocationByTencentMap = (latitude, longitude) => {
           const address = result.address_component || {}
           const pois = result.pois || []
           const poi = pois[0] || {} // 最近的POI（小区、大厦等）
-          
-          // 优先使用POI名称（小区/大厦），其次是街道
-          const locationName = poi.title || address.street || address.district || ''
+          const streetName = [address.street || '', address.street_number || '']
+            .filter(Boolean)
+            .join('')
+          const detailName = poi.title || streetName || address.district || address.city || '当前位置'
+          const shortDistrict = (address.district || '').replace(/(区|县|市辖区)$/g, '')
+          const shortDetail = detailName
+            .replace(/^中国/, '')
+            .replace(address.province || '', '')
+            .replace(address.city || '', '')
+            .replace(address.district || '', '')
+            .trim()
+          const shortName = [shortDistrict, shortDetail]
+            .filter(Boolean)
+            .filter((item, index, arr) => arr.indexOf(item) === index)
+            .join('·') || detailName
+          const fullDisplayName = [
+            address.city || address.province || '',
+            address.district || '',
+            shortDetail || detailName
+          ]
+            .filter(Boolean)
+            .filter((item, index, arr) => arr.indexOf(item) === index)
+            .join(' ')
           
           resolve({
             province: address.province || '',
@@ -107,11 +127,11 @@ export const getLocationByTencentMap = (latitude, longitude) => {
             poiName: poi.title || '',
             poiCategory: poi.category || '',
             // 用于显示的完整地址
-            fullAddress: result.address || '',
-            // 推荐显示格式：省份 + 城市 + 区县 + 街道/POI
-            displayName: `${address.province || ''}${address.city || ''}${address.district || ''}${locationName}`.replace(/^(.*?省)?(.*?市)?(.*?区)?(.*)$/, '$1$2$3$4'),
-            // 简写：区县 + 街道/POI
-            shortName: `${address.district || ''}${locationName}`
+            fullAddress: result.formatted_addresses?.recommend || result.address || fullDisplayName,
+            // 推荐显示格式：城市 + 区县 + POI/街道
+            displayName: fullDisplayName,
+            // 简写：区县 + POI/街道
+            shortName
           })
         } else {
           resolve({ 
@@ -251,6 +271,7 @@ export const getFullLocationName = (locationInfo) => {
   const city = locationInfo.city || ''
   const district = locationInfo.district || ''
   const street = locationInfo.street || ''
+  const streetNumber = locationInfo.streetNumber || ''
   const poiName = locationInfo.poiName || ''
   
   // 组合省市区+街道/POI
@@ -262,7 +283,7 @@ export const getFullLocationName = (locationInfo) => {
   if (poiName) {
     parts.push(poiName)
   } else if (street) {
-    parts.push(street)
+    parts.push(`${street}${streetNumber}`)
   }
   
   if (parts.length > 0) {

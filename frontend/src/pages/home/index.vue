@@ -96,7 +96,7 @@
           <view class="weather-row hint-row">
             <text v-if="!weatherData.isLocationAuthorized" class="location-hint">点击开启定位</text>
             <text v-else-if="weatherData.loading" class="location-hint">获取位置中...</text>
-            <text v-else class="location-hint">当前位置</text>
+            <text v-else class="location-hint">{{ weatherData.fullLocation || weatherData.locationName || '当前位置' }}</text>
           </view>
           
           <!-- 第四行：降雨提醒 -->
@@ -541,7 +541,7 @@ import { familyApi } from '../../api/family'
 import { anniversaryApi } from '../../api/anniversary'
 import { weatherApi } from '../../api/weather'
 import { waterApi } from '../../api/water'
-import { getCurrentLocationWithAddress, getWeatherByCode, getShortLocationName } from '../../utils/weather'
+import { getCurrentLocationWithAddress, getWeatherByCode, getShortLocationName, getFullLocationName } from '../../utils/weather'
 import { formatDateTime } from '../../utils/dateHelper'
 import { checkAutoLogin, doAutoLogin } from '../../utils/autoLogin'
 import { getAvatarUrl, request } from '../../utils/request'
@@ -1420,7 +1420,8 @@ const loadWeatherData = async () => {
     
     // 获取简短位置名称
     const shortLocationName = getShortLocationName(location.locationInfo)
-    weatherData.value.fullLocation = location.locationInfo?.fullAddress || shortLocationName
+    const fullLocationName = getFullLocationName(location.locationInfo)
+    weatherData.value.fullLocation = fullLocationName || location.locationInfo?.fullAddress || shortLocationName
     weatherData.value.locationName = shortLocationName
     
     // 调用 Open-Meteo API 获取天气和逐小时预报
@@ -1464,7 +1465,7 @@ const loadWeatherData = async () => {
       
       weatherData.value = {
         locationName: shortLocationName,
-        fullLocation: location.locationInfo?.fullAddress || shortLocationName,
+        fullLocation: fullLocationName || location.locationInfo?.fullAddress || shortLocationName,
         temperature: Math.round(current.temperature),
         description: weatherInfo.desc,
         icon: weatherInfo.icon,
@@ -2170,6 +2171,12 @@ const getAnniversaryIcon = (type) => {
         .location-hint {
           font-size: 22rpx;
           color: #8b9aad;
+          line-height: 1.4;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          word-break: break-all;
         }
       }
       

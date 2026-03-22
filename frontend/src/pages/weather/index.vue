@@ -384,11 +384,19 @@ $border-radius-xl: 48rpx;
   .location-info {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-width: 0;
     
     .location-name {
       font-size: 36rpx;
       font-weight: 700;
       color: $text-primary;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-all;
       
       &.no-permission {
         color: $primary-blue;

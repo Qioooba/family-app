@@ -1016,11 +1016,15 @@ onShow(() => {
 .threshold-input {
   border: 1rpx solid #ddd;
   border-radius: 8rpx;
-  padding: 16rpx 20rpx;
-  font-size: 28rpx;
+  padding: 0 24rpx;
+  font-size: 34rpx;
   background: #fff;
   width: 200rpx;
   text-align: center;
+  min-height: 88rpx;
+  line-height: 88rpx;
+  box-sizing: border-box;
+  font-weight: 600;
 }
 
 .threshold-grid {
@@ -1075,10 +1079,11 @@ onShow(() => {
   display: flex;
   align-items: center;
   gap: 16rpx;
+  min-height: 88rpx;
 }
 
 .threshold-suffix {
-  font-size: 26rpx;
+  font-size: 30rpx;
   color: #475569;
   font-weight: 600;
   flex-shrink: 0;

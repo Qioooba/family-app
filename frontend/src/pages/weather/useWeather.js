@@ -94,7 +94,7 @@ const loadWeatherData = async () => {
 const updateLocationDisplay = () => {
   if (currentLocationInfo) {
     fullLocation.value = getFullLocationName(currentLocationInfo)
-    currentCity.value = currentLocationInfo.city || currentLocationInfo.district || '定位中...'
+    currentCity.value = getShortLocationName(currentLocationInfo)
     currentDistrict.value = currentLocationInfo.district || ''
   }
 }
