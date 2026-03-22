@@ -2,9 +2,12 @@ package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.family.family.dto.request.WaterRecordCreateRequest;
+import com.family.family.dto.request.WaterTargetRequest;
 import com.family.family.entity.WaterRecord;
 import com.family.family.service.StatsService;
 import com.family.family.service.WaterRecordService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -30,7 +33,7 @@ public class HealthController {
     // ========== 饮水记录 ==========
     
     @GetMapping("/water/today")
-    public Map<String, Object> getTodayWater(@RequestParam Long userId) {
+    public Map<String, Object> getTodayWater(@RequestParam(required = false) Long userId) {
         Map<String, Object> result = new HashMap<>();
         Long currentUserId = StpUtil.getLoginIdAsLong();
         
@@ -50,7 +53,7 @@ public class HealthController {
     }
     
     @GetMapping("/water/target")
-    public Map<String, Object> getWaterTarget(@RequestParam Long userId) {
+    public Map<String, Object> getWaterTarget(@RequestParam(required = false) Long userId) {
         Map<String, Object> result = new HashMap<>();
         Long currentUserId = StpUtil.getLoginIdAsLong();
         result.put("code", 200);
@@ -67,12 +70,12 @@ public class HealthController {
     }
     
     @PostMapping("/water/target")
-    public Map<String, Object> setWaterTarget(@RequestBody Map<String, Object> data) {
+    public Map<String, Object> setWaterTarget(@Valid @RequestBody WaterTargetRequest request) {
         Map<String, Object> result = new HashMap<>();
         
         try {
             Long userId = StpUtil.getLoginIdAsLong();
-            Integer targetAmount = Integer.valueOf(data.get("targetAmount").toString());
+            Integer targetAmount = request.getTargetAmount();
             
             // 保存到数据库
             Integer savedTarget = waterRecordService.saveUserWaterTarget(userId, targetAmount);
@@ -87,20 +90,20 @@ public class HealthController {
         } catch (Exception e) {
             result.put("code", 500);
             result.put("message", "保存喝水目标失败: " + e.getMessage());
-            result.put("data", data);
+            result.put("data", Map.of("targetAmount", request.getTargetAmount()));
         }
         
         return result;
     }
     
     @PostMapping("/water/record")
-    public Map<String, Object> addWaterRecord(@RequestBody Map<String, Object> data) {
+    public Map<String, Object> addWaterRecord(@Valid @RequestBody WaterRecordCreateRequest request) {
         Map<String, Object> result = new HashMap<>();
         
         try {
             // 从 token 获取当前用户ID
             Long userId = StpUtil.getLoginIdAsLong();
-            Integer amount = Integer.valueOf(data.get("amount").toString());
+            Integer amount = request.getAmount();
             
             WaterRecord record = waterRecordService.addRecord(userId, amount);
             
@@ -147,7 +150,7 @@ public class HealthController {
     }
     
     @GetMapping("/water/history")
-    public Map<String, Object> getWaterHistory(@RequestParam Long userId, @RequestParam String date) {
+    public Map<String, Object> getWaterHistory(@RequestParam(required = false) Long userId, @RequestParam String date) {
         Map<String, Object> result = new HashMap<>();
         Long currentUserId = StpUtil.getLoginIdAsLong();
         
@@ -176,7 +179,7 @@ public class HealthController {
      * @return 当日饮食统计数据
      */
     @GetMapping("/diet/statistics")
-    public Map<String, Object> getDietStatistics(@RequestParam Long userId, @RequestParam String date) {
+    public Map<String, Object> getDietStatistics(@RequestParam(required = false) Long userId, @RequestParam String date) {
         Map<String, Object> result = new HashMap<>();
         Long currentUserId = StpUtil.getLoginIdAsLong();
         

@@ -1,11 +1,19 @@
 package com.family.family.util;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.family.common.config.AppProperties;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,9 +29,13 @@ public class TempTokenUtil {
     @Autowired
     private AppProperties appProperties;
 
+    @Value("${sa-token.jwt-secret-key:change-me-in-production}")
+    private String jwtSecretKey;
+
     private static final Map<String, TokenEntry> TOKEN_STORE = new ConcurrentHashMap<>();
 
     private static final long TOKEN_EXPIRE_MILLIS = 3L * 24 * 60 * 60 * 1000; // Token有效期3天
+    private static final String TOKEN_TYPE = "temp-login";
 
     private static class TokenEntry {
         final Long userId;
@@ -45,13 +57,15 @@ public class TempTokenUtil {
      * @return 临时Token
      */
     public String generateTempToken(Long userId) {
-        String tempToken = UUID.randomUUID().toString().replace("-", "");
-        long expireTime = System.currentTimeMillis() + TOKEN_EXPIRE_MILLIS;
-
-        // 存储到内存
-        TOKEN_STORE.put(tempToken, new TokenEntry(userId, expireTime));
-
-        log.info("生成临时Token: userId={}, tempToken={}", userId, tempToken);
+        long now = System.currentTimeMillis();
+        String tempToken = Jwts.builder()
+            .claim("uid", userId)
+            .claim("typ", TOKEN_TYPE)
+            .setIssuedAt(new java.util.Date(now))
+            .setExpiration(new java.util.Date(now + TOKEN_EXPIRE_MILLIS))
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .compact();
+        log.info("生成临时Token: userId={}", userId);
         return tempToken;
     }
 
@@ -61,21 +75,34 @@ public class TempTokenUtil {
      * @return 用户ID，验证失败返回null
      */
     public Long validateTempToken(String tempToken) {
-        TokenEntry entry = TOKEN_STORE.get(tempToken);
-
-        if (entry == null || entry.isExpired()) {
-            if (entry != null) {
-                TOKEN_STORE.remove(tempToken); // 清理过期Token
+        try {
+            Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(tempToken)
+                .getBody();
+            if (!TOKEN_TYPE.equals(claims.get("typ", String.class))) {
+                log.warn("临时Token类型非法");
+                return null;
             }
-            log.warn("临时Token无效或已过期: {}", tempToken);
+            Long userId = claims.get("uid", Long.class);
+            log.info("临时Token验证成功: userId={}", userId);
+            return userId;
+        } catch (JwtException | IllegalArgumentException e) {
+            TokenEntry entry = TOKEN_STORE.get(tempToken);
+            if (entry == null || entry.isExpired()) {
+                if (entry != null) {
+                    TOKEN_STORE.remove(tempToken);
+                }
+                log.warn("临时Token无效或已过期");
+                return null;
+            }
+            log.info("兼容旧版临时Token验证成功: userId={}", entry.userId);
+            return entry.userId;
+        } catch (Exception e) {
+            log.warn("临时Token验证失败", e);
             return null;
         }
-
-        // 验证成功后删除Token（一次性使用）
-        TOKEN_STORE.remove(tempToken);
-
-        log.info("临时Token验证成功: userId={}", entry.userId);
-        return entry.userId;
     }
 
     /**
@@ -86,5 +113,15 @@ public class TempTokenUtil {
     public String getAutoLoginUrl(Long userId) {
         String tempToken = generateTempToken(userId);
         return String.format("%s/auto-login.html?token=%s", appProperties.getBaseUrl(), tempToken);
+    }
+
+    private SecretKey getSigningKey() {
+        try {
+            byte[] raw = MessageDigest.getInstance("SHA-256")
+                .digest(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
+            return Keys.hmacShaKeyFor(raw);
+        } catch (Exception e) {
+            throw new IllegalStateException("无法初始化临时Token签名密钥", e);
+        }
     }
 }

@@ -4,8 +4,11 @@ import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotPermissionException;
 import cn.dev33.satoken.exception.NotRoleException;
 import com.family.common.core.Result;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -61,5 +64,31 @@ public class GlobalExceptionHandler {
     public Result<Void> handleSecurityException(SecurityException e) {
         log.warn("权限不足: {}", e.getMessage());
         return Result.error(403, "无权操作");
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Result<Void> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+            .findFirst()
+            .map(error -> error.getDefaultMessage() == null ? "参数错误" : error.getDefaultMessage())
+            .orElse("参数错误");
+        log.warn("参数校验失败: {}", message);
+        return Result.error(400, message);
+    }
+
+    @ExceptionHandler(BindException.class)
+    public Result<Void> handleBindException(BindException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+            .findFirst()
+            .map(error -> error.getDefaultMessage() == null ? "参数错误" : error.getDefaultMessage())
+            .orElse("参数错误");
+        log.warn("请求绑定失败: {}", message);
+        return Result.error(400, message);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Result<Void> handleConstraintViolationException(ConstraintViolationException e) {
+        log.warn("约束校验失败: {}", e.getMessage());
+        return Result.error(400, e.getMessage());
     }
 }

@@ -2,15 +2,25 @@ package com.family.family.controller;
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 
+import com.family.family.dto.request.WishCreateRequest;
+import com.family.family.dto.request.WishProgressUpdateRequest;
+import com.family.family.dto.request.WishUpdateRequest;
 import com.family.family.entity.User;
 import com.family.family.entity.Wish;
 import com.family.family.mapper.UserMapper;
 import com.family.family.mapper.WishMapper;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 心愿控制器
@@ -19,6 +29,8 @@ import java.util.*;
 @RequestMapping("/api/wish")
 @SaCheckLogin
 public class WishController {
+
+    private static final Logger log = LoggerFactory.getLogger(WishController.class);
 
     @Autowired
     private WishMapper wishMapper;
@@ -69,6 +81,7 @@ public class WishController {
             wrapper.orderByDesc(Wish::getCreateTime);
             
             List<Wish> allWishes = wishMapper.selectList(wrapper);
+            Map<Long, User> userMap = loadUsers(allWishes);
             
             List<Map<String, Object>> wishList = new ArrayList<>();
             for (Wish wish : allWishes) {
@@ -76,7 +89,7 @@ public class WishController {
                 
                 // 获取创建者信息
                 if (wish.getUserId() != null) {
-                    User creator = userMapper.selectById(wish.getUserId());
+                    User creator = userMap.get(wish.getUserId());
                     if (creator != null) {
                         wishMap.put("creatorName", creator.getNickname());
                         wishMap.put("creatorAvatar", creator.getAvatar());
@@ -85,7 +98,7 @@ public class WishController {
                 
                 // 获取认领人信息
                 if (wish.getClaimantId() != null) {
-                    User claimant = userMapper.selectById(wish.getClaimantId());
+                    User claimant = userMap.get(wish.getClaimantId());
                     if (claimant != null) {
                         wishMap.put("claimantName", claimant.getNickname());
                     }
@@ -98,7 +111,7 @@ public class WishController {
             result.put("message", "success");
             result.put("data", wishList);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("查询心愿列表失败: familyId={}, status={}", familyId, status, e);
             result.put("code", 500);
             result.put("message", "查询失败：" + e.getMessage());
         }
@@ -109,36 +122,26 @@ public class WishController {
      * 创建心愿
      */
     @PostMapping("/create")
-    public Map<String, Object> create(@RequestBody Map<String, Object> data) {
+    public Map<String, Object> create(@Valid @RequestBody WishCreateRequest request) {
         Map<String, Object> result = new HashMap<>();
         Long currentUserId = getCurrentUserId();
         
         try {
             Wish wish = new Wish();
-            wish.setFamilyId(Long.parseLong(data.get("familyId").toString()));
+            validateBudgetRange(request.getBudgetMin(), request.getBudgetMax());
+
+            wish.setFamilyId(request.getFamilyId());
             wish.setUserId(currentUserId);
-            wish.setTitle((String) data.get("title"));
-            wish.setDescription((String) data.get("description"));
-            wish.setType((String) data.get("type"));
-            wish.setVisibility((String) data.getOrDefault("visibility", "couple"));
-            
-            if (data.get("budgetMin") != null) {
-                wish.setBudgetMin(new java.math.BigDecimal(data.get("budgetMin").toString()));
-            }
-            if (data.get("budgetMax") != null) {
-                wish.setBudgetMax(new java.math.BigDecimal(data.get("budgetMax").toString()));
-            }
-            
-            if (data.get("expectDate") != null) {
-                wish.setExpectDate(java.time.LocalDate.parse(data.get("expectDate").toString()));
-            }
-            
-            if (data.get("images") != null) {
-                wish.setImages((String) data.get("images"));
-            }
-            
-            wish.setPriority(data.get("priority") != null ? Integer.parseInt(data.get("priority").toString()) : 0);
-            wish.setDifficulty(data.get("difficulty") != null ? Integer.parseInt(data.get("difficulty").toString()) : 1);
+            wish.setTitle(request.getTitle().trim());
+            wish.setDescription(request.getDescription());
+            wish.setType(request.getType());
+            wish.setVisibility(request.getVisibility() == null || request.getVisibility().isBlank() ? "couple" : request.getVisibility());
+            wish.setBudgetMin(request.getBudgetMin());
+            wish.setBudgetMax(request.getBudgetMax());
+            wish.setExpectDate(parseDate(request.getExpectDate()));
+            wish.setImages(request.getImages());
+            wish.setPriority(request.getPriority() == null ? 0 : request.getPriority());
+            wish.setDifficulty(request.getDifficulty() == null ? 1 : request.getDifficulty());
             wish.setStatus(0);
             wish.setProgress(0);
             wish.setCreateTime(LocalDateTime.now());
@@ -150,7 +153,7 @@ public class WishController {
             result.put("message", "success");
             result.put("data", convertToMap(wish));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("创建心愿失败: currentUserId={}", currentUserId, e);
             result.put("code", 500);
             result.put("message", "创建失败：" + e.getMessage());
         }
@@ -161,11 +164,11 @@ public class WishController {
      * 更新心愿
      */
     @PutMapping("/update")
-    public Map<String, Object> update(@RequestBody Map<String, Object> data) {
+    public Map<String, Object> update(@Valid @RequestBody WishUpdateRequest request) {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            Long id = Long.parseLong(data.get("id").toString());
+            Long id = request.getId();
             Wish wish = wishMapper.selectById(id);
             
             if (wish == null) {
@@ -179,33 +182,35 @@ public class WishController {
                 result.put("message", "无权限修改该心愿");
                 return result;
             }
+
+            validateBudgetRange(request.getBudgetMin(), request.getBudgetMax());
             
-            if (data.get("title") != null) {
-                wish.setTitle((String) data.get("title"));
+            if (request.getTitle() != null) {
+                wish.setTitle(request.getTitle().trim());
             }
-            if (data.get("description") != null) {
-                wish.setDescription((String) data.get("description"));
+            if (request.getDescription() != null) {
+                wish.setDescription(request.getDescription());
             }
-            if (data.get("type") != null) {
-                wish.setType((String) data.get("type"));
+            if (request.getType() != null) {
+                wish.setType(request.getType());
             }
-            if (data.get("visibility") != null) {
-                wish.setVisibility((String) data.get("visibility"));
+            if (request.getVisibility() != null) {
+                wish.setVisibility(request.getVisibility());
             }
-            if (data.get("budgetMin") != null) {
-                wish.setBudgetMin(new java.math.BigDecimal(data.get("budgetMin").toString()));
+            if (request.getBudgetMin() != null) {
+                wish.setBudgetMin(request.getBudgetMin());
             }
-            if (data.get("budgetMax") != null) {
-                wish.setBudgetMax(new java.math.BigDecimal(data.get("budgetMax").toString()));
+            if (request.getBudgetMax() != null) {
+                wish.setBudgetMax(request.getBudgetMax());
             }
-            if (data.get("expectDate") != null) {
-                wish.setExpectDate(java.time.LocalDate.parse(data.get("expectDate").toString()));
+            if (request.getExpectDate() != null) {
+                wish.setExpectDate(parseDate(request.getExpectDate()));
             }
-            if (data.get("images") != null) {
-                wish.setImages((String) data.get("images"));
+            if (request.getImages() != null) {
+                wish.setImages(request.getImages());
             }
-            if (data.get("priority") != null) {
-                wish.setPriority(Integer.parseInt(data.get("priority").toString()));
+            if (request.getPriority() != null) {
+                wish.setPriority(request.getPriority());
             }
             
             wish.setUpdateTime(LocalDateTime.now());
@@ -215,7 +220,7 @@ public class WishController {
             result.put("message", "success");
             result.put("data", convertToMap(wish));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("更新心愿失败", e);
             result.put("code", 500);
             result.put("message", "更新失败：" + e.getMessage());
         }
@@ -247,7 +252,7 @@ public class WishController {
             result.put("code", 200);
             result.put("message", "success");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("删除心愿失败: id={}", id, e);
             result.put("code", 500);
             result.put("message", "删除失败：" + e.getMessage());
         }
@@ -286,7 +291,7 @@ public class WishController {
             result.put("message", "success");
             result.put("data", convertToMap(wish));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("认领心愿失败: wishId={}, currentUserId={}", wishId, currentUserId, e);
             result.put("code", 500);
             result.put("message", "认领失败：" + e.getMessage());
         }
@@ -297,7 +302,8 @@ public class WishController {
      * 更新进度
      */
     @PostMapping("/progress/{wishId}")
-    public Map<String, Object> updateProgress(@PathVariable Long wishId, @RequestBody Map<String, Object> data) {
+    public Map<String, Object> updateProgress(@PathVariable Long wishId,
+                                              @Valid @RequestBody WishProgressUpdateRequest request) {
         Map<String, Object> result = new HashMap<>();
         
         try {
@@ -316,9 +322,7 @@ public class WishController {
                 return result;
             }
 
-            if (data.get("progress") != null) {
-                wish.setProgress(Integer.parseInt(data.get("progress").toString()));
-            }
+            wish.setProgress(request.getProgress());
             
             wish.setUpdateTime(LocalDateTime.now());
             wishMapper.updateById(wish);
@@ -327,7 +331,7 @@ public class WishController {
             result.put("message", "success");
             result.put("data", convertToMap(wish));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("更新心愿进度失败: wishId={}", wishId, e);
             result.put("code", 500);
             result.put("message", "更新失败：" + e.getMessage());
         }
@@ -367,11 +371,36 @@ public class WishController {
             result.put("message", "success");
             result.put("data", convertToMap(wish));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("完成心愿失败: wishId={}", wishId, e);
             result.put("code", 500);
             result.put("message", "操作失败：" + e.getMessage());
         }
         return result;
+    }
+
+    private Map<Long, User> loadUsers(List<Wish> wishes) {
+        Set<Long> userIds = wishes.stream()
+            .flatMap(wish -> Arrays.stream(new Long[]{wish.getUserId(), wish.getClaimantId()}))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+        if (userIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return userMapper.selectBatchIds(userIds).stream()
+            .collect(Collectors.toMap(User::getId, Function.identity()));
+    }
+
+    private void validateBudgetRange(BigDecimal budgetMin, BigDecimal budgetMax) {
+        if (budgetMin != null && budgetMax != null && budgetMin.compareTo(budgetMax) > 0) {
+            throw new IllegalArgumentException("最低预算不能大于最高预算");
+        }
+    }
+
+    private LocalDate parseDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return LocalDate.parse(value);
     }
 
     /**
