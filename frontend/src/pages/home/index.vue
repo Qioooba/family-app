@@ -83,7 +83,7 @@
             <view class="weather-icon-wrapper" :style="{ background: weatherData.iconBg }">
               <text class="weather-icon">{{ weatherData.icon }}</text>
             </view>
-            <text class="location-name" :class="{ 'location-name-long': weatherData.locationName && weatherData.locationName.length > 8 }">{{ weatherData.locationName }}</text>
+            <text class="location-name" :class="{ 'location-name-long': (weatherData.locationName || '').length > 8 }">{{ weatherData.locationName }}</text>
           </view>
           
           <!-- 第二行：温度 + 天气描述 -->
@@ -1422,7 +1422,7 @@ const loadWeatherData = async () => {
     const shortLocationName = getShortLocationName(location.locationInfo)
     const fullLocationName = getFullLocationName(location.locationInfo)
     weatherData.value.fullLocation = fullLocationName || location.locationInfo?.fullAddress || shortLocationName
-    weatherData.value.locationName = shortLocationName
+    weatherData.value.locationName = fullLocationName || shortLocationName
     
     // 调用 Open-Meteo API 获取天气和逐小时预报
     let weatherJson = null
@@ -1464,7 +1464,7 @@ const loadWeatherData = async () => {
       const weatherInfo = getWeatherByCode(current.weathercode)
       
       weatherData.value = {
-        locationName: shortLocationName,
+        locationName: fullLocationName || shortLocationName,
         fullLocation: fullLocationName || location.locationInfo?.fullAddress || shortLocationName,
         temperature: Math.round(current.temperature),
         description: weatherInfo.desc,
