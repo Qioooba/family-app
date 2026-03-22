@@ -140,9 +140,10 @@ family-app/
 │   └── releases/                 # 版本更新记录
 ├── ops/                          # systemd 与部署环境模板
 ├── scripts/                      # 部署与运营脚本
-├── tencent-cloud-function/       # Node 版云函数
-├── tencent-scf/                  # Python 版云函数
-├── wecom-vercel-api/             # 企业微信回调子项目
+├── integrations/                 # 第三方平台集成与独立部署单元
+│   ├── tencent-cloud-function/   # Node 版腾讯云函数
+│   ├── tencent-scf/              # Python 版腾讯云函数
+│   └── wecom-vercel-api/         # 企业微信回调子项目
 ├── README.md                     # 主说明
 ├── CONTRIBUTING.md               # 贡献指南
 └── .github/                      # Issue / PR / Security 模板
