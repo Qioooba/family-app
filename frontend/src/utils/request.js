@@ -7,6 +7,7 @@ import { cacheManager } from './cache.js'
 
 const trimTrailingSlash = (value) => value ? value.replace(/\/+$/, '') : ''
 const injectedApiBaseUrl = typeof __APP_API_BASE_URL__ !== 'undefined' ? __APP_API_BASE_URL__ : ''
+const REQUEST_DEBUG_BUILD = '1.3.14'
 
 // 后端地址配置 - 优先使用构建环境变量
 export const getBackendUrl = () => {
@@ -36,13 +37,18 @@ const CONFIG = {
 
 const logRequestDebug = (...args) => {
   // #ifdef MP-WEIXIN
-  console.log('[RequestDebug]', ...args)
+  console.log(`[RequestDebug][${REQUEST_DEBUG_BUILD}]`, ...args)
   // #endif
 
   // #ifndef MP-WEIXIN
-  console.log('[RequestDebug]', ...args)
+  console.log(`[RequestDebug][${REQUEST_DEBUG_BUILD}]`, ...args)
   // #endif
 }
+
+logRequestDebug('request:config', {
+  build: REQUEST_DEBUG_BUILD,
+  baseUrl: CONFIG.BASE_URL
+})
 
 // 处理头像URL - 将相对路径转为完整URL
 export const getAvatarUrl = (avatar) => {
