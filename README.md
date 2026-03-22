@@ -182,6 +182,9 @@ family-app/
 - [Docker部署指南](./docker/DEPLOY.md)
 - [PROJECT.md](./PROJECT.md) - 项目详细说明
 - [FUNCTIONS.md](./FUNCTIONS.md) - 功能清单
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - 贡献指南
+- [.github/PULL_REQUEST_TEMPLATE.md](./.github/PULL_REQUEST_TEMPLATE.md) - PR 模板
+- [.github/SECURITY.md](./.github/SECURITY.md) - 安全说明
 
 ## 🤝 贡献指南
 
