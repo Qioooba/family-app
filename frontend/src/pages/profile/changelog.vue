@@ -199,17 +199,44 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const currentVersion = ref('1.3.18')
+const currentVersion = ref('1.3.20')
 const currentDate = ref('2026-03-22')
-const buildNumber = ref('20260322.1')
+const buildNumber = ref('20260322.2')
 const updateStatus = ref('已是最新版本')
 const isChecking = ref(false)
 const showUpdateModal = ref(false)
 const newVersion = ref('')
-const expandedVersion = ref('v1.3.18')
+const expandedVersion = ref('v1.3.20')
 
 // 版本数据
 const versions = ref([
+  {
+    version: 'v1.3.20',
+    date: '2026-03-22',
+    type: 'major',
+    slogan: '全链路提醒升级，体验版发布收口',
+    features: [
+      '智能提醒系统完成一次完整收口 - 从创建、编辑、调度、推送到首页展示全部统一口径',
+      '每日早安提醒升级为内容型提醒 - 自动整合天气、每日心语与简讯摘要，早晨信息更丰富',
+      '智能场景与普通提醒彻底分层 - 场景提醒只在智能场景页维护，普通提醒管理页聚焦固定模板提醒',
+      '天气位置展示能力升级 - 首页天气卡片与天气详情页支持更细粒度的位置名称展示',
+      '体验版构建链路增强 - 构建时自动注入接口地址、腾讯地图 Key、微信 AppID 与构建版本号'
+    ],
+    optimizations: [
+      '喝水提醒改为直接读取喝水记录页真实进度与目标值，首页、提醒内容、喝水页三处数据口径统一',
+      '下雨、温度、空气质量、紫外线提醒统一补齐监测时间段和更符合日常习惯的交互参数',
+      '温度提醒输入区域样式重做，高温和低温阈值在小程序端输入与展示更稳定',
+      '首页信息布局重新整理，天气、喝水、待办、提醒卡片的视觉节奏更统一',
+      '固定时间类提醒支持同日改时后再次生效，不再被当天旧日志锁死'
+    ],
+    fixes: [
+      '修复智能场景提醒与普通提醒双重执行导致的重复推送问题',
+      '修复喝水、护眼、久坐提醒按分钟刷屏的问题，统一按真实冷却间隔执行',
+      '修复空气质量坐标解析、下雨提醒未来窗口判断、天气场景城市坐标兜底等稳定性问题',
+      '修复体验版偶发回退 localhost、腾讯地图 Key 丢失、RequestDebug 版本号与真实包版本不一致的问题',
+      '修复固定时间场景提醒在当天修改提醒时间后不再触发的问题'
+    ]
+  },
   {
     version: 'v1.3.18',
     date: '2026-03-22',
@@ -419,7 +446,7 @@ const checkForUpdate = () => {
       isChecking.value = false
       if (res.hasUpdate) {
         updateStatus.value = '发现新版本'
-        newVersion.value = 'v1.3.18'
+        newVersion.value = 'v1.3.20'
         showUpdateModal.value = true
       } else {
         updateStatus.value = '已是最新版本'
