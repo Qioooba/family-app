@@ -131,33 +131,21 @@ bash scripts/deploy_remote_backend.sh
 
 ```
 family-app/
-├── backend/                      # 后端代码
-│   ├── family-common/            # 公共模块
-│   │   └── common-core/          # 核心工具类
-│   ├── family-service/           # 业务服务模块
-│   │   └── src/main/java/com/family/
-│   │       ├── family/           # 家庭模块
-│   │       ├── user/             # 用户模块
-│   │       ├── task/             # 任务模块
-│   │       ├── calendar/         # 日历/纪念日模块
-│   │       └── weather/          # 天气模块
-│   └── pom.xml
-├── frontend/                     # 前端代码
-│   ├── src/
-│   │   ├── pages/                # 页面目录
-│   │   │   ├── task/             # 任务相关页面
-│   │   │   ├── family/           # 家庭相关页面
-│   │   │   ├── anniversary/      # 纪念日页面
-│   │   │   ├── weather/          # 天气页面
-│   │   │   └── ...               # 其他模块
-│   │   ├── components/           # 公共组件
-│   │   └── utils/                # 工具函数
-│   └── package.json
-├── docker/                       # Docker配置
-│   ├── docker-compose.yml
-│   ├── Dockerfile.backend
-│   └── Dockerfile.frontend
-└── README.md
+├── backend/                      # Spring Boot 后端
+├── frontend/                     # uni-app 小程序前端
+├── database/                     # 数据库初始化与修复脚本
+├── docs/                         # 项目文档
+│   ├── guides/                   # 使用/配置/调试指南
+│   ├── reference/                # 项目说明/功能清单
+│   └── releases/                 # 版本更新记录
+├── ops/                          # systemd 与部署环境模板
+├── scripts/                      # 部署与运营脚本
+├── tencent-cloud-function/       # Node 版云函数
+├── tencent-scf/                  # Python 版云函数
+├── wecom-vercel-api/             # 企业微信回调子项目
+├── README.md                     # 主说明
+├── CONTRIBUTING.md               # 贡献指南
+└── .github/                      # Issue / PR / Security 模板
 ```
 
 ## 🔌 API 模块列表
@@ -179,9 +167,13 @@ family-app/
 
 ## 📝 相关文档
 
-- [Docker部署指南](./docker/DEPLOY.md)
-- [PROJECT.md](./PROJECT.md) - 项目详细说明
-- [FUNCTIONS.md](./FUNCTIONS.md) - 功能清单
+- [docs/README.md](./docs/README.md) - 文档目录导航
+- [docs/reference/PROJECT.md](./docs/reference/PROJECT.md) - 项目详细说明
+- [docs/reference/FUNCTIONS.md](./docs/reference/FUNCTIONS.md) - 功能清单
+- [docs/guides/QUICKSTART.md](./docs/guides/QUICKSTART.md) - 快速开始
+- [docs/guides/CONFIG.md](./docs/guides/CONFIG.md) - 配置说明
+- [docs/guides/debug-guide.md](./docs/guides/debug-guide.md) - 调试指南
+- [docs/releases/README_CHANGES.md](./docs/releases/README_CHANGES.md) - 更新历史
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - 贡献指南
 - [.github/PULL_REQUEST_TEMPLATE.md](./.github/PULL_REQUEST_TEMPLATE.md) - PR 模板
 - [.github/SECURITY.md](./.github/SECURITY.md) - 安全说明

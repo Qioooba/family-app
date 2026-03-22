@@ -203,7 +203,7 @@ family-app/
 - ✅ [Docker部署](./docker/DEPLOY.md)
 
 #### 新增的文档
-- ✅ [功能清单](./FUNCTIONS.md) - 本次新增的详细功能文档
+- ✅ [功能清单](../reference/FUNCTIONS.md) - 本次新增的详细功能文档
 
 ---
 
