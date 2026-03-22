@@ -199,9 +199,6 @@ family-app/
 - ❌ [优先级清单](./PRIORITY_TODO.md)
 - ❌ [更新日志](./CHANGELOG.md)
 
-#### 保留的链接
-- ✅ [Docker部署](./docker/DEPLOY.md)
-
 #### 新增的文档
 - ✅ [功能清单](../reference/FUNCTIONS.md) - 本次新增的详细功能文档
 

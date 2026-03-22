@@ -66,6 +66,13 @@
 - **Docker** 20.10+
 - **Docker Compose** 2.0+
 
+## 📦 构建产物约定
+
+- `frontend/` 是前端源码唯一来源
+- 微信小程序体验版上传使用 `frontend/dist/build/mp-weixin`
+- 后端 `backend/family-service/src/main/resources/static/` 只保留运行时静态资源与已发布产物
+- 修改前端后，先在 `frontend/` 重新构建，再决定是否需要同步到后端静态目录
+
 ## 🚀 快速开始
 
 ### 环境要求

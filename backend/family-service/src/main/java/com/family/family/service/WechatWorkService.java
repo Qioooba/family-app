@@ -371,14 +371,18 @@ public class WechatWorkService {
      * 读取小程序码图片
      */
     private byte[] readMiniappQrImage() {
+        String configuredPath = System.getenv("MINIAPP_QR_IMAGE_PATH");
         String[] paths = {
-            "/Volumes/document/Projects/family-app/backend/family-service/src/main/resources/static/miniapp-qr.png",
+            configuredPath,
             "/app/static/miniapp-qr.png",
             "/static/miniapp-qr.png",
             "classpath:/static/miniapp-qr.png"
         };
         
         for (String path : paths) {
+            if (path == null || path.isBlank()) {
+                continue;
+            }
             try {
                 if (path.startsWith("classpath:")) {
                     try (var is = getClass().getResourceAsStream("/static/miniapp-qr.png")) {
@@ -396,7 +400,7 @@ public class WechatWorkService {
                 log.debug("尝试读取图片失败: {}", path);
             }
         }
-        log.error("无法找到小程序码图片");
+        log.error("无法找到小程序码图片，请确认 classpath:/static/miniapp-qr.png 或 MINIAPP_QR_IMAGE_PATH 配置");
         return null;
     }
     

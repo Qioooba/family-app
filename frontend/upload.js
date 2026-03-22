@@ -69,7 +69,7 @@ async function upload() {
             console.log('1. 登录微信小程序后台：https://mp.weixin.qq.com');
             console.log('2. 进入 开发管理 -> 开发设置 -> 小程序代码上传');
             console.log('3. 生成并下载上传密钥(private.key)');
-            console.log('4. 将文件放置到项目根目录');
+            console.log(`4. 将文件放置到：${config.privateKeyPath}`);
         }
         process.exit(1);
     }

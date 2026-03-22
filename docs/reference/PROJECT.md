@@ -27,11 +27,10 @@
 | 技术 | 版本 | 用途 |
 |-----|------|------|
 | **Spring Boot** | 3.1.5 | 核心框架 |
-| **Spring Cloud** | 2022.0.4 | 微服务框架 |
 | **MyBatis-Plus** | 3.5.5 | ORM框架 |
 | **MySQL** | 8.0 | 关系型数据库 |
-| **Redis** | 7.0 | 缓存和会话存储 |
 | **Sa-Token** | 1.37.0 | 身份认证 |
+| **Caffeine** | - | 本地缓存 |
 
 ### 前端
 
@@ -48,9 +47,9 @@
 
 | 技术 | 版本 | 用途 |
 |-----|------|------|
-| **Docker** | 20.10+ | 容器化 |
-| **Docker Compose** | 2.0+ | 容器编排 |
-| **Nginx** | 1.24+ | 反向代理 |
+| **Docker** | 20.10+ | 可选的本地数据库容器 |
+| **systemd** | - | 远程后端常驻服务 |
+| **Nginx / Caddy** | - | 反向代理 |
 
 ---
 
@@ -58,32 +57,13 @@
 
 ```
 family-app/
-├── backend/                          # 后端代码
-│   └── family-service/              # 家庭服务模块
-│       ├── src/main/java/com/family/
-│       │   ├── family/              # 家庭管理
-│       │   ├── user/                # 用户服务
-│       │   ├── task/                # 任务清单
-│       │   ├── calendar/            # 纪念日
-│       │   └── weather/             # 天气
-│       ├── src/main/resources/
-│       │   ├── db/                  # 数据库脚本
-│       │   └── application.yml
-│       └── pom.xml
-├── frontend/                         # 前端代码
-│   ├── src/
-│   │   ├── api/                     # API接口定义
-│   │   ├── components/              # 公共组件
-│   │   ├── pages/                   # 页面文件
-│   │   ├── static/                  # 静态资源
-│   │   ├── stores/                  # Pinia状态管理
-│   │   └── utils/                   # 工具函数
-│   ├── package.json
-│   └── vite.config.js
-├── docker/                           # Docker配置
-│   ├── docker-compose.yml
-│   ├── Dockerfile.backend
-│   └── Dockerfile.frontend
+├── backend/                          # Spring Boot 后端
+├── frontend/                         # uni-app 前端
+├── database/                         # 数据库脚本
+├── docs/                             # 文档
+├── ops/                              # systemd 与环境模板
+├── scripts/                          # 部署与运维脚本
+├── integrations/                     # 外部集成与独立部署单元
 └── README.md
 ```
 
@@ -91,52 +71,35 @@ family-app/
 
 ## 启动指南
 
-### 方式一：Docker 一键部署（推荐）
+### 方式一：本地开发
 
 ```bash
 # 1. 克隆项目
 git clone https://github.com/Qioooba/family-app.git
 cd family-app
 
-# 2. 运行部署脚本
-cd docker
+# 2. 配置环境变量
 cp .env.example .env
-docker-compose up -d
 
-# 3. 等待服务启动
-docker-compose ps
-```
-
-**访问地址：**
-- 前端页面：http://localhost
-- 后端API：http://localhost:8080
-- API文档：http://localhost:8080/swagger-ui.html
-
-### 方式二：本地开发环境
-
-#### 启动后端
-
-```bash
-# 1. 启动基础设施
-docker-compose up -d mysql redis
-
-# 2. 启动后端服务（需要JDK 17+ 和 Maven）
+# 3. 启动后端
 cd backend/family-service
 mvn clean package -DskipTests
 java -jar target/family-service-1.0.0.jar
 ```
 
-#### 启动前端
+**访问地址：**
+- 前端页面：http://localhost:3000
+- 后端API：http://localhost:8443
+- API文档：http://localhost:8443/swagger-ui.html
+
+### 方式二：远程部署
 
 ```bash
-# 1. 进入前端目录
-cd frontend
-
-# 2. 安装依赖
-npm install
-
-# 3. 启动H5开发服务器
-npm run dev:h5
+mvn -pl backend/family-service -am clean package
+REMOTE_PASSWORD='你的SSH密码' \
+REMOTE_MYSQL_PASSWORD='你的MySQL密码' \
+LOCAL_ENV_FILE='/path/to/family-app.env' \
+bash scripts/deploy_remote_backend.sh
 ```
 
 ---
@@ -162,7 +125,7 @@ npm run dev:h5
 
 ### 在线文档
 
-启动服务后访问：http://localhost:8080/swagger-ui.html
+启动服务后访问：http://localhost:8443/swagger-ui.html
 
 ---
 
