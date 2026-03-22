@@ -13,6 +13,7 @@
 - `wecom-vercel-api/`
   - 企业微信回调与可信域名验证的小型独立服务
   - 适用于部署到 Vercel 等平台
+  - 当前作为主仓内普通目录维护，不再依赖嵌套 Git 元数据
 
 ## 为什么不放进 frontend 或 backend
 

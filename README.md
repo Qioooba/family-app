@@ -72,6 +72,7 @@
 - 微信小程序体验版上传使用 `frontend/dist/build/mp-weixin`
 - 后端 `backend/family-service/src/main/resources/static/` 只保留运行时静态资源与已发布产物
 - 修改前端后，先在 `frontend/` 重新构建，再决定是否需要同步到后端静态目录
+- 如需同步到后端静态目录，执行 `cd frontend && npm run build:release`
 
 ## 🚀 快速开始
 

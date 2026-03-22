@@ -1,0 +1,1 @@
+"use strict";const t=require("../common/vendor.js"),g=()=>new Promise((n,s)=>{const e=o=>{o&&o.code?n(o.code):s(new Error("获取微信登录凭证失败"))},c=o=>{const i=(o==null?void 0:o.errMsg)||(o==null?void 0:o.message)||"微信授权失败";s(new Error(i))};t.wx$1.login({success:e,fail:c})});exports.getWxLoginCode=g;

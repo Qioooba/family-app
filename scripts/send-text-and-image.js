@@ -5,7 +5,8 @@ const FormData = require('form-data');
 const CONFIG = {
   corpId: process.env.WECHAT_WORK_CORPID || '',
   secret: process.env.WECHAT_WORK_SECRET || '',
-  agentId: process.env.WECHAT_WORK_AGENTID || ''
+  agentId: process.env.WECHAT_WORK_AGENTID || '',
+  qrImagePath: process.env.MINIAPP_QR_IMAGE_PATH || process.env.QR_IMAGE_PATH || 'docs/miniapp-qr.png'
 };
 
 async function main() {
@@ -19,7 +20,7 @@ async function main() {
   const token = tokenResp.data.access_token;
   
   // 1. 先上传图片
-  const imagePath = '/Users/qi/.openclaw/workspace/family-app/docs/miniapp-qr.png';
+  const imagePath = CONFIG.qrImagePath;
   const imageData = fs.readFileSync(imagePath);
   
   const form = new FormData();

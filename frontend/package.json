@@ -10,6 +10,8 @@
     "build:h5": "uni build",
     "build:mp-weixin": "uni build -p mp-weixin",
     "build:app": "uni build -p app",
+    "sync:backend-static": "bash ../scripts/sync_frontend_assets.sh",
+    "build:release": "npm run build:h5 && npm run build:mp-weixin && npm run sync:backend-static",
     "upload:mp-weixin": "node upload.js",
     "set:experience": "node set-experience.js",
     "release:experience": "npm run build:mp-weixin && npm run upload:mp-weixin && npm run set:experience"

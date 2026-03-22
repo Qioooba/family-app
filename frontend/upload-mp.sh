@@ -1,9 +1,11 @@
 #!/bin/bash
 # 微信小程序上传脚本 v1.1
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 APPID="${WEIXIN_APPID:-}"
 VERSION="${MINIPROGRAM_VERSION:-1.0.0}"
-PROJECT_PATH="${MINIPROGRAM_PROJECT_PATH:-/Volumes/document/Projects/family-app/frontend/dist/build/mp-weixin}"
+PROJECT_PATH="${MINIPROGRAM_PROJECT_PATH:-$SCRIPT_DIR/dist/build/mp-weixin}"
 DESC="${MINIPROGRAM_DESC:-自动构建上传体验版}"
 
 if [ -z "$APPID" ]; then
@@ -12,7 +14,7 @@ if [ -z "$APPID" ]; then
 fi
 
 # 检查private key
-KEY_FILE="${MINIPROGRAM_PRIVATE_KEY_PATH:-/Volumes/document/Projects/family-app/frontend/private.key}"
+KEY_FILE="${MINIPROGRAM_PRIVATE_KEY_PATH:-$SCRIPT_DIR/private.key}"
 
 if [ ! -f "$KEY_FILE" ]; then
     echo "❌ 错误：找不到 private.key 文件"

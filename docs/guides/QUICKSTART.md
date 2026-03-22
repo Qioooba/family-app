@@ -91,3 +91,12 @@ npm run upload:mp-weixin
 默认读取私钥位置：
 
 - `frontend/private.key`
+
+## 同步前端产物到后端
+
+如需让后端 JAR 携带最新 H5/小程序静态资源，执行：
+
+```bash
+cd frontend
+npm run build:release
+```

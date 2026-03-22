@@ -1,0 +1,12 @@
+{
+  "name": "wecom-vercel-api",
+  "version": "1.0.0",
+  "description": "企业微信验证和回调服务",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "crypto-js": "^4.1.1"
+  }
+}
