@@ -154,15 +154,21 @@ public class WeatherRainHandler implements SceneReminderHandler {
      * 检查未来N小时内是否下雨
      */
     private boolean checkWillRain(WeatherForecast forecast, int hoursAhead, int threshold) {
-        // 检查逐小时预报
+        int hourWindow = Math.max(hoursAhead, 1);
+        int checkedCount = 0;
+
         for (HourlyWeather hourly : forecast.getHourlyForecasts()) {
+            if (checkedCount >= hourWindow) {
+                break;
+            }
             if (hourly.getRainProbability() >= threshold) {
                 return true;
             }
+            checkedCount++;
         }
 
-        // 也检查每日预报的降雨概率
-        if (forecast.getMaxDailyRainProbability() >= threshold) {
+        // 当检查窗口超过24小时，再额外参考每日预报
+        if (hourWindow > 24 && forecast.getMaxDailyRainProbability() >= threshold) {
             return true;
         }
 

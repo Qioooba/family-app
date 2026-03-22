@@ -6,10 +6,11 @@
 import { cacheManager } from './cache.js'
 
 const trimTrailingSlash = (value) => value ? value.replace(/\/+$/, '') : ''
+const injectedApiBaseUrl = typeof __APP_API_BASE_URL__ !== 'undefined' ? __APP_API_BASE_URL__ : ''
 
 // 后端地址配置 - 优先使用构建环境变量
 export const getBackendUrl = () => {
-  const configured = import.meta.env.VITE_API_BASE_URL
+  const configured = injectedApiBaseUrl || import.meta.env.VITE_API_BASE_URL
   if (configured) {
     return trimTrailingSlash(configured)
   }

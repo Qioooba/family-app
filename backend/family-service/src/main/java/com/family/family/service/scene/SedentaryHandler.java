@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,11 @@ public class SedentaryHandler implements SceneReminderHandler {
     public boolean shouldTrigger(Reminder reminder) {
         try {
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
+
+            if (isWorkdayOnly(config) && !isWorkday(LocalDate.now())) {
+                log.debug("久坐提醒设置为仅工作日，今天非工作日");
+                return false;
+            }
             
             // 检查是否在工作时间段内
             List<String> workHours = (List<String>) config.get("workHours");
@@ -165,9 +171,9 @@ public class SedentaryHandler implements SceneReminderHandler {
             .frequencyConfig("{\"intervalMinutes\": 60}")
             .titleTemplate("🪑 久坐提醒，起来活动一下吧！")
             .contentTemplate("{userName}，您已经坐了{sitDuration}分钟了，建议起身活动{breakDuration}分钟，伸伸懒腰、走走楼梯，保护腰椎健康！{stretchTips}")
-            .businessData("{\"sceneType\": \"SEDENTARY\", \"sitDuration\": 60, \"breakDuration\": 5, \"workHours\": [\"09:00\", \"18:00\"], \"postureTips\": true, \"stretchGuide\": true}")
+            .businessData("{\"sceneType\": \"SEDENTARY\", \"sitDuration\": 60, \"breakDuration\": 5, \"workHours\": [\"09:00\", \"18:00\"], \"workDaysOnly\": true, \"postureTips\": true, \"stretchGuide\": true}")
             .icon(ICON)
-            .description("工作时间段内，久坐1小时提醒您起身活动")
+            .description("工作日工作时间内，久坐一段时间提醒您起身活动")
             .bgColor(BG_COLOR)
             .build();
     }
@@ -177,5 +183,15 @@ public class SedentaryHandler implements SceneReminderHandler {
      */
     public void markReminded(Long reminderId, Long userId) {
         sceneCacheService.updateLastSitTime(userId, LocalDateTime.now());
+    }
+
+    private boolean isWorkdayOnly(Map<String, Object> config) {
+        Object value = config.get("workDaysOnly");
+        return Boolean.TRUE.equals(value) || "true".equals(String.valueOf(value));
+    }
+
+    private boolean isWorkday(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY;
     }
 }

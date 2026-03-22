@@ -129,60 +129,6 @@
       
     </view>
     
-    <!-- 今日提醒 -->
-    <view class="section-card reminder-card-small animate-in">
-      <view class="section-header">
-        <view class="title-wrapper">
-          <text class="section-icon">✨</text>
-          <text class="section-title">今日提醒</text>
-
-        </view>
-        <view class="header-actions">
-          <view class="add-btn" @click="goAddReminder">
-            <text>+</text>
-          </view>
-          <view class="more-btn" @click="goReminderList">
-            <text>更多</text>
-            ›
-          </view>
-          <view class="collapse-btn" @click="toggleReminderCollapse">
-            <text class="collapse-icon" :class="{ 'collapsed': isReminderCollapsed }">⌄</text>
-          </view>
-        </view>
-      </view>
-      
-      <view v-if="!isReminderCollapsed" class="section-content">
-        <view v-if="todayReminders.length > 0" class="reminder-list">
-          <view 
-            v-for="(reminder, index) in todayReminders" 
-            :key="reminder.id"
-            class="reminder-item"
-            :style="{ animationDelay: `${index * 0.08}s` }"
-            @click="goReminderDetail(reminder)"
-          >
-            <view class="reminder-icon-wrapper" :style="{ background: reminder.iconBg }">
-              <text class="reminder-icon">{{ reminder.icon }}</text>
-            </view>
-            <view class="reminder-info">
-              <text class="reminder-title">{{ reminder.title }}</text>
-              <text class="reminder-time">{{ reminder.time }}</text>
-            </view>
-            <view class="reminder-tag" :class="reminder.frequencyType?.toLowerCase()">
-              <text>{{ formatFrequencyType(reminder.frequencyType) }}</text>
-            </view>
-          </view>
-        </view>
-        
-        <view v-else class="empty-state" @click="goAddReminder">
-          <view class="empty-icon-wrapper">
-            <text class="empty-icon">✨</text>
-          </view>
-          <text class="empty-text">暂无提醒</text>
-          <text class="empty-subtext">点击添加提醒</text>
-        </view>
-      </view>
-    </view>
-    
     <!-- 今日概览 -->
     <view class="section-card animate-in">
       <view class="section-header">
@@ -271,6 +217,60 @@
           </view>
           <text class="empty-text">今天没有待办事项</text>
           <text class="empty-subtext">享受生活吧！</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 今日提醒 -->
+    <view class="section-card reminder-card-small animate-in">
+      <view class="section-header">
+        <view class="title-wrapper">
+          <text class="section-icon">✨</text>
+          <text class="section-title">今日提醒</text>
+
+        </view>
+        <view class="header-actions">
+          <view class="add-btn" @click="goAddReminder">
+            <text>+</text>
+          </view>
+          <view class="more-btn" @click="goReminderList">
+            <text>更多</text>
+            ›
+          </view>
+          <view class="collapse-btn" @click="toggleReminderCollapse">
+            <text class="collapse-icon" :class="{ 'collapsed': isReminderCollapsed }">⌄</text>
+          </view>
+        </view>
+      </view>
+      
+      <view v-if="!isReminderCollapsed" class="section-content">
+        <view v-if="todayReminders.length > 0" class="reminder-list">
+          <view 
+            v-for="(reminder, index) in todayReminders" 
+            :key="reminder.id"
+            class="reminder-item"
+            :style="{ animationDelay: `${index * 0.08}s` }"
+            @click="goReminderDetail(reminder)"
+          >
+            <view class="reminder-icon-wrapper" :style="{ background: reminder.iconBg }">
+              <text class="reminder-icon">{{ reminder.icon }}</text>
+            </view>
+            <view class="reminder-info">
+              <text class="reminder-title">{{ reminder.title }}</text>
+              <text class="reminder-time">{{ reminder.time }}</text>
+            </view>
+            <view class="reminder-tag" :class="reminder.frequencyType?.toLowerCase()">
+              <text>{{ formatFrequencyType(reminder.frequencyType) }}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view v-else class="empty-state" @click="goAddReminder">
+          <view class="empty-icon-wrapper">
+            <text class="empty-icon">✨</text>
+          </view>
+          <text class="empty-text">暂无提醒</text>
+          <text class="empty-subtext">点击添加提醒</text>
         </view>
       </view>
     </view>
@@ -1978,6 +1978,7 @@ const getAnniversaryIcon = (type) => {
     .card-header {
       display: flex;
       align-items: center;
+      min-height: 56rpx;
       margin-bottom: 20rpx;
       
       .card-icon-wrapper {
@@ -2091,7 +2092,7 @@ const getAnniversaryIcon = (type) => {
       min-height: 200rpx;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       
       .weather-card-content {
         display: flex;
@@ -2106,6 +2107,7 @@ const getAnniversaryIcon = (type) => {
         display: flex;
         align-items: center;
         gap: 12rpx;
+        min-height: 56rpx;
         min-width: 0; // 防止溢出
         width: 100%; // 确保占满容器宽度
         

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -86,6 +87,7 @@ public class FamilyReminderController {
             List<Map<String, Object>> resultList = new ArrayList<>();
             if (reminders != null) {
                 for (Reminder r : reminders) {
+                    r = normalizeSceneReminder(r);
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", r.getId());
                     map.put("reminderName", r.getReminderName());
@@ -96,6 +98,14 @@ public class FamilyReminderController {
                     map.put("titleTemplate", r.getTitleTemplate());
                     map.put("contentTemplate", r.getContentTemplate());
                     map.put("businessData", r.getBusinessData());
+                    map.put("nextExecuteTime", r.getNextExecuteTime());
+                    map.put("lastExecuteTime", r.getLastExecuteTime());
+                    map.put("lastExecuteResult", r.getLastExecuteResult());
+                    map.put("pushScope", r.getPushScope());
+                    map.put("targetUserIds", r.getTargetUserIds());
+                    map.put("quietHoursStart", r.getQuietHoursStart());
+                    map.put("quietHoursEnd", r.getQuietHoursEnd());
+                    map.put("remindTime", r.getRemindTime());
                     map.put("createTime", r.getCreateTime());
                     resultList.add(map);
                 }
@@ -122,9 +132,13 @@ public class FamilyReminderController {
     @GetMapping("/detail/{id}")
     public Map<String, Object> getReminderDetail(@PathVariable Long id) {
         try {
+            Long userId = StpUtil.getLoginIdAsLong();
             Reminder reminder = reminderService.getById(id);
             if (reminder == null) {
                 return error("提醒不存在");
+            }
+            if (!userId.equals(reminder.getCreateBy())) {
+                return error("无权限查看");
             }
             return success(reminder);
         } catch (Exception e) {
@@ -179,11 +193,18 @@ public class FamilyReminderController {
             if (!reminderService.isOwner(reminder.getId(), userId)) {
                 return error("无权限修改");
             }
-            
-            boolean success = reminderService.updateReminder(reminder);
+
+            Reminder existing = reminderService.getById(reminder.getId());
+            if (existing == null) {
+                return error("提醒不存在");
+            }
+
+            mergeReminder(existing, reminder);
+
+            boolean success = reminderService.updateReminder(existing);
             if (success) {
                 // 重新计算下次执行时间
-                Reminder updated = reminderService.getById(reminder.getId());
+                Reminder updated = reminderService.getById(existing.getId());
                 reminderScheduleService.initNextExecuteTime(updated);
                 return success(null, "更新成功");
             }
@@ -486,7 +507,7 @@ public class FamilyReminderController {
                     .reminderId(existing != null ? existing.getId() : null)
                     .enabled(existing != null && existing.getStatus() == 1)
                     // 如果已创建，返回实际保存的配置；否则返回默认配置
-                    .defaultConfig(existing != null ? parseBusinessData(existing.getBusinessData()) : handler.getDefaultTemplate().getBusinessData())
+                    .defaultConfig(existing != null ? parseBusinessData(normalizeSceneReminder(existing).getBusinessData()) : parseBusinessData(handler.getDefaultTemplate().getBusinessData()))
                     .build();
                 
                 templates.add(vo);
@@ -533,11 +554,12 @@ public class FamilyReminderController {
                 defaultConfig.putAll(request.getCustomConfig());
                 businessData = JSONUtil.toJsonStr(defaultConfig);
             }
+            handler.validateConfig(businessData);
+            reminder.setFrequencyConfig(buildSceneFrequencyConfig(handler.getSceneType(), businessData, template.getFrequencyConfig()));
             reminder.setBusinessData(businessData);
             
-            reminder.setPushScope(request.getPushScope() != null ? request.getPushScope() : "SELF");
-            reminder.setTargetUserIds(request.getTargetUserIds() != null ? 
-                JSONUtil.toJsonStr(request.getTargetUserIds()) : null);
+            reminder.setPushScope("SELF");
+            reminder.setTargetUserIds(null);
             reminder.setCreateBy(userId);
             reminder.setStatus(1);
             reminder.setPriority(5);
@@ -606,9 +628,10 @@ public class FamilyReminderController {
                 reminder.setReminderName(template.getReminderName());
                 reminder.setReminderType(template.getReminderType());
                 reminder.setFrequencyType(template.getFrequencyType());
-                reminder.setFrequencyConfig(template.getFrequencyConfig());
+                reminder.setFrequencyConfig(buildSceneFrequencyConfig(sceneType, template.getBusinessData(), template.getFrequencyConfig()));
                 reminder.setTitleTemplate(template.getTitleTemplate());
                 reminder.setContentTemplate(template.getContentTemplate());
+                handler.validateConfig(template.getBusinessData());
                 reminder.setBusinessData(template.getBusinessData());
                 reminder.setPushScope("SELF");
                 reminder.setCreateBy(userId);
@@ -660,6 +683,7 @@ public class FamilyReminderController {
             result.put("exists", existing != null);
             
             if (existing != null) {
+                existing = normalizeSceneReminder(existing);
                 result.put("reminder", existing);
                 result.put("enabled", existing.getStatus() == 1);
             }
@@ -695,17 +719,24 @@ public class FamilyReminderController {
             if (existing == null) {
                 return error("该场景提醒不存在");
             }
+
+            SceneReminderHandler handler = sceneHandlerFactory.getHandler(sceneType);
+            if (handler == null) {
+                return error("不支持的提醒场景");
+            }
             
             // 更新配置
             if (params.containsKey("businessData")) {
-                existing.setBusinessData(JSONUtil.toJsonStr(params.get("businessData")));
+                String businessData = JSONUtil.toJsonStr(params.get("businessData"));
+                handler.validateConfig(businessData);
+                existing.setBusinessData(businessData);
+                existing.setFrequencyConfig(buildSceneFrequencyConfig(sceneType, businessData, existing.getFrequencyConfig()));
             }
             if (params.containsKey("frequencyConfig")) {
                 existing.setFrequencyConfig(JSONUtil.toJsonStr(params.get("frequencyConfig")));
             }
-            if (params.containsKey("pushScope")) {
-                existing.setPushScope((String) params.get("pushScope"));
-            }
+            existing.setPushScope("SELF");
+            existing.setTargetUserIds(null);
             
             reminderMapper.updateById(existing);
             
@@ -742,6 +773,287 @@ public class FamilyReminderController {
             log.error("保存用户定位失败", e);
             return error("保存失败");
         }
+    }
+
+    private void mergeReminder(Reminder target, Reminder incoming) {
+        if (incoming.getReminderName() != null) target.setReminderName(incoming.getReminderName());
+        if (incoming.getReminderType() != null) target.setReminderType(incoming.getReminderType());
+        if (incoming.getPushScope() != null) target.setPushScope(incoming.getPushScope());
+        if (incoming.getTargetUserIds() != null) target.setTargetUserIds(incoming.getTargetUserIds());
+        if (incoming.getCronExpression() != null) target.setCronExpression(incoming.getCronExpression());
+        if (incoming.getRemindTime() != null) target.setRemindTime(incoming.getRemindTime());
+        if (incoming.getFrequencyType() != null) target.setFrequencyType(incoming.getFrequencyType());
+        if (incoming.getFrequencyConfig() != null) target.setFrequencyConfig(incoming.getFrequencyConfig());
+        if (incoming.getTitleTemplate() != null) target.setTitleTemplate(incoming.getTitleTemplate());
+        if (incoming.getContentTemplate() != null) target.setContentTemplate(incoming.getContentTemplate());
+        if (incoming.getBusinessData() != null) target.setBusinessData(incoming.getBusinessData());
+        if (incoming.getStatus() != null) target.setStatus(incoming.getStatus());
+        if (incoming.getPriority() != null) target.setPriority(incoming.getPriority());
+        if (incoming.getQuietHoursStart() != null) target.setQuietHoursStart(incoming.getQuietHoursStart());
+        if (incoming.getQuietHoursEnd() != null) target.setQuietHoursEnd(incoming.getQuietHoursEnd());
+        if (incoming.getMaxExecuteCount() != null) target.setMaxExecuteCount(incoming.getMaxExecuteCount());
+    }
+
+    private Reminder normalizeSceneReminder(Reminder reminder) {
+        if (reminder == null) {
+            return null;
+        }
+        SceneReminderHandler handler = sceneHandlerFactory.getHandler(reminder.getReminderType());
+        if (handler == null) {
+            return reminder;
+        }
+
+        SceneTemplate template = handler.getDefaultTemplate();
+        Map<String, Object> defaultConfig = parseBusinessData(template.getBusinessData());
+        Map<String, Object> currentConfig = parseBusinessData(reminder.getBusinessData());
+        Map<String, Object> normalizedConfig = normalizeSceneBusinessData(handler.getSceneType(), currentConfig, defaultConfig, reminder.getFrequencyConfig());
+
+        String normalizedBusinessData = JSONUtil.toJsonStr(normalizedConfig);
+        String normalizedFrequencyConfig = buildSceneFrequencyConfig(handler.getSceneType(), normalizedBusinessData, template.getFrequencyConfig());
+        String normalizedReminderName = normalizeSceneReminderName(reminder, template);
+        String normalizedTitleTemplate = normalizeSceneTitleTemplate(reminder, template);
+        String normalizedContentTemplate = normalizeSceneContentTemplate(reminder, template);
+
+        boolean scheduleChanged = !Objects.equals(reminder.getBusinessData(), normalizedBusinessData)
+            || !Objects.equals(reminder.getFrequencyConfig(), normalizedFrequencyConfig);
+        boolean changed = scheduleChanged
+            || !Objects.equals(reminder.getReminderName(), normalizedReminderName)
+            || !Objects.equals(reminder.getTitleTemplate(), normalizedTitleTemplate)
+            || !Objects.equals(reminder.getContentTemplate(), normalizedContentTemplate)
+            || !Objects.equals(reminder.getPushScope(), "SELF")
+            || reminder.getTargetUserIds() != null;
+
+        if (changed) {
+            reminder.setBusinessData(normalizedBusinessData);
+            reminder.setFrequencyConfig(normalizedFrequencyConfig);
+            reminder.setReminderName(normalizedReminderName);
+            reminder.setTitleTemplate(normalizedTitleTemplate);
+            reminder.setContentTemplate(normalizedContentTemplate);
+            reminder.setPushScope("SELF");
+            reminder.setTargetUserIds(null);
+            reminderMapper.updateById(reminder);
+            if (scheduleChanged) {
+                reminderScheduleService.initNextExecuteTime(reminder);
+            }
+        }
+
+        return reminder;
+    }
+
+    private Map<String, Object> normalizeSceneBusinessData(String sceneType, Map<String, Object> currentConfig,
+                                                           Map<String, Object> defaultConfig, String frequencyConfig) {
+        Map<String, Object> frequency = parseBusinessData(frequencyConfig);
+        Map<String, Object> normalized = new HashMap<>();
+        normalized.put("sceneType", sceneType);
+
+        switch (sceneType) {
+            case "WATER":
+                normalized.put("intervalMinutes", getIntValue(firstNonNull(currentConfig.get("intervalMinutes"), frequency.get("intervalMinutes"), defaultConfig.get("intervalMinutes")), 60));
+                normalized.put("workHours", normalizeWorkHours(currentConfig.get("workHours"), defaultConfig.get("workHours")));
+                normalized.put("workDaysOnly", getBooleanValue(firstNonNull(currentConfig.get("workDaysOnly"), frequency.get("workDaysOnly"), defaultConfig.get("workDaysOnly")), true));
+                break;
+            case "WEATHER_RAIN":
+                normalized.put("location", getStringValue(firstNonNull(currentConfig.get("location"), defaultConfig.get("location")), "auto"));
+                normalized.put("intervalMinutes", getIntValue(firstNonNull(currentConfig.get("intervalMinutes"), frequency.get("intervalMinutes"), defaultConfig.get("intervalMinutes")), 40));
+                normalized.put("rainProbability", getIntValue(firstNonNull(currentConfig.get("rainProbability"), defaultConfig.get("rainProbability")), 40));
+                normalized.put("rainHoursAhead", getIntValue(firstNonNull(currentConfig.get("rainHoursAhead"), defaultConfig.get("rainHoursAhead")), 3));
+                normalized.put("allDay", getBooleanValue(firstNonNull(currentConfig.get("allDay"), defaultConfig.get("allDay")), false));
+                normalized.put("workHours", normalizeWorkHours(currentConfig.get("workHours"), defaultConfig.get("workHours")));
+                break;
+            case "WEATHER_TEMP":
+                normalized.put("location", getStringValue(firstNonNull(currentConfig.get("location"), defaultConfig.get("location")), "auto"));
+                normalized.put("intervalMinutes", getIntValue(firstNonNull(currentConfig.get("intervalMinutes"), frequency.get("intervalMinutes"), defaultConfig.get("intervalMinutes")), 120));
+                normalized.put("highTempThreshold", getIntValue(firstNonNull(currentConfig.get("highTempThreshold"), defaultConfig.get("highTempThreshold")), 35));
+                normalized.put("lowTempThreshold", getIntValue(firstNonNull(currentConfig.get("lowTempThreshold"), defaultConfig.get("lowTempThreshold")), 5));
+                normalized.put("allDay", getBooleanValue(firstNonNull(currentConfig.get("allDay"), defaultConfig.get("allDay")), false));
+                normalized.put("workHours", normalizeWorkHours(currentConfig.get("workHours"), defaultConfig.get("workHours")));
+                break;
+            case "AIR_QUALITY":
+                normalized.put("location", getStringValue(firstNonNull(currentConfig.get("location"), defaultConfig.get("location")), "auto"));
+                normalized.put("intervalMinutes", getIntValue(firstNonNull(currentConfig.get("intervalMinutes"), frequency.get("intervalMinutes"), defaultConfig.get("intervalMinutes")), 120));
+                normalized.put("pm25Threshold", getIntValue(firstNonNull(currentConfig.get("pm25Threshold"), defaultConfig.get("pm25Threshold")), 75));
+                normalized.put("pm10Threshold", getIntValue(firstNonNull(currentConfig.get("pm10Threshold"), defaultConfig.get("pm10Threshold")), 150));
+                normalized.put("aqiThreshold", getIntValue(firstNonNull(currentConfig.get("aqiThreshold"), defaultConfig.get("aqiThreshold")), 100));
+                normalized.put("allDay", getBooleanValue(firstNonNull(currentConfig.get("allDay"), defaultConfig.get("allDay")), false));
+                normalized.put("workHours", normalizeWorkHours(currentConfig.get("workHours"), defaultConfig.get("workHours")));
+                break;
+            case "UV_INDEX":
+                normalized.put("location", getStringValue(firstNonNull(currentConfig.get("location"), defaultConfig.get("location")), "auto"));
+                normalized.put("intervalMinutes", getIntValue(firstNonNull(currentConfig.get("intervalMinutes"), frequency.get("intervalMinutes"), defaultConfig.get("intervalMinutes")), 120));
+                normalized.put("uvThreshold", getIntValue(firstNonNull(currentConfig.get("uvThreshold"), defaultConfig.get("uvThreshold")), 3));
+                normalized.put("allDay", getBooleanValue(firstNonNull(currentConfig.get("allDay"), defaultConfig.get("allDay")), false));
+                normalized.put("workHours", normalizeWorkHours(currentConfig.get("workHours"), defaultConfig.get("workHours")));
+                break;
+            case "CHECKIN":
+                normalized.put("reminderTime", getStringValue(firstNonNull(currentConfig.get("reminderTime"), frequency.get("fixedTime"), defaultConfig.get("reminderTime")), "08:00"));
+                normalized.put("workDaysOnly", getBooleanValue(firstNonNull(currentConfig.get("workDaysOnly"), frequency.get("workDaysOnly"), defaultConfig.get("workDaysOnly")), true));
+                break;
+            case "SCHEDULE":
+            case "SLEEP":
+                normalized.put("reminderTime", getStringValue(firstNonNull(currentConfig.get("reminderTime"), frequency.get("fixedTime"), defaultConfig.get("reminderTime")), "08:00"));
+                break;
+            case "ANNIVERSARY":
+                normalized.put("reminderTime", getStringValue(firstNonNull(currentConfig.get("reminderTime"), frequency.get("fixedTime"), defaultConfig.get("reminderTime")), "09:00"));
+                normalized.put("advanceDays", getIntValue(firstNonNull(currentConfig.get("advanceDays"), defaultConfig.get("advanceDays")), 3));
+                break;
+            case "MORNING":
+                normalized.put("type", getStringValue(firstNonNull(currentConfig.get("type"), defaultConfig.get("type")), "morning"));
+                normalized.put("location", getStringValue(firstNonNull(currentConfig.get("location"), defaultConfig.get("location")), "auto"));
+                normalized.put("reminderTime", getStringValue(firstNonNull(currentConfig.get("reminderTime"), frequency.get("fixedTime"), defaultConfig.get("reminderTime")), "07:00"));
+                break;
+            case "EYE_REST":
+                normalized.put("screenTime", getIntValue(firstNonNull(currentConfig.get("screenTime"), defaultConfig.get("screenTime")), 45));
+                normalized.put("restDuration", getIntValue(firstNonNull(currentConfig.get("restDuration"), defaultConfig.get("restDuration")), 10));
+                normalized.put("workHours", normalizeWorkHours(currentConfig.get("workHours"), defaultConfig.get("workHours")));
+                normalized.put("workDaysOnly", getBooleanValue(firstNonNull(currentConfig.get("workDaysOnly"), frequency.get("workDaysOnly"), defaultConfig.get("workDaysOnly")), true));
+                normalized.put("eyeExercise", getBooleanValue(firstNonNull(currentConfig.get("eyeExercise"), defaultConfig.get("eyeExercise")), true));
+                normalized.put("blinkReminder", getBooleanValue(firstNonNull(currentConfig.get("blinkReminder"), defaultConfig.get("blinkReminder")), true));
+                break;
+            case "SEDENTARY":
+                normalized.put("sitDuration", getIntValue(firstNonNull(currentConfig.get("sitDuration"), defaultConfig.get("sitDuration")), 60));
+                normalized.put("breakDuration", getIntValue(firstNonNull(currentConfig.get("breakDuration"), defaultConfig.get("breakDuration")), 5));
+                normalized.put("workHours", normalizeWorkHours(currentConfig.get("workHours"), defaultConfig.get("workHours")));
+                normalized.put("workDaysOnly", getBooleanValue(firstNonNull(currentConfig.get("workDaysOnly"), frequency.get("workDaysOnly"), defaultConfig.get("workDaysOnly")), true));
+                normalized.put("postureTips", getBooleanValue(firstNonNull(currentConfig.get("postureTips"), defaultConfig.get("postureTips")), true));
+                normalized.put("stretchGuide", getBooleanValue(firstNonNull(currentConfig.get("stretchGuide"), defaultConfig.get("stretchGuide")), true));
+                break;
+            default:
+                normalized.putAll(defaultConfig);
+                normalized.putAll(currentConfig);
+                normalized.put("sceneType", sceneType);
+                break;
+        }
+        return normalized;
+    }
+
+    private Object firstNonNull(Object... values) {
+        for (Object value : values) {
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private List<String> normalizeWorkHours(Object value, Object defaultValue) {
+        List<String> hours = toStringList(value);
+        if (hours.size() == 2) {
+            return hours;
+        }
+        List<String> defaults = toStringList(defaultValue);
+        if (defaults.size() == 2) {
+            return defaults;
+        }
+        List<String> fallback = new ArrayList<>();
+        fallback.add("09:00");
+        fallback.add("18:00");
+        return fallback;
+    }
+
+    private List<String> toStringList(Object value) {
+        List<String> result = new ArrayList<>();
+        if (value instanceof List<?> list) {
+            for (Object item : list) {
+                if (item != null) {
+                    result.add(String.valueOf(item));
+                }
+            }
+        }
+        return result;
+    }
+
+    private boolean getBooleanValue(Object value, boolean defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        return "true".equalsIgnoreCase(String.valueOf(value));
+    }
+
+    private String normalizeSceneReminderName(Reminder reminder, SceneTemplate template) {
+        if ("WATER".equals(reminder.getReminderType())) {
+            String current = reminder.getReminderName();
+            if (current == null || current.isEmpty() || current.contains("{")) {
+                return template.getReminderName();
+            }
+        }
+        return reminder.getReminderName();
+    }
+
+    private String normalizeSceneTitleTemplate(Reminder reminder, SceneTemplate template) {
+        if ("WATER".equals(reminder.getReminderType())) {
+            return template.getTitleTemplate();
+        }
+        return reminder.getTitleTemplate();
+    }
+
+    private String normalizeSceneContentTemplate(Reminder reminder, SceneTemplate template) {
+        if ("WATER".equals(reminder.getReminderType())) {
+            return template.getContentTemplate();
+        }
+        return reminder.getContentTemplate();
+    }
+
+    private String buildSceneFrequencyConfig(String sceneType, String businessData, String fallbackConfig) {
+        Map<String, Object> config = parseBusinessData(businessData);
+        Map<String, Object> frequency = new HashMap<>();
+
+        switch (sceneType) {
+            case "WATER":
+            case "WEATHER_RAIN":
+            case "WEATHER_TEMP":
+            case "AIR_QUALITY":
+            case "UV_INDEX":
+            case "SEDENTARY":
+            case "EYE_REST":
+                frequency.put("intervalMinutes", getIntValue(config.get("intervalMinutes"), readFrequencyInt(fallbackConfig, "intervalMinutes", 60)));
+                break;
+            case "MORNING":
+            case "CHECKIN":
+            case "SCHEDULE":
+            case "SLEEP":
+            case "ANNIVERSARY":
+                frequency.put("fixedTime", getStringValue(config.get("reminderTime"), readFrequencyString(fallbackConfig, "fixedTime", "08:00")));
+                if (Boolean.TRUE.equals(config.get("workDaysOnly")) || "true".equals(String.valueOf(config.get("workDaysOnly")))) {
+                    frequency.put("workDaysOnly", true);
+                }
+                break;
+            default:
+                return fallbackConfig;
+        }
+
+        return JSONUtil.toJsonStr(frequency);
+    }
+
+    private int readFrequencyInt(String frequencyConfig, String key, int defaultValue) {
+        Map<String, Object> config = parseBusinessData(frequencyConfig);
+        return getIntValue(config.get(key), defaultValue);
+    }
+
+    private String readFrequencyString(String frequencyConfig, String key, String defaultValue) {
+        Map<String, Object> config = parseBusinessData(frequencyConfig);
+        return getStringValue(config.get(key), defaultValue);
+    }
+
+    private int getIntValue(Object value, int defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private String getStringValue(Object value, String defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        String str = String.valueOf(value).trim();
+        return str.isEmpty() ? defaultValue : str;
     }
     
     /**

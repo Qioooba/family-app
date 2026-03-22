@@ -5,6 +5,9 @@ import { resolve } from 'path'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const proxyTarget = env.VITE_PROXY_TARGET || 'http://localhost:8443'
+  const apiBaseUrl = env.VITE_API_BASE_URL || ''
+  const tencentMapKey = env.VITE_TENCENT_MAP_KEY || ''
+  const weixinAppId = env.VITE_WEIXIN_APPID || ''
   const extraHosts = (env.VITE_ALLOWED_HOSTS || '')
     .split(',')
     .map(host => host.trim())
@@ -63,7 +66,10 @@ export default defineConfig(({ mode }) => {
       reactivityTransform: false
     },
     define: {
-      __VUE_PROD_DEVTOOLS__: true
+      __VUE_PROD_DEVTOOLS__: true,
+      __APP_API_BASE_URL__: JSON.stringify(apiBaseUrl),
+      __APP_TENCENT_MAP_KEY__: JSON.stringify(tencentMapKey),
+      __APP_WEIXIN_APPID__: JSON.stringify(weixinAppId)
     }
   }
 })

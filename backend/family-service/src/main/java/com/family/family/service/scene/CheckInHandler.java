@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
@@ -55,8 +56,12 @@ public class CheckInHandler implements SceneReminderHandler {
     @Override
     public boolean shouldTrigger(Reminder reminder) {
         try {
+            Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
+            if (isWorkdayOnly(config) && !isWorkday(LocalDate.now())) {
+                return false;
+            }
+
             String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
-            String cacheKey = String.format("scene:checkin:%d:%s", reminder.getId(), today);
 
             boolean alreadyReminded = sceneCacheService.hasRemindedToday(reminder.getId());
             if (Boolean.TRUE.equals(alreadyReminded)) {
@@ -64,8 +69,6 @@ public class CheckInHandler implements SceneReminderHandler {
                 return false;
             }
 
-            // 获取配置的提醒时间
-            Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
             String reminderTime = (String) config.getOrDefault("reminderTime", "08:00");
 
             // 检查当前时间
@@ -135,14 +138,24 @@ public class CheckInHandler implements SceneReminderHandler {
             .frequencyConfig("{\"fixedTime\": \"08:00\"}")
             .titleTemplate("✅ 每日签到提醒")
             .contentTemplate("{userName}，新的一天开始啦！\n\n📝 今日任务：\n• 记得签到打卡哦\n• 完成今日待办\n• 保持好心情\n\n💪 加油！")
-            .businessData("{\"sceneType\": \"CHECKIN\", \"reminderTime\": \"08:00\"}")
+            .businessData("{\"sceneType\": \"CHECKIN\", \"reminderTime\": \"08:00\", \"workDaysOnly\": true}")
             .icon(ICON)
-            .description("每天早上8点提醒签到打卡")
+            .description("工作日上午8点提醒签到打卡")
             .bgColor(BG_COLOR)
             .build();
     }
 
     public void markReminded(Long reminderId, Long userId) {
         sceneCacheService.markRemindedToday(reminderId, userId, getSceneType());
+    }
+
+    private boolean isWorkdayOnly(Map<String, Object> config) {
+        Object value = config.get("workDaysOnly");
+        return Boolean.TRUE.equals(value) || "true".equals(String.valueOf(value));
+    }
+
+    private boolean isWorkday(LocalDate date) {
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        return dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY;
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -140,10 +141,10 @@ public class AirQualityHandler implements SceneReminderHandler {
 
             if (airQuality.getPm25() != null && airQuality.getPm25() > pm25Threshold) {
                 shouldRemind = true;
-                reason = String.format("PM2.5超标: %d > %d", airQuality.getPm25(), pm25Threshold);
+                reason = String.format("PM2.5超标: %.1f > %d", airQuality.getPm25(), pm25Threshold);
             } else if (airQuality.getPm10() != null && airQuality.getPm10() > pm10Threshold) {
                 shouldRemind = true;
-                reason = String.format("PM10超标: %d > %d", airQuality.getPm10(), pm10Threshold);
+                reason = String.format("PM10超标: %.1f > %d", airQuality.getPm10(), pm10Threshold);
             } else if (airQuality.getUsAqi() != null && airQuality.getUsAqi() > aqiThreshold) {
                 shouldRemind = true;
                 reason = String.format("AQI超标: %d > %d", airQuality.getUsAqi(), aqiThreshold);
@@ -268,7 +269,7 @@ public class AirQualityHandler implements SceneReminderHandler {
             double[] coords = getCoordinates(location);
             if (coords == null) {
                 log.warn("无法获取城市坐标: {}", location);
-                return getDefaultAirQuality(location);
+                return null;
             }
 
             // 2. 调用空气质量API
@@ -282,7 +283,7 @@ public class AirQualityHandler implements SceneReminderHandler {
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             if (response == null || !response.containsKey("current")) {
                 log.warn("空气质量API返回为空");
-                return getDefaultAirQuality(location);
+                return null;
             }
 
             Map<String, Object> current = (Map<String, Object>) response.get("current");
@@ -321,7 +322,7 @@ public class AirQualityHandler implements SceneReminderHandler {
 
         } catch (Exception e) {
             log.error("获取空气质量信息失败: {}", location, e);
-            return getDefaultAirQuality(location);
+            return null;
         }
     }
 
@@ -353,19 +354,19 @@ public class AirQualityHandler implements SceneReminderHandler {
             }
 
             @SuppressWarnings("unchecked")
-            java.util.List<Map<String, Object>> results = (java.util.List<Map<String, Object>>) response.get("results");
+            List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
             if (results == null || results.isEmpty()) {
                 return null;
             }
 
             Map<String, Object> firstResult = results.get(0);
-            Map<String, Object> latitude = (Map<String, Object>) firstResult.get("latitude");
-            Map<String, Object> longitude = (Map<String, Object>) firstResult.get("longitude");
+            Object latitude = firstResult.get("latitude");
+            Object longitude = firstResult.get("longitude");
 
-            if (latitude != null && longitude != null) {
+            if (latitude instanceof Number lat && longitude instanceof Number lon) {
                 return new double[]{
-                    ((Number) latitude.get("value")).doubleValue(),
-                    ((Number) longitude.get("value")).doubleValue()
+                    lat.doubleValue(),
+                    lon.doubleValue()
                 };
             }
 
@@ -375,19 +376,6 @@ public class AirQualityHandler implements SceneReminderHandler {
             log.error("获取城市坐标失败: {}", cityName, e);
             return null;
         }
-    }
-
-    /**
-     * 默认空气质量（API失败时返回）
-     */
-    private AirQualityInfo getDefaultAirQuality(String location) {
-        AirQualityInfo info = new AirQualityInfo();
-        info.setLocation(location);
-        // 返回良好默认值，避免误报
-        info.setPm25(30.0);
-        info.setPm10(50.0);
-        info.setUsAqi(40);
-        return info;
     }
 
     /**

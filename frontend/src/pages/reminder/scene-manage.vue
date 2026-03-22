@@ -41,33 +41,25 @@
           <!-- 喝水提醒配置 -->
           <template v-if="scene.sceneType === 'WATER'">
             <view class="config-section">
-              <text class="config-section-title">💧 喝水目标</text>
+              <text class="config-section-title">💧 喝水提醒</text>
               <view class="config-item">
-                <text class="config-label">每日目标杯数</text>
-                <view class="slider-wrapper">
-                  <slider
-                    :value="scene.config.targetTimes"
-                    min="4" max="16"
-                    show-value
-                    activeColor="#4facfe"
-                    block-size="20"
-                    @change="(e) => updateConfig(scene, 'targetTimes', e.detail.value)"
-                  />
-                </view>
-              </view>
-              <view class="config-item">
-                <text class="config-label">每杯容量 (ml)</text>
-                <view class="cup-size-options">
+                <text class="config-label">提醒间隔</text>
+                <view class="interval-options">
                   <view
-                    v-for="size in [150, 200, 250, 300]"
-                    :key="size"
-                    class="size-option"
-                    :class="{ 'active': scene.config.cupSize === size }"
-                    @click="updateConfig(scene, 'cupSize', size)"
+                    v-for="option in waterIntervalOptions"
+                    :key="option.value"
+                    class="interval-option"
+                    :class="{ 'active': scene.config.intervalMinutes === option.value }"
+                    @click="updateConfig(scene, 'intervalMinutes', option.value)"
                   >
-                    <text>{{ size }}ml</text>
+                    <text>{{ option.label }}</text>
                   </view>
                 </view>
+                <text class="config-hint">当前饮水量和目标饮水量会自动读取喝水记录页的数据</text>
+              </view>
+              <view class="config-item switch-row">
+                <text class="config-label inline">仅工作日提醒</text>
+                <switch :checked="scene.config.workDaysOnly === true" @change="(e) => updateConfig(scene, 'workDaysOnly', e.detail.value)" />
               </view>
               <view class="config-item">
                 <text class="config-label">工作时间段</text>
@@ -156,6 +148,10 @@
                   </view>
                 </view>
               </view>
+              <view class="config-item switch-row">
+                <text class="config-label inline">仅工作日提醒</text>
+                <switch :checked="scene.config.workDaysOnly === true" @change="(e) => updateConfig(scene, 'workDaysOnly', e.detail.value)" />
+              </view>
               <view class="config-item">
                 <text class="config-label">工作时间段</text>
                 <view class="time-range">
@@ -191,14 +187,21 @@
               </view>
               <view class="config-item">
                 <text class="config-label">建议休息时长 (分钟)</text>
-                <slider
-                  :value="scene.config.restDuration"
-                  min="3" max="30"
-                  show-value
-                  activeColor="#30cfd0"
-                  block-size="20"
-                  @change="(e) => updateConfig(scene, 'restDuration', e.detail.value)"
-                />
+                <view class="duration-options">
+                  <view
+                    v-for="duration in eyeRestDurationOptions"
+                    :key="duration"
+                    class="duration-option"
+                    :class="{ 'active': scene.config.restDuration === duration }"
+                    @click="updateConfig(scene, 'restDuration', duration)"
+                  >
+                    <text>{{ duration }}分</text>
+                  </view>
+                </view>
+              </view>
+              <view class="config-item switch-row">
+                <text class="config-label inline">仅工作日提醒</text>
+                <switch :checked="scene.config.workDaysOnly === true" @change="(e) => updateConfig(scene, 'workDaysOnly', e.detail.value)" />
               </view>
               <view class="config-item">
                 <text class="config-label">工作时间段</text>
@@ -406,7 +409,19 @@
 
           <!-- 签到提醒配置 -->
           <template v-if="scene.sceneType === 'CHECKIN'">
-            <view class="config-section"><text class="config-section-title">✅ 每日签到</text><view class="config-item"><text class="config-label">签到提醒时间</text><picker mode="time" :value="scene.config.reminderTime || '08:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)"><view class="picker"><text>{{ scene.config.reminderTime || '08:00' }}</text></view></picker></view></view>
+            <view class="config-section">
+              <text class="config-section-title">✅ 每日签到</text>
+              <view class="config-item">
+                <text class="config-label">签到提醒时间</text>
+                <picker mode="time" :value="scene.config.reminderTime || '08:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
+                  <view class="picker"><text>{{ scene.config.reminderTime || '08:00' }}</text></view>
+                </picker>
+              </view>
+              <view class="config-item switch-row">
+                <text class="config-label inline">仅工作日提醒</text>
+                <switch :checked="scene.config.workDaysOnly !== false" @change="(e) => updateConfig(scene, 'workDaysOnly', e.detail.value)" />
+              </view>
+            </view>
           </template>
 
           <!-- 今日日程提醒配置 -->
@@ -494,6 +509,13 @@ const intervalOptions = [
 ]
 
 const rainProbabilityOptions = [20, 30, 40, 50, 60, 70, 80]
+const waterIntervalOptions = [
+  { value: 40, label: '40分钟' },
+  { value: 60, label: '1小时' },
+  { value: 90, label: '1.5小时' },
+  { value: 120, label: '2小时' }
+]
+const eyeRestDurationOptions = [5, 10, 15, 20]
 
 const anniversaryAdvanceDayOptions = [
   { value: 0, label: '仅当天提醒' },
@@ -583,15 +605,15 @@ const loadScenes = async () => {
 // 获取默认配置
 const getDefaultConfig = (sceneType) => {
   const configs = {
-    WATER: { targetTimes: 8, cupSize: 200, workHours: ['09:00', '18:00'] },
+    WATER: { intervalMinutes: 60, workHours: ['09:00', '18:00'], workDaysOnly: true },
     WEATHER_RAIN: { location: 'auto', intervalMinutes: 40, rainProbability: 40, rainHoursAhead: 3, allDay: false, workHours: ['07:00', '22:00'] },
-    SEDENTARY: { sitDuration: 60, breakDuration: 5, workHours: ['09:00', '18:00'], postureTips: true },
-    EYE_REST: { screenTime: 45, restDuration: 10, eyeExercise: true, blinkReminder: true, workHours: ['09:00', '18:00'] },
+    SEDENTARY: { sitDuration: 60, breakDuration: 5, workHours: ['09:00', '18:00'], postureTips: true, workDaysOnly: true },
+    EYE_REST: { screenTime: 45, restDuration: 10, eyeExercise: true, blinkReminder: true, workHours: ['09:00', '18:00'], workDaysOnly: true },
     WEATHER_TEMP: { location: 'auto', intervalMinutes: 120, highTempThreshold: 35, lowTempThreshold: 5, allDay: false, workHours: ['07:00', '22:00'] },
     AIR_QUALITY: { location: 'auto', intervalMinutes: 120, pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100, allDay: false, workHours: ['06:00', '22:00'] },
     UV_INDEX: { location: 'auto', intervalMinutes: 120, uvThreshold: 3, allDay: false, workHours: ['08:00', '18:00'] },
     MORNING: { type: 'morning', location: 'auto', reminderTime: '07:00' },
-    CHECKIN: { reminderTime: '08:00' },
+    CHECKIN: { reminderTime: '08:00', workDaysOnly: true },
     SCHEDULE: { reminderTime: '07:30' },
     SLEEP: { reminderTime: '22:00' },
     ANNIVERSARY: { reminderTime: '09:00', advanceDays: 3 }
@@ -678,13 +700,13 @@ const getSceneDescription = (scene) => {
 
   switch (scene.sceneType) {
     case 'WATER':
-      return `${formatWorkHourLabel(config.workHours, '白天时段')}内按节奏提醒喝水`
+      return `${config.workDaysOnly ? '工作日' : '每天'} ${formatWorkHourLabel(config.workHours, '白天时段')}内每${getIntervalLabel(config.intervalMinutes, '1小时')}提醒喝水`
     case 'WEATHER_RAIN':
       return `${config.allDay ? '全天' : formatWorkHourLabel(config.workHours, '07:00-22:00')}内每${getIntervalLabel(config.intervalMinutes)}监测降雨`
     case 'SEDENTARY':
-      return `${formatWorkHourLabel(config.workHours, '工作时间')}内久坐${config.sitDuration || 60}分钟提醒活动`
+      return `${config.workDaysOnly ? '工作日' : '每天'} ${formatWorkHourLabel(config.workHours, '工作时间')}内久坐${config.sitDuration || 60}分钟提醒活动`
     case 'EYE_REST':
-      return `${formatWorkHourLabel(config.workHours, '工作时间')}内用眼${config.screenTime || 45}分钟提醒休息`
+      return `${config.workDaysOnly ? '工作日' : '每天'} ${formatWorkHourLabel(config.workHours, '工作时间')}内用眼${config.screenTime || 45}分钟提醒休息`
     case 'WEATHER_TEMP':
       return `${config.allDay ? '全天' : formatWorkHourLabel(config.workHours, '07:00-22:00')}内监测温度变化`
     case 'AIR_QUALITY':
@@ -694,7 +716,7 @@ const getSceneDescription = (scene) => {
     case 'MORNING':
       return `${config.type === 'evening' ? '每天' : '每天'}${config.reminderTime || '07:00'}发送${config.type === 'evening' ? '晚安问候' : '早安问候'}`
     case 'CHECKIN':
-      return `每天${config.reminderTime || '08:00'}提醒签到打卡`
+      return `${config.workDaysOnly !== false ? '工作日' : '每天'}${config.reminderTime || '08:00'}提醒签到打卡`
     case 'SCHEDULE':
       return `每天${config.reminderTime || '07:30'}提醒查看今日日程`
     case 'SLEEP':
@@ -929,8 +951,18 @@ onShow(() => {
   flex-wrap: wrap;
 }
 
+.switch-row {
+  justify-content: space-between;
+  align-items: center;
+}
+
 .config-item .config-label {
   width: 100%;
+}
+
+.config-item .config-label.inline {
+  width: auto;
+  margin-bottom: 0;
 }
 
 .config-label {
@@ -968,8 +1000,8 @@ onShow(() => {
 
 .threshold-grid {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 16rpx;
 }
 
@@ -994,7 +1026,7 @@ onShow(() => {
 }
 
 .threshold-card-label {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: #334155;
   font-weight: 600;
 }
@@ -1003,6 +1035,7 @@ onShow(() => {
   font-size: 22rpx;
   color: #64748b;
   line-height: 1.5;
+  word-break: break-all;
 }
 
 .location-auto-btn {

@@ -707,12 +707,11 @@ public class ReminderScheduleService {
     }
     
     /**
-     * 获取天气（简化版，后续可接入天气API）
+     * 获取天气变量占位文本
+     * 普通提醒不再伪装成实时天气，实时天气请使用智能场景提醒
      */
     private String getWeather() {
-        // TODO: 接入天气API，如和风天气、OpenWeatherMap等
-        // 临时返回简化天气，避免模板变量为空
-        return "☀️";
+        return "实时天气请使用智能场景提醒";
     }
     
     /**
@@ -741,7 +740,7 @@ public class ReminderScheduleService {
      * 用于天气类、需要动态判断的提醒
      * 每个handler会根据用户配置的reminderTime决定是否触发
      */
-    @Scheduled(cron = "0 0/30 * * * ?")
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void triggerSceneReminders() {
         log.info("开始检查场景化提醒...");
         
