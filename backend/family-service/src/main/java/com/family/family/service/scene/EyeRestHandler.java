@@ -9,7 +9,6 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
@@ -99,19 +98,11 @@ public class EyeRestHandler implements SceneReminderHandler {
                 }
             }
             
-            // 获取用眼时长配置
-            int screenTime = (int) config.getOrDefault("screenTime", 45);
-
-            // 检查上次提醒时间
-            LocalDateTime lastRemindTime = sceneCacheService.getLastScreenTime(reminder.getCreateBy());
-
-            if (lastRemindTime != null) {
-                LocalDateTime nextRemindTime = lastRemindTime.plusMinutes(screenTime);
-
-                if (LocalDateTime.now().isBefore(nextRemindTime)) {
-                    log.debug("护眼提醒冷却中，下次提醒时间: {}", nextRemindTime);
-                    return false;
-                }
+            int intervalMinutes = (int) config.getOrDefault("screenTime", 45);
+            boolean shouldNotify = sceneCacheService.shouldNotifyAgain(reminder.getId(), intervalMinutes);
+            if (!shouldNotify) {
+                log.debug("护眼提醒冷却中: reminderId={}, interval={}分钟", reminder.getId(), intervalMinutes);
+                return false;
             }
 
             return true;
@@ -193,7 +184,7 @@ public class EyeRestHandler implements SceneReminderHandler {
      * 标记已提醒
      */
     public void markReminded(Long reminderId, Long userId) {
-        sceneCacheService.updateLastScreenTime(userId, LocalDateTime.now());
+        sceneCacheService.markNotified(reminderId, userId, getSceneType());
     }
 
     private boolean isWorkdayOnly(Map<String, Object> config) {

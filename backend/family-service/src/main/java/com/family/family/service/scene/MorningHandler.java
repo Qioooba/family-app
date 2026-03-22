@@ -1,25 +1,33 @@
 package com.family.family.service.scene;
 
 import cn.hutool.json.JSONUtil;
+import com.family.common.config.AppProperties;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
+import com.family.family.entity.UserLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 每日早安/晚安提醒处理器
- * 包含天气摘要、语录、新闻等
+ * 每日早安提醒处理器
+ * 包含天气摘要、每日心语与简讯。
  */
 @Slf4j
 @Component
@@ -27,6 +35,9 @@ public class MorningHandler implements SceneReminderHandler {
 
     @Autowired
     private SceneCacheService sceneCacheService;
+
+    @Autowired
+    private AppProperties appProperties;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -52,14 +63,8 @@ public class MorningHandler implements SceneReminderHandler {
         "清晨第一缕阳光，照亮你的心房 ☀️"
     };
 
-    // 晚安语录
-    private static final String[] EVENING_QUOTES = {
-        "晚安好梦 🌙",
-        "辛苦了一天，好好休息 💤",
-        "明天又是美好的一天 🏵️",
-        "放下烦恼，轻松入睡 😴",
-        "晚安，愿你有个好梦 🌟"
-    };
+    private final ConcurrentHashMap<LocalDate, String> dailyQuoteCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<LocalDate, String> dailyBriefCache = new ConcurrentHashMap<>();
 
     @Override
     public String getSceneType() {
@@ -68,7 +73,7 @@ public class MorningHandler implements SceneReminderHandler {
 
     @Override
     public String getSceneName() {
-        return "早安晚安";
+        return "每日早安";
     }
 
     @Override
@@ -83,7 +88,13 @@ public class MorningHandler implements SceneReminderHandler {
 
     @Override
     public void validateConfig(String businessData) {
-        // 不需要特殊配置
+        try {
+            Map<String, Object> config = JSONUtil.parseObj(businessData);
+            String reminderTime = String.valueOf(config.getOrDefault("reminderTime", "07:00"));
+            LocalTime.parse(reminderTime);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("早安提醒配置格式错误: " + e.getMessage());
+        }
     }
 
     @Override
@@ -102,8 +113,6 @@ public class MorningHandler implements SceneReminderHandler {
             // 获取配置的提醒时间
             Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
             String reminderTime = (String) config.getOrDefault("reminderTime", "07:00");
-            boolean isEvening = "evening".equals(config.getOrDefault("type", "morning"));
-
             // 检查当前时间是否到达提醒时间
             LocalDateTime now = LocalDateTime.now();
             String currentTime = String.format("%02d:%02d", now.getHour(), now.getMinute());
@@ -114,7 +123,7 @@ public class MorningHandler implements SceneReminderHandler {
                 return false;
             }
 
-            log.info("早安/晚安提醒触发: reminderTime={}, currentTime={}", reminderTime, currentTime);
+            log.info("早安提醒触发: reminderTime={}, currentTime={}", reminderTime, currentTime);
             return true;
 
         } catch (Exception e) {
@@ -140,12 +149,9 @@ public class MorningHandler implements SceneReminderHandler {
 
     @Override
     public String renderTitle(Reminder reminder, User user) {
-        Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
-        boolean isEvening = "evening".equals(config.getOrDefault("type", "morning"));
-
         String template = reminder.getTitleTemplate();
         if (template == null || template.isEmpty()) {
-            template = isEvening ? "🌙 晚安提醒" : "🌅 早安提醒";
+            template = "🌅 早安";
         }
 
         return template.replace("{userName}", user.getNickname() != null ? user.getNickname() : "亲爱的");
@@ -154,48 +160,37 @@ public class MorningHandler implements SceneReminderHandler {
     @Override
     public String renderContent(Reminder reminder, User user) {
         Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
-        boolean isEvening = "evening".equals(config.getOrDefault("type", "morning"));
 
-        String location = (String) config.getOrDefault("location", "auto");
-        if ("auto".equals(location)) {
-            String userLocation = getUserLocation(reminder.getCreateBy());
-            location = userLocation != null ? userLocation : "南京";
-        }
+        UserLocation resolvedLocation = resolveLocation(
+            reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+        String location = resolvedLocation.getLocation();
 
         // 获取天气信息
-        String weatherInfo = getWeatherSummary(location);
+        String weatherInfo = getWeatherSummary(
+            location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
 
         // 获取日期信息
         LocalDate today = LocalDate.now();
         String dateInfo = today.format(DateTimeFormatter.ofPattern("MM月dd日 EEEE", java.util.Locale.CHINA));
 
-        // 获取语录
-        String quote = getQuote(isEvening);
+        String quote = getQuote();
+        String dailyBrief = getDailyBrief();
 
         // 构建内容
         StringBuilder content = new StringBuilder();
 
-        if (isEvening) {
-            // 晚安内容
-            content.append(quote).append("\n\n");
-            content.append("📅 ").append(dateInfo).append("\n");
-            content.append("🌙 晚安，祝好梦！");
-        } else {
-            // 早安内容
-            content.append(quote).append("\n\n");
-            content.append("📅 ").append(dateInfo).append("\n\n");
-
-            if (!weatherInfo.isEmpty()) {
-                content.append(weatherInfo).append("\n");
-            }
-
-            // 今日提醒
-            content.append("\n💡 今日提醒：\n");
-            content.append("• 新的一天，记得签到哦\n");
-            content.append("• 保持好心情\n");
+        content.append("📅 ").append(dateInfo).append("\n");
+        if (!weatherInfo.isEmpty()) {
+            content.append(weatherInfo).append("\n");
+        }
+        if (!quote.isEmpty()) {
+            content.append("💬 今日心语：").append(quote).append("\n");
+        }
+        if (!dailyBrief.isEmpty()) {
+            content.append("📰 今日简讯：").append(dailyBrief).append("\n");
         }
 
-        return content.toString();
+        return content.toString().trim();
     }
 
     /**
@@ -209,12 +204,33 @@ public class MorningHandler implements SceneReminderHandler {
         }
     }
 
+    private UserLocation resolveLocation(Long userId, String configuredLocation) {
+        UserLocation resolved = new UserLocation();
+        if (!"auto".equals(configuredLocation)) {
+            resolved.setLocation(configuredLocation);
+            return resolved;
+        }
+        try {
+            UserLocation record = sceneCacheService.getUserLocationRecord(userId);
+            if (record != null) {
+                resolved.setLocation(record.getLocation());
+                resolved.setLatitude(record.getLatitude());
+                resolved.setLongitude(record.getLongitude());
+            }
+        } catch (Exception ignored) {
+        }
+        if (resolved.getLocation() == null || resolved.getLocation().isBlank()) {
+            resolved.setLocation("南京");
+        }
+        return resolved;
+    }
+
     /**
      * 获取天气摘要
      */
-    private String getWeatherSummary(String location) {
+    private String getWeatherSummary(String location, Double latitude, Double longitude) {
         try {
-            double[] coords = getCoordinates(location);
+            double[] coords = getCoordinates(location, latitude, longitude);
             if (coords == null) {
                 return "";
             }
@@ -281,29 +297,10 @@ public class MorningHandler implements SceneReminderHandler {
     /**
      * 获取坐标
      */
-    private double[] getCoordinates(String cityName) {
+    private double[] getCoordinates(String cityName, Double latitude, Double longitude) {
         try {
-            String url = String.format("%s?name=%s&count=1&language=zh",
-                GEOCODING_API, java.net.URLEncoder.encode(cityName, "UTF-8"));
-
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            if (response == null || !response.containsKey("results")) return null;
-
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-            if (results == null || results.isEmpty()) return null;
-
-            Map<String, Object> first = results.get(0);
-            Object latObj = first.get("latitude");
-            Object lonObj = first.get("longitude");
-
-            if (latObj != null && lonObj != null) {
-                return new double[]{
-                    ((Number) latObj).doubleValue(),
-                    ((Number) lonObj).doubleValue()
-                };
-            }
-            return null;
+            return OpenMeteoGeocodingSupport.resolveCoordinates(
+                restTemplate, GEOCODING_API, cityName, latitude, longitude);
         } catch (Exception e) {
             return null;
         }
@@ -312,10 +309,81 @@ public class MorningHandler implements SceneReminderHandler {
     /**
      * 获取语录
      */
-    private String getQuote(boolean isEvening) {
-        String[] quotes = isEvening ? EVENING_QUOTES : QUOTES;
-        int index = new Random().nextInt(quotes.length);
-        return quotes[index];
+    private String getQuote() {
+        LocalDate today = LocalDate.now();
+        return dailyQuoteCache.computeIfAbsent(today, ignored -> {
+            String onlineQuote = fetchOnlineQuote();
+            if (!onlineQuote.isEmpty()) {
+                return onlineQuote;
+            }
+            return QUOTES[Math.floorMod(today.getDayOfYear(), QUOTES.length)];
+        });
+    }
+
+    private String fetchOnlineQuote() {
+        try {
+            Map<String, Object> response = restTemplate.getForObject(
+                "https://v1.hitokoto.cn/?c=d&c=h&c=i&encode=json&max_length=28",
+                Map.class
+            );
+            if (response == null) {
+                return "";
+            }
+            Object hitokoto = response.get("hitokoto");
+            return hitokoto == null ? "" : clampText(String.valueOf(hitokoto), 32);
+        } catch (Exception e) {
+            log.debug("获取每日心语失败，回退本地文案", e);
+            return "";
+        }
+    }
+
+    private String getDailyBrief() {
+        LocalDate today = LocalDate.now();
+        return dailyBriefCache.computeIfAbsent(today, ignored -> fetchDailyBrief());
+    }
+
+    private String fetchDailyBrief() {
+        String feedUrl = appProperties.getDailyBriefFeedUrl();
+        if (feedUrl == null || feedUrl.isBlank()) {
+            return "";
+        }
+        try {
+            String xml = restTemplate.getForObject(feedUrl, String.class);
+            if (xml == null || xml.isBlank()) {
+                return "";
+            }
+
+            Document document = DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            document.getDocumentElement().normalize();
+
+            NodeList itemNodes = document.getElementsByTagName("item");
+            if (itemNodes.getLength() == 0) {
+                return "";
+            }
+            NodeList titleNodes = document.getElementsByTagName("title");
+            for (int i = 0; i < titleNodes.getLength(); i++) {
+                String title = titleNodes.item(i).getTextContent();
+                if (title != null && !title.isBlank() && !title.contains("知乎日报")) {
+                    return clampText(title.replaceAll("\\s+", " ").trim(), 34);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("获取今日简讯失败，自动省略", e);
+        }
+        return "";
+    }
+
+    private String clampText(String text, int maxLength) {
+        if (text == null) {
+            return "";
+        }
+        String normalized = text.replaceAll("\\s+", " ").trim();
+        if (normalized.length() <= maxLength) {
+            return normalized;
+        }
+        return normalized.substring(0, Math.max(0, maxLength - 1)) + "…";
     }
 
     @Override
@@ -326,11 +394,11 @@ public class MorningHandler implements SceneReminderHandler {
             .reminderType("MORNING")
             .frequencyType("DAILY")
             .frequencyConfig("{\"fixedTime\": \"07:00\"}")
-            .titleTemplate("🌅 早安提醒")
+            .titleTemplate("🌅 早安")
             .contentTemplate("")
-            .businessData("{\"sceneType\": \"MORNING\", \"type\": \"morning\", \"location\": \"auto\", \"reminderTime\": \"07:00\"}")
+            .businessData("{\"sceneType\": \"MORNING\", \"location\": \"auto\", \"reminderTime\": \"07:00\"}")
             .icon(ICON)
-            .description("每天早上7点发送早安问候，包含天气和语录")
+            .description("每天早上发送早安提醒，包含天气、每日心语和一条简讯")
             .bgColor(BG_COLOR)
             .build();
     }

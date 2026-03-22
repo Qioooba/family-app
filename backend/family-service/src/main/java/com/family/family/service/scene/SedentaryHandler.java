@@ -9,7 +9,6 @@ import com.family.family.service.SceneCacheService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.DayOfWeek;
 import java.time.format.DateTimeFormatter;
@@ -99,19 +98,11 @@ public class SedentaryHandler implements SceneReminderHandler {
                 }
             }
             
-            // 获取久坐时长配置
-            int sitDuration = (int) config.getOrDefault("sitDuration", 60);
-
-            // 检查上次提醒时间
-            LocalDateTime lastRemindTime = sceneCacheService.getLastSitTime(reminder.getCreateBy());
-
-            if (lastRemindTime != null) {
-                LocalDateTime nextRemindTime = lastRemindTime.plusMinutes(sitDuration);
-
-                if (LocalDateTime.now().isBefore(nextRemindTime)) {
-                    log.debug("久坐提醒冷却中，下次提醒时间: {}", nextRemindTime);
-                    return false;
-                }
+            int intervalMinutes = (int) config.getOrDefault("sitDuration", 60);
+            boolean shouldNotify = sceneCacheService.shouldNotifyAgain(reminder.getId(), intervalMinutes);
+            if (!shouldNotify) {
+                log.debug("久坐提醒冷却中: reminderId={}, interval={}分钟", reminder.getId(), intervalMinutes);
+                return false;
             }
 
             return true;
@@ -182,7 +173,7 @@ public class SedentaryHandler implements SceneReminderHandler {
      * 标记已提醒
      */
     public void markReminded(Long reminderId, Long userId) {
-        sceneCacheService.updateLastSitTime(userId, LocalDateTime.now());
+        sceneCacheService.markNotified(reminderId, userId, getSceneType());
     }
 
     private boolean isWorkdayOnly(Map<String, Object> config) {

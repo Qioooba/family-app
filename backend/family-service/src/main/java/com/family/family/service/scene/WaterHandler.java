@@ -3,6 +3,7 @@ package com.family.family.service.scene;
 import cn.hutool.json.JSONUtil;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
+import com.family.family.service.SceneCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.family.family.service.WaterRecordService;
@@ -23,6 +24,9 @@ public class WaterHandler implements SceneReminderHandler {
     
     @Autowired
     private WaterRecordService waterRecordService;
+
+    @Autowired
+    private SceneCacheService sceneCacheService;
     
     private static final String SCENE_TYPE = "WATER";
     private static final String ICON = "💧";
@@ -102,6 +106,13 @@ public class WaterHandler implements SceneReminderHandler {
             // 如果已完成目标，不再提醒
             if (todayAmount >= targetAmount) {
                 log.debug("今日饮水目标已达成: {}/{}ml", todayAmount, targetAmount);
+                return false;
+            }
+
+            int intervalMinutes = getIntValue(config.get("intervalMinutes"), 60);
+            boolean shouldNotify = sceneCacheService.shouldNotifyAgain(reminder.getId(), intervalMinutes);
+            if (!shouldNotify) {
+                log.debug("喝水提醒冷却中: reminderId={}, interval={}分钟", reminder.getId(), intervalMinutes);
                 return false;
             }
             

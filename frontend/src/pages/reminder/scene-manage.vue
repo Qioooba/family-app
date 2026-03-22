@@ -240,26 +240,36 @@
                 <text class="config-label">温度阈值</text>
                 <view class="threshold-grid">
                   <view class="threshold-card">
-                    <text class="threshold-card-label">高温提醒</text>
-                    <input
-                      class="threshold-input"
-                      type="number"
-                      :value="scene.config.highTempThreshold"
-                      placeholder="如 35"
-                      @input="(e) => updateConfig(scene, 'highTempThreshold', parseInt(e.detail.value) || 0)"
-                    />
-                    <text class="threshold-unit">达到或超过该温度提醒</text>
+                    <view class="threshold-card-header">
+                      <text class="threshold-card-label">高温提醒</text>
+                      <text class="threshold-card-desc">达到或超过时提醒</text>
+                    </view>
+                    <view class="threshold-input-row">
+                      <input
+                        class="threshold-input"
+                        type="number"
+                        :value="scene.config.highTempThreshold"
+                        placeholder="35"
+                        @input="(e) => updateConfig(scene, 'highTempThreshold', parseInt(e.detail.value) || 0)"
+                      />
+                      <text class="threshold-suffix">°C</text>
+                    </view>
                   </view>
                   <view class="threshold-card low">
-                    <text class="threshold-card-label">低温提醒</text>
-                    <input
-                      class="threshold-input"
-                      type="number"
-                      :value="scene.config.lowTempThreshold"
-                      placeholder="如 5"
-                      @input="(e) => updateConfig(scene, 'lowTempThreshold', parseInt(e.detail.value) || 0)"
-                    />
-                    <text class="threshold-unit">低于或等于该温度提醒</text>
+                    <view class="threshold-card-header">
+                      <text class="threshold-card-label">低温提醒</text>
+                      <text class="threshold-card-desc">低于或等于时提醒</text>
+                    </view>
+                    <view class="threshold-input-row">
+                      <input
+                        class="threshold-input"
+                        type="number"
+                        :value="scene.config.lowTempThreshold"
+                        placeholder="5"
+                        @input="(e) => updateConfig(scene, 'lowTempThreshold', parseInt(e.detail.value) || 0)"
+                      />
+                      <text class="threshold-suffix">°C</text>
+                    </view>
                   </view>
                 </view>
               </view>
@@ -392,18 +402,20 @@
             </view>
           </template>
 
-          <!-- 早安晚安提醒配置 -->
+          <!-- 早安提醒配置 -->
           <template v-if="scene.sceneType === 'MORNING'">
             <view class="config-section">
-              <text class="config-section-title">🌅 早安晚安</text>
+              <text class="config-section-title">🌅 每日早安</text>
               <view class="config-item">
-                <text class="config-label">提醒类型</text>
-                <view class="type-selector">
-                  <view class="type-option" :class="{ 'active': scene.config.type === 'morning' }" @click="updateConfig(scene, 'type', 'morning')"><text>☀️ 早安</text></view>
-                  <view class="type-option" :class="{ 'active': scene.config.type === 'evening' }" @click="updateConfig(scene, 'type', 'evening')"><text>🌙 晚安</text></view>
-                </view>
+                <text class="config-label">提醒时间</text>
+                <picker mode="time" :value="scene.config.reminderTime || '07:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)">
+                  <view class="picker"><text>{{ scene.config.reminderTime || '07:00' }}</text></view>
+                </picker>
               </view>
-              <view class="config-item"><text class="config-label">提醒时间</text><picker mode="time" :value="scene.config.reminderTime || '07:00'" @change="(e) => updateConfig(scene, 'reminderTime', e.detail.value)"><view class="picker"><text>{{ scene.config.reminderTime || '07:00' }}</text></view></picker></view>
+              <view class="config-item">
+                <text class="config-label">内容说明</text>
+                <text class="config-hint">会自动组合今日天气、每日心语和一条简讯，控制在适合提醒阅读的长度内</text>
+              </view>
             </view>
           </template>
 
@@ -612,7 +624,7 @@ const getDefaultConfig = (sceneType) => {
     WEATHER_TEMP: { location: 'auto', intervalMinutes: 120, highTempThreshold: 35, lowTempThreshold: 5, allDay: false, workHours: ['07:00', '22:00'] },
     AIR_QUALITY: { location: 'auto', intervalMinutes: 120, pm25Threshold: 75, pm10Threshold: 150, aqiThreshold: 100, allDay: false, workHours: ['06:00', '22:00'] },
     UV_INDEX: { location: 'auto', intervalMinutes: 120, uvThreshold: 3, allDay: false, workHours: ['08:00', '18:00'] },
-    MORNING: { type: 'morning', location: 'auto', reminderTime: '07:00' },
+    MORNING: { location: 'auto', reminderTime: '07:00' },
     CHECKIN: { reminderTime: '08:00', workDaysOnly: true },
     SCHEDULE: { reminderTime: '07:30' },
     SLEEP: { reminderTime: '22:00' },
@@ -714,7 +726,7 @@ const getSceneDescription = (scene) => {
     case 'UV_INDEX':
       return `${config.allDay ? '全天' : formatWorkHourLabel(config.workHours, '08:00-18:00')}内监测紫外线指数`
     case 'MORNING':
-      return `${config.type === 'evening' ? '每天' : '每天'}${config.reminderTime || '07:00'}发送${config.type === 'evening' ? '晚安问候' : '早安问候'}`
+      return `每天${config.reminderTime || '07:00'}发送早安提醒，包含天气、心语和简讯`
     case 'CHECKIN':
       return `${config.workDaysOnly !== false ? '工作日' : '每天'}${config.reminderTime || '08:00'}提醒签到打卡`
     case 'SCHEDULE':
@@ -758,6 +770,19 @@ const saveSceneConfig = async (scene) => {
     if (scene.sceneType === 'WEATHER_TEMP') {
       delete scene.config.alertType
       delete scene.config.tempThreshold
+
+      const highTempThreshold = Number(scene.config.highTempThreshold)
+      const lowTempThreshold = Number(scene.config.lowTempThreshold)
+
+      if (!Number.isFinite(highTempThreshold) || !Number.isFinite(lowTempThreshold)) {
+        uni.showToast({ title: '请填写完整的温度阈值', icon: 'none' })
+        return
+      }
+
+      if (lowTempThreshold >= highTempThreshold) {
+        uni.showToast({ title: '低温阈值必须小于高温阈值', icon: 'none' })
+        return
+      }
     }
     await request.post('/api/reminder/scene/update', {
       sceneType: scene.sceneType,
@@ -1025,17 +1050,38 @@ onShow(() => {
   }
 }
 
+.threshold-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
 .threshold-card-label {
   font-size: 26rpx;
   color: #334155;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
-.threshold-unit {
+.threshold-card-desc {
   font-size: 22rpx;
   color: #64748b;
   line-height: 1.5;
-  word-break: break-all;
+}
+
+.threshold-input-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.threshold-suffix {
+  font-size: 26rpx;
+  color: #475569;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .location-auto-btn {

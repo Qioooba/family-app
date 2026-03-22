@@ -17,6 +17,6 @@ public interface TaskMapper extends BaseMapper<Task> {
     /**
      * 查询用户今日待办任务数量
      */
-    @Select("SELECT COUNT(*) FROM task WHERE create_by = #{userId} AND DATE(create_time) = CURDATE() AND status != 2")
+    @Select("SELECT COUNT(*) FROM task WHERE creator_id = #{userId} AND DATE(create_time) = CURDATE() AND status != 2")
     int countTodayTodos(@Param("userId") Long userId);
 }

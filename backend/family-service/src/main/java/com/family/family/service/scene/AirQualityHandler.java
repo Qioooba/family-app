@@ -3,6 +3,7 @@ package com.family.family.service.scene;
 import cn.hutool.json.JSONUtil;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
+import com.family.family.entity.UserLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.family.family.service.SceneCacheService;
@@ -111,20 +112,13 @@ public class AirQualityHandler implements SceneReminderHandler {
                 }
             }
 
-            String location = (String) config.getOrDefault("location", "auto");
-
-            // 如果是auto，尝试获取用户定位信息
-            if ("auto".equals(location)) {
-                String userLocation = getUserLocation(reminder.getCreateBy());
-                if (userLocation != null) {
-                    location = userLocation;
-                } else {
-                    location = "南京";
-                }
-            }
+            UserLocation resolvedLocation = resolveLocation(
+                reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+            String location = resolvedLocation.getLocation();
 
             // 获取空气质量信息
-            AirQualityInfo airQuality = getAirQualityInfo(location);
+            AirQualityInfo airQuality = getAirQualityInfo(
+                location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
             if (airQuality == null) {
                 log.warn("获取空气质量信息失败，位置: {}", location);
                 return false;
@@ -174,6 +168,27 @@ public class AirQualityHandler implements SceneReminderHandler {
         }
     }
 
+    private UserLocation resolveLocation(Long userId, String configuredLocation) {
+        UserLocation resolved = new UserLocation();
+        if (!"auto".equals(configuredLocation)) {
+            resolved.setLocation(configuredLocation);
+            return resolved;
+        }
+        try {
+            UserLocation record = sceneCacheService.getUserLocationRecord(userId);
+            if (record != null) {
+                resolved.setLocation(record.getLocation());
+                resolved.setLatitude(record.getLatitude());
+                resolved.setLongitude(record.getLongitude());
+            }
+        } catch (Exception ignored) {
+        }
+        if (resolved.getLocation() == null || resolved.getLocation().isBlank()) {
+            resolved.setLocation("南京");
+        }
+        return resolved;
+    }
+
     @Override
     public String renderTitle(Reminder reminder, User user) {
         Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
@@ -183,13 +198,12 @@ public class AirQualityHandler implements SceneReminderHandler {
             template = "🌫️ 空气质量较差，注意防护！";
         }
 
-        String location = (String) config.getOrDefault("location", "auto");
-        if ("auto".equals(location)) {
-            String userLocation = getUserLocation(reminder.getCreateBy());
-            location = userLocation != null ? userLocation : "南京";
-        }
+        UserLocation resolvedLocation = resolveLocation(
+            reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+        String location = resolvedLocation.getLocation();
 
-        AirQualityInfo airQuality = getAirQualityInfo(location);
+        AirQualityInfo airQuality = getAirQualityInfo(
+            location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
 
         String aqiText = "优";
         if (airQuality != null && airQuality.getUsAqi() != null) {
@@ -211,13 +225,12 @@ public class AirQualityHandler implements SceneReminderHandler {
             template = "{userName}，当前位置{location}的空气质量{aqiLevel}，PM2.5浓度{pm25}μg/m³，建议减少户外活动，外出佩戴口罩😷";
         }
 
-        String location = (String) config.getOrDefault("location", "auto");
-        if ("auto".equals(location)) {
-            String userLocation = getUserLocation(reminder.getCreateBy());
-            location = userLocation != null ? userLocation : "南京";
-        }
+        UserLocation resolvedLocation = resolveLocation(
+            reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+        String location = resolvedLocation.getLocation();
 
-        AirQualityInfo airQuality = getAirQualityInfo(location);
+        AirQualityInfo airQuality = getAirQualityInfo(
+            location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
 
         String aqiText = "优";
         String pm25Text = "--";
@@ -263,10 +276,10 @@ public class AirQualityHandler implements SceneReminderHandler {
     /**
      * 获取空气质量信息（调用 Open-Meteo API）
      */
-    private AirQualityInfo getAirQualityInfo(String location) {
+    private AirQualityInfo getAirQualityInfo(String location, Double latitude, Double longitude) {
         try {
             // 1. 先通过城市名获取坐标
-            double[] coords = getCoordinates(location);
+            double[] coords = getCoordinates(location, latitude, longitude);
             if (coords == null) {
                 log.warn("无法获取城市坐标: {}", location);
                 return null;
@@ -274,7 +287,7 @@ public class AirQualityHandler implements SceneReminderHandler {
 
             // 2. 调用空气质量API
             String url = String.format(
-                "%s?latitude=%.4f&longitude=%.4f&current=pm2_5,pm10,us_aqi, european_aqi",
+                "%s?latitude=%.4f&longitude=%.4f&current=pm2_5,pm10,us_aqi,european_aqi",
                 AIR_QUALITY_API, coords[0], coords[1]
             );
 
@@ -329,9 +342,10 @@ public class AirQualityHandler implements SceneReminderHandler {
     /**
      * 获取城市坐标
      */
-    private double[] getCoordinates(String cityName) {
+    private double[] getCoordinates(String cityName, Double latitude, Double longitude) {
         try {
-            return OpenMeteoGeocodingSupport.resolveCoordinates(restTemplate, GEOCODING_API, cityName);
+            return OpenMeteoGeocodingSupport.resolveCoordinates(
+                restTemplate, GEOCODING_API, cityName, latitude, longitude);
 
         } catch (Exception e) {
             log.error("获取城市坐标失败: {}", cityName, e);

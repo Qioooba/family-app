@@ -19,7 +19,19 @@ public interface ReminderMapper extends BaseMapper<Reminder> {
      * 查询需要执行的提醒（下次执行时间<=当前时间）
      * 限制最多100条，防止一次性处理过多任务
      */
-    @Select("SELECT * FROM reminder_config WHERE status = 1 AND next_execute_time <= #{now} ORDER BY priority DESC, next_execute_time ASC LIMIT 100")
+    @Select("""
+        SELECT * FROM reminder_config
+        WHERE status = 1
+          AND next_execute_time <= #{now}
+          AND COALESCE(create_type, 1) <> 2
+          AND reminder_type NOT IN (
+            'WATER', 'WEATHER_RAIN', 'WEATHER_TEMP', 'AIR_QUALITY', 'UV_INDEX',
+            'MORNING', 'CHECKIN', 'SCHEDULE', 'SLEEP', 'ANNIVERSARY',
+            'EYE_REST', 'SEDENTARY'
+          )
+        ORDER BY priority DESC, next_execute_time ASC
+        LIMIT 100
+        """)
     List<Reminder> selectDueReminders(@Param("now") LocalDateTime now);
     
     /**

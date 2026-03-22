@@ -15,6 +15,7 @@ public class AppProperties {
 
     private String baseUrl = "http://localhost:8443";
     private String publicOrigin = "http://localhost:8443";
+    private String dailyBriefFeedUrl = "https://rsshub.app/zhihu/daily";
     private List<String> corsAllowedOrigins = new ArrayList<>();
 
     public String getBaseUrl() {
@@ -39,6 +40,14 @@ public class AppProperties {
 
     public void setCorsAllowedOrigins(List<String> corsAllowedOrigins) {
         this.corsAllowedOrigins = corsAllowedOrigins;
+    }
+
+    public String getDailyBriefFeedUrl() {
+        return trimTrailingSlash(dailyBriefFeedUrl);
+    }
+
+    public void setDailyBriefFeedUrl(String dailyBriefFeedUrl) {
+        this.dailyBriefFeedUrl = dailyBriefFeedUrl;
     }
 
     private String trimTrailingSlash(String value) {

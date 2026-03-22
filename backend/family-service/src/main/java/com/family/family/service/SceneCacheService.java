@@ -39,6 +39,13 @@ public class SceneCacheService {
      * 保存用户定位
      */
     public void saveUserLocation(Long userId, String location) {
+        saveUserLocation(userId, location, null, null);
+    }
+
+    /**
+     * 保存用户定位（含经纬度）
+     */
+    public void saveUserLocation(Long userId, String location, Double latitude, Double longitude) {
         UserLocation record = userLocationMapper.selectOne(
             new LambdaQueryWrapper<UserLocation>().eq(UserLocation::getUserId, userId)
         );
@@ -46,10 +53,14 @@ public class SceneCacheService {
         if (record == null) {
             record = new UserLocation();
             record.setUserId(userId);
-            record.setLocation(location);
+        } else {
+        }
+        record.setLocation(location);
+        record.setLatitude(latitude);
+        record.setLongitude(longitude);
+        if (record.getId() == null) {
             userLocationMapper.insert(record);
         } else {
-            record.setLocation(location);
             userLocationMapper.updateById(record);
         }
         log.info("保存用户定位: userId={}, location={}", userId, location);
@@ -63,6 +74,15 @@ public class SceneCacheService {
             new LambdaQueryWrapper<UserLocation>().eq(UserLocation::getUserId, userId)
         );
         return record != null ? record.getLocation() : null;
+    }
+
+    /**
+     * 获取完整的用户定位记录
+     */
+    public UserLocation getUserLocationRecord(Long userId) {
+        return userLocationMapper.selectOne(
+            new LambdaQueryWrapper<UserLocation>().eq(UserLocation::getUserId, userId)
+        );
     }
 
     // ========== 每日提醒防重复 ==========

@@ -4,10 +4,36 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 final class OpenMeteoGeocodingSupport {
+
+    private static final Map<String, double[]> BUILTIN_CITY_COORDINATES = new HashMap<>();
+
+    static {
+        BUILTIN_CITY_COORDINATES.put("北京", new double[] {39.9042, 116.4074});
+        BUILTIN_CITY_COORDINATES.put("上海", new double[] {31.2304, 121.4737});
+        BUILTIN_CITY_COORDINATES.put("广州", new double[] {23.1291, 113.2644});
+        BUILTIN_CITY_COORDINATES.put("深圳", new double[] {22.5431, 114.0579});
+        BUILTIN_CITY_COORDINATES.put("杭州", new double[] {30.2741, 120.1551});
+        BUILTIN_CITY_COORDINATES.put("南京", new double[] {32.0603, 118.7969});
+        BUILTIN_CITY_COORDINATES.put("苏州", new double[] {31.2989, 120.5853});
+        BUILTIN_CITY_COORDINATES.put("无锡", new double[] {31.4900, 120.3124});
+        BUILTIN_CITY_COORDINATES.put("常州", new double[] {31.8107, 119.9741});
+        BUILTIN_CITY_COORDINATES.put("成都", new double[] {30.5728, 104.0668});
+        BUILTIN_CITY_COORDINATES.put("重庆", new double[] {29.5630, 106.5516});
+        BUILTIN_CITY_COORDINATES.put("天津", new double[] {39.3434, 117.3616});
+        BUILTIN_CITY_COORDINATES.put("武汉", new double[] {30.5928, 114.3055});
+        BUILTIN_CITY_COORDINATES.put("西安", new double[] {34.3416, 108.9398});
+        BUILTIN_CITY_COORDINATES.put("长沙", new double[] {28.2282, 112.9388});
+        BUILTIN_CITY_COORDINATES.put("青岛", new double[] {36.0671, 120.3826});
+        BUILTIN_CITY_COORDINATES.put("郑州", new double[] {34.7473, 113.6249});
+        BUILTIN_CITY_COORDINATES.put("厦门", new double[] {24.4798, 118.0894});
+        BUILTIN_CITY_COORDINATES.put("宁波", new double[] {29.8683, 121.5440});
+        BUILTIN_CITY_COORDINATES.put("合肥", new double[] {31.8206, 117.2290});
+    }
 
     private OpenMeteoGeocodingSupport() {
     }
@@ -20,6 +46,10 @@ final class OpenMeteoGeocodingSupport {
             }
 
             String normalized = normalizeCityName(cityName);
+            double[] builtin = lookupBuiltinCoordinates(normalized);
+            if (builtin != null) {
+                return builtin;
+            }
             for (String keyword : buildSearchKeywords(normalized)) {
                 double[] coords = queryCoordinates(restTemplate, geocodingApi, keyword);
                 if (coords != null) {
@@ -30,6 +60,14 @@ final class OpenMeteoGeocodingSupport {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    static double[] resolveCoordinates(RestTemplate restTemplate, String geocodingApi, String cityName,
+                                       Double latitude, Double longitude) {
+        if (latitude != null && longitude != null) {
+            return new double[] { latitude, longitude };
+        }
+        return resolveCoordinates(restTemplate, geocodingApi, cityName);
     }
 
     private static double[] queryCoordinates(RestTemplate restTemplate, String geocodingApi, String keyword) {
@@ -84,7 +122,29 @@ final class OpenMeteoGeocodingSupport {
         if (normalized.contains(" ")) {
             normalized = normalized.split("\\s+")[0];
         }
+        if (normalized.contains("市")) {
+            normalized = normalized.substring(0, normalized.indexOf("市"));
+        }
+        if (normalized.contains("区")) {
+            normalized = normalized.substring(0, normalized.indexOf("区"));
+        }
         return normalized;
+    }
+
+    private static double[] lookupBuiltinCoordinates(String cityName) {
+        if (cityName == null || cityName.isBlank()) {
+            return null;
+        }
+        double[] exact = BUILTIN_CITY_COORDINATES.get(cityName);
+        if (exact != null) {
+            return exact;
+        }
+        for (Map.Entry<String, double[]> entry : BUILTIN_CITY_COORDINATES.entrySet()) {
+            if (cityName.contains(entry.getKey()) || entry.getKey().contains(cityName)) {
+                return entry.getValue();
+            }
+        }
+        return null;
     }
 
     private static double[] parseCoordinateString(String cityName) {

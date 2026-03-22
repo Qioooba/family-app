@@ -757,19 +757,22 @@ public class FamilyReminderController {
      * 保存用户定位信息（用于天气提醒）
      */
     @PostMapping("/scene/location")
-    public Map<String, Object> saveUserLocation(@RequestBody Map<String, String> params) {
+    public Map<String, Object> saveUserLocation(@RequestBody Map<String, Object> params) {
         try {
             Long userId = StpUtil.getLoginIdAsLong();
-            String location = params.get("location");
+            String location = params.get("location") == null ? null : String.valueOf(params.get("location"));
+            Double latitude = toDouble(params.get("latitude"));
+            Double longitude = toDouble(params.get("longitude"));
 
             if (location == null || location.isEmpty()) {
                 return error("位置不能为空");
             }
 
             // 保存到数据库
-            sceneCacheService.saveUserLocation(userId, location);
+            sceneCacheService.saveUserLocation(userId, location, latitude, longitude);
 
-            log.info("保存用户定位: userId={}, location={}", userId, location);
+            log.info("保存用户定位: userId={}, location={}, latitude={}, longitude={}",
+                userId, location, latitude, longitude);
 
             return success(null, "定位已保存");
         } catch (Exception e) {
@@ -900,7 +903,6 @@ public class FamilyReminderController {
                 normalized.put("advanceDays", getIntValue(firstNonNull(currentConfig.get("advanceDays"), defaultConfig.get("advanceDays")), 3));
                 break;
             case "MORNING":
-                normalized.put("type", getStringValue(firstNonNull(currentConfig.get("type"), defaultConfig.get("type")), "morning"));
                 normalized.put("location", getStringValue(firstNonNull(currentConfig.get("location"), defaultConfig.get("location")), "auto"));
                 normalized.put("reminderTime", getStringValue(firstNonNull(currentConfig.get("reminderTime"), frequency.get("fixedTime"), defaultConfig.get("reminderTime")), "07:00"));
                 break;
@@ -1057,6 +1059,17 @@ public class FamilyReminderController {
         }
         String str = String.valueOf(value).trim();
         return str.isEmpty() ? defaultValue : str;
+    }
+
+    private Double toDouble(Object value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(String.valueOf(value));
+        } catch (Exception e) {
+            return null;
+        }
     }
     
     /**

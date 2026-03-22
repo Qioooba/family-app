@@ -3,6 +3,7 @@ package com.family.family.service.scene;
 import cn.hutool.json.JSONUtil;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
+import com.family.family.entity.UserLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.family.family.service.SceneCacheService;
@@ -108,14 +109,13 @@ public class WeatherRainHandler implements SceneReminderHandler {
             }
 
             // 获取位置
-            String location = (String) config.getOrDefault("location", "auto");
-            if ("auto".equals(location)) {
-                String userLocation = getUserLocation(reminder.getCreateBy());
-                location = userLocation != null ? userLocation : "南京";
-            }
+            UserLocation resolvedLocation = resolveLocation(
+                reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+            String location = resolvedLocation.getLocation();
 
             // 获取天气预报数据
-            WeatherForecast forecast = getWeatherForecast(location);
+            WeatherForecast forecast = getWeatherForecast(
+                location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
             if (forecast == null) {
                 log.warn("获取天气预报失败，位置: {}", location);
                 return false;
@@ -150,6 +150,27 @@ public class WeatherRainHandler implements SceneReminderHandler {
         }
     }
 
+    private UserLocation resolveLocation(Long userId, String configuredLocation) {
+        UserLocation resolved = new UserLocation();
+        if (!"auto".equals(configuredLocation)) {
+            resolved.setLocation(configuredLocation);
+            return resolved;
+        }
+        try {
+            UserLocation record = sceneCacheService.getUserLocationRecord(userId);
+            if (record != null) {
+                resolved.setLocation(record.getLocation());
+                resolved.setLatitude(record.getLatitude());
+                resolved.setLongitude(record.getLongitude());
+            }
+        } catch (Exception ignored) {
+        }
+        if (resolved.getLocation() == null || resolved.getLocation().isBlank()) {
+            resolved.setLocation("南京");
+        }
+        return resolved;
+    }
+
     /**
      * 检查未来N小时内是否下雨
      */
@@ -178,10 +199,10 @@ public class WeatherRainHandler implements SceneReminderHandler {
     /**
      * 获取天气预报（调用真实API）
      */
-    private WeatherForecast getWeatherForecast(String location) {
+    private WeatherForecast getWeatherForecast(String location, Double latitude, Double longitude) {
         try {
             // 1. 获取坐标
-            double[] coords = getCoordinates(location);
+            double[] coords = getCoordinates(location, latitude, longitude);
             if (coords == null) {
                 log.warn("无法获取城市坐标: {}", location);
                 return null;
@@ -259,9 +280,10 @@ public class WeatherRainHandler implements SceneReminderHandler {
     /**
      * 获取城市坐标
      */
-    private double[] getCoordinates(String cityName) {
+    private double[] getCoordinates(String cityName, Double latitude, Double longitude) {
         try {
-            return OpenMeteoGeocodingSupport.resolveCoordinates(restTemplate, GEOCODING_API, cityName);
+            return OpenMeteoGeocodingSupport.resolveCoordinates(
+                restTemplate, GEOCODING_API, cityName, latitude, longitude);
         } catch (Exception e) {
             log.error("获取城市坐标失败: {}", cityName, e);
             return null;
@@ -277,11 +299,9 @@ public class WeatherRainHandler implements SceneReminderHandler {
             template = "🌧️ 今日有雨，记得带伞！";
         }
 
-        String location = (String) config.getOrDefault("location", "auto");
-        if ("auto".equals(location)) {
-            String userLocation = getUserLocation(reminder.getCreateBy());
-            location = userLocation != null ? userLocation : "南京";
-        }
+        UserLocation resolvedLocation = resolveLocation(
+            reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+        String location = resolvedLocation.getLocation();
 
         return template
             .replace("{userName}", user.getNickname() != null ? user.getNickname() : "亲爱的")
@@ -297,14 +317,13 @@ public class WeatherRainHandler implements SceneReminderHandler {
             template = "{userName}，{location}今天有雨，出门记得带{umbrellaIcon}！";
         }
 
-        String location = (String) config.getOrDefault("location", "auto");
-        if ("auto".equals(location)) {
-            String userLocation = getUserLocation(reminder.getCreateBy());
-            location = userLocation != null ? userLocation : "南京";
-        }
+        UserLocation resolvedLocation = resolveLocation(
+            reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+        String location = resolvedLocation.getLocation();
 
         // 获取最新预报
-        WeatherForecast forecast = getWeatherForecast(location);
+        WeatherForecast forecast = getWeatherForecast(
+            location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
 
         String rainTime = "今天";
         String rainProb = "--";

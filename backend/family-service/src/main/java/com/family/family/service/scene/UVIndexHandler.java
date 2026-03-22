@@ -3,6 +3,7 @@ package com.family.family.service.scene;
 import cn.hutool.json.JSONUtil;
 import com.family.family.entity.Reminder;
 import com.family.family.entity.User;
+import com.family.family.entity.UserLocation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.family.family.service.SceneCacheService;
@@ -110,18 +111,13 @@ public class UVIndexHandler implements SceneReminderHandler {
             }
 
             // 获取位置
-            String location = (String) config.getOrDefault("location", "auto");
-            if ("auto".equals(location)) {
-                String userLocation = getUserLocation(reminder.getCreateBy());
-                if (userLocation != null) {
-                    location = userLocation;
-                } else {
-                    location = "南京";
-                }
-            }
+            UserLocation resolvedLocation = resolveLocation(
+                reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+            String location = resolvedLocation.getLocation();
 
             // 获取紫外线信息
-            UVIndexInfo uvInfo = getUVIndexInfo(location);
+            UVIndexInfo uvInfo = getUVIndexInfo(
+                location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
             if (uvInfo == null) {
                 log.warn("获取紫外线信息失败，位置: {}", location);
                 return false;
@@ -155,6 +151,27 @@ public class UVIndexHandler implements SceneReminderHandler {
         }
     }
 
+    private UserLocation resolveLocation(Long userId, String configuredLocation) {
+        UserLocation resolved = new UserLocation();
+        if (!"auto".equals(configuredLocation)) {
+            resolved.setLocation(configuredLocation);
+            return resolved;
+        }
+        try {
+            UserLocation record = sceneCacheService.getUserLocationRecord(userId);
+            if (record != null) {
+                resolved.setLocation(record.getLocation());
+                resolved.setLatitude(record.getLatitude());
+                resolved.setLongitude(record.getLongitude());
+            }
+        } catch (Exception ignored) {
+        }
+        if (resolved.getLocation() == null || resolved.getLocation().isBlank()) {
+            resolved.setLocation("南京");
+        }
+        return resolved;
+    }
+
     @Override
     public String renderTitle(Reminder reminder, User user) {
         Map<String, Object> config = JSONUtil.parseObj(reminder.getBusinessData());
@@ -164,13 +181,12 @@ public class UVIndexHandler implements SceneReminderHandler {
             template = "☀️ 紫外线较强，注意防晒！";
         }
 
-        String location = (String) config.getOrDefault("location", "auto");
-        if ("auto".equals(location)) {
-            String userLocation = getUserLocation(reminder.getCreateBy());
-            location = userLocation != null ? userLocation : "南京";
-        }
+        UserLocation resolvedLocation = resolveLocation(
+            reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+        String location = resolvedLocation.getLocation();
 
-        UVIndexInfo uvInfo = getUVIndexInfo(location);
+        UVIndexInfo uvInfo = getUVIndexInfo(
+            location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
 
         String uvLevel = "弱";
         if (uvInfo != null && uvInfo.getUvIndex() != null) {
@@ -192,13 +208,12 @@ public class UVIndexHandler implements SceneReminderHandler {
             template = "{userName}，当前位置{location}当前紫外线指数{uvIndex}，{uvLevel}，建议涂抹防晒霜，佩戴遮阳帽或太阳镜🕶️";
         }
 
-        String location = (String) config.getOrDefault("location", "auto");
-        if ("auto".equals(location)) {
-            String userLocation = getUserLocation(reminder.getCreateBy());
-            location = userLocation != null ? userLocation : "南京";
-        }
+        UserLocation resolvedLocation = resolveLocation(
+            reminder.getCreateBy(), (String) config.getOrDefault("location", "auto"));
+        String location = resolvedLocation.getLocation();
 
-        UVIndexInfo uvInfo = getUVIndexInfo(location);
+        UVIndexInfo uvInfo = getUVIndexInfo(
+            location, resolvedLocation.getLatitude(), resolvedLocation.getLongitude());
 
         String uvIndexText = "--";
         String uvLevel = "弱";
@@ -235,10 +250,10 @@ public class UVIndexHandler implements SceneReminderHandler {
     /**
      * 获取紫外线指数信息
      */
-    private UVIndexInfo getUVIndexInfo(String location) {
+    private UVIndexInfo getUVIndexInfo(String location, Double latitude, Double longitude) {
         try {
             // 1. 获取坐标
-            double[] coords = getCoordinates(location);
+            double[] coords = getCoordinates(location, latitude, longitude);
             if (coords == null) {
                 log.warn("无法获取城市坐标: {}", location);
                 return getDefaultUVInfo(location);
@@ -296,9 +311,10 @@ public class UVIndexHandler implements SceneReminderHandler {
     /**
      * 获取城市坐标
      */
-    private double[] getCoordinates(String cityName) {
+    private double[] getCoordinates(String cityName, Double latitude, Double longitude) {
         try {
-            return OpenMeteoGeocodingSupport.resolveCoordinates(restTemplate, GEOCODING_API, cityName);
+            return OpenMeteoGeocodingSupport.resolveCoordinates(
+                restTemplate, GEOCODING_API, cityName, latitude, longitude);
 
         } catch (Exception e) {
             log.error("获取城市坐标失败: {}", cityName, e);

@@ -740,7 +740,7 @@ public class ReminderScheduleService {
      * 用于天气类、需要动态判断的提醒
      * 每个handler会根据用户配置的reminderTime决定是否触发
      */
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "0 * * * * ?")
     public void triggerSceneReminders() {
         log.info("开始检查场景化提醒...");
         
